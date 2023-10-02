@@ -1,0 +1,27 @@
+DB_HOST=<your db host>
+DB_USER=<your db user>
+DB_PASS=<your db password>
+DB_NAME=<your db name>
+HOST=admin.kenecare.com
+PORT=<your application port>
+
+BASE_URL=https://admin.kenecare.com/
+API_BASE_URL=https://admin.kenecare.com/api/
+FRONTEND_URL=https://kenecare.com/
+
+TIME_SLOT_INTERVAL=60
+ZOOM_SDK_KEY=<your zoom sdk key>
+ZOOM_SDK_SECRET=<your zoom sdk secret>
+ZOOM_ACCESS_TOKEN=<your zoom access token>
+ZOOM_API_URL=https://api.zoom.us/v2
+
+ORANGEPAY_AUTH_TOKEN=<your orange money auth token>
+ORANGEPAY_AUTH_API_BASE_URL=https://api.orange.com/oauth/v3
+ORANGEPAY_API_BASE_URL= https://api.orange.com/orange-money-webpay/sl/v1
+ORANGEPAY_API_MERCHANT_KEY=<your orange money merchant key>
+ORANGEPAY_CURRENCY=SLE
+
+SYSTEM_CURRENCY=Le
+
+MAIL_SENDER=Kenecare <admin.kenecare@gmail.com>
+

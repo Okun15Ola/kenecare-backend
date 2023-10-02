@@ -1,0 +1,95 @@
+<div class="fixed-sidebar-left">
+<ul class="nav navbar-nav side-nav nicescroll-bar">
+	<li class="navigation-header">
+		<span>Main</span> 
+		<hr/>
+	</li>
+	<li>
+		<a href="<%= BASE_URL %>dashboard"><div class="pull-left"><i class="ti-dashboard mr-20"></i><span class="right-nav-text">Dashboard</span></div><div class="clearfix"></div></a>
+	</li>
+	<li>
+		<a href="<%= BASE_URL %>view_user"><div class="pull-left"><i class="ti-user mr-20"></i><span class="right-nav-text">Patients</span></div><div class="clearfix"></div></a>
+	</li>
+	<li>
+		<a href="<%= BASE_URL %>view_doctor"><div class="pull-left"><i class="ti-user mr-20"></i><span class="right-nav-text">Doctor</span></div><div class="clearfix"></div></a>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#cat_dr"><div class="pull-left"><i class="ti-basketball mr-20"></i><span class="right-nav-text">Departments</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="cat_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_department_type">Department Types</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#blog_dr"><div class="pull-left"><i class="ti-book mr-20"></i><span class="right-nav-text">Blog</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="blog_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_blog_category">Category</a>
+			</li>
+			<li>
+				<a href="<%= BASE_URL %>view_blog">Blog</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#app_dr"><div class="pull-left"><i class="ti-calendar mr-20"></i><span class="right-nav-text">Appointments</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="app_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_appointment">Appointment List</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#city_dr"><div class="pull-left"><i class="ti-location-pin mr-20"></i><span class="right-nav-text">City</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="city_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_city">Manage City</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#tes_dr"><div class="pull-left"><i class="ti-comment mr-20"></i><span class="right-nav-text">Testimonial</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="tes_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_testimonial">Manage Testimonial</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#home_dr"><div class="pull-left"><i class="ti-settings mr-20"></i><span class="right-nav-text">Home</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="home_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_section1">Manage Section1</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#spe_dr"><div class="pull-left"><i class="ti-location-pin mr-20"></i><span class="right-nav-text">Specialization</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="spe_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_specialization">Manage Specialization</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#rc_dr"><div class="pull-left"><i class="ti-location-pin mr-20"></i><span class="right-nav-text">Registration Council</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="rc_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_registration_council">Manage Registration Council</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a class="collapsed" href="javascript:void(0);" data-toggle="collapse" data-target="#dg_dr"><div class="pull-left"><i class="ti-location-pin mr-20"></i><span class="right-nav-text">Degree</span></div><div class="pull-right"><i class="ti-angle-down"></i></div><div class="clearfix"></div></a>
+		<ul id="dg_dr" class="collapse collapse-level-1">
+			<li>
+				<a href="<%= BASE_URL %>view_degree">Manage Degree</a>
+			</li>
+		</ul>
+	</li>
+	<li>
+		<a href="<%= BASE_URL %>logout"><div class="pull-left"><i class="fa fa-sign-out mr-20"></i><span class="right-nav-text">Logout</span></div><div class="clearfix"></div></a>
+	</li>
+</ul>
+</div>

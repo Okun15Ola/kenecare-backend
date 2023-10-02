@@ -1,0 +1,50 @@
+{
+  "name": "node_project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.2",
+    "config": "^3.3.9",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
+    "date-and-time": "^2.3.0",
+    "dateformat": "^5.0.3",
+    "dotenv": "^16.0.0",
+    "ejs": "^3.1.6",
+    "express": "^4.17.3",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.17.2",
+    "express-validator": "^6.14.0",
+    "html-entities": "^2.3.3",
+    "jsonwebtoken": "^8.5.1",
+    "jsrsasign": "^10.5.22",
+    "multer": "^1.4.4",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.6.1",
+    "node-fetch": "^2.6.1",
+    "nodemailer": "^6.7.3",
+    "parse-multipart-data": "^1.2.1",
+    "pm2": "^5.2.2",
+    "promise": "^8.1.0",
+    "req-flash": "0.0.3",
+    "validatorjs": "^3.22.1"
+  },
+  "scripts": {
+    "start:prod": "NODE_ENV=production node src/app.js",
+    "start:dev": "NODE_ENV=development nodemon src/app.js",
+    "test": "jest --watchAll --detectOpenHandles"
+  },
+  "keywords": [],
+  "author": "IMO TECH SOLUTIONS",
+  "license": "ISC",
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "eslint": "^8.50.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.1",
+    "supertest": "^6.3.3"
+  }
+}

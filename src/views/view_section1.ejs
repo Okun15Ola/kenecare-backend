@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<%- include('./common/head.ejs') %>
+	<link href="<%= BASE_URL %>public/admin/assets/vendors/bower_components/datatables/media/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+	<!-- Preloader -->
+	<div class="preloader-it">
+		<div class="la-anim-1"></div>
+	</div>
+	<!-- /Preloader -->
+    <div class="wrapper theme-2-active navbar-top-light">
+		<!-- Top Menu Items -->
+			
+			<!-- /Top Menu Items -->
+			<%- include('./common/header.ejs') %>
+			<!-- Left Sidebar Menu -->
+			
+			<!-- /Left Sidebar Menu -->
+			<%- include('./common/sidebar.ejs') %>
+		
+        <!-- Main Content -->
+		<div class="page-wrapper">
+			<div class="container">
+				<!-- Row -->
+				<div class="row heading-bg">
+					<!-- Breadcrumb -->
+					<div class="col-lg-12 col-sm-12 col-md-12 col-xs-12">
+					  <ol class="breadcrumb">
+						<li><a href="<%= BASE_URL %>dashboard">Dashboard</a></li>
+						<li class="active"><span>Section1</span></li>
+					  </ol>
+					</div>
+					<!-- /Breadcrumb -->
+				</div>
+				<!-- /Row -->
+				<div class="row">
+					<div class="col-md-12">
+					<%- include('./common/errors.ejs') %>
+						<div class="panel panel-default border-panel card-view">
+				<div class="panel-heading">
+								
+						<h6 class="panel-title txt-dark">Section1</h6>
+						<a class="btn btn-danger btn-rounded pull-right" href="<%= BASE_URL %>add_section1"> Add Section1</a>
+					<div class="clearfix"></div>
+				</div>
+				<div class="panel-wrapper collapse in">
+					<div class="panel-body">
+						<div class="table-wrap">
+							<div class="table-responsive">
+								<table id="datable_1" class="table table-hover display  pb-30" >
+									<thead>
+										<tr>
+											<th>No</th>
+											<th>Name</th>
+											<th>Image</th>
+											th>Status</th>
+											<th>Action</th>
+										</tr>
+									</thead>
+									<tbody>
+										<% var i=1; data.forEach(function(value){ %>
+											<tr>
+												<td><%= i %></td>
+												<td><%= value.name %></td>
+												<td>
+													<% if(value.image){ %>
+														<img src="<%= BASE_URL+'public/upload/section1/'+value.image %>" height="50" width="50" />
+														<%  } %>
+												</td>
+												<td>
+												<%if (value.status == 1) { 
+													var checked = 'checked';
+												}else{
+													var checked = '';
+												}%>
+												<div class="onoffswitch">
+												<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox changestatus" id="switch_sick<%=i %>" data-table="section1" data-field="status" data-id-name="id" data-id="<%= value.id %>" <%=checked %>   value="1">
+												<label class="onoffswitch-label" for="switch_sick<%=i %>">
+													<span class="onoffswitch-inner"></span>
+													<span class="onoffswitch-switch"></span>
+												</label>
+												</div>
+												
+												</td>
+												<% var deleteUrl = BASE_URL+'delete_section1/'+value.id; %>
+												<% var editUrl = BASE_URL+'edit_section1/'+value.id; %>
+												<td><a href="<%= editUrl %>" class="btn btn-dark" data-placement="top" data-toggle="tooltip" class="tooltips" data-original-title="Edit" ><i class="fa fa-pencil"></i></a>&nbsp;&nbsp;&nbsp;<a href="<%= deleteUrl %>" class="btn btn-dark" data-placement="top" data-toggle="tooltip" class="tooltips" data-original-title="Edit" ><i class="fa fa-trash"></i></a></td>
+											</tr>
+										<%  i++; }) %>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+				</div>
+				</div>
+			</div>
+			
+			<%- include('./common/footer.ejs') %>
+			
+		</div>
+        <!-- /Main Content -->
+
+    </div>
+    <!-- /#wrapper -->
+	
+    <%- include('./common/footerjs.ejs') %>
+	<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+    <script src="<%= BASE_URL %>public/admin/assets/dist/js/dataTables-data.js"></script>
+</body>
+
+</html>
