@@ -1,0 +1,82 @@
+version: '3'
+
+services:
+  admin:
+    depends_on:
+      - db
+    build:
+      context: .
+    container_name: kenecare-admin-${ENV}
+    image: imotechsl/kenecare-admin:${ENV}
+    ports:
+      - 8000:8000
+    networks:
+      - kenecare-net
+    restart: always
+    env_file: .env.${ENV}
+    environment:
+      - DB_HOST=$DB_HOST
+      - DB_USER=$DB_USER
+      - DB_PASS=$DB_PASS
+      - DB_NAME=$DB_NAME
+      - HOST=$HOST
+      - PORT=$PORT
+      - BASE_URL=$BASE_URL
+      - API_BASE_URL=$API_BASE_URL
+      - FRONTEND_URL=$FRONTEND_URL
+      - TIME_SLOT_INTERVAL=$TIME_SLOT_INTERVAL
+      - ZOOM_SDK_KEY=$ZOOM_SDK_KEY
+      - ZOOM_SDK_SECRET=$ZOOM_SDK_SECRET
+      - ZOOM_API_URL=$ZOOM_API_URL
+      - ORANGEPAY_AUTH_TOKEN=$ORANGEPAY_AUTH_TOKEN
+      - ORANGEPAY_AUTH_API_BASE_URL=$ORANGEPAY_AUTH_API_BASE_URL
+      - ORANGEPAY_API_BASE_URL=$ORANGEPAY_API_BASE_URL
+      - ORANGEPAY_API_MERCHANT_KEY=$ORANGEPAY_API_MERCHANT_KEY
+      - ORANGEPAY_CURRENCY=$ORANGEPAY_CURRENCY
+      - SYSTEM_CURRENCY=$SYSTEM_CURRENCY
+      - MAIL_SENDER=$MAIL_SENDER
+    volumes:
+      - .:/usr/src/app
+    
+
+  db:
+    image: mysql:latest
+    container_name: kenecare-db-${ENV}
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    env_file: .env.${ENV}
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_ROOT_USER=$MYSQL_ROOT_USER
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_ROOT_HOST=%
+    ports:
+      - 3307:3306
+    volumes:
+      - ./src/db/kenecare.sql:/docker-entrypoint-initdb.d/init.sql
+      - kenecare-db-data:/var/lib/mysql
+    networks:
+      - app-net
+
+  nginx:
+    build:
+      context: ./nginx
+    image: imotechsl/kenecare-nginx:${ENV}
+    container_name: kenecare-nginx-${ENV}
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app
+    networks:
+      - kenecare-net
+
+volumes:
+  kenecare-db-data:
+    name: kenecare-db-data
+
+networks:
+  kenecare-net:
+    name: kenecare-net
+    driver: bridge
