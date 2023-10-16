@@ -19,6 +19,8 @@ const commonService = {
             ((date.getSeconds().toString().length === 1) ? '0' + date.getSeconds() : date.getSeconds());
         return tempTime;
     },
+
+    
     getTimeSlots: (morning_start_time, morning_end_time, evening_start_time, evening_end_time, aptDate) => {
         var interval = process.env.TIME_SLOT_INTERVAL;
 

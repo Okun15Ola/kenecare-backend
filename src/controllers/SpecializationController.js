@@ -32,7 +32,6 @@ exports.add_specialization = (req, res, next) => {
     });
 };
  
-
 exports.do_add_specialization = (req, res, next) => {
 								 
 			const validationRule = {

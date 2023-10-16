@@ -1,0 +1,32 @@
+const { env } = process;
+
+module.exports = {
+  appPort: env.APP_PORT,
+  appHost: env.HOST,
+  appBaseURL: env.BASE_URL,
+  apiBaseURL: env.API_BASE_URL,
+  frontendURL: env.FRONTEND_URL,
+  timeSlotInterval: env.TIME_SLOT_INTERVAL,
+  zoomSdkKey: env.ZOOM_SDK_KEY,
+  zoomSdkSecret: env.ZOOM_SDK_SECRET,
+  zoomAccessToken: env.ZOOM_ACCESS_TOKEN,
+  zoomAPIURL: env.ZOOM_API_URL,
+  nodeEnv: env.NODE_ENV,
+  dbHost: env.DB_HOST,
+  dbUsername: env.DB_USER,
+  dbPassword: env.DB_PASS,
+  dbName: env.DB_NAME,
+  dbPort: env.DB_PORT,
+  dbConnectionLimit: env.DB_CONNECTION_LIMIT,
+  sessionSecret: env.SESSION_SECRET,
+
+  omWebPaymentUrl: env.OM_WEB_PAYMENT_URL,
+  omTokenUrl: env.OM_TOKEN_URL,
+  omTransactionStatusUrl: env.OM_TRANSACTION_STATUS_URL,
+  omMerchantKey: env.OM_MERCHANT_KEY,
+  omBasicAuthToken: env.OM_BASIC_AUTH_TOKEN,
+  omReturnURL: env.OM_RETURN_URL,
+  omCancelURL: env.OM_CANCEL_URL,
+  omCurrency: env.OM_CURRENCY,
+  omNotificationURL: env.OM_NOTIFICATION_URL,
+};

@@ -1,91 +1,97 @@
- <!-- jQuery -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/jquery/dist/jquery.min.js"></script>
+<!-- jQuery -->
+<script src="/admin/assets/vendors/bower_components/jquery/dist/jquery.min.js"></script>
 
 <!-- Bootstrap Core JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
 <!-- Data table JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
 
 <!-- Slimscroll JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/dist/js/jquery.slimscroll.js"></script>
+<script src="/admin/assets/dist/js/jquery.slimscroll.js"></script>
 
 <!-- Progressbar Animation JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/waypoints/lib/jquery.waypoints.min.js"></script>
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/jquery.counterup/jquery.counterup.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/waypoints/lib/jquery.waypoints.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/jquery.counterup/jquery.counterup.min.js"></script>
 
 <!-- Fancy Dropdown JS -->
-<script src="<%= BASE_URL %>public/admin/assets/dist/js/dropdown-bootstrap-extended.js"></script>
+<script src="/admin/assets/dist/js/dropdown-bootstrap-extended.js"></script>
 
 <!-- Sparkline JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/jquery.sparkline/dist/jquery.sparkline.min.js"></script>
+<script src="/admin/assets/vendors/jquery.sparkline/dist/jquery.sparkline.min.js"></script>
 
 <!-- Owl JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/owl.carousel/dist/owl.carousel.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/owl.carousel/dist/owl.carousel.min.js"></script>
 
 <!-- Switchery JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/switchery/dist/switchery.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/switchery/dist/switchery.min.js"></script>
 
 <!-- Vector Maps JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/vectormap/jquery-jvectormap-2.0.2.min.js"></script>
-<script src="<%= BASE_URL %>public/admin/assets/vendors/vectormap/jquery-jvectormap-us-aea-en.js"></script>
-<script src="<%= BASE_URL %>public/admin/assets/vendors/vectormap/jquery-jvectormap-world-mill-en.js"></script>
-<script src="<%= BASE_URL %>public/admin/assets/dist/js/vectormap-data.js"></script>
+<script src="/admin/assets/vendors/vectormap/jquery-jvectormap-2.0.2.min.js"></script>
+<script src="/admin/assets/vendors/vectormap/jquery-jvectormap-us-aea-en.js"></script>
+<script src="/admin/assets/vendors/vectormap/jquery-jvectormap-world-mill-en.js"></script>
+<script src="/admin/assets/dist/js/vectormap-data.js"></script>
 
 <!-- Toast JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/jquery-toast-plugin/dist/jquery.toast.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/jquery-toast-plugin/dist/jquery.toast.min.js"></script>
 
 <!-- Piety JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/peity/jquery.peity.min.js"></script>
-<script src="<%= BASE_URL %>public/admin/assets/dist/js/peity-data.js"></script>
+<script src="/admin/assets/vendors/bower_components/peity/jquery.peity.min.js"></script>
+<script src="/admin/assets/dist/js/peity-data.js"></script>
 
 <!-- Chartist JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/chartist/dist/chartist.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/chartist/dist/chartist.min.js"></script>
 
 <!-- Morris Charts JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/raphael/raphael.min.js"></script>
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/morris.js/morris.min.js"></script>
-<script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/jquery-toast-plugin/dist/jquery.toast.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/raphael/raphael.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/morris.js/morris.min.js"></script>
+<script src="/admin/assets/vendors/bower_components/jquery-toast-plugin/dist/jquery.toast.min.js"></script>
 
 <!-- ChartJS JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/vendors/chart.js/Chart.min.js"></script>
+<script src="/admin/assets/vendors/chart.js/Chart.min.js"></script>
 
 <!-- Init JavaScript -->
-<script src="<%= BASE_URL %>public/admin/assets/dist/js/init.js"></script>
-<script src="<%= BASE_URL %>public/admin/assets/dist/js/dashboard-data.js"></script>
+<script src="/admin/assets/dist/js/init.js"></script>
+<script src="/admin/assets/dist/js/dashboard-data.js"></script>
 <script type="text/javascript">
-$('.changestatus').click(function (){
-var table = $(this).attr('data-table');
-var id = $(this).attr('data-id');
-var field_name = $(this).attr('data-field');
-var id_name = $(this).attr('data-id-name');
-if($(this).prop("checked") == true){
-	var status = 1;
-}
-else if($(this).prop("checked") == false){
-	var status = 0;
-}
+  $(".changestatus").click(function () {
+    var table = $(this).attr("data-table");
+    var id = $(this).attr("data-id");
+    var field_name = $(this).attr("data-field");
+    var id_name = $(this).attr("data-id-name");
+    if ($(this).prop("checked") == true) {
+      var status = 1;
+    } else if ($(this).prop("checked") == false) {
+      var status = 0;
+    }
 
-var htmlsuccess = '<div class="alert alert-success myDiv" role="alert" id="myDiv"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>Status Change Success</div>';
-var htmlerror = '<div class="alert alert-danger myDiv" role="alert" id="myDiv"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>Status Change Failed</div>';
+    var htmlsuccess =
+      '<div class="alert alert-success myDiv" role="alert" id="myDiv"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>Status Change Success</div>';
+    var htmlerror =
+      '<div class="alert alert-danger myDiv" role="alert" id="myDiv"><button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>Status Change Failed</div>';
 
-jQuery.ajax( {
-	type: "POST",
-	url: "/change_status",
-	dataType: 'json',
-		data: {"table": table,"id":id ,"status": status,"field_name":field_name,"id_name":id_name,},
-		async: false,
-		success: function(response) {
-			
-			if(response.data == true){
-			  $('#errormsg').html(htmlsuccess);
-			  $("html, body").animate({ scrollTop: 0 }, "slow");
-			}else{
-			  $('#errormsg').html(htmlerror);
-			  $("html, body").animate({ scrollTop: 0 }, "slow");
-			}
-		}
-	});
-});
+    jQuery.ajax({
+      type: "POST",
+      url: "/change_status",
+      dataType: "json",
+      data: {
+        table: table,
+        id: id,
+        status: status,
+        field_name: field_name,
+        id_name: id_name,
+      },
+      async: false,
+      success: function (response) {
+        if (response.data == true) {
+          $("#errormsg").html(htmlsuccess);
+          $("html, body").animate({ scrollTop: 0 }, "slow");
+        } else {
+          $("#errormsg").html(htmlerror);
+          $("html, body").animate({ scrollTop: 0 }, "slow");
+        }
+      },
+    });
+  });
 </script>
 <%- include('./modals.ejs') %>

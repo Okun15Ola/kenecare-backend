@@ -1,48 +1,73 @@
-const mysql = require("mysql");
-const express = require("express");
-var expressSession = require("express-session");
-const path = require("path");
+// const mysql = require("mysql");
+// const bCrypt = require("bcryptjs");
+// const multer = require("multer");
+// const http = require("http").Server(app);
+// const hostname = process.env.HOST;
+// const PORT = process.env.PORT;
+// const expressValidator = require("express-validator");
 require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const expressSession = require("express-session");
+const path = require("path");
+const bodyParser = require("body-parser");
+const apirouter = require("./routes/api/apiroute");
+const adminrouter = require("./routes/api/admin/adminrouter");
+const flash = require("req-flash");
+const { sessionSecret } = require("./config/default.config");
+const { connectionPool } = require("./db/db.connection.js");
+const {
+  NOT_FOUND,
+  INTERNAL_SERVER_ERROR,
+} = require("./utils/response.utils.js");
+const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
 
-const hostname = process.env.HOST;
-const PORT = process.env.PORT;
 global.BASE_URL = process.env.BASE_URL;
 global.API_BASE_URL = process.env.API_BASE_URL;
 global.FRONTEND_URL = process.env.FRONTEND_URL;
-
 global.UPLOAD_DIR = "public/upload/";
-
-global.connectPool = require("./config/database.js");
+global.connectPool = connectionPool;
 global.__basedir = __dirname;
 global.dateAndTime = require("date-and-time");
-const app = express();
-
-const http = require("http").Server(app);
-
 global.nodemailer = require("nodemailer");
 global.mailerConfig = require("./config/mailer.config.js");
 global.html_entities = require("./controllers/helpers/html_entities");
 global.jwt = require("jsonwebtoken");
 global.jwtConfig = require("./config/auth.jwtConfig.js");
 
-const bCrypt = require("bcryptjs");
-
-const multer = require("multer");
-
-const apirouter = require("./apiroute.js");
-
-const cors = require("cors");
+const app = express();
 
 app.use(cors());
-const bodyParser = require("body-parser");
-app.use("/public", express.static("public"));
+app.use(
+  helmet({
+    hidePoweredBy: true,
+    crossOriginResourcePolicy: false,
+  })
+);
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+// app.use("public", express.static("public"));
+app.use(express.static(__dirname + "/public"));
 app.use(
   expressSession({
-    secret: "D%$*&^lk32",
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: true,
   })
 );
+
+// connectPool.on("error", function (err) {
+//   console.log("[mysql error]", err);
+// });
+
+app.use(flash());
+
+//For set layouts of html view
+//const expressLayouts = require('express-ejs-layouts');
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+//app.use(expressLayouts);
 
 app.use(function (req, res, next) {
   if (!req.path.includes("/api/")) {
@@ -56,31 +81,29 @@ app.use(function (req, res, next) {
   next();
 });
 
-const adminrouter = require("./adminrouter.js");
-const expressValidator = require("express-validator");
-var flash = require("req-flash");
+app.use("/", logUserInteraction, adminrouter);
+app.use("/api", logUserInteraction, apirouter);
+app.use("api/admin", adminrouter);
 
-connectPool.on("error", function (err) {
-  console.log("[mysql error]", err);
+// Catch-all route for handling unknown routes
+app.use((req, res, next) => {
+  const err = new Error("Not Found");
+  err.code = 404;
+  next(err);
+});
+app.use((err, req, res, next) => {
+  logger.error(err);
+  let statusCode = 500;
+  let errorMessage = "Internal Server Error";
+  if (err.code === 404) {
+    statusCode = 404;
+    errorMessage = "The requested resource could not be found.";
+    return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
+  }
+
+  return res
+    .status(statusCode)
+    .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
 });
 
-//For set layouts of html view
-//const expressLayouts = require('express-ejs-layouts');
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
-//app.use(expressLayouts);
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-app.use(flash());
-
-app.use("/", adminrouter);
-
-app.use("/api", apirouter);
-
-var server = http.listen(PORT, hostname, () => {
-  console.log(`Server running at http://${hostname}:${PORT}/`);
-});
-
-server.timeout = 0;
+module.exports = app;

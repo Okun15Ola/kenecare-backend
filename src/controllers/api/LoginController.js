@@ -112,6 +112,7 @@ exports.login = (req, res, next) => {
 		}
 	});
 };
+
 exports.doctor_login = (req, res, next) => {
 	const { body } = req;
 	const validationRule = {
@@ -194,6 +195,7 @@ exports.doctor_login = (req, res, next) => {
 		}
 	});
 };
+
 exports.login_otp = (req, res, next) => {
 	const { body } = req;
 	const validationRule = {
@@ -296,6 +298,7 @@ exports.login_otp = (req, res, next) => {
 		}
 	});
 };
+
 exports.notification = (req, res, next) => {
 	const { body } = req;
 	const validationRule = {
