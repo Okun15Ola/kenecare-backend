@@ -17,7 +17,7 @@ run-prod:
 	
 	
 stop-prod:
-	@ENV=production docker compose --env-file=production.env -f docker-compose-prod.yml down 
+	@ENV=production docker compose --env-file=production.env -f docker-compose-prod.yml down  -v
 	
 
 build-dev-all:

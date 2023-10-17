@@ -11,7 +11,9 @@ const Validate = (req, res, next) => {
       };
     });
 
-    return res.status(400).json(BAD_REQUEST("Validation Error", errors));
+    return res
+      .status(400)
+      .json(BAD_REQUEST({ message: "Validation Error", error: errors }));
   }
   next();
 };

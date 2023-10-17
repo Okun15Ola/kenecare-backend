@@ -13,8 +13,8 @@ function Enum(baseEnum) {
 }
 
 const USERTYPE = Enum({
-  USERS: 1,
-  DOCTORS: 2,
+  PATIENT: 1,
+  DOCTOR: 2,
 });
 
 const STATUS = Enum({
@@ -22,4 +22,9 @@ const STATUS = Enum({
   NOT_ACTIVE: 0,
 });
 
-module.exports = { USERTYPE, STATUS };
+const VERIFICATIONSTATUS = Enum({
+  VERIFIED: 1,
+  NOT_VERIFIED: 0,
+});
+
+module.exports = { USERTYPE, STATUS, VERIFICATIONSTATUS };

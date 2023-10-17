@@ -1,6 +1,5 @@
 const JwtStrategy = require("passport-jwt").Strategy,
 const ExtractJwt = require("passport-jwt").ExtractJwt;
-const passport = require("passport");
 const {patientJwtSecret} = require("../config/default.config")
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -9,18 +8,23 @@ const opts = {
   audience:"kenecare.com"
 };
 const {getUserById} = require("../services/users.service")
-const authenticate = passport => {
-   passport.use(
-    new JwtStrategy(opts, async (userId, done) => {
-      const user = await getUserById(userId);
-      if (user) {
+module.exports = {
+  authenticate: (passport) => {
+    
+  passport.use(
+    new JwtStrategy(opts, async (jwt_payload, done) => {
+      await getUserById({ id: jwt_payload.sub }, (err, user) =>  {
+        if (err) {
+          return done(err, false);
+        }
+        if (user) {
           return done(null, user);
         } else {
           return done(null, false);
           // or you could create a new account
         }
+      });
     })
   );
+  }
 }
-
-module.export = authenticate

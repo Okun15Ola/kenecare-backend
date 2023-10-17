@@ -19,7 +19,12 @@ module.exports = {
   dbPort: env.DB_PORT,
   dbConnectionLimit: env.DB_CONNECTION_LIMIT,
   sessionSecret: env.SESSION_SECRET,
-
+  patientJwtSecret: env.PATIENT_JWT_SECRET,
+  jwtIssuer: env.JWT_ISSUER,
+  jwtAudience: env.JWT_AUDIENCE,
+  twilioAccountSID: env.TWILIO_ACCOUNT_SID,
+  twilioAuthToken: env.TWILIO_AUTH_TOKEN,
+  twilioPhoneNumber: env.TWILIO_PHONE_NUMBER,
   omWebPaymentUrl: env.OM_WEB_PAYMENT_URL,
   omTokenUrl: env.OM_TOKEN_URL,
   omTransactionStatusUrl: env.OM_TRANSACTION_STATUS_URL,

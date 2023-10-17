@@ -49,7 +49,7 @@ services:
       - MYSQL_ROOT_PASSWORD=changeme
       - MYSQL_USER=kenecare
       - MYSQL_PASSWORD=changeme
-      - MYSQL_DATABASE=kenecare_db
+      - MYSQL_DATABASE=db_kenecare
       - MYSQL_ROOT_HOST=%
     ports:
       - 3307:3306

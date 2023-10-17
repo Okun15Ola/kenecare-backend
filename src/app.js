@@ -14,6 +14,7 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const apirouter = require("./routes/api/apiroute");
 const adminrouter = require("./routes/api/admin/adminrouter");
+const authRouter = require("./routes/api/auth.routes");
 const flash = require("req-flash");
 const { sessionSecret } = require("./config/default.config");
 const { connectionPool } = require("./db/db.connection.js");
@@ -22,6 +23,7 @@ const {
   INTERNAL_SERVER_ERROR,
 } = require("./utils/response.utils.js");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
+const logger = require("./middlewares/logger.middleware");
 
 global.BASE_URL = process.env.BASE_URL;
 global.API_BASE_URL = process.env.API_BASE_URL;
@@ -81,9 +83,11 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.use("/", logUserInteraction, adminrouter);
-app.use("/api", logUserInteraction, apirouter);
-app.use("api/admin", adminrouter);
+// app.use("/", logUserInteraction, adminrouter);
+// app.use("/api", logUserInteraction, apirouter);
+// app.use("api/admin", adminrouter);
+
+app.use("/api/v1/auth", logUserInteraction, authRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {

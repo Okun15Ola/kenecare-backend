@@ -2,7 +2,7 @@
 const HttpStatus = require("http-status-codes");
 
 const Response = {};
-Response.SUCCESS = (message = "", data) => {
+Response.SUCCESS = ({ message = "", data }) => {
   const timestamp = new Date();
   return {
     status: "success",
@@ -12,7 +12,7 @@ Response.SUCCESS = (message = "", data) => {
     data: data,
   };
 };
-Response.CREATED = (data, message) => {
+Response.CREATED = ({ data, message }) => {
   const timestamp = new Date();
   return {
     status: "success",
@@ -23,7 +23,7 @@ Response.CREATED = (data, message) => {
   };
 };
 
-Response.BAD_REQUEST = (message = "", error = null) => {
+Response.BAD_REQUEST = ({ message = "", error = null }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -34,7 +34,7 @@ Response.BAD_REQUEST = (message = "", error = null) => {
   };
 };
 
-Response.UNAUTHORIZED = (message = "", error = null) => {
+Response.UNAUTHORIZED = ({ message = "", error = null }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -44,7 +44,7 @@ Response.UNAUTHORIZED = (message = "", error = null) => {
     errors: error,
   };
 };
-Response.NOT_FOUND = (message = "", error = null) => {
+Response.NOT_FOUND = ({ message = "", error = null }) => {
   const timestamp = new Date();
   return {
     status: "error",

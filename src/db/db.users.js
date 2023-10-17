@@ -24,7 +24,7 @@ exports.getUserByUsersType = (typeId) => {
 
 exports.getUserById = (userId) => {
   const sql =
-    "SELECT user_id mobile_number,email,user_type,is_verified,is_account_active,is_online,is_2fa_enabled FROM users WHERE user_id = ? LIMIT = 1";
+    "SELECT user_id mobile_number,email,user_type,is_verified,is_account_active,is_online,is_2fa_enabled FROM users WHERE user_id = ? LIMIT  1";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [userId], (err, result) => {
       if (err) return reject(err);
@@ -35,7 +35,7 @@ exports.getUserById = (userId) => {
 };
 
 exports.getUserByMobileNumber = (mobileNumber) => {
-  const sql = "SELECT * from users WHERE mobile_number = ? LIMIT = 1;";
+  const sql = "SELECT * from users WHERE mobile_number = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [mobileNumber], (err, result) => {
       if (err) return reject(err);
@@ -46,7 +46,7 @@ exports.getUserByMobileNumber = (mobileNumber) => {
 };
 exports.getUserByEmail = (email) => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT * from users WHERE email = ? LIMIT = 1;`;
+    const sql = `SELECT * from users WHERE email = ? LIMIT 1;`;
     connectionPool.query(sql, [email], (err, result) => {
       if (err) return reject(err);
 
@@ -56,7 +56,7 @@ exports.getUserByEmail = (email) => {
 };
 exports.getUserByVerificationToken = (token) => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT * from users WHERE verification_token = ? LIMIT = 1;`;
+    const sql = `SELECT * from users WHERE verification_token = ? LIMIT 1;`;
     connectionPool.query(sql, [token], (err, result) => {
       if (err) return reject(err);
 
@@ -67,16 +67,15 @@ exports.getUserByVerificationToken = (token) => {
 
 exports.createNewUser = (user) => {
   const email = user.email || null;
-  const { mobileNumber, userType, verificationToken, password } = user;
+  const { mobileNumber, userType, vToken, password } = user;
   const sql =
-    "INSERT INTO users (mobile_number, email,user_type, password,verification_token) values (?,?)";
+    "INSERT INTO users (mobile_number, email,user_type, password,verification_token) values (?,?,?,?,?)";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [mobileNumber, email, userType, password, verificationToken],
+      [mobileNumber, email, userType, password, vToken],
       (err, result) => {
         if (err) return reject(err);
-        console.log(result);
         return resolve(result);
       }
     );
@@ -87,6 +86,16 @@ exports.updateUserEmailById = ({ userId, email }) => {
   const sql = `UPDATE users SET  email = ? WHERE user_id = ?;`;
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [email, userId], (err, result) => {
+      if (err) return reject(err);
+
+      return resolve(result);
+    });
+  });
+};
+exports.updateUserVerificationTokenById = ({ userId, token }) => {
+  const sql = `UPDATE users SET  verification_token = ? WHERE user_id = ?;`;
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [token, userId], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result);
@@ -105,30 +114,45 @@ exports.updateUserMobileNumberById = ({ userId, mobileNumber }) => {
   });
 };
 
-exports.updateUserAccountStatusById = ({ userId, accountStatus }) => {
+exports.updateUserAccountStatusById = ({ userId, status }) => {
   const sql = `UPDATE users SET  is_account_active = ? WHERE user_id = ?;`;
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [accountStatus, userId], (err, result) => {
+    connectionPool.query(sql, [status, userId], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result);
     });
   });
 };
-exports.updateUserVerificationStatusById = ({ userId, verificationStatus }) => {
-  const sql = `UPDATE users SET  is_verified = ? WHERE user_id = ?;`;
+exports.updateUserVerificationStatusById = ({ token, verificationStatus }) => {
+  const timestamp = new Date();
+  const sql = `UPDATE users SET  is_verified = ?, verification_token = NULL, is_online = 1, verified_at = ? WHERE verification_token = ?;`;
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [verificationStatus, userId], (err, result) => {
-      if (err) return reject(err);
+    connectionPool.query(
+      sql,
+      [verificationStatus, timestamp, token],
+      (err, result) => {
+        if (err) return reject(err);
 
-      return resolve(result);
-    });
+        return resolve(result);
+      }
+    );
   });
 };
 exports.updateUserPasswordById = ({ userId, password }) => {
   const sql = `UPDATE users SET  password = ? WHERE user_id = ?;`;
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [password, userId], (err, result) => {
+      if (err) return reject(err);
+
+      return resolve(result);
+    });
+  });
+};
+exports.updateUserOnlineStatus = ({ userId, status }) => {
+  const sql = `UPDATE users SET  is_online = ? WHERE user_id = ?;`;
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [status, userId], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result);
@@ -147,14 +171,3 @@ exports.deleteUserById = (userId) => {
     });
   });
 };
-
-// exports.getUserByUsername = (username) => {
-//   return new Promise((resolve, reject) => {
-//     const sql = `SELECT * from users WHERE username = ? LIMIT = 1;`;
-//     connectionPool.query(sql, [username], (err, result) => {
-//       if (err) return reject(err);
-
-//       return resolve(result[0]);
-//     });
-//   });
-// };
