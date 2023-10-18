@@ -1,7 +1,7 @@
 const { connectionPool } = require("./db.connection");
 
 exports.getAllBlogCategories = () => {
-  const sql = "SELECT * FROM blog_category ORDER BY id DESC";
+  const sql = "SELECT * FROM blog_categories";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, (error, results) => {
@@ -12,11 +12,36 @@ exports.getAllBlogCategories = () => {
   });
 };
 
-exports.getBlogCategoryById = (blogCategoryId) => {
-  const sql = "SELECT * FROM blog_category WHERE id = ? LIMIT 1";
+exports.getBlogCategoryById = (id) => {
+  const sql = "SELECT * FROM blog_categories WHERE category_id = ? LIMIT 1";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [blogCategoryId], (error, results) => {
+    connectionPool.query(sql, [id], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results[0]);
+    });
+  });
+};
+exports.getBlogCategoryByName = (name) => {
+  const sql = "SELECT * FROM blog_categories WHERE category_name = ? LIMIT 1";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [name], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results[0]);
+    });
+  });
+};
+
+exports.createNewBlogCategory = (category) => {
+  const { name, inputtedBy } = category;
+  const sql =
+    "INSERT INTO blog_categories (category_name, inputted_by) VALUES (?,?);";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [name, inputtedBy], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);
@@ -24,12 +49,12 @@ exports.getBlogCategoryById = (blogCategoryId) => {
   });
 };
 
-exports.createNewBlogCategory = (blogCategory) => {
-  const { categoryName } = blogCategory;
-  const sql = "INSERT INTO blog_category (name) VALUES (?) ";
+exports.updateBlogCategoryById = ({ id, name }) => {
+  const sql =
+    "UPDATE blog_categories SET category_name = ? WHERE category_id = ?";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [categoryName], (error, results) => {
+    connectionPool.query(sql, [name, id], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);
@@ -37,27 +62,11 @@ exports.createNewBlogCategory = (blogCategory) => {
   });
 };
 
-exports.updateBlogCategoryById = (blogCategoryId, updatedBlog) => {
-  const { categoryName } = updatedBlog;
-  const sql = "UPDATE blog_category SET name = ? WHERE id = ?";
+exports.updateBlogCategoryStatusById = ({ id, status }) => {
+  const sql = "UPDATE blog_categories SET is_active = ? WHERE category_id = ?";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(
-      sql,
-      [categoryName, blogCategoryId],
-      (error, results) => {
-        if (error) return reject(error);
-
-        return resolve(results);
-      }
-    );
-  });
-};
-exports.updateBlogCategoryStatus = (blogCategoryId, status) => {
-  const sql = "UPDATE blog_category SET status = ? WHERE id = ?";
-
-  return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [status, blogCategoryId], (error, results) => {
+    connectionPool.query(sql, [status, id], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);
@@ -65,11 +74,11 @@ exports.updateBlogCategoryStatus = (blogCategoryId, status) => {
   });
 };
 
-exports.deleteBlogCategoryById = (blogCategoryId) => {
-  const sql = "DELETE FROM blog_category WHERE id = ?";
+exports.deleteBlogCategoryById = (id) => {
+  const sql = "DELETE FROM blog_categories WHERE category_id = ?";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [blogCategoryId], (error, results) => {
+    connectionPool.query(sql, [id], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);

@@ -1,4 +1,3 @@
-// const mysql = require("mysql");
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -6,8 +5,6 @@ const helmet = require("helmet");
 const expressSession = require("express-session");
 const path = require("path");
 const bodyParser = require("body-parser");
-// const apirouter = require("./routes/api/apiroute");
-// const adminrouter = require("./routes/api/admin/adminrouter");
 
 const flash = require("req-flash");
 const { sessionSecret } = require("./config/default.config");
@@ -25,6 +22,7 @@ const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
 const adminSpecializationsRoute = require("./routes/api/admin/specializations.routes");
 const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
 const adminAccountsRouter = require("./routes/api/admin/admin.accounts.routes");
+const adminBlogCategoriesRouter = require("./routes/api/admin/blog-category.routes");
 
 global.BASE_URL = process.env.BASE_URL;
 global.API_BASE_URL = process.env.API_BASE_URL;
@@ -91,7 +89,7 @@ app.use("/api/v1/admin/specializations", adminSpecializationsRoute);
 app.use("/api/v1/admin/specialties", adminSpecializationsRoute);
 app.use("/api/v1/admin/accounts", adminAccountsRouter);
 app.use("/api/v1/admin/blogs", adminAccountsRouter);
-app.use("/api/v1/admin/blog-categories", adminAccountsRouter);
+app.use("/api/v1/admin/blog-categories", adminBlogCategoriesRouter);
 app.use("/api/v1/admin/cities", adminAccountsRouter);
 app.use("/api/v1/admin/services", adminAccountsRouter);
 app.use("/api/v1/admin/user-types", adminAccountsRouter);
