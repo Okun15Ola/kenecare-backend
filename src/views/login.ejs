@@ -46,7 +46,7 @@
                     </div>
                     <%- include('./common/errors.ejs') %>
                     <div class="form-wrap">
-                      <form action="/do_login" method="post">
+                      <form action="/dashboard" method="get">
                         <div class="form-group">
                           <label
                             class="control-label mb-10"
@@ -74,7 +74,7 @@
                           >
                           <a
                             class="capitalize-font txt-orange block mb-10 pull-right font-12"
-                            href="<%= BASE_URL %>forgot_password"
+                            href="/forgot_password"
                             >forgot password ?</a
                           >
                           <div class="clearfix"></div>

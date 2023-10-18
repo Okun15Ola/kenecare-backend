@@ -5,7 +5,6 @@ const helmet = require("helmet");
 const expressSession = require("express-session");
 const path = require("path");
 const bodyParser = require("body-parser");
-
 const flash = require("req-flash");
 const { sessionSecret } = require("./config/default.config");
 const { connectionPool } = require("./db/db.connection.js");
@@ -16,13 +15,16 @@ const {
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
 const logger = require("./middlewares/logger.middleware");
 
-//ROUTES
+//API ROUTES
 const authRouter = require("./routes/api/auth.routes");
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
 const adminSpecializationsRoute = require("./routes/api/admin/specializations.routes");
 const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
 const adminAccountsRouter = require("./routes/api/admin/admin.accounts.routes");
 const adminBlogCategoriesRouter = require("./routes/api/admin/blog-category.routes");
+
+//DASHBOARD ROUTES
+const dashboardRouter = require("./routes/dashboard.routes");
 
 global.BASE_URL = process.env.BASE_URL;
 global.API_BASE_URL = process.env.API_BASE_URL;
@@ -79,6 +81,10 @@ app.use(function (req, res, next) {
 });
 
 app.use(logUserInteraction);
+
+//DASHBOARD
+app.use("/", dashboardRouter);
+//USERS ROUTES
 app.use("/api/v1/auth", authRouter);
 
 //ADMIN ROUTES
@@ -115,6 +121,7 @@ app.use((err, req, res, next) => {
     return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
   }
 
+  console.log(err);
   return res
     .status(statusCode)
     .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
