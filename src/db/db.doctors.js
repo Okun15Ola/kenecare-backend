@@ -1,22 +1,12 @@
 const { connectionPool } = require("./db.connection");
 
 exports.getAllDoctors = () => {
-  const sqlQuery = "SELECT * FROM users WHERE type=2 ORDER BY id DESC;";
+  const sqlQuery = "SELECT * FROM doctors ;";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sqlQuery, [id], (err, result) => {
+    connectionPool.query(sqlQuery, (err, result) => {
       if (err) return reject(err);
 
       return resolve(result);
-    });
-  });
-};
-
-exports.getDoctorByUserId = (userId) => {
-  const sql = "SELECT * FROM doctos WHERE user_id = ? LIMIT 1;";
-  return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [userId], (err, result) => {
-      if (err) return reject(err);
-      return resolve(result[0]);
     });
   });
 };
@@ -25,6 +15,17 @@ exports.getDoctorById = (doctorId) => {
   const sql = "SELECT * FROM doctors WHERE doctor_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [doctorId], (err, result) => {
+      if (err) return reject(err);
+      return resolve(result[0]);
+    });
+  });
+};
+
+
+exports.getDoctorByUserId = (userId) => {
+  const sql = "SELECT * FROM doctors WHERE user_id = ?;";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [userId], (err, result) => {
       if (err) return reject(err);
       return resolve(result[0]);
     });

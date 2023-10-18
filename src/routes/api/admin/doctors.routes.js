@@ -2,7 +2,6 @@ const router = require("express").Router();
 const {
   GetDoctorsController,
   GetDoctorByIDController,
-  CreateDoctorController,
   UpdateDoctorByIdController,
   UpdateDoctorStatusController,
   DeleteDoctorByIdController,
@@ -10,7 +9,8 @@ const {
 
 router.get("/", GetDoctorsController);
 router.post("/:id", GetDoctorByIDController);
-router.post("/", CreateDoctorController);
 router.put("/:id", UpdateDoctorByIdController);
 router.patch("/:id/:status", UpdateDoctorStatusController);
 router.delete("/:id", DeleteDoctorByIdController);
+
+module.exports = router;

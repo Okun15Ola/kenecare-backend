@@ -15,7 +15,7 @@ const dbConfig = {
   host: dbHost,
   user: dbUsername,
   password: dbPassword,
-  database: "db_kenecare", //TODO pull db name from env file
+  database: dbName,
   port: dbPort,
   connectionLimit: dbConnectionLimit,
 };

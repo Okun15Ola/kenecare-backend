@@ -1,35 +1,41 @@
-const {
-  getUserByEmail,
-  getUserByMobileNumber,
-} = require("../services/users.service");
-
-const bcryptjs = require("bcryptjs");
-const Response = require("../utils/response.utils");
-const logger = require("../middlewares/logger.middleware");
+const Response = require("../../utils/response.utils");
+const { createAdmin, loginAdmin } = require("../../services/admins.services");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.AuthenticateController = async (req, res, next) => {
   try {
-    //Authenticate Controller
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
     next(error);
   }
 };
-exports.LoginController = async (req, res, next) => {
+exports.AdminLoginController = async (req, res, next) => {
   try {
-    //Login Controller
-    const { mobileNumber, password } = req.body;
+    const admin = req.user;
+    console.log(admin);
+    const { message, data } = await loginAdmin(admin);
+    return res.status(200).json(Response.SUCCESS({ message, data }));
   } catch (error) {
     console.error(error);
     logger.error(error);
     next(error);
   }
 };
-exports.OTPLoginController = async (req, res, next) => {
+
+exports.AdminRegisterController = async (req, res, next) => {
   try {
-    //OTP Login Controller
-    const { mobileNumber, password } = req.body;
+    const { fullname, email, mobileNumber, password } = req.body;
+
+    const { message, data } = await createAdmin({
+      fullname,
+      email,
+      mobileNumber,
+      password,
+    });
+
+    return res.status(201).json(Response.CREATED({ message, data }));
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -37,52 +43,22 @@ exports.OTPLoginController = async (req, res, next) => {
   }
 };
 
-exports.RegisterController = async (req, res, next) => {
-  try {
-    const { name, mobileNumber, password } = req.body;
-
-    //TODO Check if mobile number exists
-
-    //TODO Check if email exists
-
-    //TODO hash password
-
-    //TODO Save to database
-
-    //TODO Send verification OTP (sms/email)
-
-    //TODO Send success response
-  } catch (error) {
-    console.error(error);
-    logger.error(error);
-    next(error);
-  }
-};
-
-exports.VerifyOTPController = (req, res, next) => {
-  try {
-    //Verify OTP Controller
-    const { otp } = req.params;
-  } catch (error) {
-    console.error(error);
-    logger.error(error);
-    next(error);
-  }
-};
-exports.ForgotPasswordController = (req, res, next) => {
-  try {
-    //Forgot Password Controller
-    const { otp } = req.params;
-  } catch (error) {
-    console.error(error);
-    logger.error(error);
-    next(error);
-  }
-};
-exports.UpdatePasswordController = (req, res, next) => {
+exports.AdminUpdatePasswordController = (req, res, next) => {
   try {
     //Update Password Controller
     const { otp } = req.params;
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+exports.AdminUpdateAccountStatusController = (req, res, next) => {
+  try {
+    //Update Password Controller
+    console.log("update account status");
+    console.log(req.params);
+    console.log(req.query);
   } catch (error) {
     console.error(error);
     logger.error(error);

@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const {
   patientJwtSecret,
+  adminJwtSecret,
   jwtIssuer,
   jwtAudience,
 } = require("../config/default.config");
@@ -28,6 +29,20 @@ const comparePassword = async ({ plainPassword, hashedPassword }) => {
 const generateUsersJwtAccessToken = (user) => {
   try {
     return jwt.sign(user, patientJwtSecret, {
+      issuer: jwtIssuer,
+      audience: jwtAudience,
+      expiresIn: "1d",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+const generateAdminJwtAccessToken = (admin) => {
+  try {
+    return jwt.sign(admin, adminJwtSecret, {
+      issuer: jwtIssuer,
+      audience: "admin.kenecare.com",
       expiresIn: "1d",
     });
   } catch (error) {
@@ -50,4 +65,5 @@ module.exports = {
   comparePassword,
   generateVerificationToken,
   generateUsersJwtAccessToken,
+  generateAdminJwtAccessToken,
 };

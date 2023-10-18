@@ -1,7 +1,7 @@
 const { connectionPool } = require("./db.connection");
 
 exports.getAllAdmins = () => {
-  const sql = "SELECT * FROM admins ORDER BY user_id DESC;";
+  const sql = "SELECT * FROM admins;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, (err, result) => {
       if (err) return reject(err);
@@ -11,11 +11,10 @@ exports.getAllAdmins = () => {
   });
 };
 
-exports.getAdminById = (userId) => {
-  const sql =
-    "SELECT user_id mobile_number,email,user_type,is_verified,is_account_active,is_online,is_2fa_enabled FROM admins WHERE user_id = ? LIMIT = 1";
+exports.getAdminById = (adminId) => {
+  const sql = "SELECT * FROM admins WHERE admin_id = ? LIMIT 1";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [userId], (err, result) => {
+    connectionPool.query(sql, [adminId], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result[0]);
@@ -24,7 +23,7 @@ exports.getAdminById = (userId) => {
 };
 
 exports.getAdminByMobileNumber = (mobileNumber) => {
-  const sql = "SELECT * from users WHERE mobile_number = ? LIMIT = 1;";
+  const sql = "SELECT * from admins WHERE mobile_number = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [mobileNumber], (err, result) => {
       if (err) return reject(err);
@@ -35,7 +34,7 @@ exports.getAdminByMobileNumber = (mobileNumber) => {
 };
 exports.getAdminByEmail = (email) => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT * from users WHERE email = ? LIMIT = 1;`;
+    const sql = `SELECT * from admins WHERE email = ? LIMIT 1;`;
     connectionPool.query(sql, [email], (err, result) => {
       if (err) return reject(err);
 
@@ -52,9 +51,8 @@ exports.createNewAdmin = (admin) => {
       sql,
       [fullname, email, mobileNumber, password],
       (err, result) => {
-        if (err) reject(err);
-        console.log(result);
-        resolve(result);
+        if (err) return reject(err);
+        return resolve(result);
       }
     );
   });
@@ -64,9 +62,9 @@ exports.updateAdminEmailById = ({ adminId, email }) => {
   const sql = `UPDATE admins SET  email = ? WHERE admin_id = ?;`;
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [email, adminId], (err, result) => {
-      if (err) reject(err);
+      if (err) return reject(err);
 
-      resolve(result);
+      return resolve(result);
     });
   });
 };
@@ -82,10 +80,10 @@ exports.updateAdminMobileNumberById = ({ adminId, mobileNumber }) => {
   });
 };
 
-exports.updateUserAccountStatusById = ({ userId, accountStatus }) => {
-  const sql = `UPDATE admins SET  is_account_active = ? WHERE user_id = ?;`;
+exports.updateAdminAccountStatusById = ({ id, status }) => {
+  const sql = `UPDATE admins SET  is_account_active = ? WHERE admin_id = ?;`;
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [accountStatus, userId], (err, result) => {
+    connectionPool.query(sql, [status, id], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result);

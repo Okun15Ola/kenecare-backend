@@ -1,8 +1,12 @@
-const Response = require("../utils/response.utils");
-const logger = require("../middlewares/logger.middleware");
+const Response = require("../../utils/response.utils");
+const logger = require("../../middlewares/logger.middleware");
+const { getAllDoctors } = require("../../services/doctors.services.js");
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {
+    const doctors = await getAllDoctors();
+
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);

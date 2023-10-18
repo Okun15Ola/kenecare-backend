@@ -3,6 +3,7 @@ const {
   twilioAuthToken,
   twilioPhoneNumber,
 } = require("../config/default.config");
+
 const client = require("twilio")(twilioAccountSID, twilioAuthToken);
 
 exports.sendTokenSMS = async ({ token, mobileNumber }) => {

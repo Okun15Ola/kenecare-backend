@@ -1,10 +1,4 @@
 // const mysql = require("mysql");
-// const bCrypt = require("bcryptjs");
-// const multer = require("multer");
-// const http = require("http").Server(app);
-// const hostname = process.env.HOST;
-// const PORT = process.env.PORT;
-// const expressValidator = require("express-validator");
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -12,9 +6,9 @@ const helmet = require("helmet");
 const expressSession = require("express-session");
 const path = require("path");
 const bodyParser = require("body-parser");
-const apirouter = require("./routes/api/apiroute");
-const adminrouter = require("./routes/api/admin/adminrouter");
-const authRouter = require("./routes/api/auth.routes");
+// const apirouter = require("./routes/api/apiroute");
+// const adminrouter = require("./routes/api/admin/adminrouter");
+
 const flash = require("req-flash");
 const { sessionSecret } = require("./config/default.config");
 const { connectionPool } = require("./db/db.connection.js");
@@ -24,6 +18,13 @@ const {
 } = require("./utils/response.utils.js");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
 const logger = require("./middlewares/logger.middleware");
+
+//ROUTES
+const authRouter = require("./routes/api/auth.routes");
+const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
+const adminSpecializationsRoute = require("./routes/api/admin/specializations.routes");
+const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
+const adminAccountsRouter = require("./routes/api/admin/admin.accounts.routes");
 
 global.BASE_URL = process.env.BASE_URL;
 global.API_BASE_URL = process.env.API_BASE_URL;
@@ -59,10 +60,6 @@ app.use(
   })
 );
 
-// connectPool.on("error", function (err) {
-//   console.log("[mysql error]", err);
-// });
-
 app.use(flash());
 
 //For set layouts of html view
@@ -83,11 +80,25 @@ app.use(function (req, res, next) {
   next();
 });
 
-// app.use("/", logUserInteraction, adminrouter);
-// app.use("/api", logUserInteraction, apirouter);
-// app.use("api/admin", adminrouter);
+app.use(logUserInteraction);
+app.use("/api/v1/auth", authRouter);
 
-app.use("/api/v1/auth", logUserInteraction, authRouter);
+//ADMIN ROUTES
+//TODO Add a middle ware to authenticate ADMIN JWT
+app.use("/api/v1/admin/auth", adminAuthRouter);
+app.use("/api/v1/admin/doctors", adminDoctorsRoute);
+app.use("/api/v1/admin/specializations", adminSpecializationsRoute);
+app.use("/api/v1/admin/specialties", adminSpecializationsRoute);
+app.use("/api/v1/admin/accounts", adminAccountsRouter);
+app.use("/api/v1/admin/blogs", adminAccountsRouter);
+app.use("/api/v1/admin/blog-categories", adminAccountsRouter);
+app.use("/api/v1/admin/cities", adminAccountsRouter);
+app.use("/api/v1/admin/services", adminAccountsRouter);
+app.use("/api/v1/admin/user-types", adminAccountsRouter);
+app.use("/api/v1/admin/faqs", adminAccountsRouter);
+app.use("/api/v1/admin/common-symptoms", adminAccountsRouter);
+app.use("/api/v1/admin/appointments", adminAccountsRouter);
+app.use("/api/v1/admin/medical-councils", adminAccountsRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {
@@ -95,6 +106,7 @@ app.use((req, res, next) => {
   err.code = 404;
   next(err);
 });
+
 app.use((err, req, res, next) => {
   logger.error(err);
   let statusCode = 500;
