@@ -14,6 +14,7 @@ const {
 } = require("./utils/response.utils.js");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
 const logger = require("./middlewares/logger.middleware");
+const {requireUserAuth,requireAdminAuth} = require('./middlewares/auth.middleware');
 
 //API ROUTES
 const authRouter = require("./routes/api/auth.routes");
@@ -22,6 +23,8 @@ const adminSpecializationsRoute = require("./routes/api/admin/specializations.ro
 const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
 const adminAccountsRouter = require("./routes/api/admin/admin.accounts.routes");
 const adminBlogCategoriesRouter = require("./routes/api/admin/blog-category.routes");
+const adminBlogsRouter = require("./routes/api/admin/blogs.routes");
+
 
 //DASHBOARD ROUTES
 const dashboardRouter = require("./routes/dashboard.routes");
@@ -90,19 +93,19 @@ app.use("/api/v1/auth", authRouter);
 //ADMIN ROUTES
 //TODO Add a middle ware to authenticate ADMIN JWT
 app.use("/api/v1/admin/auth", adminAuthRouter);
+app.use("/api/v1/admin/accounts", adminAccountsRouter);
+app.use("/api/v1/admin/appointments", adminAccountsRouter);
+app.use("/api/v1/admin/blog-categories", adminBlogCategoriesRouter);
+app.use("/api/v1/admin/blogs", requireAdminAuth,adminBlogsRouter);
+app.use("/api/v1/admin/cities", adminAccountsRouter);
+app.use("/api/v1/admin/common-symptoms", adminAccountsRouter);
 app.use("/api/v1/admin/doctors", adminDoctorsRoute);
+app.use("/api/v1/admin/faqs", adminAccountsRouter);
+app.use("/api/v1/admin/medical-councils", adminAccountsRouter);
+app.use("/api/v1/admin/services", adminAccountsRouter);
 app.use("/api/v1/admin/specializations", adminSpecializationsRoute);
 app.use("/api/v1/admin/specialties", adminSpecializationsRoute);
-app.use("/api/v1/admin/accounts", adminAccountsRouter);
-app.use("/api/v1/admin/blogs", adminAccountsRouter);
-app.use("/api/v1/admin/blog-categories", adminBlogCategoriesRouter);
-app.use("/api/v1/admin/cities", adminAccountsRouter);
-app.use("/api/v1/admin/services", adminAccountsRouter);
 app.use("/api/v1/admin/user-types", adminAccountsRouter);
-app.use("/api/v1/admin/faqs", adminAccountsRouter);
-app.use("/api/v1/admin/common-symptoms", adminAccountsRouter);
-app.use("/api/v1/admin/appointments", adminAccountsRouter);
-app.use("/api/v1/admin/medical-councils", adminAccountsRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {

@@ -9,8 +9,10 @@ const {
 } = require("../../../controllers/admin/blogs.controller");
 
 router.get("/", GetBlogsController);
-router.post("/:id", GetBlogByIDController);
+router.get("/:id", GetBlogByIDController);
 router.post("/", CreateBlogController);
 router.put("/:id", UpdateBlogByIdController);
-router.patch("/:id/:status", UpdateBlogStatusController);
+router.patch("/:id/", UpdateBlogStatusController);
 router.delete("/:id", DeleteBlogByIdController);
+
+module.exports = router

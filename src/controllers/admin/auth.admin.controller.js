@@ -14,7 +14,6 @@ exports.AuthenticateController = async (req, res, next) => {
 exports.AdminLoginController = async (req, res, next) => {
   try {
     const admin = req.user;
-    console.log(admin);
     const { message, data } = await loginAdmin(admin);
     return res.status(200).json(Response.SUCCESS({ message, data }));
   } catch (error) {

@@ -1,5 +1,3 @@
--- CREATE DATABASE  IF NOT EXISTS `db_kenecare` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
--- USE `db_kenecare`;
 -- MySQL dump 10.13  Distrib 8.0.29, for Win64 (x86_64)
 --
 -- Host: localhost    Database: db_kenecare
@@ -181,7 +179,7 @@ DROP TABLE IF EXISTS `blog_categories`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `blog_categories` (
-  `category_id` int NOT NULL,
+  `category_id` int NOT NULL AUTO_INCREMENT,
   `category_name` varchar(255) NOT NULL,
   `inputted_by` int NOT NULL,
   `is_active` int NOT NULL DEFAULT '1' COMMENT '0 - False , 1 - True',
@@ -210,7 +208,7 @@ DROP TABLE IF EXISTS `blogs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `blogs` (
-  `blog_id` int NOT NULL,
+  `blog_id` int NOT NULL AUTO_INCREMENT,
   `blog_category_id` int NOT NULL,
   `title` varchar(255) NOT NULL,
   `description` text NOT NULL,
@@ -465,7 +463,9 @@ CREATE TABLE `doctors` (
   PRIMARY KEY (`doctor_id`),
   KEY `fk_doctor_user_id` (`user_id`),
   KEY `fk_doctor_city_id` (`city_id`),
+  KEY `fk_doctor_specialization` (`specialization_id`),
   CONSTRAINT `fk_doctor_city_id` FOREIGN KEY (`city_id`) REFERENCES `cities` (`city_id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_doctor_specialization` FOREIGN KEY (`specialization_id`) REFERENCES `specializations` (`specialization_id`) ON UPDATE CASCADE,
   CONSTRAINT `fk_doctor_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1348,4 +1348,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-10-16 16:48:00
+-- Dump completed on 2023-10-19 13:22:54

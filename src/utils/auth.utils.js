@@ -6,6 +6,7 @@ const {
   adminJwtSecret,
   jwtIssuer,
   jwtAudience,
+  jwtAdminAudience,
 } = require("../config/default.config");
 
 const hashUsersPassword = async (password) => {
@@ -42,7 +43,7 @@ const generateAdminJwtAccessToken = (admin) => {
   try {
     return jwt.sign(admin, adminJwtSecret, {
       issuer: jwtIssuer,
-      audience: "admin.kenecare.com",
+      audience: jwtAdminAudience,
       expiresIn: "1d",
     });
   } catch (error) {

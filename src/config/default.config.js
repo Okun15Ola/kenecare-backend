@@ -23,6 +23,7 @@ module.exports = {
   adminJwtSecret: env.ADMINS_JWT_SECRET,
   jwtIssuer: env.JWT_ISSUER,
   jwtAudience: env.JWT_AUDIENCE,
+  jwtAdminAudience: env.JWT_ADMIN_AUDIENCE,
   twilioAccountSID: env.TWILIO_ACCOUNT_SID,
   twilioAuthToken: env.TWILIO_AUTH_TOKEN,
   twilioPhoneNumber: env.TWILIO_PHONE_NUMBER,

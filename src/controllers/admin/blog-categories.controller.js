@@ -1,6 +1,6 @@
 const {
   getBlogCategories,
-  getBlogCategoryBy,
+  getBlogCategory,
   createBlogCategory,
   updateBlogCategory,
   updateBlogCategoryStatus,
@@ -21,7 +21,7 @@ exports.GetBlogCategoriesController = async (req, res, next) => {
 exports.GetBlogCategoryByIDController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    const response = await getBlogCategoryBy(id);
+    const response = await getBlogCategory(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

@@ -1,7 +1,7 @@
 const { connectionPool } = require("./db.connection");
 
 exports.getAllBlogs = () => {
-  const sql = "SELECT * FROM blogs ORDER BY id DESC;";
+  const sql = "SELECT * FROM blogs;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, (error, results) => {
       if (error) return reject(error);
@@ -11,27 +11,27 @@ exports.getAllBlogs = () => {
   });
 };
 
-exports.getBlogById = (blogId) => {
-  const sql = "SELECT * FROM blogs WHERE id = ? LIMIT 1";
+exports.getBlogById = (id) => {
+  const sql = "SELECT * FROM blogs WHERE blog_id = ? LIMIT 1";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [blogId], (error, results) => {
+    connectionPool.query(sql, [id], (error, results) => {
       if (error) return reject(error);
 
-      return resolve(results);
+      return resolve(results[0]);
     });
   });
 };
 
-exports.createNewBlog = (blog = {}) => {
-  const { categoryId, name, description, image, tags } = blog;
+exports.createNewBlog = (blog) => {
+  const { category, title, content, image, tags,featured,inputtedBy } = blog;
   const sql =
-    "INSERT INTO blog (categorty_id, name, description, image, tags) VALUES (?,?,?,?,?)";
+    "INSERT INTO blogs (blog_category_id, title, description, image, tags,is_featured, inputted_by) VALUES (?,?,?,?,?,?,?)";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [categoryId, name, description, image, tags],
+      [category, title, content, image, tags,featured,inputtedBy],
       (error, results) => {
         if (error) return reject(error);
 
@@ -41,15 +41,15 @@ exports.createNewBlog = (blog = {}) => {
   });
 };
 
-exports.updateBlogById = (blogId, updatedBlog) => {
-  const { categoryId, name, description, image, tags } = updatedBlog;
+exports.updateBlogById = ({id, blog}) => {
+  const { category, title, content, image, tags,featured } = blog;
   const sql =
-    "UPDATE blog SET category_id = ?, name = ?, description = ?, image = ?, tags = ? WHERE id = ?";
+    "UPDATE blogs SET blog_category_id = ?, title = ?, description = ?, image = ?, tags = ?, is_featured = ? WHERE blog_id = ?";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [categoryId, name, description, image, tags, blogId],
+      [category, title, content, image, tags,featured, id],
       (error, results) => {
         if (error) return reject(error);
 
@@ -59,22 +59,33 @@ exports.updateBlogById = (blogId, updatedBlog) => {
   });
 };
 
-exports.updateBlogStatus = (blogId, updatedStatus) => {
-  const sql = "UPDATE blog SET status = ? WHERE id = ?";
+exports.updateBlogStatusById = ({id, status}) => {
+  const sql = "UPDATE blogs SET is_active = ? WHERE blog_id = ?";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [updatedStatus, blogId], (error, results) => {
+    connectionPool.query(sql, [status,id], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);
     });
   });
 };
-exports.deleteBlogById = (blogId) => {
-  const sql = "DELETE FROM blog WHERE id = ? ";
+exports.updateBlogFeaturedById = ({id, status}) => {
+  const sql = "UPDATE blogs SET is_featured = ? WHERE blog_id = ?";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [blogId], (error, results) => {
+    connectionPool.query(sql, [status,id], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results);
+    });
+  });
+};
+exports.deleteBlogById = (id) => {
+  const sql = "DELETE FROM blogs WHERE blog_id = ? ";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [id], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);

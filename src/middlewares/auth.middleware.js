@@ -1,90 +1,83 @@
 const jwt = require("jsonwebtoken");
-const Response = require("../utils/responses.utils");
+const Response = require("../utils/response.utils");
+const {patientJwtSecret,adminJwtSecret,jwtAudience,jwtAdminAudience,jwtIssuer} = require("../config/default.config");
+const { STATUS } = require("../utils/enum.utils");
 
-const requireAuth = async (req, res, next) => {
+
+
+const getAuthToken = (req) => {
+  const authorizationHeader = req.headers["authorization"];
+  
+  if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = authorizationHeader.split(" ")[1];
+  return token || null;
+};
+
+const requireUserAuth = async (req, res, next) => {
   try {
-    if (req.headers["authorization"]) {
-      const authorization = req.headers["authorization"].split(" ")[0];
-      const token = req.headers["authorization"].split(" ")[1];
-      if (authorization !== "Bearer") {
-        return res
+    const token = getAuthToken(req)
+    
+    if (!token) {
+      return res
           .status(400)
-          .json(Response.badRequest("Authentication Error!", null));
-      }
-
-      if (!token) {
-        return res
-          .status(400)
-          .json(Response.badRequest("Authentication Error!", null));
-      }
-
-      const decoded = await jwt.verify(
+          .json({message:"Bad Request"});
+    }
+      const decoded =  jwt.verify(
         token,
-        process.env.JWT_ACCESS_TOKEN_SECRET,
-        {}
+        patientJwtSecret,
+        {audience:jwtAudience,issuer:jwtIssuer}
       );
+    
+      console.log(decoded);
+      // return
 
-      req.user = {
-        id: decoded.sub,
-        admin: decoded.admin,
-      };
+      // req.user = {
+      //   id: decoded.sub,
+      //   admin: decoded.admin,
+      // };
       next();
-    } else {
-      return res
-        .status(400)
-        .json(Response.badRequest("Authentication Error!", null));
-    }
-  } catch (err) {
-    if (err.message === "jwt expired") {
-      return res
-        .status(401)
-        .json(Response.unAuthorized("Session Expired. Login Again!", null));
-    }
-    res.status(400).json(Response.badRequest("Authentication Error!", err));
+
+  } catch (error) {
+    console.error(error)
+    return res.status(400).json(Response.BAD_REQUEST({message:"Authentication Failed! Please Try Again"})); 
   }
 };
 
-const requireAdmin = async (req, res, next) => {
+const requireAdminAuth = async (req, res, next) => {
   try {
-    if (req.headers["authorization"]) {
-      const authorization = req.headers["authorization"].split(" ")[0];
-      const token = req.headers["authorization"].split(" ")[1];
-      if (authorization !== "Bearer")
-        return res
+    const token = getAuthToken(req)
+    
+    if (!token) {
+      return res
           .status(400)
-          .json(Response.badRequest("Authentication Error!", null));
+          .json(Response.BAD_REQUEST({message:"Authentication Error!"}));
+    }
 
-      if (!token) {
-        return res
-          .status(400)
-          .json(Response.badRequest("Authentication Error!", null));
-      }
-
-      const decoded = await jwt.verify(
+    const decoded =  jwt.verify(
         token,
-        process.env.JWT_ACCESS_TOKEN_SECRET,
-        {}
-      );
+        adminJwtSecret,
+        {audience:jwtAdminAudience,issuer:jwtIssuer}
+    );
+    
+      const {sub,actSts} = decoded
 
-      const { admin } = decoded;
-      if (!admin) {
+      
+      if (actSts !== STATUS.ACTIVE) {
         return res
           .status(401)
-          .json(Response.unAuthorized("UnAuthorized Access", null));
+          .json(Response.UNAUTHORIZED({message:"Account Disabled.Please Contact Support"}));
+      }
+    
+      req.user = {
+        id: sub,
       }
       next();
-    } else {
-      return res
-        .status(401)
-        .json(Response.unAuthorized("UnAuthorized Access", null));
-    }
-  } catch (err) {
-    if (err.message === "jwt expired") {
-      return res
-        .status(401)
-        .json(Response.unAuthorized("Session Expired. Login Again!", null));
-    }
-    res.status(400).json(Response.badRequest("Authentication Error!", err));
+  } catch (error) {
+     console.error(error)
+    return res.status(400).json(Response.BAD_REQUEST({message:"Authentication Failed! Please Try Again"})); 
   }
 };
 
@@ -115,6 +108,6 @@ const requireUser = async (req, res, next) => {
 };
 
 module.exports = {
-  requireAuth,
-  requireAdmin,
+  requireUserAuth,
+   requireAdminAuth,
 };

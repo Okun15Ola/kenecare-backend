@@ -131,12 +131,8 @@ exports.loginAdmin = async (admin) => {
     });
 
     const accessToken = generateAdminJwtAccessToken({
-      adminId,
-      fullname,
-      mobileNumber,
-      email,
-      isOnline: STATUS.ACTIVE,
-      accountActive,
+      sub:adminId,
+      actSts:accountActive,
     });
 
     return { message: "Admin Login Successful", data: accessToken };
