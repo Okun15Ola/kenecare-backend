@@ -156,22 +156,6 @@ exports.reset_password = (req, res, next) => {
     error: req.flash("error"),
     success: req.flash("success"),
   });
-  const token = req.params.key;
-  let sql = "SELECT * FROM admin WHERE token = " + token + " LIMIT 1";
-  connectPool.query(sql, (error, results, fields) => {
-    if (error) {
-      req.flash("error", "Try Again...Your key is invalid or expired.");
-      return res.redirect("/forgot_password");
-    }
-    if (results.length > 0) {
-      res.render("reset_password", {
-        title: "Reset Password",
-        token: token,
-        error: req.flash("error"),
-        success: req.flash("success"),
-      });
-    }
-  });
 };
 
 exports.update_password = (req, res, next) => {
@@ -179,72 +163,5 @@ exports.update_password = (req, res, next) => {
     title: "Reset Password",
     token: body.token,
     err: err,
-  });
-  const { body } = req;
-
-  const validationRule = {
-    password: "required",
-    cpassword: "required",
-  };
-  const validationMsg = {
-    "required.password": "The Password field is required.",
-    "required.cpassword": "The Confirm Password  field is required.",
-  };
-  var token = body.token;
-
-  validator(req.body, validationRule, validationMsg, (err, status) => {
-    if (status) {
-      var token = body.token;
-      var password = body.password;
-      var cpassword = body.cpassword;
-      if (token != "") {
-        if (password == cpassword) {
-          connectPool.query(
-            "SELECT * FROM admin WHERE token = " + token,
-            (error, results, fields) => {
-              if (results.length > 0) {
-                const salt = genSaltSync(10);
-                password = hashSync(password, salt);
-                var fieldsToUpdate = {};
-                fieldsToUpdate["password"] = password;
-                fieldsToUpdate["token"] = "";
-                var sqlupdate =
-                  "UPDATE admin SET ? WHERE id  = " + results[0].id;
-                connectPool.query(
-                  sqlupdate,
-                  fieldsToUpdate,
-                  function (errors, results) {
-                    if (errors) {
-                      req.flash("error", errors);
-                      return res.redirect("/reset_password/" + token);
-                    }
-                    req.flash("success", "Password Update Successfully!");
-                    return res.redirect("/");
-                  }
-                );
-              } else {
-                req.flash(
-                  "error",
-                  "Try Again...Your key is invalid or expired."
-                );
-                return result.redirect("/forgot_password");
-              }
-            }
-          );
-        } else {
-          req.flash("error", "Password and Confirm Password did not match");
-          return res.redirect("/reset_password/" + token);
-        }
-      } else {
-        req.flash("error", "Try Again...Your key is invalid or expired.");
-        return result.redirect("/forgot_password");
-      }
-    } else {
-      res.render("reset_password", {
-        title: "Reset Password",
-        token: body.token,
-        err: err,
-      });
-    }
   });
 };

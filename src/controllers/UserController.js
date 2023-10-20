@@ -8,22 +8,6 @@ exports.view_user = (req, res, next) => {
     success: req.flash("success"),
     error: req.flash("error"),
   });
-  // connectPool.query(
-  //           'select * from user where type=1 order by id DESC', (error, [], fields) => {
-  // 		if (error) {
-  // 			return res.render('view_user', {
-  // 				title: 'Manage User',
-  // 				error:error,
-  // 				data: []
-  // 			});
-  // 		}
-  // 		res.render("view_user", {
-  // 			title: 'User',
-  // 			data: [],
-  // 			success:req.flash('success'),
-  // 			error:req.flash('error'),
-  // 		});
-  //  });
 };
 
 exports.delete_user = (req, res) => {
@@ -59,24 +43,6 @@ exports.view_doctor = (req, res, next) => {
     success: req.flash("success"),
     error: req.flash("error"),
   });
-  // connectPool.query(
-  //   "select * from user where type=2 order by id DESC",
-  //   (error, [], fields) => {
-  //     if (error) {
-  //       return res.render("view_doctor", {
-  //         title: "Manage Doctor",
-  //         error: error,
-  //         data: [],
-  //       });
-  //     }
-  //     res.render("view_doctor", {
-  //       title: "Manage Doctor",
-  //       data: [],
-  //       success: req.flash("success"),
-  //       error: req.flash("error"),
-  //     });
-  //   }
-  // );
 };
 
 exports.delete_doctor = (req, res) => {

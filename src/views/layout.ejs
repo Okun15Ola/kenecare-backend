@@ -1,5 +1,2 @@
-<%- include('common/head') %> <% if ((typeof isLoggedIn !=="undefined" ) &&
-isLoggedIn===true) { %> <%- include('admin/admin-navbar') %>
-
-<section class="admin-section"><%- body %></section>
-<% } else { %> <%- body %> <%}%> <%- include('common/footer') %>
+<%- include('partials/header') %> <%- include('partials/sidebar') %> <%- body %>
+<%- include('partials/footer') %>

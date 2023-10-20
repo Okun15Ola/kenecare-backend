@@ -1,321 +1,339 @@
-<!DOCTYPE html>
-<html lang="en">
+<div class="wrapper theme-2-active navbar-top-light">
+  <!-- Main Content -->
+  <div class="page-wrapper">
+    <div class="container">
+      <!-- Row -->
+      <div class="row heading-bg">
+        <!-- Breadcrumb -->
+        <div class="col-lg-12 col-sm-12 col-md-12 col-xs-12">
+          <ol class="breadcrumb">
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li class="active"><span>Doctor</span></li>
+          </ol>
+        </div>
+        <!-- /Breadcrumb -->
+      </div>
+      <!-- /Row -->
+      <div class="row">
+        <div class="col-md-12">
+          <%- include('./common/errors.ejs') %>
+          <div class="panel panel-default border-panel card-view">
+            <div class="panel-heading">
+              <h6 class="panel-title txt-dark">Doctor</h6>
 
-<head>
-    <%- include('./common/head.ejs') %>
-        <link href="<%= BASE_URL %>public/admin/assets/vendors/bower_components/datatables/media/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css">
-</head>
-
-<body>
-    <!-- Preloader -->
-    <div class="preloader-it">
-        <div class="la-anim-1"></div>
-    </div>
-    <!-- /Preloader -->
-    <div class="wrapper theme-2-active navbar-top-light">
-        <!-- Top Menu Items -->
-
-        <!-- /Top Menu Items -->
-        <%- include('./common/header.ejs') %>
-            <!-- Left Sidebar Menu -->
-
-            <!-- /Left Sidebar Menu -->
-            <%- include('./common/sidebar.ejs') %>
-
-                <!-- Main Content -->
-                <div class="page-wrapper">
-                    <div class="container">
-                        <!-- Row -->
-                        <div class="row heading-bg">
-                            <!-- Breadcrumb -->
-                            <div class="col-lg-12 col-sm-12 col-md-12 col-xs-12">
-                                <ol class="breadcrumb">
-                                    <li><a href="<%= BASE_URL %>dashboard">Dashboard</a></li>
-                                    <li class="active"><span>Doctor</span></li>
-                                </ol>
-                            </div>
-                            <!-- /Breadcrumb -->
-                        </div>
-                        <!-- /Row -->
-                        <div class="row">
-                            <div class="col-md-12">
-                                <%- include('./common/errors.ejs') %>
-                                    <div class="panel panel-default border-panel card-view">
-                                        <div class="panel-heading">
-
-                                            <h6 class="panel-title txt-dark">Doctor</h6>
-
-                                            <div class="clearfix"></div>
-                                        </div>
-                                        <div class="panel-wrapper collapse in">
-                                            <div class="panel-body">
-                                                <div class="table-wrap">
-                                                    <div class="table-responsive">
-                                                        <table id="datable_1" class="table table-hover display  pb-30">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>No</th>
-                                                                    <th>Name</th>
-                                                                    <th>Mobile No</th>
-                                                                    <th>Document Verification Status</th>
-                                                                    <th>Document Rejection Reason</th>
-                                                                    <th>Approval Status</th>
-                                                                    <th>Update Approval</th>
-                                                                    <th>Action</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <% var i=1; data.forEach(function(value){ %>
-                                                                    <tr>
-                                                                        <td>
-                                                                            <%= i %>
-                                                                        </td>
-                                                                        <td>
-                                                                            <a href="javascript:;" class="viewDrDetails" data-placement="top" data-toggle="tooltip" class="tooltips" data-original-title="View Details" data-id="<%= value.id %>"><%= value.name %></a>
-                                                                        </td>
-                                                                        <td>
-                                                                            <%= value.mobile_no %>
-                                                                        </td>
-                                                                        <td>
-                                                                            <%if (value.verification_status_by_admin == 1) { 
-                                                                                var badge = 'success';
-                                                                                var approval_status = 'Approved';
-                                                                            }else if (value.verification_status_by_admin == 2){
-                                                                                var badge = 'danger';
-                                                                                var approval_status = 'Rejected';
-                                                                            }else if(value.verification_status_by_admin == 3){
-                                                                                var badge = 'warning';
-                                                                                var approval_status = 'Waiting For Approval';
-                                                                            }%>
-                                                                                <span class="badge badge-<%= badge %>"><%= approval_status %></span>
-                                                                        </td>
-                                                                        <td>
-                                                                            <%= value.verification_rejection_reason %>
-                                                                        </td>
-                                                                        <td>
-                                                                            <%if (value.doctor_approval_status == 1) { 
-                                                                                var badge_apr = 'success';
-                                                                                var auth_approval_status = 'Approved';
-                                                                            }else if (value.doctor_approval_status == 2){
-                                                                                var badge_apr = 'danger';
-                                                                                var auth_approval_status = 'Denied';
-                                                                            }else if(value.doctor_approval_status == 0){
-                                                                                var badge_apr = 'warning';
-                                                                                var auth_approval_status = 'Pending';
-                                                                            }%>
-                                                                                <span class="badge badge-<%= badge_apr %>"><%= auth_approval_status %></span>
-                                                                        </td>
-                                                                        <td>
-                                                                            <div class="dropdown">
-                                                                                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Approval Status
-                                                                                <span class="caret"></span></button>
-                                                                                <ul class="dropdown-menu">
-                                                                                    <%if (value.doctor_approval_status == 1) { %>
-                                                                                        <li><a href="javascript:;" class="changeAuthApprovalStatus" data-status="2" data-uid="<%= value.id %>">Deny</a></li>
-                                                                                    <% }else if (value.doctor_approval_status == 2){ %>
-                                                                                        <li><a href="javascript:;" class="changeAuthApprovalStatus" data-status="1" data-uid="<%= value.id %>">Approve</a></li>
-                                                                                    <% }else if(value.doctor_approval_status == 0){ %>
-                                                                                        <li><a href="javascript:;" class="changeAuthApprovalStatus" data-status="1" data-uid="<%= value.id %>">Approve</a></li>
-                                                                                        <li><a href="javascript:;" class="changeAuthApprovalStatus" data-status="2" data-uid="<%= value.id %>">Deny</a></li>
-                                                                                    <% } %>
-                                                                                </ul>
-                                                                            </div>
-                                                                        </td>
-                                                                        <% var deleteUrl = BASE_URL+'delete_doctor/'+value.id; %>
-                                                                            <td>
-                                                                                <!-- <a href="<%= deleteUrl %>" class="btn btn-dark" data-placement="top" data-toggle="tooltip" class="tooltips" data-original-title="Edit"><i class="fa fa-trash"></i></a> -->
-                                                                                <a href="javascript:;" class="btn btn-warning viewDocs" data-placement="top" data-toggle="tooltip" class="tooltips" data-original-title="View Documents" data-id="<%= value.id %>"><i class="fa fa-eye"></i></a>
-                                                                            </td>
-                                                                    </tr>
-                                                                    <%  i++; }) %>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <%- include('./common/footer.ejs') %>
-
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-wrapper collapse in">
+              <div class="panel-body">
+                <div class="table-wrap">
+                  <div class="table-responsive">
+                    <table
+                      id="datable_1"
+                      class="table table-hover display pb-30"
+                    >
+                      <thead>
+                        <tr>
+                          <th>No</th>
+                          <th>Name</th>
+                          <th>Mobile No</th>
+                          <th>Document Verification Status</th>
+                          <th>Document Rejection Reason</th>
+                          <th>Approval Status</th>
+                          <th>Update Approval</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
                 </div>
-                <!-- /Main Content -->
-
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- /#wrapper -->
+  </div>
+  <!-- /Main Content -->
+</div>
 
-    <%- include('./common/footerjs.ejs') %>
-        <script src="<%= BASE_URL %>public/admin/assets/vendors/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
-        <script src="<%= BASE_URL %>public/admin/assets/dist/js/dataTables-data.js"></script>
-        <script>
-            $(document).on('click', '.viewDocs', function() {
-                var id = $(this).attr('data-id');
-                jQuery.ajax({
-                    type: "POST",
-                    url: "/getDocProfileVerificationData",
-                    data: {
-                        "user_id": id
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        var pvHtml = '';
-                        if (response.status) {
-                            pvHtml += '<input type="hidden" id="uid" value="' + id + '" /><div class="modal-body">';
-                            pvHtml += '<div class="row">';
-                            response.data.forEach(value => {
-                                var doc_ext = value.document.split('.').pop();
-                                pvHtml += '<div class="col-md-4 pvImgCol">';
-                                if(doc_ext == 'jpg' || doc_ext == 'jpeg' || doc_ext == 'png'){
-                                    pvHtml += '<img src="' + value.document + '" class="img-responsive pvImg" />';
-                                }else if(doc_ext == 'pdf'){
-                                    pvHtml += '<i class="fa fa-file-pdf-o" style="font-size: 150px;"></i>';
-                                }else if(doc_ext == 'doc' || doc_ext == 'docx'){
-                                    pvHtml += '<i class="fa fa-file-word-o" style="font-size: 150px;"></i>';
-                                }
-                                pvHtml += '<div class="text-center" style="margin-top: 5px"><a href="' + value.document + '" target="_blank" class="pull-left text-primary"><i class="fa fa-eye"></i> View</a> <a href="' + value.document + '" class="pull-right ml-1 text-primary" download><i class="fa fa-download"></i> Download</a></div></div>';
-                            });
-                            pvHtml += '</div><div id="rejection_area"></div></div>';
-                            if (response.approval_status == 3) {
-                                pvHtml += '<div class="modal-footer" id="approval_area"> <button type="button" class="btn btn-success updateApprovalStatus" data-type="1">Approve <i class="fa fa-check"></i></button> <button type="button" class="btn btn-danger updateApprovalStatus" data-type="2">Reject <i class="fa fa-times"></i></button> </div>';
-                            }
-                        } else {
-                            pvHtml += '<div class="modal-body"> <div class="row"><div class="col-md-12 text-center">No documents found</div></div>';
-                        }
-                        $('#commonMdlTitle').html('Profile Verification Docs');
-                        $('#commonMdlBody').html(pvHtml);
-                        $('#commonModal').modal('show');
-                    }
-                });
-            });
+// //
+<script>
+  //   //   $(document).on("click", ".viewDocs", function () {
+  //   //     var id = $(this).attr("data-id");
+  //   //     jQuery.ajax({
+  //   //       type: "POST",
+  //   //       url: "/getDocProfileVerificationData",
+  //   //       data: {
+  //   //         user_id: id,
+  //   //       },
+  //   //       dataType: "json",
+  //   //       success: function (response) {
+  //   //         var pvHtml = "";
+  //   //         if (response.status) {
+  //   //           pvHtml +=
+  //   //             '<input type="hidden" id="uid" value="' +
+  //   //             id +
+  //   //             '" /><div class="modal-body">';
+  //   //           pvHtml += '<div class="row">';
+  //   //           response.data.forEach((value) => {
+  //   //             var doc_ext = value.document.split(".").pop();
+  //   //             pvHtml += '<div class="col-md-4 pvImgCol">';
+  //   //             if (doc_ext == "jpg" || doc_ext == "jpeg" || doc_ext == "png") {
+  //   //               pvHtml +=
+  //   //                 '<img src="' +
+  //   //                 value.document +
+  //   //                 '" class="img-responsive pvImg" />';
+  //   //             } else if (doc_ext == "pdf") {
+  //   //               pvHtml +=
+  //   //                 '<i class="fa fa-file-pdf-o" style="font-size: 150px;"></i>';
+  //   //             } else if (doc_ext == "doc" || doc_ext == "docx") {
+  //   //               pvHtml +=
+  //   //                 '<i class="fa fa-file-word-o" style="font-size: 150px;"></i>';
+  //   //             }
+  //   //             pvHtml +=
+  //   //               '<div class="text-center" style="margin-top: 5px"><a href="' +
+  //   //               value.document +
+  //   //               '" target="_blank" class="pull-left text-primary"><i class="fa fa-eye"></i> View</a> <a href="' +
+  //   //               value.document +
+  //   //               '" class="pull-right ml-1 text-primary" download><i class="fa fa-download"></i> Download</a></div></div>';
+  //   //           });
+  //   //           pvHtml += '</div><div id="rejection_area"></div></div>';
+  //   //           if (response.approval_status == 3) {
+  //   //             pvHtml +=
+  //   //               '<div class="modal-footer" id="approval_area"> <button type="button" class="btn btn-success updateApprovalStatus" data-type="1">Approve <i class="fa fa-check"></i></button> <button type="button" class="btn btn-danger updateApprovalStatus" data-type="2">Reject <i class="fa fa-times"></i></button> </div>';
+  //   //           }
+  //   //         } else {
+  //   //           pvHtml +=
+  //   //             '<div class="modal-body"> <div class="row"><div class="col-md-12 text-center">No documents found</div></div>';
+  //   //         }
+  //   //         $("#commonMdlTitle").html("Profile Verification Docs");
+  //   //         $("#commonMdlBody").html(pvHtml);
+  //   //         $("#commonModal").modal("show");
+  //   //       },
+  //   //     });
+  //   //   });
 
-            $(document).on('click', '.updateApprovalStatus', function() {
-                var type = $(this).attr('data-type');
-                var uid = $('#uid').val();
-                var is_validated = true;
-                if (type == 2) {
-                    var rejectionData = $('#rejection_area').html();
-                    if (rejectionData == '') {
-                        $('#rejection_area').html('<div class="row"><div class="col-md-12"><textarea class="form-control" id="rejection_reason" rows="3" placeholder="Enter Rejection Reason"></textarea></div></div>');
-                    } else {
-                        $('#rejection_area').show();
-                    }
-                    var rejection_reason = $('#rejection_reason').val();
-                    if (rejection_reason == '') {
-                        is_validated = false;
-                    }
-                } else if (type == 1) {
-                    $('#rejection_area').hide();
-                }
-                if (is_validated == true) {
-                    var doConfirm = confirm('Are you sure you want to proceed?');
-                    if (doConfirm) {
-                        jQuery.ajax({
-                            type: "POST",
-                            url: "/updateApprovalStatus",
-                            data: {
-                                uid: uid,
-                                type: type,
-                                rejection_reason: rejection_reason
-                            },
-                            dataType: 'json',
-                            success: function(response) {
-                                if (response.status) {
-                                    location.reload();
-                                }
-                            }
-                        });
-                    }
-                }
-            });
+  //   //   $(document).on("click", ".updateApprovalStatus", function () {
+  //   //     var type = $(this).attr("data-type");
+  //   //     var uid = $("#uid").val();
+  //   //     var is_validated = true;
+  //   //     if (type == 2) {
+  //   //       var rejectionData = $("#rejection_area").html();
+  //   //       if (rejectionData == "") {
+  //   //         $("#rejection_area").html(
+  //   //           '<div class="row"><div class="col-md-12"><textarea class="form-control" id="rejection_reason" rows="3" placeholder="Enter Rejection Reason"></textarea></div></div>'
+  //   //         );
+  //   //       } else {
+  //   //         $("#rejection_area").show();
+  //   //       }
+  //   //       var rejection_reason = $("#rejection_reason").val();
+  //   //       if (rejection_reason == "") {
+  //   //         is_validated = false;
+  //   //       }
+  //   //     } else if (type == 1) {
+  //   //       $("#rejection_area").hide();
+  //   //     }
+  //   //     if (is_validated == true) {
+  //   //       var doConfirm = confirm("Are you sure you want to proceed?");
+  //   //       if (doConfirm) {
+  //   //         jQuery.ajax({
+  //   //           type: "POST",
+  //   //           url: "/updateApprovalStatus",
+  //   //           data: {
+  //   //             uid: uid,
+  //   //             type: type,
+  //   //             rejection_reason: rejection_reason,
+  //   //           },
+  //   //           dataType: "json",
+  //   //           success: function (response) {
+  //   //             if (response.status) {
+  //   //               location.reload();
+  //   //             }
+  //   //           },
+  //   //         });
+  //   //       }
+  //   //     }
+  //   //   });
 
-            $(document).on('click', '.changeAuthApprovalStatus', function() {
-                var status = $(this).attr('data-status');
-                var uid = $(this).attr('data-uid');
-                var doConfirm = confirm('Are you sure you want to proceed?');
-                if (doConfirm) {
-                    jQuery.ajax({
-                        type: "POST",
-                        url: "/updateDrAuthApprovalStatus",
-                        data: {
-                            uid: uid,
-                            status: status
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.status) {
-                                location.reload();
-                            }
-                        }
-                    });
-                }
-            });
-            $(document).on('click', '.viewDrDetails', function() {
-                var id = $(this).attr('data-id');
-                jQuery.ajax({
-                    type: "POST",
-                    url: "/getDoctorFullDetails",
-                    data: {
-                        "user_id": id
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        console.log(response);
-                        var commonMdlHtml = '';
-                        if (response.status === 0) {
-                            commonMdlHtml += '<div class="row"><div class="col-md-12 text-center">No data found</div>';
-                        } else {
-                            var doctorData = response.data;
-                            commonMdlHtml += '<div class="modal-body">';
-                                commonMdlHtml += '<div class="row"><div class="col-md-12"><img class="avatar-img rounded-circle" src='+doctorData.image+' alt="User Image" width="150px" /></div></div>';
-                            
-                                commonMdlHtml += '<div class="row mt-3" style="line-height: 2;">';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Doctor Name: </strong></label> '+((doctorData.name!==null) ? doctorData.name : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Mobile No: </strong></label> '+((doctorData.mobile_no!==null) ? doctorData.mobile_no : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Email: </strong></label> '+((doctorData.email!==null) ? doctorData.email : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Gender: </strong></label> '+((doctorData.gender!==null) ? doctorData.gender : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Position: </strong></label> '+((doctorData.position!==null) ? doctorData.position : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Specialty: </strong></label> '+((doctorData.specialty!==null) ? doctorData.specialty : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>City: </strong></label> '+((doctorData.city!==null) ? doctorData.city : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Registration Number: </strong></label> '+doctorData.registration_number+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Registration Council: </strong></label> '+((doctorData.registration_council!==null) ? doctorData.registration_council : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Registration Year: </strong></label> '+((doctorData.registration_year!==null) ? doctorData.registration_year : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Degree: </strong></label> '+((doctorData.degree!==null) ? doctorData.degree : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>College/Institute: </strong></label> '+((doctorData.college!==null) ? doctorData.college : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Year of completion: </strong></label> '+((doctorData.year_of_completion!==null) ? doctorData.year_of_completion : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Year of experience: </strong></label> '+((doctorData.year_of_experience!==null) ? doctorData.year_of_experience : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Morning Start Time: </strong></label> '+((doctorData.doc_morning_start_time!==null) ? doctorData.doc_morning_start_time : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Morning End Time: </strong></label> '+((doctorData.doc_morning_end_time!==null) ? doctorData.doc_morning_end_time : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Evening Start Time: </strong></label> '+((doctorData.doc_evening_start_time!==null) ? doctorData.doc_evening_start_time : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Evening End Time: </strong></label> '+((doctorData.doc_evening_end_time!==null) ? doctorData.doc_evening_end_time : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Consultation Fee: </strong></label> '+doctorData.system_currency+' '+doctorData.consultation_fee+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Hospital Name: </strong></label> '+((doctorData.hospital_name!==null) ? doctorData.hospital_name : "")+'</div>';
-                                    commonMdlHtml += '<div class="col-md-4"><label class="mr-5"><strong>Not available on: </strong></label> '+((doctorData.doctor_not_available_on!==null) ? doctorData.doctor_not_available_on : "")+'</div>';
-                                    commonMdlHtml += '</div>';
-                                commonMdlHtml += '<div class="row mt-5"><div class="col-md-12"><h4>Profile Verification Docs:</h4></div></div>';
-                                commonMdlHtml += '<div class="row mb-5">';
-                                    if(doctorData.profile_verification_docs.length > 0){
-                                        doctorData.profile_verification_docs.forEach(value => {
-                                            var doc_name = value.document.split('/').pop();
-                                            commonMdlHtml += '<div class="col-md-3 mb-2"><a class="btn btn-primary" href="'+value.document+'" target="_blank"><i className="fa fa-paperclip"></i> '+doc_name+'</a></div>';
-                                        });
-                                    }else{
-                                        commonMdlHtml += '<div class="col-md-12">No documents found.</div>';
-                                    }
-                                commonMdlHtml += '</div>';
-                            commonMdlHtml += '</div>';
-                        }
-                        $('#commonMdlTitle').html('View Details');
-                        $('#commonMdlBody').html(commonMdlHtml);
-                        $('#commonModal').modal('show');
-                        $('.modal-dialog').width('80%');
-                    }
-                });
-            });
-        </script>
-        
-</body>
+  //   //   $(document).on("click", ".changeAuthApprovalStatus", function () {
+  //   //     var status = $(this).attr("data-status");
+  //   //     var uid = $(this).attr("data-uid");
+  //   //     var doConfirm = confirm("Are you sure you want to proceed?");
+  //   //     if (doConfirm) {
+  //   //       jQuery.ajax({
+  //   //         type: "POST",
+  //   //         url: "/updateDrAuthApprovalStatus",
+  //   //         data: {
+  //   //           uid: uid,
+  //   //           status: status,
+  //   //         },
+  //   //         dataType: "json",
+  //   //         success: function (response) {
+  //   //           if (response.status) {
+  //   //             location.reload();
+  //   //           }
+  //   //         },
+  //   //       });
+  //   //     }
+  //   //   });
+  //   //   $(document).on("click", ".viewDrDetails", function () {
+  //   //     var id = $(this).attr("data-id");
+  //   //     jQuery.ajax({
+  //   //       type: "POST",
+  //   //       url: "/getDoctorFullDetails",
+  //   //       data: {
+  //   //         user_id: id,
+  //   //       },
+  //   //       dataType: "json",
+  //   //       success: function (response) {
+  //   //         console.log(response);
+  //   //         var commonMdlHtml = "";
+  //   //         if (response.status === 0) {
+  //   //           commonMdlHtml +=
+  //   //             '<div class="row"><div class="col-md-12 text-center">No data found</div>';
+  //   //         } else {
+  //   //           var doctorData = response.data;
+  //   //           commonMdlHtml += '<div class="modal-body">';
+  //   //           commonMdlHtml +=
+  //   //             '<div class="row"><div class="col-md-12"><img class="avatar-img rounded-circle" src=' +
+  //   //             doctorData.image +
+  //   //             ' alt="User Image" width="150px" /></div></div>';
 
-</html>
+  //   //           commonMdlHtml += '<div class="row mt-3" style="line-height: 2;">';
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Doctor Name: </strong></label> ' +
+  //   //             (doctorData.name !== null ? doctorData.name : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Mobile No: </strong></label> ' +
+  //   //             (doctorData.mobile_no !== null ? doctorData.mobile_no : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Email: </strong></label> ' +
+  //   //             (doctorData.email !== null ? doctorData.email : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Gender: </strong></label> ' +
+  //   //             (doctorData.gender !== null ? doctorData.gender : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Position: </strong></label> ' +
+  //   //             (doctorData.position !== null ? doctorData.position : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Specialty: </strong></label> ' +
+  //   //             (doctorData.specialty !== null ? doctorData.specialty : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>City: </strong></label> ' +
+  //   //             (doctorData.city !== null ? doctorData.city : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Registration Number: </strong></label> ' +
+  //   //             doctorData.registration_number +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Registration Council: </strong></label> ' +
+  //   //             (doctorData.registration_council !== null
+  //   //               ? doctorData.registration_council
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Registration Year: </strong></label> ' +
+  //   //             (doctorData.registration_year !== null
+  //   //               ? doctorData.registration_year
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Degree: </strong></label> ' +
+  //   //             (doctorData.degree !== null ? doctorData.degree : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>College/Institute: </strong></label> ' +
+  //   //             (doctorData.college !== null ? doctorData.college : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Year of completion: </strong></label> ' +
+  //   //             (doctorData.year_of_completion !== null
+  //   //               ? doctorData.year_of_completion
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Year of experience: </strong></label> ' +
+  //   //             (doctorData.year_of_experience !== null
+  //   //               ? doctorData.year_of_experience
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Morning Start Time: </strong></label> ' +
+  //   //             (doctorData.doc_morning_start_time !== null
+  //   //               ? doctorData.doc_morning_start_time
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Morning End Time: </strong></label> ' +
+  //   //             (doctorData.doc_morning_end_time !== null
+  //   //               ? doctorData.doc_morning_end_time
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Evening Start Time: </strong></label> ' +
+  //   //             (doctorData.doc_evening_start_time !== null
+  //   //               ? doctorData.doc_evening_start_time
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Evening End Time: </strong></label> ' +
+  //   //             (doctorData.doc_evening_end_time !== null
+  //   //               ? doctorData.doc_evening_end_time
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Consultation Fee: </strong></label> ' +
+  //   //             doctorData.system_currency +
+  //   //             " " +
+  //   //             doctorData.consultation_fee +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Hospital Name: </strong></label> ' +
+  //   //             (doctorData.hospital_name !== null
+  //   //               ? doctorData.hospital_name
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="col-md-4"><label class="mr-5"><strong>Not available on: </strong></label> ' +
+  //   //             (doctorData.doctor_not_available_on !== null
+  //   //               ? doctorData.doctor_not_available_on
+  //   //               : "") +
+  //   //             "</div>";
+  //   //           commonMdlHtml += "</div>";
+  //   //           commonMdlHtml +=
+  //   //             '<div class="row mt-5"><div class="col-md-12"><h4>Profile Verification Docs:</h4></div></div>';
+  //   //           commonMdlHtml += '<div class="row mb-5">';
+  //   //           if (doctorData.profile_verification_docs.length > 0) {
+  //   //             doctorData.profile_verification_docs.forEach((value) => {
+  //   //               var doc_name = value.document.split("/").pop();
+  //   //               commonMdlHtml +=
+  //   //                 '<div class="col-md-3 mb-2"><a class="btn btn-primary" href="' +
+  //   //                 value.document +
+  //   //                 '" target="_blank"><i className="fa fa-paperclip"></i> ' +
+  //   //                 doc_name +
+  //   //                 "</a></div>";
+  //   //             });
+  //   //           } else {
+  //   //             commonMdlHtml += '<div class="col-md-12">No documents found.</div>';
+  //   //           }
+  //   //           commonMdlHtml += "</div>";
+  //   //           commonMdlHtml += "</div>";
+  //   //         }
+  //   //         $("#commonMdlTitle").html("View Details");
+  //   //         $("#commonMdlBody").html(commonMdlHtml);
+  //   //         $("#commonModal").modal("show");
+  //   //         $(".modal-dialog").width("80%");
+  //   //       },
+  //   //     });
+  //   //   });
+  //   //
+  //
+</script>

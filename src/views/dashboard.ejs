@@ -1,261 +1,201 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<%- include('./common/head.ejs') %>
-</head>
+<div class="wrapper theme-2-active navbar-top-light">
+  <!-- Main Content -->
+  <div class="page-wrapper">
+    <div class="container pt-30">
+      <!-- Row -->
+      <div class="row dash-mb">
+        <div class="col-sm-3 col-xs-3">
+          <div class="neloop-box" style="cursor: pointer">
+            <div class="neloop-desc">
+              <p>Departments</p>
+              <h6><%= total_departments %></h6>
+            </div>
+            <div class="neloop-icon">
+              <i class="icon-grid data-right-rep-icon"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-3 col-xs-3">
+          <div class="neloop-box" style="cursor: pointer">
+            <div class="neloop-desc">
+              <p>Doctors</p>
+              <h6><%= total_doctors %></h6>
+            </div>
+            <div class="neloop-icon">
+              <i class="icon-user-follow data-right-rep-icon"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-3 col-xs-3">
+          <div class="neloop-box" style="cursor: pointer">
+            <div class="neloop-desc">
+              <p>Patients</p>
+              <h6><%= total_patients %></h6>
+            </div>
+            <div class="neloop-icon">
+              <i class="icon-user data-right-rep-icon"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-3 col-xs-3">
+          <div class="neloop-box" style="cursor: pointer">
+            <div class="neloop-desc">
+              <p>Appointments</p>
+              <h6><%= total_appointments %></h6>
+            </div>
+            <div class="neloop-icon">
+              <i class="icon-calender data-right-rep-icon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="panel panel-default border-panel card-view">
+            <div class="panel-heading">
+              <div class="pull-left">
+                <h6 class="panel-title txt-dark">Total Progress</h6>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-wrapper collapse in">
+              <div class="panel-body">
+                <canvas id="line-chart" width="800" height="450"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<body>
-	<!-- Preloader -->
-	<div class="preloader-it">
-		<div class="la-anim-1"></div>
-	</div>
-	<!-- /Preloader -->
-    <div class="wrapper theme-2-active navbar-top-light">
-		<!-- Top Menu Items -->
-			
-			<!-- /Top Menu Items -->
-			<%- include('./common/header.ejs') %>
-			<!-- Left Sidebar Menu -->
-			
-			<!-- /Left Sidebar Menu -->
-			<%- include('./common/sidebar.ejs') %>
-			
-        <!-- Main Content -->
-		<div class="page-wrapper">
-            <div class="container pt-30">
-				<!-- Row -->
-				<div class="row dash-mb">
-		<div class="col-sm-3 col-xs-3">
-			<div class="neloop-box" style="cursor: pointer;">
-				<div class="neloop-desc">
-					<p>Departments</p>
-					<h6> <%= total_departments %></h6>
-				</div>
-				<div class="neloop-icon"><i class="icon-grid data-right-rep-icon"></i></div>
-			</div>
-		</div>
-		<div class="col-sm-3 col-xs-3">
-			<div class="neloop-box" style="cursor: pointer;">
-				<div class="neloop-desc">
-					<p>Doctors</p>
-					<h6> <%= total_doctors %></h6>
-				</div>
-				<div class="neloop-icon"><i class="icon-user-follow data-right-rep-icon"></i></div>
-			</div>
-		</div>
-		<div class="col-sm-3 col-xs-3">
-			<div class="neloop-box" style="cursor: pointer;">
-				<div class="neloop-desc">
-					<p>Patients</p>
-					<h6> <%= total_patients %></h6>
-				</div>
-				<div class="neloop-icon"><i class="icon-user data-right-rep-icon"></i></div>
-			</div>
-		</div>
-		<div class="col-sm-3 col-xs-3">
-			<div class="neloop-box" style="cursor: pointer;">
-				<div class="neloop-desc">
-					<p>Appointments</p>
-					<h6> <%= total_appointments %></h6>
-				</div>
-				<div class="neloop-icon"><i class="icon-calender data-right-rep-icon"></i></div>
-			</div>
-		</div>
-	</div>
-	<div class="row">
-	<div class="col-lg-12">
-		<div class="panel panel-default border-panel card-view">
-			<div class="panel-heading">
-				<div class="pull-left">
-					<h6 class="panel-title txt-dark">Total Progress</h6>
-				</div>
-				<div class="clearfix"></div>
-			</div>
-			<div class="panel-wrapper collapse in">
-				<div class="panel-body">
-					<canvas id="line-chart" width="800" height="450"></canvas>	
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-
-<div class="row">
-	<div class="col-lg-12">
-		<div class="panel panel-default border-panel card-view">
-			<div class="panel-heading">
-				<div class="pull-left">
-					<h6 class="panel-title txt-dark">Total Revenue</h6>
-				</div>
-				<div class="clearfix"></div>
-			</div>
-			<div class="panel-wrapper collapse in">
-				<div class="panel-body">
-					<canvas id="total-revenue-chart" width="800" height="450"></canvas>	
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-<div class="row">
-	<div class="col-sm-8">
-		<div class="panel panel-default border-panel card-view panel-refresh">
-			<div class="refresh-container">
-				<div class="la-anim-1"></div>
-			</div>
-			<div class="panel-heading">
-				<div class="pull-left">
-					<h6 class="panel-title txt-dark">New Patients</h6>
-				</div>
-				<a class="btn pmd-btn-raised btn-primary pmd-ripple-effect btn-sm pull-right" href="<%= BASE_URL %>view_user">View
-                            All</a>
-				<div class="clearfix"></div>
-			</div>
-			<div class="panel-wrapper collapse in">
-				<div class="panel-body row pa-0">
-					<div class="table-wrap">
-						<div class="table-responsive">
-							<table cellspacing="0" cellpadding="0" class="table pmd-table pmd-table-card">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Name</th>
-                                    <th>Patient ID</th>
-                                    <th>Mobile No</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-								<% var i=1; patients.forEach(function(value){ %>
-									<tr>
-										<td data-title="No"><%= i %></td>
-										<td data-title="Name">
-											<div class="media align-items-center">
-												<img src="<%= value.patient_image %>" alt="Profile Image" class="pmd-avatar-list-img" width="40" height="40">
-												<div ><%= value.name %></div>
-											</div>
-										</td>
-										<td data-title="Patient ID">000<%= value.id %></td>
-										<td><%= value.mobile_no %></td>
-									</tr>
-								<%  i++; }) %>
-                            </tbody>
-                        </table>
-						</div>
-					</div>	
-				</div>	
-			</div>
-		</div>
-	</div>
-	<div class="col-sm-4">
-		<div class="panel panel-default border-panel card-view panel-refresh">
-<div class="refresh-container">
-	<div class="la-anim-1"></div>
-</div>
-<div class="panel-heading">
-	<div class="pull-left">
-		<h6 class="panel-title txt-dark">Doctors</h6>
-	</div>
-	<a class="btn pmd-btn-raised btn-primary pmd-ripple-effect btn-sm pull-right" href="<%= BASE_URL %>view_doctor">View
-				All</a>
-	<div class="clearfix"></div>
-</div>
-<div class="panel-wrapper collapse in">
-	<div class="panel-body row pa-0">
-		<div class="list-group pmd-list">
-			<% var i=1; doctors.forEach(function(value){ %>
-				<a class="list-group-item d-flex flex-row" href="javascript:void(0);">
-					<span class="pmd-avatar-list-img">
-						<img alt="40x40" data-src="holder.js/40x40" class="img-fluid" src="<%= value.doctor_image %>" data-holder-rendered="true">
-					</span>
-					<div>
-						<h5 class="pmd-list-title"><%= value.name %></h5>
-						<p class="pmd-list-subtitle"><%= value.specialty %></p>
-					</div>
-				</a>
-			<%  i++; }) %>
-		</div>
-	</div>	
-</div>
-</div>
-	</div>
-	
-</div>
-
-			</div>
-			
-			<%- include('./common/footer.ejs') %>
-			
-		</div>
-        <!-- /Main Content -->
-
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="panel panel-default border-panel card-view">
+            <div class="panel-heading">
+              <div class="pull-left">
+                <h6 class="panel-title txt-dark">Total Revenue</h6>
+              </div>
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-wrapper collapse in">
+              <div class="panel-body">
+                <canvas
+                  id="total-revenue-chart"
+                  width="800"
+                  height="450"
+                ></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-8">
+          <div class="panel panel-default border-panel card-view panel-refresh">
+            <div class="refresh-container">
+              <div class="la-anim-1"></div>
+            </div>
+            <div class="panel-heading">
+              <div class="pull-left">
+                <h6 class="panel-title txt-dark">New Patients</h6>
+              </div>
+              <a
+                class="btn pmd-btn-raised btn-primary pmd-ripple-effect btn-sm pull-right"
+                href="/view_user"
+                >View All</a
+              >
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-wrapper collapse in">
+              <div class="panel-body row pa-0">
+                <div class="table-wrap">
+                  <div class="table-responsive">
+                    <table
+                      cellspacing="0"
+                      cellpadding="0"
+                      class="table pmd-table pmd-table-card"
+                    >
+                      <thead>
+                        <tr>
+                          <th>No</th>
+                          <th>Name</th>
+                          <th>Patient ID</th>
+                          <th>Mobile No</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% var i=1; patients.forEach(function(value){ %>
+                        <tr>
+                          <td data-title="No"><%= i %></td>
+                          <td data-title="Name">
+                            <div class="media align-items-center">
+                              <img
+                                src="<%= value.patient_image %>"
+                                alt="Profile Image"
+                                class="pmd-avatar-list-img"
+                                width="40"
+                                height="40"
+                              />
+                              <div><%= value.name %></div>
+                            </div>
+                          </td>
+                          <td data-title="Patient ID">000<%= value.id %></td>
+                          <td><%= value.mobile_no %></td>
+                        </tr>
+                        <% i++; }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="panel panel-default border-panel card-view panel-refresh">
+            <div class="refresh-container">
+              <div class="la-anim-1"></div>
+            </div>
+            <div class="panel-heading">
+              <div class="pull-left">
+                <h6 class="panel-title txt-dark">Doctors</h6>
+              </div>
+              <a
+                class="btn pmd-btn-raised btn-primary pmd-ripple-effect btn-sm pull-right"
+                href="/view_doctor"
+                >View All</a
+              >
+              <div class="clearfix"></div>
+            </div>
+            <div class="panel-wrapper collapse in">
+              <div class="panel-body row pa-0">
+                <div class="list-group pmd-list">
+                  <% var i=1; doctors.forEach(function(value){ %>
+                  <a
+                    class="list-group-item d-flex flex-row"
+                    href="javascript:void(0);"
+                  >
+                    <span class="pmd-avatar-list-img">
+                      <img
+                        alt="40x40"
+                        data-src="holder.js/40x40"
+                        class="img-fluid"
+                        src="<%= value.doctor_image %>"
+                        data-holder-rendered="true"
+                      />
+                    </span>
+                    <div>
+                      <h5 class="pmd-list-title"><%= value.name %></h5>
+                      <p class="pmd-list-subtitle"><%= value.specialty %></p>
+                    </div>
+                  </a>
+                  <% i++; }) %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- /#wrapper -->
-	
-    <%- include('./common/footerjs.ejs') %>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
-	<script type="text/javascript">
-	var ctx=document.getElementById("line-chart");
-  var myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
-                        "Sep", "Oct", "Nov", "Dec"
-                    ],
-                    datasets: [{
-                            label: "Patient",
-                            borderColor: "#34316E",
-                            borderWidth: "2",
-                            backgroundColor: "rgba(30, 30, 45, 0.07)",
-                            pointHighlightStroke: "#1e1e2d",
-                            pointRadius: 0,
-                            data: [10, 45, 30, 30, 3, 10, 15, 2, 5, 5, 5, 25],
-                        },
-                        {
-                            label: "Appointment",
-                            borderColor: "#F58634",
-                            borderWidth: "2",
-                            pointRadius: 0,
-                            backgroundColor: "rgba(245, 134, 52, 0.07)",
-                            pointHighlightStroke: "#F58634",
-                            data: [15, 40, 45, 40, 3, 10, 25, 5, 10, 5, 10, 45]
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    tooltips: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    hover: {
-                        mode: 'nearest',
-                        intersect: true
-                    },
-                    maintainAspectRatio: false
-                }
-            });
-			
-			var ctx2 = document.getElementById("total-revenue-chart");
-            var myChart2 = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: [
-                        "Net Revenue",
-                        "Gross Income",
-                        "Marketing"
-                    ],
-                    datasets: [{
-                        backgroundColor: ["#4caf50", "#34316E", "#F58634"],
-                        pointRadius: 0,
-                        data: [50, 30, 20],
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-</script>
-</body>
-
-</html>
+  </div>
+  <!-- /Main Content -->
+</div>

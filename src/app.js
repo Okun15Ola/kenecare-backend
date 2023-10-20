@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const ejsLayout = require("express-ejs-layouts");
 const cors = require("cors");
 const helmet = require("helmet");
 const expressSession = require("express-session");
@@ -57,7 +58,6 @@ app.use(
 );
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-// app.use("public", express.static("public"));
 app.use(express.static(__dirname + "/public"));
 app.use(
   expressSession({
@@ -69,11 +69,10 @@ app.use(
 
 app.use(flash());
 
-//For set layouts of html view
-//const expressLayouts = require('express-ejs-layouts');
+//View Engine Middleware
 app.set("view engine", "ejs");
+app.use(ejsLayout);
 app.set("views", path.join(__dirname, "views"));
-//app.use(expressLayouts);
 
 app.use(function (req, res, next) {
   if (!req.path.includes("/api/")) {
@@ -87,7 +86,7 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.use(logUserInteraction);
+// app.use(logUserInteraction);
 
 //DASHBOARD
 app.use("/", dashboardRouter);
