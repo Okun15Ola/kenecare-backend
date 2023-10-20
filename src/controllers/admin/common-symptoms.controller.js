@@ -1,8 +1,17 @@
-const Response = require("../utils/response.utils");
-const logger = require("../middlewares/logger.middleware");
+const logger = require("../../middlewares/logger.middleware");
+const {
+  getCommonSymptoms,
+  getCommonSymptom,
+  createCommonSymptom,
+  updateCommonSymptom,
+  updateCommonSymptomStatus,
+  deleteCommonSymptom,
+} = require("../../services/common-symptoms.services");
 
 exports.GetCommonSymptomsController = async (req, res, next) => {
   try {
+    const response = await getCommonSymptoms();
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -11,6 +20,9 @@ exports.GetCommonSymptomsController = async (req, res, next) => {
 };
 exports.GetCommonSymptomByIDController = async (req, res, next) => {
   try {
+    const id = parseInt(req.params.id);
+    const response = await getCommonSymptom(id);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -19,6 +31,8 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
 };
 exports.CreateCommonSymptomController = async (req, res, next) => {
   try {
+    const { } = req.body;
+    const response = await createCommonSymptom()
   } catch (error) {
     console.error(error);
     logger.error(error);

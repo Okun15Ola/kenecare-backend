@@ -1,47 +1,23 @@
 const router = require("express").Router();
-const Response = require("../../../utils/response.utils");
+const {
+  GetCommonSymptomsController,
+  GetCommonSymptomByIDController,
+  CreateCommonSymptomController,
+  UpdateCommonSymptomByIdController,
+  UpdateCommonSymptomStatusController,
+  DeleteCommonSymptomByIdController,
+} = require("../../../controllers/admin/common-symptoms.controller");
 
-router.get("/", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+router.get("/", GetCommonSymptomsController);
 
-router.post("/:id", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+router.get("/:id",GetCommonSymptomByIDController);
 
-router.post("/", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+router.post("/", CreateCommonSymptomController);
 
-router.put("/:id", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+router.put("/:id", UpdateCommonSymptomByIdController);
 
-router.delete("/:id", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+router.patch("/:id/", UpdateCommonSymptomStatusController);
+
+router.delete("/:id", DeleteCommonSymptomByIdController);
+
+module.exports = router;

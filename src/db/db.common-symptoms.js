@@ -11,33 +11,42 @@ exports.getAllCommonSymptoms = () => {
     });
   });
 };
-exports.getCommonSymptomById = (symptonId) => {
+exports.getCommonSymptomById = (id) => {
   const sql = "SELECT * FROM common_symptoms WHERE symptom_id = ? LIMIT 1";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [symptonId], (error, results) => {
+    connectionPool.query(sql, [id], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results[0]);
     });
   });
 };
-exports.createNewCommonSymptom = (sympton) => {
+exports.createNewCommonSymptom = (symptom) => {
   const {
-    symptomName,
+    name,
     description,
     specialtyId,
     imageUrl,
     consultationFee,
     tags,
-  } = sympton;
+    inputtedBy,
+  } = symptom;
   const sql =
-    "INSERT INTO common_symptoms (symptom_name,symptom_descriptions,speciality_id,image_url, general_consultation_fee,tags) VALUES (?,?,?,?,?,?)";
+    "INSERT INTO common_symptoms (symptom_name,symptom_descriptions,speciality_id,image_url, general_consultation_fee,tags,inputted_by) VALUES (?,?,?,?,?,?,?)";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [symptomName, description, specialtyId, imageUrl, consultationFee, tags],
+      [
+        name,
+        description,
+        specialtyId,
+        imageUrl,
+        consultationFee,
+        tags,
+        inputtedBy,
+      ],
       (error, results) => {
         if (error) return reject(error);
 
@@ -46,16 +55,16 @@ exports.createNewCommonSymptom = (sympton) => {
     );
   });
 };
-exports.updateCommonSymptomById = ({ symptomId, updatedSymptom }) => {
-  const { symptomName, description, specialtyId, consultationFee, tags } =
-    updatedSymptom;
+exports.updateCommonSymptomById = ({ id, symptom }) => {
+  const { name, description, specialtyId, imageUrl, consultationFee, tags } =
+    symptom;
   const sql =
-    "UPDATE common_symptoms SET symptom_name = ?, symptom_descriptions, speciality_id = ?, general_consultation_fee = ?, tags = ? WHERE symptom_id = ?";
+    "UPDATE common_symptoms SET symptom_name = ?, symptom_descriptions, speciality_id = ?, image_url = ?, general_consultation_fee = ?, tags = ? WHERE symptom_id = ?";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [symptomName, description, specialtyId, consultationFee, tags, symptomId],
+      [name, description, specialtyId, imageUrl, consultationFee, tags, id],
       (error, results) => {
         if (error) return reject(error);
 
@@ -64,11 +73,11 @@ exports.updateCommonSymptomById = ({ symptomId, updatedSymptom }) => {
     );
   });
 };
-exports.deleteCommonSymptomById = (symptomId) => {
+exports.deleteCommonSymptomById = (id) => {
   const sql = "DELETE FROM common_symptoms WHERE symptom_id = ?";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [symptomId], (error, results) => {
+    connectionPool.query(sql, [id], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);
