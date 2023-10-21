@@ -8,11 +8,17 @@ const {
   DeleteCommonSymptomByIdController,
 } = require("../../../controllers/admin/common-symptoms.controller");
 
+const { servicesImageUploader } = require("../../../utils/file-upload.utils");
+
 router.get("/", GetCommonSymptomsController);
 
-router.get("/:id",GetCommonSymptomByIDController);
+router.get("/:id", GetCommonSymptomByIDController);
 
-router.post("/", CreateCommonSymptomController);
+router.post(
+  "/",
+  servicesImageUploader.single("image"),
+  CreateCommonSymptomController
+);
 
 router.put("/:id", UpdateCommonSymptomByIdController);
 

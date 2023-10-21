@@ -7,7 +7,7 @@
         <!-- Breadcrumb -->
         <div class="col-lg-12 col-sm-12 col-md-12 col-xs-12">
           <ol class="breadcrumb">
-            <li><a href="<%= BASE_URL %>dashboard">Dashboard</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
             <li class="active"><span>Edit Category</span></li>
           </ol>
         </div>
@@ -17,7 +17,7 @@
       <div class="row">
         <div class="col-md-6 col-md-offset-3">
           <div class="panel panel-default border-panel card-view">
-            <%- include('./common/errors.ejs') %>
+            <%- include('./partails/errors.ejs') %>
             <div class="panel-heading">
               <div class="pull-left">
                 <h6 class="panel-title txt-dark">Edit Category</h6>
@@ -30,7 +30,7 @@
                   <div class="col-sm-12 col-xs-12">
                     <div class="form-wrap">
                       <form
-                        action="<%= BASE_URL %>do_edit_blog_category"
+                        action="/do_edit_blog_category"
                         id="myForm"
                         method="post"
                       >

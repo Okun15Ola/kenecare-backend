@@ -31,8 +31,10 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
 };
 exports.CreateCommonSymptomController = async (req, res, next) => {
   try {
-    const { } = req.body;
-    const response = await createCommonSymptom()
+    console.log(req.body);
+    return;
+    const {} = req.body;
+    const response = await createCommonSymptom();
   } catch (error) {
     console.error(error);
     logger.error(error);

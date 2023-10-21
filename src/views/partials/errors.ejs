@@ -1,0 +1,18 @@
+<% if(typeof error !== 'undefined'){ %>
+<div class="alert alert-danger myDiv" role="alert" id="myDiv">
+		  <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>
+		  <%= error %>
+	</div>
+<% } %>
+<% if(typeof success !== 'undefined'){ %>
+<div class="alert alert-success myDiv" role="alert" id="myDiv">
+		  <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>
+		  <%= success %>
+	</div>
+<% } %>
+<div id="errormsg"></div>
+<script type="text/javascript">
+    setTimeout(function(){
+        $('.myDiv').fadeOut(500);
+    }, 5000);
+</script>
