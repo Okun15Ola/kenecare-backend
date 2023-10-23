@@ -34,6 +34,8 @@ const adminSymptomsRouter = require("./routes/api/admin/common-symptoms.routes")
 //DASHBOARD ROUTES
 const dashboardRouter = require("./routes/dashboard.routes");
 
+// const admin_dashboardRouter = require("./routes/admin_dashboard.routes");
+
 // global.BASE_URL = process.env.BASE_URL;
 // global.API_BASE_URL = process.env.API_BASE_URL;
 // global.FRONTEND_URL = process.env.FRONTEND_URL;
@@ -91,6 +93,9 @@ app.use(function (req, res, next) {
 
 //DASHBOARD
 app.use("/", dashboardRouter);
+
+// app.use("/admin_Dashboard", admin_dashboardRouter);
+
 //USERS ROUTES
 app.use("/api/v1/auth", authRouter);
 
