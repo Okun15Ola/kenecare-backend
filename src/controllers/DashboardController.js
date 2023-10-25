@@ -5,7 +5,7 @@ const { compareSync, hashSync, genSaltSync } = require("bcryptjs");
 
 // Login Page
 exports.index = (req, res, next) => {
-  return res.render("dashboard", {
+  return res.render("dashboard_new", {
     total_departments: 100,
     total_doctors: 100,
     total_patients: 100,

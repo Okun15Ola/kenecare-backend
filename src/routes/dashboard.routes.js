@@ -53,8 +53,8 @@ router.post(
   LoginController.update_password
 );
 
-router.post("/change_status", DashboardController.change_status);
 router.get("/dashboard", DashboardController.index);
+router.post("/change_status", DashboardController.change_status);
 router.get("/profile", DashboardController.profile);
 router.post(
   "/profile_edit",
@@ -73,7 +73,7 @@ router.post(
   DashboardController.update_password
 );
 
-router.get("/view_users", UserController.view_user);
+router.get("/view_patient", UserController.view_patient_records);
 router.get("/delete_user/:id", UserController.delete_user);
 router.get("/view_doctor", UserController.view_doctor);
 router.get(
@@ -87,6 +87,8 @@ router.get(
 
   DepartmenttypeController.view_department_type
 );
+
+
 router.get(
   "/add_department_type",
 
