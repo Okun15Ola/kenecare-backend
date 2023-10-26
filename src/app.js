@@ -96,6 +96,17 @@ app.use(function (req, res, next) {
 //DASHBOARD
 app.use("/", dashboardRouter);
 
+// app.get('/login', (req, res) => {
+//   res.render('login', {
+//       // Your login data here
+//   }, (err, html) => {
+//       res.render('login_layout', {
+//           body: html,
+//       });
+//   });
+// });
+
+
 // app.use("/test1", testRouter);
 
 // app.use("/admin_Dashboard", admin_dashboardRouter);

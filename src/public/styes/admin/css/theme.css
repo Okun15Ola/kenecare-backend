@@ -4740,18 +4740,20 @@ section {
 
 /* ----- Footer ----- */
 .copyright {
-    text-align: center;
+    /* text-align: center;
     padding: 60px 0;
-    padding-top: 20px;
+    padding-top: 20px; */
+    display: none;
 }
 
+/*
 .copyright p {
     font-size: 14px;
     color: #666;
     line-height: -webkit-calc(24/14);
     line-height: -moz-calc(24/14);
     line-height: calc(24/14);
-}
+} */
 
 /* ----- Breadcrumb ----- */
 .au-breadcrumb {

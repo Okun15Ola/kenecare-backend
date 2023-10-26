@@ -1,4 +1,6 @@
-<%- include('partials/new_header') %> <%- include('partials/new-side-nav') %>
-    <%- body %>
-        
+<%- include('partials/new_header') %>
+<% if (typeof userIsLoggedIn !== 'undefined' && userIsLoggedIn) { %>
+  <%- include('partials/new-side-nav') %>
+<% } %>
+<%- body %>
 <%- include('partials/new_footer') %>
