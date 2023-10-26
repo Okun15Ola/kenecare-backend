@@ -11,7 +11,7 @@ const validator = require("./helpers/validate");
 // };
 
 exports.view_patient_records = (req, res, next) => {
-  res.render("view_patient", {
+  res.render("view_patients", {
     title: "Patient_Records",
     data: [],
     success: req.flash("success"),

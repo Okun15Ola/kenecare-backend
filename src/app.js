@@ -138,20 +138,76 @@ app.use((req, res, next) => {
   next(err);
 });
 
+// app.use((err, req, res, next) => {
+
+//   logger.error(err);
+//   let statusCode = 500;
+//   let errorMessage = "Internal Server Error";
+
+//   if (err.code === 404) {
+//     statusCode = 404;
+//     errorMessage = "The requested resource could not be found.";
+
+//     return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
+
+//   }
+
+//   console.log(err);
+//   return res
+//     .status(statusCode)
+//     .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
+// });
+
 app.use((err, req, res, next) => {
+  
   logger.error(err);
-  let statusCode = 500;
-  let errorMessage = "Internal Server Error";
+
   if (err.code === 404) {
-    statusCode = 404;
-    errorMessage = "The requested resource could not be found.";
-    return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
+    // For 404 errors, render the custom 404 HTML page
+    return res.status(404).render('errors/404', { layout: false });
   }
 
-  console.log(err);
-  return res
-    .status(statusCode)
-    .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
+  // For other errors (500 and others), render the custom 500 HTML page
+  return res.status(500).render('errors/500', { layout: false });
 });
+
+
+// // Custom error handling middleware
+// app.use((err, req, res, next) => {
+//   logger.error(err);
+//   let statusCode = 500;
+//   let errorMessage = "Internal Server Error";
+
+//   if (err.code === 404) {
+//     statusCode = 404;
+//     errorMessage = "The requested resource could not be found.";
+
+//     // Send the custom 404 HTML page
+//     return res.status(statusCode).sendFile(path.join(__dirname, 'views', '404.ejs'));
+//   }
+
+//   console.log(err);
+
+//   // For other errors, you can still send a JSON response or render another error page.
+//   return res
+//     .status(statusCode)
+//     .json({ message: errorMessage });
+// });
+
+// app.use((err, req, res, next) => {
+//   logger.error(err);
+
+//   if (err.code === 404) {
+//     // For 404 errors, render the custom 404 HTML page
+//     return res.status(404).render('errors/404');
+//   }
+
+//   // For other errors (500 and others), render the custom 500 HTML page
+//   return res.status(500).render('errors/500', { layout: false });
+// });
+
+
+// Start your Express server...
+
 
 module.exports = app;
