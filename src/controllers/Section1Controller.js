@@ -4,7 +4,7 @@ var multer = require("multer");
 var fs = require("fs");
 
 exports.view_section1 = (req, res, next) => {
-  return res.render("view_section1", {
+  return res.render("view_sections", {
     title: "Section1",
     data: [],
     success: req.flash("success"),

@@ -176,9 +176,9 @@ router.get("/delete_city/:id", CityController.delete_city);
 
 router.get(
   "/view_testimonial",
-
-  TestimonialController.view_testimonial
+  TestimonialController.view_testimonials
 );
+
 router.get(
   "/add_testimonial",
 

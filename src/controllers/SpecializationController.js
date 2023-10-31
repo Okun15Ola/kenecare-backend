@@ -2,7 +2,7 @@ const validator = require("./helpers/validate");
 var multer = require("multer");
 
 exports.view_specialization = (req, res, next) => {
-  return res.render("view_specialization", {
+  return res.render("view_specializations", {
     title: "Manage Specialization",
     data: [],
     success: req.flash("success"),
