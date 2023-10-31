@@ -1,13 +1,17 @@
 const jwt = require("jsonwebtoken");
 const Response = require("../utils/response.utils");
-const {patientJwtSecret,adminJwtSecret,jwtAudience,jwtAdminAudience,jwtIssuer} = require("../config/default.config");
+const {
+  patientJwtSecret,
+  adminJwtSecret,
+  jwtAudience,
+  jwtAdminAudience,
+  jwtIssuer,
+} = require("../config/default.config");
 const { STATUS } = require("../utils/enum.utils");
-
-
 
 const getAuthToken = (req) => {
   const authorizationHeader = req.headers["authorization"];
-  
+
   if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
     return null;
   }
@@ -18,66 +22,66 @@ const getAuthToken = (req) => {
 
 const requireUserAuth = async (req, res, next) => {
   try {
-    const token = getAuthToken(req)
-    
+    const token = getAuthToken(req);
+
     if (!token) {
-      return res
-          .status(400)
-          .json({message:"Bad Request"});
+      return res.status(400).json({ message: "Bad Request" });
     }
-      const decoded =  jwt.verify(
-        token,
-        patientJwtSecret,
-        {audience:jwtAudience,issuer:jwtIssuer}
-      );
-    
-      console.log(decoded);
-      // return
+    const decoded = jwt.verify(token, patientJwtSecret, {
+      audience: jwtAudience,
+      issuer: jwtIssuer,
+    });
 
-      // req.user = {
-      //   id: decoded.sub,
-      //   admin: decoded.admin,
-      // };
-      next();
-
+    req.user = {
+      id: decoded.sub,
+    };
+    next();
   } catch (error) {
-    console.error(error)
-    return res.status(400).json(Response.BAD_REQUEST({message:"Authentication Failed! Please Try Again"})); 
+    console.error(error);
+    return res.status(400).json(
+      Response.BAD_REQUEST({
+        message: "Authentication Failed! Please Try Again",
+      })
+    );
   }
 };
 
 const requireAdminAuth = async (req, res, next) => {
   try {
-    const token = getAuthToken(req)
-    
+    const token = getAuthToken(req);
+
     if (!token) {
       return res
-          .status(400)
-          .json(Response.BAD_REQUEST({message:"Authentication Error!"}));
+        .status(400)
+        .json(Response.BAD_REQUEST({ message: "Authentication Error!" }));
     }
 
-    const decoded =  jwt.verify(
-        token,
-        adminJwtSecret,
-        {audience:jwtAdminAudience,issuer:jwtIssuer}
-    );
-    
-      const {sub,actSts} = decoded
+    const decoded = jwt.verify(token, adminJwtSecret, {
+      audience: jwtAdminAudience,
+      issuer: jwtIssuer,
+    });
 
-      
-      if (actSts !== STATUS.ACTIVE) {
-        return res
-          .status(401)
-          .json(Response.UNAUTHORIZED({message:"Account Disabled.Please Contact Support"}));
-      }
-    
-      req.user = {
-        id: sub,
-      }
-      next();
+    const { sub, actSts } = decoded;
+
+    if (actSts !== STATUS.ACTIVE) {
+      return res.status(401).json(
+        Response.UNAUTHORIZED({
+          message: "Account Disabled.Please Contact Support",
+        })
+      );
+    }
+
+    req.user = {
+      id: sub,
+    };
+    next();
   } catch (error) {
-     console.error(error)
-    return res.status(400).json(Response.BAD_REQUEST({message:"Authentication Failed! Please Try Again"})); 
+    console.error(error);
+    return res.status(400).json(
+      Response.BAD_REQUEST({
+        message: "Authentication Failed! Please Try Again",
+      })
+    );
   }
 };
 
@@ -109,5 +113,5 @@ const requireUser = async (req, res, next) => {
 
 module.exports = {
   requireUserAuth,
-   requireAdminAuth,
+  requireAdminAuth,
 };

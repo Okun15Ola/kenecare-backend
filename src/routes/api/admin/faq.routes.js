@@ -15,3 +15,5 @@ router.post("/", CreateFaqController);
 router.put("/:id", UpdateFaqByIdController);
 router.patch("/:id/:status", UpdateFaqStatusController);
 router.delete("/:id", DeleteFaqByIdController);
+
+module.exports = router;

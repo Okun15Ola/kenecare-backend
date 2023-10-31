@@ -7,6 +7,10 @@ const {
   updateCommonSymptomStatus,
   deleteCommonSymptom,
 } = require("../../services/common-symptoms.services");
+const {
+  localMediaUploader: mediaUploaded,
+} = require("../../utils/file-upload.utils");
+const upload = mediaUploaded.single("image");
 
 exports.GetCommonSymptomsController = async (req, res, next) => {
   try {
@@ -31,10 +35,7 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
 };
 exports.CreateCommonSymptomController = async (req, res, next) => {
   try {
-    console.log(req.body);
-    return;
-    const {} = req.body;
-    const response = await createCommonSymptom();
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);

@@ -1,51 +1,117 @@
-const Response = require("../utils/response.utils");
-const logger = require("../middlewares/logger.middleware");
+const logger = require("../../middlewares/logger.middleware");
+const {
+  getDoctorByUser,
+  createDoctorProfile,
+  updateDoctorProfile,
+  updateDoctorProfilePicture,
+} = require("../../services/doctors.services");
 
-exports.GetPatientProfileController = async (req, res, next) => {
+const GetDoctorProfileController = async (req, res, next) => {
   try {
+    const id = parseInt(req.user.id);
+    const response = await getDoctorByUser(id);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
     next(error);
   }
 };
-// exports.GetTestimonialByIDController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
-exports.CreatePatientProfileController = async (req, res, next) => {
+
+const CreateDoctorProfileController = async (req, res, next) => {
   try {
+    const userId = req.user.id;
+    const {
+      title,
+      firstname,
+      middlename,
+      lastname,
+      gender,
+      profileSummary,
+      specialization,
+      qualifications,
+      consultationfee,
+      city,
+      yearOfExperience,
+    } = req.body;
+    const response = await createDoctorProfile({
+      userId,
+      title,
+      firstName: firstname,
+      middleName: middlename,
+      lastName: lastname,
+      gender,
+      professionalSummary: profileSummary,
+      specializationId: specialization,
+      qualifications,
+      consultationFee: consultationfee,
+      cityId: city,
+      yearOfExperience: yearOfExperience,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
     next(error);
   }
 };
-// exports.UpdateTestimonialByIdController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
-// exports.UpdateTestimonialStatusController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
-// exports.DeleteTestimonialByIdController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
+const UpdateDoctorProfileByIdController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id);
+    const doctorId = parseInt(req.params.id);
+    const {
+      title,
+      firstname,
+      middlename,
+      lastname,
+      gender,
+      profileSummary,
+      specialization,
+      qualifications,
+      consultationfee,
+      city,
+      yearOfExperience,
+    } = req.body;
+
+    const response = await updateDoctorProfile({
+      doctorId,
+      userId,
+      title,
+      firstName: firstname,
+      middleName: middlename,
+      lastName: lastname,
+      gender,
+      professionalSummary: profileSummary,
+      specializationId: specialization,
+      qualifications,
+      consultationFee: consultationfee,
+      cityId: city,
+      yearOfExperience: yearOfExperience,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+const UpdateDoctorProfilePictureController = async (req, res, next) => {
+  try {
+    if (req.file) {
+      const doctorId = parseInt(req.params.id);
+      const response = await up;
+
+      return res.sendStatus(200);
+    }
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+module.exports = {
+  GetDoctorProfileController,
+  CreateDoctorProfileController,
+  UpdateDoctorProfileByIdController,
+  UpdateDoctorProfilePictureController,
+};

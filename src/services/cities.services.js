@@ -3,135 +3,152 @@ const Response = require("../utils/response.utils");
 exports.getCities = async () => {
   try {
     const rawData = await dbObject.getAllCities();
-    console.log(rawData)
+    const cities = rawData.map(
+      ({
+        city_id: cityId,
+        city_name: cityName,
+        latitude,
+        longitude,
+        is_active: isActive,
+        inputted_by: inputtedBy,
+      }) => {
+        return {
+          cityId,
+          cityName,
+          latitude,
+          longitude,
+          isActive,
+          inputtedBy,
+        };
+      }
+    );
 
-    const blogs = rawData.map(({
-      blog_id: blogId,
-      blog_category_id: blogCategory,
-      title: blogTitle,
-      description,
-      image,
-      tags,
-      inputted_by: author,
-      is_featured: featured,
-      is_active: isActive
-    }) => {
-
-      return {
-        blogId,
-        blogCategory,
-        blogTitle,
-        description,
-        image,
-        tags,
-        author,
-        featured,
-        isActive
-      };
-    });
-
-    return Response.SUCCESS({ data: blogs });
+    return Response.SUCCESS({ data: cities });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
 
-exports.getBlog = async (id) => {
+exports.getCity = async (id) => {
   try {
-
-    const rawData = await dbObject.getBlogById(id);
+    const rawData = await isCityExist(id);
     if (!rawData) {
-      return Response.NOT_FOUND({ message: "Blog Not Found" });
+      return Response.NOT_FOUND({ message: "City Not Found" });
     }
     const {
-      blog_id: blogId,
-      blog_category_id: blogCategory,
-      title: blogTitle,
-      description,
-      image,
-      tags,
-      inputted_by: author,
-      is_featured: featured,
-      is_active: isActive
+      city_id: cityId,
+      city_name: cityName,
+      latitude,
+      longitude,
+      is_active: isActive,
+      inputted_by: inputtedBy,
     } = rawData;
 
-    const blog = {
-      blogId,
-      blogCategory,
-      blogTitle,
-      description,
-      image,
-      tags,
-      author,
-      featured,
-      isActive
+    const city = {
+      cityId,
+      cityName,
+      latitude,
+      longitude,
+      isActive,
+      inputtedBy,
     };
 
-    return Response.SUCCESS({ data: blog });
+    return Response.SUCCESS({ data: city });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-exports.createBlog = async ({ category, title, content, image, tags, inputtedBy }) => {
+exports.getCityByName = async (name) => {
   try {
-
-    const transformedTags = JSON.stringify(tags);
-
-
-    await dbObject.createNewBlog({ category, title, content, image, tags: transformedTags, inputtedBy });
-
-    return Response.CREATED({ message: "Blog Created Successfully" });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-exports.updateBlog = async ({ id, blog }) => {
-  try {
-    const rawData = await dbObject.getBlogById(id);
+    const rawData = await dbObject.getCityByName(name);
     if (!rawData) {
-      return Response.NOT_FOUND({ message: "Bog Not Found" });
+      return Response.NOT_FOUND({ message: "City Not Found" });
     }
-    await dbObject.updateBlogById({ id, blog });
-    return Response.SUCCESS({ message: "Blog Updated Succcessfully" });
+    const {
+      city_id: cityId,
+      city_name: cityName,
+      latitude,
+      longitude,
+      is_active: isActive,
+      inputted_by: inputtedBy,
+    } = rawData;
+
+    const city = {
+      cityId,
+      cityName,
+      latitude,
+      longitude,
+      isActive,
+      inputtedBy,
+    };
+
+    return Response.SUCCESS({ data: city });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-exports.updateBlogStatus = async ({ id, status }) => {
+exports.createCity = async ({ name, latitude, longitude, inputtedBy }) => {
   try {
-    const rawData = await dbObject.getBlogById(id);
+    await dbObject.createNewCity({
+      name,
+      latitude,
+      longitude,
+      inputtedBy,
+    });
+
+    return Response.CREATED({ message: "City Created Successfully" });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.updateCity = async ({ id, name, latitude, longitude }) => {
+  try {
+    const rawData = await dbObject.getCityById(id);
     if (!rawData) {
-      return Response.NOT_FOUND({ message: "Bog Not Found" });
+      return Response.NOT_FOUND({ message: "City Not Found" });
     }
-    await dbObject.updateBlogStatusById({ id, status });
-    return Response.SUCCESS({ message: "Blog Status Updated Successfully" });
+    await dbObject.updateCityById({ id, name, latitude, longitude });
+    return Response.SUCCESS({ message: "City Updated Succcessfully" });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-exports.deleteBlog = async (id) => {
+exports.updateCityStatus = async ({ id, status }) => {
   try {
-    if (await !isBlogExist(id)) {
-      return Response.NOT_FOUND({ message: "Bog Not Found" });
+    const rawData = await dbObject.getCityById(id);
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "City Not Found" });
     }
-
-    await dbObject.deleteBlogById(id);
-    return Response.SUCCESS({ message: "Blog Deleted Successfully" });
+    await dbObject.updateCityStatusById({ id, status });
+    return Response.SUCCESS({ message: "City Status Updated Successfully" });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.deleteCity = async (id) => {
+  try {
+    const rawData = await dbObject.getCityById(id);
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "City Not Found" });
+    }
+    await dbObject.deleteCityById(id);
+    return Response.SUCCESS({ message: "City Deleted Successfully" });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
 
-const isBlogExist = async (id) => {
-  const rawData = await dbObject.getBlogById(id);
+const isCityExist = async (id) => {
+  const rawData = await dbObject.getCityById(id);
   if (!rawData) {
-    return false;
+    return null;
   }
-  return true;
+  return rawData;
 };

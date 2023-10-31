@@ -1,7 +1,24 @@
 const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
-const { Validate } = require("../validations/validate");
+const aws = require("aws-sdk");
+const multerS3 = require("multer-s3");
+const {
+  awsAccessSecretKey,
+  awsAccessKeyId,
+  awsRegion,
+} = require("../config/default.config");
+
+aws.config.update({
+  credentials: {
+    secretAccessKey: awsAccessSecretKey,
+    accessKeyId: awsAccessKeyId,
+  },
+
+  region: awsRegion,
+});
+
+const s3 = new aws.S3();
 
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpeg|jpg|png|pdf/;
@@ -10,119 +27,89 @@ const fileFilter = (req, file, cb) => {
   );
   const allowedMimetypes = filetypes.test(file.mimetype);
   if (allowedExtension && allowedMimetypes) {
-    return cb(null, Validate);
+    return cb(null, true);
   } else {
-    cb(null, false);
+    const error = new Error("Invalid File Type");
+    error.code = 400;
+    error.message =
+      "Invalid file type. Please upload a JPEG, JPG, PNG, or PDF file.";
+    cb(error, false);
   }
 };
 
-const blogImageStorage = multer.diskStorage({
+const s3MediaUploader = multer({
+  fileFilter: fileFilter,
+  storage: multerS3({
+    s3: s3,
+    bucket: "imotechsl-kenecare-media",
+    acl: "public-read",
+    metadata: (req, file, cb) => {
+      cb(null, { fieldName: req.file.fieldname });
+    },
+    key: (req, file, cb) => {
+      cb(null, generateUniqueFileName(file, cb));
+    },
+  }),
+});
+
+const localMediaStore = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/upload/blogs/"));
+    console.log(req.body);
+    cb(null, path.join(__dirname, "../public/upload/media/"));
   },
   filename: (req, file, cb) => {
-    generateUniqueFileName(req, file, cb);
+    generateUniqueFileName(file, cb);
+  },
+});
+const localProfilePictureStore = multer.diskStorage({
+  destination: (req, file, cb) => {
+    console.log(req.body);
+    cb(null, path.join(__dirname, "../public/upload/profile_pics/"));
+  },
+  filename: (req, file, cb) => {
+    generateUniqueFileName(file, cb);
   },
 });
 
-exports.blogImageUploader = multer({
-  storage: blogImageStorage,
+const tempUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fieldSize: 1024 * 1024 * 2,
+  },
+  fileFilter,
+});
+
+const localMediaUploader = multer({
+  storage: localMediaStore,
+  limits: {
+    fileSize: 1024 * 1024 * 2,
+  },
+  fileFilter: fileFilter,
+});
+const localProfilePicUploader = multer({
+  storage: localProfilePictureStore,
   limits: {
     fileSize: 1024 * 1024 * 2,
   },
   fileFilter: fileFilter,
 });
 
-const servicesImageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/upload/services/"));
-  },
-  filename: (req, file, cb) => {
-    generateUniqueFileName(req, file, cb);
-  },
-});
-exports.servicesImageUploader = multer({
-  storage: servicesImageStorage,
-  limits: {
-    fileSize: 1024 * 1024 * 2,
-  },
-  fileFilter: fileFilter,
-});
-const specializationsImageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/upload/sepecializations/"));
-  },
-  filename: (req, file, cb) => {
-    generateUniqueFileName(req, file, cb);
-  },
-});
-exports.specializationsImageUploader = multer({
-  storage: specializationsImageStorage,
-  limits: {
-    fileSize: 1024 * 1024 * 2,
-  },
-  fileFilter: fileFilter,
-});
-const specialtiesImageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/upload/specialties/"));
-  },
-  filename: (req, file, cb) => {
-    generateUniqueFileName(req, file, cb);
-  },
-});
-exports.specialtiesImageUploader = multer({
-  storage: specialtiesImageStorage,
-  limits: {
-    fileSize: 1024 * 1024 * 2,
-  },
-  fileFilter: fileFilter,
-});
-const patientMedicalDocumentStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/upload/medicalrecords/"));
-  },
-  filename: (req, file, cb) => {
-    generateUniqueFileName(req, file, cb);
-  },
-});
-exports.patientMedicalDocumentUploader = multer({
-  storage: patientMedicalDocumentStorage,
-  limits: {
-    fileSize: 1024 * 1024 * 2,
-  },
-  fileFilter: fileFilter,
-});
-const patientDoctorProfileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../public/upload/profile/"));
-  },
-  filename: (req, file, cb) => {
-    generateUniqueFileName(req, file, cb);
-  },
-});
-exports.patientDoctorProfileUploader = multer({
-  storage: patientDoctorProfileStorage,
-  limits: {
-    fileSize: 1024 * 1024 * 2,
-  },
-  fileFilter: fileFilter,
-});
+const generateUniqueFileName = (file, cb) => {
+  crypto.randomBytes(16, (err, raw) => {
+    if (err) return cb(err);
 
-const generateUniqueFileName = (req, file, cb) => {
-  try {
-    crypto.randomBytes(16, (err, raw) => {
-      if (err) return cb(err);
+    const randomName = raw.toString("hex");
+    const fileExtension = path.extname(file.originalname);
 
-      const randomName = raw.toString("hex");
-      const fileExtension = path.extname(file.originalname);
+    const uniqueFileName = randomName + fileExtension;
 
-      const uniqueFileName = randomName + fileExtension;
+    cb(null, uniqueFileName);
+  });
+};
 
-      cb(null, uniqueFileName);
-    });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
+module.exports = {
+  localMediaUploader,
+  localProfilePicUploader,
+  s3MediaUploader,
+  tempUpload,
 };

@@ -1,6 +1,6 @@
 const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
-const { getAllDoctors } = require("../../services/doctors.services.js");
+const { getDoctorByUserId } = require("../../services/doctors.services.js");
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {

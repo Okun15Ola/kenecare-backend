@@ -18,9 +18,11 @@ const {
 const {
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  BAD_REQUEST,
 } = require("./utils/response.utils.js");
 //API ROUTES
 const authRouter = require("./routes/api/auth.routes");
+const doctorsRouter = require("./routes/api/doctors/profile.routes");
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
 const adminSpecializationsRoute = require("./routes/api/admin/specializations.routes");
 const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
@@ -30,6 +32,9 @@ const adminBlogsRouter = require("./routes/api/admin/blogs.routes");
 const adminCitiesRouter = require("./routes/api/admin/cities.routes");
 const adminServicesRouter = require("./routes/api/admin/services.routes");
 const adminSymptomsRouter = require("./routes/api/admin/common-symptoms.routes");
+const adminSpecialtiesRouter = require("./routes/api/admin/specialties.routes");
+const adminFaqRouter = require("./routes/api/admin/faq.routes");
+const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
 
 //DASHBOARD ROUTES
 const dashboardRouter = require("./routes/dashboard.routes");
@@ -58,8 +63,9 @@ app.use(
 );
 app.use(express.json());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + "/public"));
+app.use(express.static(__dirname + "/public/upload/media"));
 app.use(
   expressSession({
     secret: sessionSecret,
@@ -93,6 +99,7 @@ app.use(function (req, res, next) {
 app.use("/", dashboardRouter);
 //USERS ROUTES
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/doctors", requireUserAuth, doctorsRouter);
 
 //ADMIN ROUTES
 //TODO Add a middle ware to authenticate ADMIN JWT
@@ -104,11 +111,11 @@ app.use("/api/v1/admin/blogs", requireAdminAuth, adminBlogsRouter);
 app.use("/api/v1/admin/cities", adminCitiesRouter);
 app.use("/api/v1/admin/symptoms", adminSymptomsRouter);
 app.use("/api/v1/admin/doctors", adminDoctorsRoute);
-app.use("/api/v1/admin/faqs", adminAccountsRouter);
-app.use("/api/v1/admin/medical-councils", adminAccountsRouter);
+app.use("/api/v1/admin/faqs", adminFaqRouter);
+app.use("/api/v1/admin/medical-councils", adminMedicalCouncilRouter);
 app.use("/api/v1/admin/services", adminServicesRouter);
 app.use("/api/v1/admin/specializations", adminSpecializationsRoute);
-app.use("/api/v1/admin/specialties", adminSpecializationsRoute);
+app.use("/api/v1/admin/specialties", adminSpecialtiesRouter);
 app.use("/api/v1/admin/user-types", adminAccountsRouter);
 
 // Catch-all route for handling unknown routes
@@ -120,15 +127,20 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
   logger.error(err);
+
   let statusCode = 500;
+
   let errorMessage = "Internal Server Error";
+  if (err.code === 400) {
+    return res.status(err.code).json(BAD_REQUEST({ message: err.message }));
+  }
+
   if (err.code === 404) {
     statusCode = 404;
     errorMessage = "The requested resource could not be found.";
     return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
   }
 
-  console.log(err);
   return res
     .status(statusCode)
     .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));

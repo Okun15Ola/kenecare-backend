@@ -1,8 +1,11 @@
 build-dev:
-	@ENV=development docker build -t imotechsl/kenecare-admin:development . 
+	@ENV=development docker build -t imotechsl/kenecare-api:development . 
+
+build-staging:
+	@ENV=staging docker build --pull -t imotechsl/kenecare-api:staging -f Dockerfile.staging .
 
 build-prod:
-	@ENV=production docker build -t imotechsl/kenecare-admin:production -f Dockerfile.prod . 
+	@ENV=production docker build -t imotechsl/kenecare-api:production -f Dockerfile.prod . 
 
 
 
@@ -14,15 +17,14 @@ stop-dev:
 
 run-prod:
 	@ENV=production docker compose --env-file=production.env  -f docker-compose-prod.yml up -d
+
+run-staging:
+	@ENV=staging docker compose --env-file=.env  -f docker-compose-staging.yml up
 	
 	
 stop-prod:
 	@ENV=production docker compose --env-file=production.env -f docker-compose-prod.yml down  -v
 	
 
-build-dev-all:
-	@$(MAKE) build-dev
-	@cd nginx && $(MAKE) build-nginx-dev
-
 push-image:
-	@docker push imotechsl/kenecare-admin:production
+	@docker push imotechsl/kenecare-api:production

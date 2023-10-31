@@ -1,4 +1,6 @@
 const router = require("express").Router();
+const { body, check, checkSchema } = require("express-validator");
+const { Validate } = require("../../../validations/validate");
 const {
   GetCommonSymptomsController,
   GetCommonSymptomByIDController,
@@ -8,7 +10,9 @@ const {
   DeleteCommonSymptomByIdController,
 } = require("../../../controllers/admin/common-symptoms.controller");
 
-const { servicesImageUploader } = require("../../../utils/file-upload.utils");
+const {
+  localMediaUploader: mediaUploaded,
+} = require("../../../utils/file-upload.utils");
 
 router.get("/", GetCommonSymptomsController);
 
@@ -16,7 +20,7 @@ router.get("/:id", GetCommonSymptomByIDController);
 
 router.post(
   "/",
-  servicesImageUploader.single("image"),
+
   CreateCommonSymptomController
 );
 

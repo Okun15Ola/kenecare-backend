@@ -20,9 +20,8 @@ exports.AuthenticateController = async (req, res, next) => {
 };
 exports.LoginController = async (req, res, next) => {
   try {
-    const { message, data } = await loginUser(req.user);
-
-    return res.status(200).json(Response.SUCCESS({ message, data }));
+    const response = await loginUser(req.user);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -31,8 +30,8 @@ exports.LoginController = async (req, res, next) => {
 };
 exports.RequestLoginOTPController = async (req, res, next) => {
   try {
-    const { message, data } = await requestUserLoginOtp(req.user);
-    return res.status(200).json(Response.SUCCESS({ message, data }));
+    const response = await requestUserLoginOtp(req.user);
+    return res.status(response.statusCode).json(Response.SUCCESS(response));
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -41,8 +40,8 @@ exports.RequestLoginOTPController = async (req, res, next) => {
 };
 exports.VerifyLoginOTPController = async (req, res, next) => {
   try {
-    const { message, data } = await verifyUserLoginOtp(req.user);
-    return res.status(200).json(Response.SUCCESS({ message, data }));
+    const response = await verifyUserLoginOtp(req.user);
+    return res.status(response.statusCode).json(Response.SUCCESS(response));
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -90,6 +89,7 @@ exports.VerifyRegisterOTPController = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.ForgotPasswordController = async (req, res, next) => {
   try {
     //Forgot Password Controller

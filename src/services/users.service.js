@@ -6,6 +6,7 @@ const {
 const { USERTYPE, VERIFICATIONSTATUS, STATUS } = require("../utils/enum.utils");
 const { hashUsersPassword } = require("../utils/auth.utils");
 const { sendTokenSMS } = require("../utils/sms.utils");
+const Response = require("../utils/response.utils");
 
 exports.getUsers = async () => {
   const rawData = await dbObject.getAllUsers();
@@ -204,11 +205,23 @@ exports.loginUser = async (user) => {
       mobileNumber,
     } = user;
 
-    dbObject.updateUserAccountStatusById({
-      userId,
-      status: STATUS.ACTIVE,
-    });
+    //TODO Check if the account is verified
+    if (accountVerified !== STATUS.ACTIVE) {
+      return Response.UNAUTHORIZED({
+        message:
+          "Account has not been verified. Please Verify account and try again",
+      });
+    }
 
+    //TODO check if the account has not been deactivated by admin
+    if (accountActive !== STATUS.ACTIVE) {
+      return Response.UNAUTHORIZED({
+        message:
+          "Account has been been disabled by system administrator. Please Contact for further instructions",
+      });
+    }
+
+    //Check if 2FA is enabled on the user's account
     if (is2faEnabled === STATUS.ACTIVE) {
       //generate token for 2-factor authentication
       const token = generateVerificationToken();
@@ -220,19 +233,22 @@ exports.loginUser = async (user) => {
 
       // send sms notifcation with 2fa token
       await sendTokenSMS({ token, mobileNumber });
+      return Response.SUCCESS({ message: "2FA Token Sent successfully" });
       return { message: "2FA Token Sent successfully", data: null };
     }
+
+    //Generate access token
     const accessToken = generateUsersJwtAccessToken({
-      is2faEnabled,
-      userId,
-      email,
-      userType,
-      accountVerified,
-      isOnline: STATUS.ACTIVE,
-      accountActive,
+      sub: userId,
     });
 
-    return { message: "Login Successful", data: accessToken };
+    //update user's active status in the database
+    dbObject.updateUserAccountStatusById({
+      userId,
+      status: STATUS.ACTIVE,
+    });
+    //Return access token
+    return Response.SUCCESS({ message: "Login Successful", data: accessToken });
   } catch (error) {
     console.error(error);
     throw error;
@@ -240,15 +256,44 @@ exports.loginUser = async (user) => {
 };
 exports.requestUserLoginOtp = async (user) => {
   try {
-    const { userId, mobileNumber } = user;
+    const {
+      userId,
+      email,
+      userType,
+      accountVerified,
+      accountActive,
+      mobileNumber,
+    } = user;
 
+    //TODO Check if the account is verified
+    if (accountVerified !== STATUS.ACTIVE) {
+      return Response.UNAUTHORIZED({
+        message:
+          "Account has not been verified. Please Verify account and try again",
+      });
+    }
+
+    //TODO check if the account has not been deactivated by admin
+    if (accountActive !== STATUS.ACTIVE) {
+      return Response.UNAUTHORIZED({
+        message:
+          "Account has been been disabled by system administrator. Please Contact for further instructions",
+      });
+    }
+    //Generate Login OTP
     const token = generateVerificationToken();
+
+    //Update user's OTP in database
     await dbObject.updateUserVerificationTokenById({
       userId,
       token,
     });
+
+    //send sms with generated token
     await sendTokenSMS({ token, mobileNumber });
-    return { message: "Login OTP Sent successfully", data: null };
+
+    //return response to user
+    return Response.SUCCESS({ message: "Login OTP Sent successfully" });
   } catch (error) {
     console.error(error);
     throw error;
