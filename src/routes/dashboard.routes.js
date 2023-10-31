@@ -73,7 +73,9 @@ router.post(
   DashboardController.update_password
 );
 
-router.get("/view_patient", UserController.view_patient_records);
+
+
+router.get("/view_patients", UserController.view_patient_records);
 router.get("/delete_user/:id", UserController.delete_user);
 router.get("/view_doctor", UserController.view_doctor);
 router.get(
@@ -83,7 +85,7 @@ router.get(
 );
 
 router.get(
-  "/view_department_type",
+  "/view_department",
 
   DepartmenttypeController.view_department_type
 );
@@ -115,8 +117,9 @@ router.get(
   DepartmenttypeController.delete_department_type
 );
 
+
 router.get(
-  "/view_blog_category",
+  "/view_blog_categories",
 
   BlogcategoryController.view_blog_category
 );
@@ -146,7 +149,7 @@ router.get(
   BlogcategoryController.delete_blog_category
 );
 
-router.get("/view_blog", BlogController.view_blog);
+router.get("/view_blogs", BlogController.view_blog);
 router.get("/add_blog", BlogController.add_blog);
 router.post("/do_add_blog", BlogController.do_add_blog);
 router.get("/edit_blog/:id", BlogController.edit_blog);

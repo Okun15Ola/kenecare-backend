@@ -4,7 +4,7 @@ var multer = require("multer");
 var fs = require("fs");
 
 exports.view_blog_category = (req, res, next) => {
-  return res.render("view_blog_category", {
+  return res.render("view_blog_categories", {
     title: "Category",
     data: [],
     success: req.flash("success"),

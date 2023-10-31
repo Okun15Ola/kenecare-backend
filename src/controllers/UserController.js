@@ -46,7 +46,7 @@ exports.delete_user = (req, res) => {
 };
 
 exports.view_doctor = (req, res, next) => {
-  res.render("view_doctor", {
+  res.render("view_doctors", {
     title: "Manage Doctor",
     data: [],
     success: req.flash("success"),

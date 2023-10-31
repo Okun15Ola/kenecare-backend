@@ -4,7 +4,7 @@ var multer = require("multer");
 var fs = require("fs");
 
 exports.view_city = (req, res, next) => {
-  return res.render("view_city", {
+  return res.render("view_cities", {
     title: "Manage City",
     data: [],
     success: req.flash("success"),

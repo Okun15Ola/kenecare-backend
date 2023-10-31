@@ -8,6 +8,7 @@ exports.login = (req, res, next) => {
     title: "Login",
     success: req.flash("success"),
     error: req.flash("error"),
+    layout: false
   });
 };
 
