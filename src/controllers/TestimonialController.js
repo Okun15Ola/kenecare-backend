@@ -3,7 +3,7 @@ var fs = require("fs");
 
 exports.view_testimonials = (req, res, next) => {
 
-  return res.render("view_testimonials", {
+  return res.render("testimonials/view_testimonials", {
 
     title: "Testimonial",
     data: [],
