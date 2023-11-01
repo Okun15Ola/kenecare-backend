@@ -1,9 +1,18 @@
 const { validationResult } = require("express-validator");
 const validator = require("./helpers/validate");
 
-exports.view_user = (req, res, next) => {
-  res.render("view_user", {
-    title: "User",
+// exports.view_user = (req, res, next) => {
+//   res.render("view_user", {
+//     title: "User",
+//     data: [],
+//     success: req.flash("success"),
+//     error: req.flash("error"),
+//   });
+// };
+
+exports.view_patient_records = (req, res, next) => {
+  res.render("view_patients", {
+    title: "Patient_Records",
     data: [],
     success: req.flash("success"),
     error: req.flash("error"),
@@ -37,7 +46,7 @@ exports.delete_user = (req, res) => {
 };
 
 exports.view_doctor = (req, res, next) => {
-  res.render("view_doctor", {
+  res.render("view_doctors", {
     title: "Manage Doctor",
     data: [],
     success: req.flash("success"),

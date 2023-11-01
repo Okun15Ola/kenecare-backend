@@ -26,7 +26,7 @@ const { getTragos } = require("./helpers/msgget");
 // const {html_entity_encode} = require("./helpers/html_entities");
 
 exports.view_blog = (req, res, next) => {
-  return res.render("view_blog", {
+  return res.render("view_blogs", {
     title: "Blog",
     data: [],
     success: req.flash("success"),
@@ -264,6 +264,7 @@ exports.delete_blog = (req, res) => {
     }
   });
 };
+
 exports.do_edit_blog = (req, res) => {
   return res.render("edit_blog", {
     title: "Edit Blog",

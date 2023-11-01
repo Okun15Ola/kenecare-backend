@@ -1,7 +1,8 @@
 const { validationResult } = require("express-validator");
 const validator = require("./helpers/validate");
+
 exports.view_appointment = (req, res, next) => {
-  return res.render("view_appointment", {
+  return res.render("view_appointments", {
     title: "Manage Appointment",
     data: [],
     success: req.flash("success"),

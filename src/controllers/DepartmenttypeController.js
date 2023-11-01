@@ -4,7 +4,7 @@ var multer = require("multer");
 var fs = require("fs");
 
 exports.view_department_type = (req, res, next) => {
-  return res.render("view_department_type", {
+  return res.render("view_department", {
     title: "Department Type",
     data: [],
     success: req.flash("success"),

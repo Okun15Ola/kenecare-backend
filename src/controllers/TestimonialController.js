@@ -1,8 +1,10 @@
 var multer = require("multer");
 var fs = require("fs");
 
-exports.view_testimonial = (req, res, next) => {
-  return res.render("view_testimonial", {
+exports.view_testimonials = (req, res, next) => {
+
+  return res.render("testimonials/view_testimonials", {
+
     title: "Testimonial",
     data: [],
     success: req.flash("success"),
@@ -19,15 +21,19 @@ exports.add_testimonial = (req, res, next) => {
 };
 
 var storage = multer.diskStorage({
+
   destination: function (req, file, callback) {
     callback(null, "./public/upload/testimonial");
   },
+
   filename: function (req, file, callback) {
     let extArray = file.originalname.split(".");
     let extension = extArray[extArray.length - 1];
     callback(null, file.fieldname + "-" + Date.now() + "." + extension);
   },
+
 });
+
 var upload = multer({ storage: storage }).single("image");
 
 exports.do_add_testimonial = (req, res, next) => {
@@ -54,6 +60,7 @@ exports.delete_testimonial = (req, res) => {
     error: [],
   });
 };
+
 exports.do_edit_testimonial = (req, res) => {
   return res.render("edit_testimonial", {
     title: "Edit Testimonial",

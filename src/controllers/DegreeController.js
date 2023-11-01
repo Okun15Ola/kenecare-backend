@@ -4,7 +4,7 @@ var multer = require("multer");
 var fs = require("fs");
 
 exports.view_degree = (req, res, next) => {
-  return res.render("view_degree", {
+  return res.render("view_degrees", {
     title: "Manage Degree",
     data: [],
     success: req.flash("success"),

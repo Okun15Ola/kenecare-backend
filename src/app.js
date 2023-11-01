@@ -39,6 +39,10 @@ const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.ro
 //DASHBOARD ROUTES
 const dashboardRouter = require("./routes/dashboard.routes");
 
+// const testRouter = require("./routes/test.routes");
+
+// const admin_dashboardRouter = require("./routes/admin_dashboard.routes");
+
 // global.BASE_URL = process.env.BASE_URL;
 // global.API_BASE_URL = process.env.API_BASE_URL;
 // global.FRONTEND_URL = process.env.FRONTEND_URL;
@@ -97,6 +101,22 @@ app.use(function (req, res, next) {
 
 //DASHBOARD
 app.use("/", dashboardRouter);
+
+// app.get('/login', (req, res) => {
+//   res.render('login', {
+//       // Your login data here
+//   }, (err, html) => {
+//       res.render('login_layout', {
+//           body: html,
+//       });
+//   });
+// });
+
+
+// app.use("/test1", testRouter);
+
+// app.use("/admin_Dashboard", admin_dashboardRouter);
+
 //USERS ROUTES
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/doctors", requireUserAuth, doctorsRouter);
@@ -125,7 +145,28 @@ app.use((req, res, next) => {
   next(err);
 });
 
+// app.use((err, req, res, next) => {
+
+//   logger.error(err);
+//   let statusCode = 500;
+//   let errorMessage = "Internal Server Error";
+
+//   if (err.code === 404) {
+//     statusCode = 404;
+//     errorMessage = "The requested resource could not be found.";
+
+//     return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
+
+//   }
+
+//   console.log(err);
+//   return res
+//     .status(statusCode)
+//     .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
+// });
+
 app.use((err, req, res, next) => {
+  
   logger.error(err);
 
   let statusCode = 500;
@@ -136,10 +177,28 @@ app.use((err, req, res, next) => {
   }
 
   if (err.code === 404) {
-    statusCode = 404;
-    errorMessage = "The requested resource could not be found.";
-    return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
+    // For 404 errors, render the custom 404 HTML page
+    return res.status(404).render('errors/404', { layout: false });
   }
+
+  // For other errors (500 and others), render the custom 500 HTML page
+  return res.status(500).render('errors/500', { layout: false });
+});
+
+
+// // Custom error handling middleware
+// app.use((err, req, res, next) => {
+//   logger.error(err);
+//   let statusCode = 500;
+//   let errorMessage = "Internal Server Error";
+
+//   if (err.code === 404) {
+//     statusCode = 404;
+//     errorMessage = "The requested resource could not be found.";
+
+//     // Send the custom 404 HTML page
+//     return res.status(statusCode).sendFile(path.join(__dirname, 'views', '404.ejs'));
+//   }
 
   return res
     .status(statusCode)

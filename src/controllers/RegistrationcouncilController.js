@@ -4,7 +4,7 @@ var multer = require("multer");
 var fs = require("fs");
 
 exports.view_registration_council = (req, res, next) => {
-  return res.render("view_registration_council", {
+  return res.render("view_registration_councils", {
     title: "Manage Registration Council",
     data: [],
     success: req.flash("success"),

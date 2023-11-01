@@ -5,7 +5,7 @@ const { compareSync, hashSync, genSaltSync } = require("bcryptjs");
 
 // Login Page
 exports.index = (req, res, next) => {
-  return res.render("dashboard", {
+  return res.render("dashboard_new",{
     total_departments: 100,
     total_doctors: 100,
     total_patients: 100,
@@ -15,6 +15,20 @@ exports.index = (req, res, next) => {
     title: "Dashboard",
   });
 };
+
+
+// //New Dashboard
+// exports.index = (req, res, next) => {
+//   return res.render("admin_dashboard", {
+//   total_departments: 100,
+//   total_doctors: 100,
+//   total_patients: 100,
+//   total_appointments: 100,
+//   patients: [],
+//   doctors: [],
+//   title: "Admin_Dashboard",
+//   });
+// };
 
 exports.profile = (req, res) => {
   return res.render("profile", {

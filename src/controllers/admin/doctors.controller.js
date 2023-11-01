@@ -13,6 +13,7 @@ exports.GetDoctorsController = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.GetDoctorByIDController = async (req, res, next) => {
   try {
   } catch (error) {

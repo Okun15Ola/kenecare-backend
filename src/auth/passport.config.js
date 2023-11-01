@@ -1,4 +1,4 @@
-const JwtStrategy = require("passport-jwt").Strategy,
+const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const {patientJwtSecret} = require("../config/default.config")
 const opts = {
