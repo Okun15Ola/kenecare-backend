@@ -112,7 +112,6 @@ app.use("/", dashboardRouter);
 //   });
 // });
 
-
 // app.use("/test1", testRouter);
 
 // app.use("/admin_Dashboard", admin_dashboardRouter);
@@ -145,61 +144,19 @@ app.use((req, res, next) => {
   next(err);
 });
 
-// app.use((err, req, res, next) => {
-
-//   logger.error(err);
-//   let statusCode = 500;
-//   let errorMessage = "Internal Server Error";
-
-//   if (err.code === 404) {
-//     statusCode = 404;
-//     errorMessage = "The requested resource could not be found.";
-
-//     return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
-
-//   }
-
-//   console.log(err);
-//   return res
-//     .status(statusCode)
-//     .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
-// });
-
 app.use((err, req, res, next) => {
-  
   logger.error(err);
-
   let statusCode = 500;
-
   let errorMessage = "Internal Server Error";
-  if (err.code === 400) {
-    return res.status(err.code).json(BAD_REQUEST({ message: err.message }));
-  }
 
   if (err.code === 404) {
-    // For 404 errors, render the custom 404 HTML page
-    return res.status(404).render('errors/404', { layout: false });
+    statusCode = 404;
+    errorMessage = "The requested resource could not be found.";
+
+    return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
   }
 
-  // For other errors (500 and others), render the custom 500 HTML page
-  return res.status(500).render('errors/500', { layout: false });
-});
-
-
-// // Custom error handling middleware
-// app.use((err, req, res, next) => {
-//   logger.error(err);
-//   let statusCode = 500;
-//   let errorMessage = "Internal Server Error";
-
-//   if (err.code === 404) {
-//     statusCode = 404;
-//     errorMessage = "The requested resource could not be found.";
-
-//     // Send the custom 404 HTML page
-//     return res.status(statusCode).sendFile(path.join(__dirname, 'views', '404.ejs'));
-//   }
-
+  console.log(err);
   return res
     .status(statusCode)
     .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
