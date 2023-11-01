@@ -1,12 +1,10 @@
 require("dotenv").config();
 const express = require("express");
-const ejsLayout = require("express-ejs-layouts");
 const cors = require("cors");
 const helmet = require("helmet");
 const expressSession = require("express-session");
 const path = require("path");
 const bodyParser = require("body-parser");
-const flash = require("req-flash");
 const { sessionSecret } = require("./config/default.config");
 const { connectionPool } = require("./db/db.connection.js");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
@@ -36,25 +34,7 @@ const adminSpecialtiesRouter = require("./routes/api/admin/specialties.routes");
 const adminFaqRouter = require("./routes/api/admin/faq.routes");
 const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
 
-//DASHBOARD ROUTES
-const dashboardRouter = require("./routes/dashboard.routes");
 
-// const testRouter = require("./routes/test.routes");
-
-// const admin_dashboardRouter = require("./routes/admin_dashboard.routes");
-
-// global.BASE_URL = process.env.BASE_URL;
-// global.API_BASE_URL = process.env.API_BASE_URL;
-// global.FRONTEND_URL = process.env.FRONTEND_URL;
-// global.UPLOAD_DIR = "public/upload/";
-// global.connectPool = connectionPool;
-// global.__basedir = __dirname;
-// global.dateAndTime = require("date-and-time");
-// global.nodemailer = require("nodemailer");
-// global.mailerConfig = require("./config/mailer.config.js");
-// global.html_entities = require("./controllers/helpers/html_entities");
-// global.jwt = require("jsonwebtoken");
-// global.jwtConfig = require("./config/auth.jwtConfig.js");
 
 const app = express();
 
@@ -78,12 +58,7 @@ app.use(
   })
 );
 
-app.use(flash());
 
-//View Engine Middleware
-app.set("view engine", "ejs");
-app.use(ejsLayout);
-app.set("views", path.join(__dirname, "views"));
 
 app.use(function (req, res, next) {
   if (!req.path.includes("/api/")) {
@@ -97,24 +72,7 @@ app.use(function (req, res, next) {
   next();
 });
 
-// app.use(logUserInteraction);
-
-//DASHBOARD
-app.use("/", dashboardRouter);
-
-// app.get('/login', (req, res) => {
-//   res.render('login', {
-//       // Your login data here
-//   }, (err, html) => {
-//       res.render('login_layout', {
-//           body: html,
-//       });
-//   });
-// });
-
-// app.use("/test1", testRouter);
-
-// app.use("/admin_Dashboard", admin_dashboardRouter);
+app.use(logUserInteraction);
 
 //USERS ROUTES
 app.use("/api/v1/auth", authRouter);

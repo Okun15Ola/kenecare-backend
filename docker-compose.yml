@@ -47,7 +47,6 @@ services:
       - JWT_ISSUER=$JWT_ISSUER
     volumes:
       - .:/usr/src/app
-    
 
   db:
     image: mysql:latest
@@ -65,10 +64,9 @@ services:
       - 3307:3306
     volumes:
       - ./src/db/kenecare.sql:/docker-entrypoint-initdb.d/init.sql
-      - kenecare-db-data:/var/lib/mysql
+      - kenecare-api-db-data:/var/lib/mysql
     networks:
       - kenecare-net
-
   # nginx:
   #   build:
   #     context: ./nginx
@@ -84,8 +82,8 @@ services:
   #     - kenecare-net
 
 volumes:
-  kenecare-db-data:
-    name: kenecare-db-data
+  kenecare-api-db-data:
+    name: kenecare-api-db-data
 
 networks:
   kenecare-net:
