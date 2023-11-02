@@ -10,6 +10,7 @@ services:
       - 8001:8000
     networks:
       - kenecare-staging-net
+      - mysql-db-net
     restart: unless-stopped
     env_file: ./.env
     environment:
@@ -20,10 +21,9 @@ services:
       - DB_PORT=$DB_PORT
       - DB_CONNECTION_LIMIT=$DB_CONNECTION_LIMIT
       - NODE_ENV=$NODE_ENV
-      - APP_PORT=$APP_PORT   
+      - APP_PORT=$APP_PORT
     volumes:
       - kenecare-app-data:/usr/src/app/src/public/upload
-    
 
   db:
     image: mysql:latest
@@ -32,10 +32,10 @@ services:
     # command: --default-authentication-plugin=mysql_native_password
     env_file: ./.env
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_USER=$MYSQL_USER
     ports:
       - 3306:3306
     volumes:
@@ -43,8 +43,6 @@ services:
       - kenecare-db-data:/var/lib/mysql
     networks:
       - mysql-db-net
-      - kenecare-staging-net
-
 
 volumes:
   kenecare-db-data:

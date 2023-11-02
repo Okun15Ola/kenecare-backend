@@ -21,6 +21,9 @@ run-prod:
 run-staging:
 	@ENV=staging docker compose --env-file=.env  -f docker-compose-staging.yml up
 	
+stop-staging:
+	@ENV=staging docker compose --env-file=.env  -f docker-compose-staging.yml down
+	
 	
 stop-prod:
 	@ENV=production docker compose --env-file=production.env -f docker-compose-prod.yml down  -v
@@ -28,6 +31,6 @@ stop-prod:
 
 push-staging-image:
 	@docker push imotechsl/kenecare-api:staging
-	
+
 push-production-image:
 	@docker push imotechsl/kenecare-api:production
