@@ -19,7 +19,7 @@ run-prod:
 	@ENV=production docker compose --env-file=production.env  -f docker-compose-prod.yml up -d
 
 run-staging:
-	@ENV=staging docker compose --env-file=.env  -f docker-compose-staging.yml up
+	@ENV=staging docker compose --env-file=.env  -f docker-compose-staging.yml up -d
 	
 stop-staging:
 	@ENV=staging docker compose --env-file=.env  -f docker-compose-staging.yml down
