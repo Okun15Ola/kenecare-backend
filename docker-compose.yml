@@ -6,8 +6,8 @@ services:
       - db
     build:
       context: .
-    container_name: kenecare-admin-${ENV}
-    image: imotechsl/kenecare-admin:${ENV}
+    container_name: kenecare-api-${ENV}
+    image: imotechsl/kenecare-api:${ENV}
     ports:
       - 8000:8000
     networks:
@@ -55,11 +55,11 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     env_file: ./.env.${ENV}
     environment:
-      - MYSQL_ROOT_PASSWORD=changeme
-      - MYSQL_USER=kenecare
-      - MYSQL_PASSWORD=changeme
-      - MYSQL_DATABASE=db_kenecare
-      - MYSQL_ROOT_HOST=%
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_ROOT_HOST=MYSQL_ROOT_HOST
     ports:
       - 3307:3306
     volumes:

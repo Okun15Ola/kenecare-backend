@@ -26,5 +26,8 @@ stop-prod:
 	@ENV=production docker compose --env-file=production.env -f docker-compose-prod.yml down  -v
 	
 
-push-image:
+push-staging-image:
+	@docker push imotechsl/kenecare-api:staging
+	
+push-production-image:
 	@docker push imotechsl/kenecare-api:production
