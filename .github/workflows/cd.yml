@@ -28,5 +28,5 @@ jobs:
       run: cp ~/.env.kenecare.api ./.env
 
     - name: Run docker compose
-      run: make run-staging
+      run: make stop-staging
 
