@@ -1,0 +1,32 @@
+name: deploy-images
+
+on:
+  workflow_run: 
+    workflows: ["build-and-push-images"]    
+    types:
+      - completed
+ 
+env:
+  DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+  DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+
+jobs:
+  deploy:
+    runs-on: ["self-hosted", "imotechsl-apps"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Remove old running containers
+      run: docker rm -f kenecare-api-staging  || true
+
+    - name: Remove cached images
+      run: docker rmi imotechsl/kenecare-api:staging || true
+
+    - name: Copy env
+      run: cp ~/.env.kenecare.api ./.env
+
+    - name: Run docker compose
+      run: make run-staging
+
