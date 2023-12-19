@@ -15,6 +15,7 @@ localMediaUploader.single("image");
 
 exports.GetSpecialtiesController = async (req, res, next) => {
   try {
+    
     const response = await getSpecialties();
     return res.status(response.statusCode).json(response);
   } catch (error) {

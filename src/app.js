@@ -3,10 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const expressSession = require("express-session");
-const path = require("path");
 const bodyParser = require("body-parser");
 const { sessionSecret } = require("./config/default.config");
-const { connectionPool } = require("./db/db.connection.js");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
 const logger = require("./middlewares/logger.middleware");
 const {
@@ -18,9 +16,24 @@ const {
   INTERNAL_SERVER_ERROR,
   BAD_REQUEST,
 } = require("./utils/response.utils.js");
+
 //API ROUTES
+
+//INDEX ROUTES
+const indexRouter = require("./routes/api/index.routes.js");
+
+//AUTHENTICATION ROUTER
 const authRouter = require("./routes/api/auth.routes");
-const doctorsRouter = require("./routes/api/doctors/profile.routes");
+
+//DOCTORS ROUTER
+const doctorsProfileRouter = require("./routes/api/doctors/profile.routes");
+const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.routes.js");
+
+//PATIENTS ROUTES
+const patientsProfileRouter = require("./routes/api/patients/profile.routes");
+const patientAppointmentRouter = require("./routes/api/patients/appointments.routes.js");
+
+//ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
 const adminSpecializationsRoute = require("./routes/api/admin/specializations.routes");
 const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
@@ -33,8 +46,7 @@ const adminSymptomsRouter = require("./routes/api/admin/common-symptoms.routes")
 const adminSpecialtiesRouter = require("./routes/api/admin/specialties.routes");
 const adminFaqRouter = require("./routes/api/admin/faq.routes");
 const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
-
-
+const swaggerUi = require("swagger-ui-express");
 
 const app = express();
 
@@ -58,8 +70,6 @@ app.use(
   })
 );
 
-
-
 app.use(function (req, res, next) {
   if (!req.path.includes("/api/")) {
     global.session_user_id = "";
@@ -72,11 +82,22 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.use(logUserInteraction);
+// app.use(logUserInteraction);
+app.use("/api/v1", indexRouter);
+
+//API DOCS ROUTE
+const swaggerDocs = require("./utils/swagger.utils.js");
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 //USERS ROUTES
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/doctors", requireUserAuth, doctorsRouter);
+app.use("/api/v1/doctors", requireUserAuth, doctorsProfileRouter);
+app.use("/api/v1/patients", requireUserAuth, patientsProfileRouter);
+app.use(
+  "/api/v1/patients/appointments",
+  requireUserAuth,
+  patientAppointmentRouter
+);
 
 //ADMIN ROUTES
 //TODO Add a middle ware to authenticate ADMIN JWT
@@ -85,10 +106,10 @@ app.use("/api/v1/admin/accounts", adminAccountsRouter);
 app.use("/api/v1/admin/appointments", adminAccountsRouter);
 app.use("/api/v1/admin/blog-categories", adminBlogCategoriesRouter);
 app.use("/api/v1/admin/blogs", requireAdminAuth, adminBlogsRouter);
-app.use("/api/v1/admin/cities", adminCitiesRouter);
-app.use("/api/v1/admin/symptoms", adminSymptomsRouter);
+app.use("/api/v1/admin/cities", requireAdminAuth, adminCitiesRouter);
+app.use("/api/v1/admin/symptoms", requireAdminAuth, adminSymptomsRouter);
 app.use("/api/v1/admin/doctors", adminDoctorsRoute);
-app.use("/api/v1/admin/faqs", adminFaqRouter);
+app.use("/api/v1/admin/faqs", requireAdminAuth, adminFaqRouter);
 app.use("/api/v1/admin/medical-councils", adminMedicalCouncilRouter);
 app.use("/api/v1/admin/services", adminServicesRouter);
 app.use("/api/v1/admin/specializations", adminSpecializationsRoute);

@@ -1,51 +1,126 @@
-const Response = require("../utils/response.utils");
-const logger = require("../middlewares/logger.middleware");
+const Response = require("../../utils/response.utils");
+const logger = require("../../middlewares/logger.middleware");
+const {
+  getPatientByUser,
+  getAllPatients,
+  createPatientProfile,
+  updatePatientProfile,
+  updatePatientProfilePicture,
+  createPatientMedicalInfo,
+} = require("../../services/patients.services");
 
-exports.GetProfileByUserIdController = async (req, res, next) => {
+exports.GetPatientProfileController = async (req, res, next) => {
   try {
+    const { id } = req.user;
+    const response = await getPatientByUser(id);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
     next(error);
   }
 };
-// exports.GetTestimonialByIDController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
-// exports.CreateTestimonialController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
-// exports.UpdateTestimonialByIdController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
-// exports.UpdateTestimonialStatusController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
-// exports.DeleteTestimonialByIdController = async (req, res, next) => {
-//   try {
-//   } catch (error) {
-//     console.error(error);
-//     logger.error(error);
-//     next(error);
-//   }
-// };
+exports.CreatePatientProfileController = async (req, res, next) => {
+  try {
+    console.log(req.body);
+
+    const { id } = req.user;
+    const { firstname, middlename, lastname, gender, dateOfBirth } = req.body;
+    const response = await createPatientProfile({
+      userId: id,
+      firstName: firstname,
+      middleName: middlename,
+      lastName: lastname,
+      gender,
+      dateOfBirth,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+exports.CreatePatientMedicalInfoController = async (req, res, next) => {
+  try {
+    console.log(req.body);
+    const { id } = req.user;
+    const {
+      height,
+      weight,
+      allergies,
+      familyMedicalHistory,
+      surgries,
+      isDisabled,
+      disabilityDesc,
+      useTobacco,
+      tobaccoIntakeFreq,
+      alcoholIntake,
+      alcoholIntakeFreq,
+      caffineIntake,
+      caffineIntakeFreq,
+      reacreationalDrugIntake,
+      reacreationalDrugIntakeFreq,
+    } = req.body;
+    const response = await createPatientMedicalInfo({
+      userId: id,
+      height,
+      weight,
+      allergies,
+      familyMedicalHistory,
+      surgries,
+      isDisabled,
+      disabilityDesc,
+      useTobacco,
+      tobaccoIntakeFreq,
+      alcoholIntake,
+      alcoholIntakeFreq,
+      caffineIntake,
+      caffineIntakeFreq,
+      reacreationalDrugIntake,
+      reacreationalDrugIntakeFreq,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+exports.UpdatePatientProfileController = async (req, res, next) => {
+  try {
+    console.log(req.body);
+
+    const { id } = req.user;
+    const { firstname, middlename, lastname, gender, dateOfBirth } = req.body;
+    const response = await updatePatientProfile({
+      userId: id,
+      firstName: firstname,
+      middleName: middlename,
+      lastName: lastname,
+      gender,
+      dateOfBirth,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+exports.UpdatePatientProfilePictureController = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const imageUrl = req.file.filename;
+
+    const response = await updatePatientProfilePicture({
+      userId: id,
+      imageUrl,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};

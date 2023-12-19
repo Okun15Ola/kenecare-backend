@@ -1,24 +1,27 @@
 const { connectionPool } = require("./db.connection");
 
 exports.getAllCities = () => {
-  const sql = "SELECT * FROM cities ";
+  const sql = "CALL Sp_GetCities()";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, (error, results) => {
       if (error) return reject(error);
 
-      return resolve(results);
+      const [cities] = results;
+      return resolve(cities);
     });
   });
 };
 exports.getCityById = (id) => {
-  const sql = "SELECT * FROM cities WHERE city_id = ? LIMIT 1";
+  const sql = "CALL Sp_GetCityById(?)";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [id], (error, results) => {
       if (error) return reject(error);
 
-      return resolve(results[0]);
+      const [result] = results;
+
+      return resolve(result[0]);
     });
   });
 };

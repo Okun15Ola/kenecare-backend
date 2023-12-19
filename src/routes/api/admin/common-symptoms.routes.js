@@ -12,7 +12,11 @@ const {
 
 const {
   localMediaUploader: mediaUploaded,
+  localMediaUploader,
 } = require("../../../utils/file-upload.utils");
+const {
+  CreateSymptomValidation,
+} = require("../../../validations/symptoms.validations");
 
 router.get("/", GetCommonSymptomsController);
 
@@ -20,7 +24,9 @@ router.get("/:id", GetCommonSymptomByIDController);
 
 router.post(
   "/",
-
+  mediaUploaded.single("image"),
+  CreateSymptomValidation,
+  Validate,
   CreateCommonSymptomController
 );
 

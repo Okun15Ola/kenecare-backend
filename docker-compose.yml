@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   admin:
@@ -9,7 +9,7 @@ services:
     container_name: kenecare-api-${ENV}
     image: imotechsl/kenecare-api:${ENV}
     ports:
-      - 8000:8000
+      - 8500:8000
     networks:
       - kenecare-net
     restart: always

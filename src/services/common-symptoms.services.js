@@ -23,7 +23,7 @@ exports.getCommonSymptoms = async () => {
           specialty,
           imageUrl,
           consultationFee,
-          tags: JSON.parse(tags),
+          tags,
           isActive,
           inputtedBy,
         };
@@ -39,8 +39,8 @@ exports.getCommonSymptoms = async () => {
 
 exports.getCommonSymptom = async (id) => {
   try {
-    const result = await isSymptomExists(id);
-    if (!result) {
+    const rawData = await dbObject.getCommonSymptomById(id);
+    if (!rawData) {
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
     const {
@@ -62,7 +62,7 @@ exports.getCommonSymptom = async (id) => {
       specialty,
       imageUrl,
       consultationFee,
-      tags: JSON.parse(tags),
+      tags,
       isActive,
       inputtedBy,
     };
@@ -73,18 +73,24 @@ exports.getCommonSymptom = async (id) => {
     throw error;
   }
 };
-exports.createCommonSymptom = async (symptom) => {
+exports.createCommonSymptom = async ({
+  name,
+  description,
+  specialtyId,
+  image,
+  consultationFee,
+  tags,
+  inputtedBy,
+}) => {
   try {
-    const { name, description, specialtyId, imageUrl, consultationFee, tags } =
-      symptom;
-
     await dbObject.createNewCommonSymptom({
       name,
       description,
       specialtyId,
-      imageUrl,
+      image,
       consultationFee,
       tags,
+      inputtedBy,
     });
 
     return Response.CREATED({ message: "Common Symptom Created Successfully" });
@@ -93,10 +99,19 @@ exports.createCommonSymptom = async (symptom) => {
     throw error;
   }
 };
-exports.updateCommonSymptom = async ({ id, symptom }) => {
+exports.updateCommonSymptom = async ({
+  id,
+  name,
+  description,
+  specialtyId,
+  image,
+  consultationFee,
+  tags,
+  inputtedBy,
+}) => {
   try {
-    const result = await isSymptomExists(id);
-    if (!result) {
+    const rawData = await dbObject.getCommonSymptomById(id);
+    if (!rawData) {
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
     await dbObject.updateCommonSymptomById({ id, symptom });

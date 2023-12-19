@@ -22,16 +22,15 @@ exports.getCommonSymptomById = (id) => {
     });
   });
 };
-exports.createNewCommonSymptom = (symptom) => {
-  const {
-    name,
-    description,
-    specialtyId,
-    imageUrl,
-    consultationFee,
-    tags,
-    inputtedBy,
-  } = symptom;
+exports.createNewCommonSymptom = ({
+  name,
+  description,
+  specialtyId,
+  image,
+  consultationFee,
+  tags,
+  inputtedBy,
+}) => {
   const sql =
     "INSERT INTO common_symptoms (symptom_name,symptom_descriptions,speciality_id,image_url, general_consultation_fee,tags,inputted_by) VALUES (?,?,?,?,?,?,?)";
 
@@ -42,7 +41,7 @@ exports.createNewCommonSymptom = (symptom) => {
         name,
         description,
         specialtyId,
-        imageUrl,
+        image,
         consultationFee,
         tags,
         inputtedBy,
@@ -55,16 +54,22 @@ exports.createNewCommonSymptom = (symptom) => {
     );
   });
 };
-exports.updateCommonSymptomById = ({ id, symptom }) => {
-  const { name, description, specialtyId, imageUrl, consultationFee, tags } =
-    symptom;
+exports.updateCommonSymptomById = ({
+  id,
+  name,
+  description,
+  specialtyId,
+  image,
+  consultationFee,
+  tags,
+}) => {
   const sql =
     "UPDATE common_symptoms SET symptom_name = ?, symptom_descriptions, speciality_id = ?, image_url = ?, general_consultation_fee = ?, tags = ? WHERE symptom_id = ?";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [name, description, specialtyId, imageUrl, consultationFee, tags, id],
+      [name, description, specialtyId, image, consultationFee, tags, id],
       (error, results) => {
         if (error) return reject(error);
 

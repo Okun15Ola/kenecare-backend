@@ -34,3 +34,6 @@ push-staging-image:
 
 push-production-image:
 	@docker push imotechsl/kenecare-api:production
+
+logs:
+	@ENV=development docker logs -f kenecare-api-development

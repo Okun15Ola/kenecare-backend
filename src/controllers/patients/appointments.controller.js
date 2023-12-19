@@ -1,28 +1,37 @@
-const Response = require("../utils/response.utils");
-const logger = require("../middlewares/logger.middleware");
+const logger = require("../../middlewares/logger.middleware");
+const {
+  getPatientAppointment,
+  getPatientAppointments,
+  createPatientAppointment,
+} = require("../../services/patients.appointments.services");
 
-exports.GetPatientMedicalAppointmentsController = async (req, res, next) => {
+exports.GetAppointmentsController = async (req, res, next) => {
   try {
+    const userId = parseInt(req.user.id);
+    const response = await getPatientAppointments(userId);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
     next(error);
   }
 };
-exports.GetPatientMedicalAppointmentsByIDController = async (
-  req,
-  res,
-  next
-) => {
+exports.GetAppointmentsByIDController = async (req, res, next) => {
   try {
+    const { id } = req.params;
+    const response = await getAppointment(id);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
     next(error);
   }
 };
-exports.CreatePatientMedicalAppointmentController = async (req, res, next) => {
+exports.CreateAppointmentController = async (req, res, next) => {
   try {
+    console.log(req.body);
+    return res.end();
+    const response = await createPatientAppointment();
   } catch (error) {
     console.error(error);
     logger.error(error);

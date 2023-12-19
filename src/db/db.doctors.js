@@ -1,7 +1,8 @@
 const { connectionPool } = require("./db.connection");
 
 exports.getAllDoctors = () => {
-  const sqlQuery = "SELECT * FROM doctors;";
+  const sqlQuery =
+    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, specialization_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN specializations ON doctors.specialization_id = specializations.specialization_id INNER JOIN cities ON doctors.city_id = cities.city_id;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sqlQuery, (err, result) => {
       if (err) return reject(err);
@@ -11,11 +12,11 @@ exports.getAllDoctors = () => {
   });
 };
 
-exports.getDoctorById = (id) => {
+exports.getDoctorById = (doctorId) => {
   const sql =
     "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, specialization_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN specializations ON doctors.specialization_id = specializations.specialization_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctor_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [id], (err, result) => {
+    connectionPool.query(sql, [doctorId], (err, result) => {
       if (err) return reject(err);
       return resolve(result[0]);
     });

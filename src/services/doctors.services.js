@@ -6,7 +6,55 @@ const { getUserById } = require("../db/db.users");
 exports.getAllDoctors = async () => {
   try {
     const rawData = await dbObject.getAllDoctors();
-    console.log(rawData);
+    if (rawData) {
+      const doctors = rawData.map(
+        ({
+          doctor_id: doctorId,
+          title,
+          first_name: firstName,
+          middle_name: middleName,
+          last_name: lastName,
+          gender,
+          professional_summary: professionalSummary,
+          profile_pic_url,
+          profilePic,
+          specialization_name: specialization,
+          qualifications,
+          consultation_fee: consultationFee,
+          city_name: location,
+          years_of_experience: yearOfExperience,
+          is_profile_approved: isProfileApproved,
+          mobile_number: mobileNumber,
+          email,
+          user_type: userType,
+          is_account_active: isAccountActive,
+        }) => {
+          return {
+            doctorId,
+            title,
+            firstName,
+            middleName,
+            lastName,
+            gender,
+            professionalSummary,
+            profile_pic_url,
+            profilePic,
+            specialization,
+            qualifications,
+            consultationFee,
+            location,
+            yearOfExperience,
+            isProfileApproved,
+            mobileNumber,
+            email,
+            userType,
+            isAccountActive,
+          };
+        }
+      );
+
+      return Response.SUCCESS({ data: doctors });
+    }
   } catch (error) {
     console.error(error);
     throw error;
@@ -18,6 +66,9 @@ exports.getDoctorByUser = async (id) => {
     //Get profile from database
     const rawData = await dbObject.getDoctorByUserId(id);
 
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Patient Profile Not Found" });
+    }
     //destruct properties from database object
     const {
       doctor_id: doctorId,
@@ -80,6 +131,65 @@ exports.getDoctorByUser = async (id) => {
     throw error;
   }
 };
+
+exports.getDoctorById = async (doctorId) => {
+  try {
+    //Get profile from database
+    const rawData = await dbObject.getDoctorById(doctorId);
+
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Doctor Not Found" });
+    }
+    //destruct properties from database object
+    const {
+      doctor_id: doctorId,
+      title,
+      first_name: firstName,
+      middle_name: middleName,
+      last_name: lastName,
+      gender,
+      professional_summary: professionalSummary,
+      profile_pic_url: profilePic,
+      specialization_name: specialization,
+      qualifications,
+      consultation_fee: consultationFees,
+      city_name: city,
+      years_of_experience: yearOfExperience,
+      is_profile_approved: isProfileApproved,
+      user_id: userId,
+      mobile_number: mobileNumber,
+      email,
+      user_type: userType,
+      is_account_active: isAccountActive,
+    } = rawData;
+
+    const doctor = {
+      doctorId,
+      userId,
+      title,
+      firstName,
+      middleName,
+      lastName,
+      gender,
+      mobileNumber,
+      email,
+      professionalSummary,
+      profilePic,
+      specialization,
+      qualifications,
+      consultationFees,
+      city,
+      yearOfExperience,
+      isProfileApproved,
+    };
+
+    return Response.SUCCESS({ data: doctor });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 exports.createDoctorProfile = async ({
   userId,
   title,

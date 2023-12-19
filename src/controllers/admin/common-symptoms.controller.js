@@ -10,6 +10,7 @@ const {
 const {
   localMediaUploader: mediaUploaded,
 } = require("../../utils/file-upload.utils");
+const Response = require("../../utils/response.utils");
 const upload = mediaUploaded.single("image");
 
 exports.GetCommonSymptomsController = async (req, res, next) => {
@@ -35,7 +36,25 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
 };
 exports.CreateCommonSymptomController = async (req, res, next) => {
   try {
-    return res.sendStatus(200);
+    if (req.file) {
+      const image = req.file.filename;
+      const inputtedBy = parseInt(req.user.id);
+      const { name, description, specialtyId, tags, consultationFee } =
+        req.body;
+      const response = await createCommonSymptom({
+        name,
+        description,
+        specialtyId,
+        image,
+        consultationFee,
+        tags,
+        inputtedBy,
+      });
+      return res.status(response.statusCode).json(response);
+    }
+    return res
+      .status(400)
+      .json(Response.BAD_REQUEST({ message: "Bad Request" }));
   } catch (error) {
     console.error(error);
     logger.error(error);

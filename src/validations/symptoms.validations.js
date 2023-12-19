@@ -4,7 +4,7 @@ const {
   getSpecialtiyById,
 } = require("../db/db.specialities");
 
-exports.CreateSpecialtyValidation = [
+exports.CreateSymptomValidation = [
   body("name")
     .notEmpty()
     .withMessage("Name is required")
@@ -24,8 +24,30 @@ exports.CreateSpecialtyValidation = [
     .toLowerCase()
     .trim()
     .escape(),
+  body("consultationFee")
+    .notEmpty()
+    .withMessage("Consultation Fee is required")
+    .isNumeric({ no_symbols: true })
+    .withMessage("Invalid Consultation Fee Specified")
+    .trim()
+    .escape(),
+  body("specialtyId")
+    .notEmpty()
+    .withMessage("Specialty ID is required")
+    .isNumeric({ no_symbols: true })
+    .trim()
+    .escape()
+    .custom(async (value, { req }) => {
+      const id = parseInt(value);
+      const found = await getSpecialtiyById(id);
+
+      if (!found) {
+        throw new Error("Invalid Specialty ID");
+      }
+      return true;
+    }),
 ];
-exports.UpdateSpecialtyValidation = [
+exports.UpdateSymptomValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specialty ID is required")
@@ -53,7 +75,6 @@ exports.UpdateSpecialtyValidation = [
     .toLowerCase()
     .trim()
     .escape(),
-  body("tags").toLowerCase().trim().escape(),
 ];
 exports.SpecialtyIDValidation = [
   param("id")
