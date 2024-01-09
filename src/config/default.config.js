@@ -5,6 +5,7 @@ module.exports = {
   appHost: env.HOST,
   appBaseURL: env.BASE_URL,
   apiBaseURL: env.API_BASE_URL,
+  adminJwtSecret: env.ADMINS_JWT_SECRET,
   frontendURL: env.FRONTEND_URL,
   timeSlotInterval: env.TIME_SLOT_INTERVAL,
   zoomSdkKey: env.ZOOM_SDK_KEY,
@@ -20,7 +21,6 @@ module.exports = {
   dbConnectionLimit: env.DB_CONNECTION_LIMIT,
   sessionSecret: env.SESSION_SECRET,
   patientJwtSecret: env.PATIENTS_JWT_SECRET,
-  adminJwtSecret: env.ADMINS_JWT_SECRET,
   jwtIssuer: env.JWT_ISSUER,
   jwtAudience: env.JWT_AUDIENCE,
   jwtAdminAudience: env.JWT_ADMIN_AUDIENCE,
@@ -36,4 +36,6 @@ module.exports = {
   omCancelURL: env.OM_CANCEL_URL,
   omCurrency: env.OM_CURRENCY,
   omNotificationURL: env.OM_NOTIFICATION_URL,
+  sendGridApiKey: env.SENDGRID_API_KEY,
+  sendGridSenderEmail: env.SENDGRID_EMAIL,
 };

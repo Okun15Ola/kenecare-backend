@@ -4,12 +4,13 @@ exports.getCommonSymptoms = async () => {
   try {
     const rawData = await dbObject.getAllCommonSymptoms();
 
+    console.log(rawData);
     const symptoms = rawData.map(
       ({
         symptom_id: symptomId,
         symptom_name: name,
         symptom_description: description,
-        specialty_id: specialty,
+        speciality_name: specialty,
         image_url: imageUrl,
         general_consultation_fee: consultationFee,
         tags,

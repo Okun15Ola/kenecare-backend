@@ -1,15 +1,23 @@
 const router = require("express").Router();
-const { body, param } = require("express-validator");
 const {
   GetAppointmentsController,
   GetAppointmentsByIDController,
   CreateAppointmentController,
 } = require("../../../controllers/patients/appointments.controller");
+const {
+  CreateAppointmentValidation,
+} = require("../../../validations/appointments.validations");
+const { Validate } = require("../../../validations/validate");
 
 router.get("/", GetAppointmentsController);
 router.get("/:id", GetAppointmentsByIDController);
 
-router.post("/", CreateAppointmentController);
+router.post(
+  "/",
+  CreateAppointmentValidation,
+  Validate,
+  CreateAppointmentController
+);
 router.put("/:id", (req, res, next) => {
   try {
     console.log("Update patient's appointment");

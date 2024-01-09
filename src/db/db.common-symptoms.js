@@ -1,7 +1,8 @@
 const { connectionPool } = require("./db.connection");
 
 exports.getAllCommonSymptoms = () => {
-  const sql = "SELECT * FROM common_symptoms;";
+  const sql =
+    "select symptom_id, symptom_name,symptom_descriptions,common_symptoms.image_url,general_consultation_fee, common_symptoms.tags, common_symptoms.is_active, common_symptoms.inputted_by, speciality_name from common_symptoms inner join medical_specialities on common_symptoms.speciality_id = medical_specialities.speciality_id;";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, (error, results) => {

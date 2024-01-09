@@ -198,6 +198,7 @@ exports.getVideoConsultantData = (req, res, next) => {
 		}
 	});
 };
+
 exports.send_msg = (req, res, next) => {
 	const { body } = req;
 	const validationRule = {
@@ -339,6 +340,7 @@ exports.getall_message = (req, res, next) => {
 		}
 	});
 };
+
 exports.getlive_message = (req, res, next) => {
 	const { body } = req;
 	const validationRule = {
@@ -618,7 +620,7 @@ exports.createZoomMeeting = (req, res, next) => {
 							},
 						})
 							.then(function (response) {
-								const zoomUserID = response.data.id;
+								const  zoomUserID = response.data.id;
 								let sqlUpdate = "UPDATE user SET doc_zoom_user_id = '" + zoomUserID + "' WHERE id = " + body.from_id;
 								connectPool.query(sqlUpdate, (updError, updResults, updFields) => {
 									if (updError) {
@@ -833,6 +835,10 @@ exports.getMeetingSignature = (req, res, next) => {
 };
 /* Zoom API End */
 
+
+
+
+
 var storage = multer.diskStorage({
 	destination: function (req, file, callback) {
 		var dir = './public/upload/prescriptions';
@@ -847,6 +853,8 @@ var storage = multer.diskStorage({
 		callback(null, file.fieldname + '-' + Date.now() + '.' + extension);
 	}
 });
+
+
 const uploadFiles = multer({ storage: storage }).array('presc_docs');
 exports.addPrescription = (req, res, next) => {
 	uploadFiles(req, res, function (err) {

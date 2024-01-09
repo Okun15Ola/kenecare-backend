@@ -32,6 +32,7 @@ const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.rout
 //PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
 const patientAppointmentRouter = require("./routes/api/patients/appointments.routes.js");
+const appointmentPaymentRoutes = require("./routes/api/patients/appointment.payments.routes.js");
 
 //ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
@@ -82,6 +83,11 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.use("/api/v1/health-check", (req, res, next) => {
+  return res
+    .status(200)
+    .json({ message: "Health check passed", status: "success" });
+});
 // app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
 
@@ -98,6 +104,7 @@ app.use(
   requireUserAuth,
   patientAppointmentRouter
 );
+app.use("/api/v1/appointments", requireUserAuth, appointmentPaymentRoutes);
 
 //ADMIN ROUTES
 //TODO Add a middle ware to authenticate ADMIN JWT

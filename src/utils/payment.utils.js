@@ -42,9 +42,13 @@ const getAccessToken = async (next) => {
   }
 };
 
-const getPaymentURL = async (orderId, amount) => {
+const getPaymentURL = async ({ orderId, amount }) => {
   try {
     const token = await getAccessToken();
+
+    console.log("Return url: " + omReturnURL);
+    console.log("Cancel url: " + omCancelURL);
+    console.log("Notification url: " + omNotificationURL);
 
     const { data } = await axios
       .post(
@@ -54,9 +58,9 @@ const getPaymentURL = async (orderId, amount) => {
           currency: omCurrency,
           order_id: orderId,
           amount: Number(amount),
-          return_url: `${omReturnURL}?consultationId=${orderId}&referrer=kenecare.com`,
-          cancel_url: `${omCancelURL}?consultationId=${orderId}&referrer=kenecare.com`,
-          notif_url: omNotificationURL,
+          return_url: `http://localhost:8500${omReturnURL}?consultationId=${orderId}&referrer=kenecare.com`,
+          cancel_url: `http://localhost:8500${omCancelURL}?consultationId=${orderId}&referrer=kenecare.com`,
+          notif_url: `http://localhost:8500${omNotificationURL}`,
           lang: "en",
           reference: "Kenecare",
         },
@@ -67,14 +71,15 @@ const getPaymentURL = async (orderId, amount) => {
           },
         }
       )
-      .catch((err) => {
-        throw err;
+      .catch((error) => {
+        console.log(error);
+        throw error;
       });
 
     const { payment_url, notif_token, pay_token } = data;
     return { payment_url, notif_token, pay_token };
   } catch (error) {
-    console.error(error);
+    console.log(error);
     throw error;
   }
 };

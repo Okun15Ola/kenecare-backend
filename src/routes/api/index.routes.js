@@ -14,7 +14,9 @@ const {
 const {
   GetCitiesController,
 } = require("../../controllers/index/cities.controller");
-const { GetCommonSymptomsController } = require("../../controllers/index/common-symptoms.controller");
+const {
+  GetCommonSymptomsController,
+} = require("../../controllers/index/common-symptoms.controller");
 
 router.get("/blogs", GetBlogsController);
 router.get("/blogs/:id", GetBlogByIDController);
@@ -28,11 +30,13 @@ router.get("/specialties", GetSpecialtiesController);
 router.get("/doctors", GetDoctorsController);
 router.get("/faqs", (req, res, next) => {
   try {
+    console.log("FAQ's");
     return res.end();
   } catch (error) {}
 });
 router.get("/testimonials", (req, res, next) => {
   try {
+    console.log("Testimonials");
     return res.end();
   } catch (error) {}
 });

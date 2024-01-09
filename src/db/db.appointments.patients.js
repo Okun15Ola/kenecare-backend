@@ -28,17 +28,42 @@ exports.getPatientAppointmentById = ({ patientId, appointmentId }) => {
   });
 };
 
-exports.createNewPatientAppointment = ({ appointment, patientId }) => {
-  const { category, title, content, image, tags, featured, inputtedBy } = blog;
-  const sql = "INSERT INTO medical_appointments () VALUES (?,?,?,?,?,?,?)";
+exports.createNewPatientAppointment = ({
+  uuid,
+  patientId,
+  doctorId,
+  patientName,
+  patientNumber,
+  symptoms,
+  appointmentType,
+  consultationFee,
+  specialtyId,
+  appointmentDate,
+  appointmentTime,
+}) => {
+  const sql =
+    "INSERT INTO medical_appointments (appointment_uuid,patient_id, doctor_id, appointment_type, patient_name_on_prescription, patient_mobile_number, speciality_id, patient_symptoms, consultation_fee, appointment_date, appointment_time) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [category, title, content, image, tags, featured, inputtedBy],
+      [
+        uuid,
+        patientId,
+        doctorId,
+        appointmentType,
+        patientName,
+        patientNumber,
+        specialtyId,
+        symptoms,
+        consultationFee,
+        appointmentDate,
+        appointmentTime,
+      ],
       (error, results) => {
         if (error) return reject(error);
 
+        console.log(results);
         return resolve(results);
       }
     );

@@ -29,9 +29,35 @@ exports.GetAppointmentsByIDController = async (req, res, next) => {
 };
 exports.CreateAppointmentController = async (req, res, next) => {
   try {
-    console.log(req.body);
-    return res.end();
-    const response = await createPatientAppointment();
+    const userId = parseInt(req.user.id);
+
+    const {
+      patientName,
+      patientNumber,
+      doctorId,
+      specialtyId,
+      symptoms,
+      appointmentType,
+      appointmentDate,
+      appointmentTime,
+      timeSlotId,
+    } = req.body;
+    const response = await createPatientAppointment({
+      userId,
+      patientName,
+      patientNumber,
+      appointmentType,
+      doctorId,
+      specialtyId,
+      symptoms,
+      appointmentDate,
+      appointmentTime,
+      timeSlotId,
+    });
+
+
+
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
