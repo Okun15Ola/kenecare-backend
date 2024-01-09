@@ -7,11 +7,11 @@ services:
     image: imotechsl/kenecare-api:${ENV}
     container_name: kenecare-api-${ENV}
     ports:
-      - 8001:8000
+      - 8500:8000
     networks:
       - kenecare-staging-net
       - mysql-db-net
-    restart: always
+    restart: unless-stopped
     env_file: ./.env
     environment:
       - DB_HOST=db
@@ -28,7 +28,7 @@ services:
       - PATIENTS_JWT_SECRET=$PATIENTS_JWT_SECRET
       - ADMINS_JWT_SECRET=$ADMINS_JWT_SECRET
       - JWT_AUDIENCE=$JWT_AUDIENCE
-      - JWT_AMDIN_AUDIENCE=$JWT_AMDIN_AUDIENCE
+      - JWT_ADMIN_AUDIENCE=$JWT_ADMIN_AUDIENCE
       - JWT_ISSUER=$JWT_ISSUER
       - OM_WEB_PAYMENT_URL=$OM_WEB_PAYMENT_URL
       - OM_MERCHANT_KEY=$OM_MERCHANT_KEY
@@ -45,7 +45,7 @@ services:
       - SENDGRID_API_KEY=$SENDGRID_API_KEY
       - SENDGRID_EMAIL=$SENDGRID_EMAIL
     volumes:
-      - kenecare-app-data:/usr/src/app/src/public/upload
+      - kenecare-app-data-staging:/usr/src/app/src/public/upload
 
   db:
     image: mysql:8.0.2
@@ -59,18 +59,18 @@ services:
       - MYSQL_DATABASE=$MYSQL_DATABASE
       - MYSQL_USER=$MYSQL_USER
     ports:
-      - 3306:3306
+      - 3307:3306
     volumes:
       - ./src/db/kenecare.sql:/docker-entrypoint-initdb.d/init.sql
-      - kenecare-db-data:/var/lib/mysql
+      - kenecare-db-data-staging:/var/lib/mysql
     networks:
       - mysql-db-net
 
 volumes:
-  kenecare-db-data:
-    name: kenecare-db-data
-  kenecare-app-data:
-    name: kenecare-app-data
+  kenecare-db-data-staging:
+    name: kenecare-db-data-staging
+  kenecare-app-data-staging:
+    name: kenecare-app-data-staging
 
 networks:
   kenecare-staging-net:
