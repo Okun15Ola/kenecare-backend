@@ -15,7 +15,15 @@ const {
   omTokenUrl,
   omTransactionStatusUrl,
   omCurrency,
+  apiBaseURL,
+  nodeEnv,
 } = require("../config/default.config");
+let baseUrl = apiBaseURL;
+if (nodeEnv === "development") {
+  baseUrl = "http://172.25.54.187:8500";
+}
+
+console.log(baseUrl);
 
 const getAccessToken = async (next) => {
   try {
@@ -55,9 +63,9 @@ const getPaymentURL = async ({ orderId, amount }) => {
           currency: omCurrency,
           order_id: orderId,
           amount: Number(amount),
-          return_url: `http://172.25.54.187:8500${omReturnURL}?consultationId=${orderId}&referrer=kenecare.com`,
-          cancel_url: `http://172.25.54.187:8500${omCancelURL}?consultationId=${orderId}&referrer=kenecare.com`,
-          notif_url: `http://172.25.54.187:8500${omNotificationURL}`,
+          return_url: `${baseUrl}${omReturnURL}?consultationId=${orderId}&referrer=kenecare.com`,
+          cancel_url: `${baseUrl}${omCancelURL}?consultationId=${orderId}&referrer=kenecare.com`,
+          notif_url: `${baseUrl}${omNotificationURL}`,
           lang: "en",
           reference: "Kenecare",
         },
