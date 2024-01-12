@@ -2,7 +2,7 @@
 const HttpStatus = require("http-status-codes");
 
 const Response = {};
-Response.SUCCESS = ({ message , data }) => {
+Response.SUCCESS = ({ message, data }) => {
   const timestamp = new Date();
   return {
     status: "success",
@@ -12,10 +12,20 @@ Response.SUCCESS = ({ message , data }) => {
     data: data,
   };
 };
+Response.NOT_MODIFIED = () => {
+  const timestamp = new Date();
+  return {
+    status: "no content",
+    statusCode: HttpStatus.StatusCodes.NOT_MODIFIED,
+    timestamp: timestamp,
+    message: null,
+    data: null,
+  };
+};
 Response.CREATED = ({ data, message }) => {
   const timestamp = new Date();
   return {
-    status: "success",
+    status: "created",
     statusCode: HttpStatus.StatusCodes.CREATED,
     timestamp: timestamp,
     message: message,
@@ -23,7 +33,7 @@ Response.CREATED = ({ data, message }) => {
   };
 };
 
-Response.BAD_REQUEST = ({ message , error }) => {
+Response.BAD_REQUEST = ({ message, error }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -34,7 +44,7 @@ Response.BAD_REQUEST = ({ message , error }) => {
   };
 };
 
-Response.UNAUTHORIZED = ({ message , error  }) => {
+Response.UNAUTHORIZED = ({ message, error }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -44,7 +54,7 @@ Response.UNAUTHORIZED = ({ message , error  }) => {
     errors: error,
   };
 };
-Response.NOT_FOUND = ({ message , error  }) => {
+Response.NOT_FOUND = ({ message, error }) => {
   const timestamp = new Date();
   return {
     status: "error",

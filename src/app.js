@@ -104,7 +104,7 @@ app.use(
   requireUserAuth,
   patientAppointmentRouter
 );
-app.use("/api/v1/appointments", requireUserAuth, appointmentPaymentRoutes);
+app.use("/api/v1/payments", requireUserAuth, appointmentPaymentRoutes);
 
 //ADMIN ROUTES
 //TODO Add a middle ware to authenticate ADMIN JWT

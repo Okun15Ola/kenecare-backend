@@ -15,7 +15,6 @@ exports.getAllPatientAppointments = (patientId) => {
 };
 
 exports.getPatientAppointmentById = ({ patientId, appointmentId }) => {
-  // const sql = "SELECT * FROM medical_appointments WHERE appointment_id = ? AND patient_id = ? LIMIT 1";
   const sql = "CALL Sp_GetPatientMedicalAppointmentById(?,?);";
 
   return new Promise((resolve, reject) => {
@@ -24,6 +23,19 @@ exports.getPatientAppointmentById = ({ patientId, appointmentId }) => {
 
       const [result] = results;
       return resolve(result[0]);
+    });
+  });
+};
+exports.getAppointmentByUUID = (appointmentUUID) => {
+  console.log(appointmentUUID);
+  const sql =
+    "SELECT appointment_id,appointment_uuid,p.patient_id,p.first_name,p.last_name,d.doctor_id,d.first_name,d.last_name,appointment_type,appointment_date,appointment_time,time_slot_id,patient_name_on_prescription,patient_mobile_number,patient_symptoms, speciality_name, meeting_url,start_time,end_time,appointment_status,cancelled_reason,cancelled_at,canceled_by,postponed_by,postponed_date,postponed_reason,medical_appointments.created_at,medical_appointments.updated_at FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id WHERE medical_appointments.appointment_uuid = ?  LIMIT 1;";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [appointmentUUID], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results[0]);
     });
   });
 };
@@ -70,51 +82,12 @@ exports.createNewPatientAppointment = ({
   });
 };
 
-exports.updateBlogById = ({ id, blog }) => {
-  const { category, title, content, image, tags, featured } = blog;
+exports.deleteAppointmentById = ({ appointmentId }) => {
   const sql =
-    "UPDATE blogs SET blog_category_id = ?, title = ?, description = ?, image = ?, tags = ?, is_featured = ? WHERE blog_id = ?";
+    "DELETE FROM medical_appointments WHERE appointment_id = ? LIMIT 1";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(
-      sql,
-      [category, title, content, image, tags, featured, id],
-      (error, results) => {
-        if (error) return reject(error);
-
-        return resolve(results);
-      }
-    );
-  });
-};
-
-exports.updateBlogStatusById = ({ id, status }) => {
-  const sql = "UPDATE blogs SET is_active = ? WHERE blog_id = ?";
-
-  return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [status, id], (error, results) => {
-      if (error) return reject(error);
-
-      return resolve(results);
-    });
-  });
-};
-exports.updateBlogFeaturedById = ({ id, status }) => {
-  const sql = "UPDATE blogs SET is_featured = ? WHERE blog_id = ?";
-
-  return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [status, id], (error, results) => {
-      if (error) return reject(error);
-
-      return resolve(results);
-    });
-  });
-};
-exports.deleteBlogById = (id) => {
-  const sql = "DELETE FROM blogs WHERE blog_id = ? ";
-
-  return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [id], (error, results) => {
+    connectionPool.query(sql, [appointmentId], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);

@@ -6,11 +6,8 @@ const { USER_TYPE } = require("../utils/enum.utils");
 const Response = require("../utils/response.utils");
 const { v4: uuidv4 } = require("uuid");
 const { getDoctorById } = require("../db/db.doctors");
+const { createAppointmentPayment } = require("../db/db.payments");
 
-const {
-  newPatientAppointmentEmail,
-  newDoctorAppointmentEmail,
-} = require("../utils/email.utils");
 const { getPaymentURL } = require("../utils/payment.utils");
 
 exports.getPatientAppointments = async (userId) => {
@@ -24,14 +21,17 @@ exports.getPatientAppointments = async (userId) => {
         appointment_id: appointmentId,
         appointment_uuid: appointmentUUID,
         patient_id: patient,
+        first_name: firstName,
+        last_name: lastName,
         doctor_id: doctor,
         appointment_type: appointmentType,
         patient_name_on_prescription: patientNameOnPrescription,
         patient_mobile_number: patientMobileNumber,
         patient_symptoms: patientSymptoms,
         consultation_fee_paid: consultationFees,
-        specialty,
+        specialty_name: specialty,
         time_slot: timeSlot,
+        meeting_url: meetingUrl,
         start_time: appointmentStartTime,
         end_time: appointmentEndTime,
         appointment_status: appointmentStatus,
@@ -47,6 +47,7 @@ exports.getPatientAppointments = async (userId) => {
           appointmentId,
           appointmentUUID,
           patient,
+          username: `${firstName} ${lastName}`,
           doctor,
           appointmentType,
           patientNameOnPrescription,
@@ -55,6 +56,7 @@ exports.getPatientAppointments = async (userId) => {
           consultationFees,
           specialty,
           timeSlot,
+          meetingUrl,
           appointmentStartTime,
           appointmentEndTime,
           appointmentStatus,
@@ -76,13 +78,13 @@ exports.getPatientAppointments = async (userId) => {
   }
 };
 
-exports.getPatientAppointment = async (userId, appointmentId) => {
+exports.getPatientAppointment = async ({ userId, id }) => {
   try {
     const { patient_id: patientId } = await getPatientByUserId(userId);
 
     const rawData = await dbObject.getPatientAppointmentById({
       patientId,
-      appointmentId,
+      appointmentId: id,
     });
 
     //TODO Check if the requesting user is the owner of the appointment
@@ -93,14 +95,17 @@ exports.getPatientAppointment = async (userId, appointmentId) => {
       appointment_id: appointmentId,
       appointment_uuid: appointmentUUID,
       patient_id: patient,
+      first_name: firstName,
+      last_name: lastName,
       doctor_id: doctor,
       appointment_type: appointmentType,
       patient_name_on_prescription: patientNameOnPrescription,
       patient_mobile_number: patientMobileNumber,
       patient_symptoms: patientSymptoms,
       consultation_fee_paid: consultationFees,
-      specialty,
+      specialty_name: specialty,
       time_slot: timeSlot,
+      meeting_url: meetingUrl,
       start_time: appointmentStartTime,
       end_time: appointmentEndTime,
       appointment_status: appointmentStatus,
@@ -116,6 +121,7 @@ exports.getPatientAppointment = async (userId, appointmentId) => {
     const appointment = {
       appointmentId,
       appointmentUUID,
+      username: `${firstName} ${lastName}`,
       patient,
       doctor,
       appointmentType,
@@ -138,6 +144,74 @@ exports.getPatientAppointment = async (userId, appointmentId) => {
     };
 
     return Response.SUCCESS({ data: appointment });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+exports.getPatientAppointmentByUUID = async (uuid) => {
+  try {
+    // const { patient_id: patientId } = await getPatientByUserId(userId);
+
+    const rawData = await dbObject.getPatientAppointmentByUUID(uuid);
+
+    const appointments = rawData.map(
+      ({
+        appointment_id: appointmentId,
+        appointment_uuid: appointmentUUID,
+        patient_id: patient,
+        first_name: firstName,
+        last_name: lastName,
+        doctor_id: doctor,
+        appointment_type: appointmentType,
+        patient_name_on_prescription: patientNameOnPrescription,
+        patient_mobile_number: patientMobileNumber,
+        patient_symptoms: patientSymptoms,
+        consultation_fee_paid: consultationFees,
+        specialty_name: specialty,
+        time_slot: timeSlot,
+        meeting_url: meetingUrl,
+        start_time: appointmentStartTime,
+        end_time: appointmentEndTime,
+        appointment_status: appointmentStatus,
+        cancelled_reason: cancelledReason,
+        cancelled_at: cancelledAt,
+        cancelled_by: cancelledBy,
+        postponed_reason: postponedReason,
+        postponed_date: postponeDate,
+        postponed_by: postponedBy,
+        created_at: createAt,
+      }) => {
+        return {
+          appointmentId,
+          appointmentUUID,
+          patient,
+          username: `${firstName} ${lastName}`,
+          doctor,
+          appointmentType,
+          patientNameOnPrescription,
+          patientMobileNumber,
+          patientSymptoms,
+          consultationFees,
+          specialty,
+          timeSlot,
+          meetingUrl,
+          appointmentStartTime,
+          appointmentEndTime,
+          appointmentStatus,
+          cancelledReason,
+          cancelledAt,
+          cancelledBy,
+          postponedReason,
+          postponeDate,
+          postponedBy,
+          createAt,
+        };
+      }
+    );
+
+    return Response.SUCCESS({ data: appointments });
   } catch (error) {
     console.error(error);
     throw error;
@@ -196,19 +270,20 @@ exports.createPatientAppointment = async ({
     //Generate a unique ID for each appointment
     const genUUID = uuidv4();
 
-    await dbObject.createNewPatientAppointment({
-      uuid: genUUID,
-      patientId,
-      doctorId,
-      patientName,
-      patientNumber,
-      symptoms,
-      appointmentType,
-      consultationFee,
-      specialtyId,
-      appointmentDate,
-      appointmentTime,
-    });
+    const { insertId: appointmentId } =
+      await dbObject.createNewPatientAppointment({
+        uuid: genUUID,
+        patientId,
+        doctorId,
+        patientName,
+        patientNumber,
+        symptoms,
+        appointmentType,
+        consultationFee,
+        specialtyId,
+        appointmentDate,
+        appointmentTime,
+      });
 
     //DONE Send email notification to doctor and patient
     // if (patientEmail) {
@@ -243,81 +318,37 @@ exports.createPatientAppointment = async ({
 
     const {
       payment_url: paymentUrl,
-      notif_token: notificatioToken,
+      notif_token: notificationToken,
       pay_token: paymentToken,
     } = await getPaymentURL({
       orderId: genUUID,
       amount: consultationFee,
     });
 
+    console.log(paymentUrl);
+    console.log(notificationToken);
+    console.log(paymentToken);
 
+    //TODO create new appointment payments record
+    const done = await createAppointmentPayment({
+      appointmentId,
+      amountPaid: consultationFee,
+      orderId: genUUID,
+      paymentMethod: "ORNAGE MONEY",
+      paymentToken,
+      notificationToken,
+    });
+
+    console.log(done);
 
     return Response.CREATED({
-      message:
-        "Appointment Created Successfully. A confirmation email has been sent.",
+      message: "Appointment Booked Successfully. Proceed to payment.",
+      data: {
+        paymentUrl,
+      },
     });
   } catch (error) {
     console.error(error);
     throw error;
   }
-};
-exports.updateBlog = async ({ id, blog }) => {
-  try {
-    const result = await isBlogExist(id);
-
-    if (!result) {
-      return Response.NOT_FOUND({ message: "Blog Not Found" });
-    }
-    await dbObject.updateBlogById({ id, blog });
-    return Response.SUCCESS({ message: "Blog Updated Succcessfully" });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-exports.updateBlogStatus = async ({ id, status }) => {
-  try {
-    const result = await isBlogExist(id);
-    if (!result) {
-      return Response.NOT_FOUND({ message: "Blog Not Found" });
-    }
-    await dbObject.updateBlogStatusById({ id, status });
-    return Response.SUCCESS({ message: "Blog Status Updated Successfully" });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-exports.updateBlogFeaturedStatus = async ({ id, status }) => {
-  try {
-    const result = await isBlogExist(id);
-    if (!result) {
-      return Response.NOT_FOUND({ message: "Blog Not Found" });
-    }
-    await dbObject.updateBlogFeaturedById({ id, status });
-    return Response.SUCCESS({
-      message: "Blog Featured Status Updated Successfully",
-    });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-exports.deleteBlog = async (id) => {
-  try {
-    const result = await isBlogExist(id);
-    if (!result) {
-      return Response.NOT_FOUND({ message: "Blog Not Found" });
-    }
-    await dbObject.deleteBlogById(id);
-    return Response.SUCCESS({ message: "Blog Deleted Successfully" });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-
-const isBlogExist = async (id) => {
-  const rawData = await dbObject.getBlogById(id);
-  return !!rawData;
 };

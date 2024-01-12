@@ -18,8 +18,10 @@ exports.GetAppointmentsController = async (req, res, next) => {
 };
 exports.GetAppointmentsByIDController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const response = await getAppointment(id);
+    const userId = parseInt(req.user.id);
+    const appointmentId = parseInt(req.params.id);
+
+    const response = await getPatientAppointment({userId, id:appointmentId});
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -54,8 +56,6 @@ exports.CreateAppointmentController = async (req, res, next) => {
       appointmentTime,
       timeSlotId,
     });
-
-
 
     return res.status(response.statusCode).json(response);
   } catch (error) {

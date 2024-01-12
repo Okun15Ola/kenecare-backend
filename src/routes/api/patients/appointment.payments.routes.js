@@ -1,25 +1,45 @@
 const router = require("express").Router();
+const {
+  cancelAppointmentPayment,
+  processAppointmentPayment,
+} = require("../../../services/payment.services");
 
-router.get("/payment", (req, res, next) => {
+router.get("/", (req, res, next) => {
   try {
     return res.send("Get Payment Url");
   } catch (error) {}
 });
-router.post("/payments/om/return", (req, res, next) => {
+router.get("/om/return", async (req, res, next) => {
   try {
-    return res.send("Payment Return Route");
+    const userId = parseInt(req.user.id);
+    const { consultationId, referrer } = req.query;
+
+    const response = await processAppointmentPayment({
+      userId,
+      consultationId,
+      referrer,
+    });
+
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     next(error);
   }
 });
-router.post("/payments/om/cancel", (req, res, next) => {
+router.get("/om/cancel", async (req, res, next) => {
   try {
-    return res.send("Payment Cancel Route");
+    const { consultationId, referrer } = req.query;
+
+    const response = await cancelAppointmentPayment({
+      consultationId,
+      referrer,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     next(error);
   }
 });
-router.post("/payments/om/notification", (req, res, next) => {
+
+router.post("/om/notification", (req, res, next) => {
   try {
     return res.send("Payment Notification Route");
   } catch (error) {
