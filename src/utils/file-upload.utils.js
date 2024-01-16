@@ -1,24 +1,6 @@
 const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
-const aws = require("aws-sdk");
-const multerS3 = require("multer-s3");
-const {
-  awsAccessSecretKey,
-  awsAccessKeyId,
-  awsRegion,
-} = require("../config/default.config");
-
-aws.config.update({
-  credentials: {
-    secretAccessKey: awsAccessSecretKey,
-    accessKeyId: awsAccessKeyId,
-  },
-
-  region: awsRegion,
-});
-
-const s3 = new aws.S3();
 
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpeg|jpg|png|pdf/;
@@ -37,19 +19,9 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const s3MediaUploader = multer({
+const AWSUploader = multer({
   fileFilter: fileFilter,
-  storage: multerS3({
-    s3: s3,
-    bucket: "imotechsl-kenecare-media",
-    acl: "public-read",
-    metadata: (req, file, cb) => {
-      cb(null, { fieldName: req.file.fieldname });
-    },
-    key: (req, file, cb) => {
-      cb(null, generateUniqueFileName(file, cb));
-    },
-  }),
+  storage: multer.memoryStorage(),
 });
 
 const localMediaStore = multer.diskStorage({
@@ -106,10 +78,17 @@ const generateUniqueFileName = (file, cb) => {
     cb(null, uniqueFileName);
   });
 };
+const generateFileName = (file) => {
+  const buffer = crypto.randomBytes(16);
+  const randomString = buffer.toString("hex");
+  const fileExtension = path.extname(file.originalname);
+  return randomString + fileExtension;
+};
 
 module.exports = {
   localMediaUploader,
   localProfilePicUploader,
-  s3MediaUploader,
+  AWSUploader,
+  generateFileName,
   tempUpload,
 };

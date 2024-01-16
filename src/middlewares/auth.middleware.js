@@ -25,7 +25,11 @@ const requireUserAuth = async (req, res, next) => {
     const token = getAuthToken(req);
 
     if (!token) {
-      return res.status(400).json({ message: "Bad Request" });
+      return res.status(400).json(
+        Response.BAD_REQUEST({
+          message: "Invalid/Missing Authentication Token",
+        })
+      );
     }
     const decoded = jwt.verify(token, patientJwtSecret, {
       audience: jwtAudience,
@@ -51,9 +55,11 @@ const requireAdminAuth = async (req, res, next) => {
     const token = getAuthToken(req);
 
     if (!token) {
-      return res
-        .status(400)
-        .json(Response.BAD_REQUEST({ message: "Authentication Error!" }));
+      return res.status(400).json(
+        Response.BAD_REQUEST({
+          message: "Invalid/Missing Authentication Token",
+        })
+      );
     }
 
     const decoded = jwt.verify(token, adminJwtSecret, {
@@ -82,32 +88,6 @@ const requireAdminAuth = async (req, res, next) => {
         message: "Authentication Failed! Please Try Again",
       })
     );
-  }
-};
-
-const requireUser = async (req, res, next) => {
-  try {
-    if (req.headers["authorization"]) {
-      const authorization = req.headers["authorization"].split(" ")[0];
-      const token = req.headers["authorization"].split(" ")[1];
-      if (authorization !== "Bearer") return res.sendStatus(400);
-
-      if (!token) return res.sendStatus(400);
-
-      const decoded = await jwt.verify(
-        token,
-        process.env.JWT_ACCESS_TOKEN_SECRET,
-        {}
-      );
-
-      //todo check if the issuer is valid
-      req.user = decoded;
-      next();
-    } else {
-      return res.sendStatus(401);
-    }
-  } catch (err) {
-    res.sendStatus(400);
   }
 };
 

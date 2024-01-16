@@ -32,6 +32,7 @@ const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.rout
 //PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
 const patientAppointmentRouter = require("./routes/api/patients/appointments.routes.js");
+const patientMedicalRecordRouter = require("./routes/api/patients/medical-records.routes.js");
 const appointmentPaymentRoutes = require("./routes/api/patients/appointment.payments.routes.js");
 
 //ADMIN ROUTES
@@ -95,15 +96,31 @@ app.use("/api/v1", indexRouter);
 const swaggerDocs = require("./utils/swagger.utils.js");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-//USERS ROUTES
+//AUTH ROUTES
 app.use("/api/v1/auth", authRouter);
+
+//DOCTORS ROUTES
 app.use("/api/v1/doctors", requireUserAuth, doctorsProfileRouter);
+app.use(
+  "/api/v1/doctors/appointments",
+  requireUserAuth,
+  doctorsAppointmentRouter
+);
+
+//PATIENT'S ROUTES
 app.use("/api/v1/patients", requireUserAuth, patientsProfileRouter);
 app.use(
   "/api/v1/patients/appointments",
   requireUserAuth,
   patientAppointmentRouter
 );
+app.use(
+  "/api/v1/patients/medical-records",
+  requireUserAuth,
+  patientMedicalRecordRouter
+);
+
+//PAYMENT ROUTES
 app.use("/api/v1/payments", requireUserAuth, appointmentPaymentRoutes);
 
 //ADMIN ROUTES

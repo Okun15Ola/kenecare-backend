@@ -16,6 +16,7 @@ const {
   VerifyTokenValidations,
 } = require("../../validations/auth.validations");
 
+const { requireUserAuth } = require("../../middlewares/auth.middleware");
 /**
  * @swagger
  * /api/v1/auth/authenticate:
@@ -29,9 +30,9 @@ const {
  *        200:
  *          description: Success
  */
-router.get("/authenticate", (req, res, next) => {
+router.get("/authenticate", requireUserAuth, (req, res, next) => {
   try {
-    console.log("Authenticated");
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);

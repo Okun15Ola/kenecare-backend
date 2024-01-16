@@ -111,7 +111,7 @@ exports.getUserByEmail = async (email) => {
   }
 };
 
-exports.createUser = async ({
+exports.registerNewUser = async ({
   mobileNumber,
   email = "",
   password,
@@ -142,7 +142,7 @@ exports.createUser = async ({
     // Send TOKEN VIA SMS
     await sendTokenSMS({ token: vToken, mobileNumber });
 
-    return true;
+    return Response.CREATED({ message: "Account Created Successfully" });
   } catch (error) {
     console.error(error);
     throw error;
@@ -179,14 +179,42 @@ exports.getUserByToken = async (token) => {
   }
 };
 
-exports.verifyUserAccount = async (token) => {
+exports.verifyRegistrationOTP = async ({ token, user }) => {
   try {
-    await dbObject.updateUserVerificationStatusById({
+    const {
+      is2faEnabled,
+      userId,
+      email,
+      userType,
+      accountVerified,
+      accountActive,
+      mobileNumber,
+    } = user;
+    await dbObject.updateUserVerificationStatusByToken({
       token,
       verificationStatus: VERIFICATIONSTATUS.VERIFIED,
     });
 
-    return true;
+    //Generate access token
+    const accessToken = generateUsersJwtAccessToken({
+      sub: userId,
+    });
+
+    //update user's active status in the database
+    dbObject.updateUserAccountStatusById({
+      userId,
+      status: STATUS.ACTIVE,
+    });
+
+    return Response.SUCCESS({
+      message: "Account Verified Successfully",
+      data: {
+        token: accessToken,
+        type: userType,
+        isVerified: accountVerified,
+        isActive: accountActive,
+      },
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -234,7 +262,6 @@ exports.loginUser = async (user) => {
       // send sms notifcation with 2fa token
       await sendTokenSMS({ token, mobileNumber });
       return Response.SUCCESS({ message: "2FA Token Sent successfully" });
-      return { message: "2FA Token Sent successfully", data: null };
     }
 
     //Generate access token
@@ -248,7 +275,15 @@ exports.loginUser = async (user) => {
       status: STATUS.ACTIVE,
     });
     //Return access token
-    return Response.SUCCESS({ message: "Login Successful", data: accessToken });
+    return Response.SUCCESS({
+      message: "Logged In Successfully",
+      data: {
+        token: accessToken,
+        type: userType,
+        isVerified: accountVerified,
+        isActive: accountActive,
+      },
+    });
   } catch (error) {
     console.error(error);
     throw error;

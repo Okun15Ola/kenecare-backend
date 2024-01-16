@@ -1,62 +1,16 @@
 const dbObject = require("../db/db.appointments.patients");
 const { getPatientByUserId } = require("../db/db.patients");
 const Response = require("../utils/response.utils");
-exports.getPatientAppointments = async () => {
+const { awsBucketName } = require("../config/default.config");
+const { uploadFileToS3Bucket } = require("../utils/aws-s3.utils");
+const { generateFileName } = require("../utils/file-upload.utils");
+
+exports.getMedicalDocuments = async (userId) => {
   try {
     const rawData = await dbObject.getAllAppointments();
     console.log(rawData);
 
     return {};
-
-    const appointments = rawData.map(
-      ({
-        appointment_id: appointmentId,
-        appointment_uuid: appointmentUUID,
-        patient_id: patient,
-        doctor_id: doctor,
-        appointment_type: appointmentType,
-        patient_name_on_prescription: patientNameOnPrescription,
-        patient_mobile_number: patientMobileNumber,
-        patient_symptoms: patientSymptoms,
-        consultation_fee_paid: consultationFees,
-        specialty,
-        time_slot: timeSlot,
-        start_time: appointmentStartTime,
-        end_time: appointmentEndTime,
-        appointment_status: appointmentStatus,
-        cancelled_reason: cancelledReason,
-        cancelled_at: cancelledAt,
-        cancelled_by: cancelledBy,
-        postponed_reason: postponedReason,
-        postponed_date: postponeDate,
-        postponed_by: postponedBy,
-        created_at: createAt,
-      }) => {
-        return {
-          appointmentId,
-          appointmentUUID,
-          patient,
-          doctor,
-          appointmentType,
-          patientNameOnPrescription,
-          patientMobileNumber,
-          patientSymptoms,
-          consultationFees,
-          specialty,
-          timeSlot,
-          appointmentStartTime,
-          appointmentEndTime,
-          appointmentStatus,
-          cancelledReason,
-          cancelledAt,
-          cancelledBy,
-          postponedReason,
-          postponeDate,
-          postponedBy,
-          createAt,
-        };
-      }
-    );
 
     return Response.SUCCESS({ data: appointments });
   } catch (error) {
@@ -65,7 +19,7 @@ exports.getPatientAppointments = async () => {
   }
 };
 
-exports.getAppointment = async (id) => {
+exports.getMedicalDocument = async ({ userId, documentId }) => {
   try {
     const rawData = await dbObject.getAppointmentById(id);
 
@@ -73,53 +27,6 @@ exports.getAppointment = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
-    const {
-      appointment_id: appointmentId,
-      appointment_uuid: appointmentUUID,
-      patient_id: patient,
-      doctor_id: doctor,
-      appointment_type: appointmentType,
-      patient_name_on_prescription: patientNameOnPrescription,
-      patient_mobile_number: patientMobileNumber,
-      patient_symptoms: patientSymptoms,
-      consultation_fee_paid: consultationFees,
-      specialty,
-      time_slot: timeSlot,
-      start_time: appointmentStartTime,
-      end_time: appointmentEndTime,
-      appointment_status: appointmentStatus,
-      cancelled_reason: cancelledReason,
-      cancelled_at: cancelledAt,
-      cancelled_by: cancelledBy,
-      postponed_reason: postponedReason,
-      postponed_date: postponeDate,
-      postponed_by: postponedBy,
-      created_at: createAt,
-    } = rawData;
-
-    const appointment = {
-      appointmentId,
-      appointmentUUID,
-      patient,
-      doctor,
-      appointmentType,
-      patientNameOnPrescription,
-      patientMobileNumber,
-      patientSymptoms,
-      consultationFees,
-      specialty,
-      timeSlot,
-      appointmentStartTime,
-      appointmentEndTime,
-      appointmentStatus,
-      cancelledReason,
-      cancelledAt,
-      cancelledBy,
-      postponedReason,
-      postponeDate,
-      postponedBy,
-      createAt,
-    };
 
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
@@ -127,34 +34,22 @@ exports.getAppointment = async (id) => {
     throw error;
   }
 };
-exports.createAppointment = async ({
-  userId,
-  doctorId,
-  appointmentType,
-  patientName,
-  patientNumber,
-  symptoms,
-  consultationFees,
-  specialtyId,
-  timeSlotId,
-}) => {
+
+exports.createMedicalDocument = async ({ userId, file }) => {
   try {
     const { patient_id: patientId } = await getPatientByUserId(userId);
     const uuid = "uuid";
-    await dbObject.createNewAppointment({
-      uuid,
-      patientId,
-      doctorId,
-      appointmentType,
-      patientName,
-      patientNumber,
-      symptoms,
-      consultationFees,
-      specialtyId,
-      timeSlotId,
-    });
 
-    return Response.CREATED({ message: "Appointment Created Successfully" });
+    if (file) {
+      const newFileName = generateFileName(file);
+      file.originalname = newFileName;
+
+      await uploadFileToS3Bucket(file);
+
+      return Response.CREATED({
+        message: "Medical Document Saved Successfully",
+      });
+    }
   } catch (error) {
     console.error(error);
     throw error;

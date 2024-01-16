@@ -1,6 +1,6 @@
 const {
-  createUser,
-  verifyUserAccount,
+  registerNewUser,
+  verifyRegistrationOTP,
   loginUser,
   requestUserLoginOtp,
   verifyUserLoginOtp,
@@ -54,18 +54,14 @@ exports.RegisterController = async (req, res, next) => {
     const email = req.body.email || "";
     const { mobileNumber, userType, password } = req.body;
 
-    const result = await createUser({
+    const response = await registerNewUser({
       mobileNumber,
       password,
       email,
       userType,
     });
 
-    if (result) {
-      return res
-        .status(201)
-        .json(Response.CREATED({ message: "Account Created Successfully" }));
-    }
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -74,15 +70,11 @@ exports.RegisterController = async (req, res, next) => {
 };
 exports.VerifyRegisterOTPController = async (req, res, next) => {
   try {
-    //TODO Extract token FROM REQUEST
+    // Extract token FROM REQUEST
     const { token } = req.params;
-
-    //TODO VERIFY TOKEN
-    const result = await verifyUserAccount(token);
-    if (result)
-      return res
-        .status(200)
-        .json(Response.SUCCESS({ message: "Account Verfied Successfully" }));
+    const { user } = req;
+    const response = await verifyRegistrationOTP({ token, user });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);

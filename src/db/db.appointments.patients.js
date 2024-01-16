@@ -26,7 +26,7 @@ exports.getPatientAppointmentById = ({ patientId, appointmentId }) => {
     });
   });
 };
-exports.getAppointmentByUUID = (appointmentUUID) => {
+exports.getPatientAppointmentByUUID = (appointmentUUID) => {
   console.log(appointmentUUID);
   const sql =
     "SELECT appointment_id,appointment_uuid,p.patient_id,p.first_name,p.last_name,d.doctor_id,d.first_name,d.last_name,appointment_type,appointment_date,appointment_time,time_slot_id,patient_name_on_prescription,patient_mobile_number,patient_symptoms, speciality_name, meeting_url,start_time,end_time,appointment_status,cancelled_reason,cancelled_at,canceled_by,postponed_by,postponed_date,postponed_reason,medical_appointments.created_at,medical_appointments.updated_at FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id WHERE medical_appointments.appointment_uuid = ?  LIMIT 1;";

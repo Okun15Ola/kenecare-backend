@@ -124,7 +124,10 @@ exports.updateUserAccountStatusById = ({ userId, status }) => {
     });
   });
 };
-exports.updateUserVerificationStatusById = ({ token, verificationStatus }) => {
+exports.updateUserVerificationStatusByToken = ({
+  token,
+  verificationStatus,
+}) => {
   const timestamp = new Date();
   const sql = `UPDATE users SET  is_verified = ?, verification_token = NULL, is_online = 1, verified_at = ? WHERE verification_token = ?;`;
   return new Promise((resolve, reject) => {

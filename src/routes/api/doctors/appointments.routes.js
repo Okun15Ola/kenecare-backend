@@ -1,47 +1,19 @@
 const router = require("express").Router();
-const Response = require("../../../utils/response.utils");
+const {
+  GetDoctorAppointmentsController,
+  GetDoctorAppointmentsByIDController,
+  CancelDoctorAppointmentController,
+  ApproveDoctorAppointmentController,
+  PostponeDoctorAppointmentController,
+} = require("../../../controllers/doctors/appointments.controller");
 
-router.get("/", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+router.get("/", GetDoctorAppointmentsController);
+router.get("/:id", GetDoctorAppointmentsByIDController);
 
-router.post("/:id", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
 
-router.post("/", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+//TODO add data validation rules
+router.patch("/:id/approve", ApproveDoctorAppointmentController);
+router.patch("/:id/cancel", CancelDoctorAppointmentController);
+router.patch("/:id/postpone", PostponeDoctorAppointmentController);
 
-router.put("/:id", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
-
-router.delete("/:id", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+module.exports = router;
