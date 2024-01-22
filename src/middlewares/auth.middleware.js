@@ -41,13 +41,20 @@ const requireUserAuth = async (req, res, next) => {
     };
     next();
   } catch (error) {
-    console.error(error);
-    return res.status(400).json(
-      Response.BAD_REQUEST({
-        message: "Authentication Failed! Please Try Again",
-      })
-    );
+    if (error.message === "jwt expired") {
+      return res.status(400).json(
+        Response.BAD_REQUEST({
+          message:
+            "Authentication Failed! Session Expired Please Login to Continue",
+        })
+      );
+    }
   }
+  return res.status(400).json(
+    Response.BAD_REQUEST({
+      message: "Authentication Failed! Please Try Again",
+    })
+  );
 };
 
 const requireAdminAuth = async (req, res, next) => {
