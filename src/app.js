@@ -6,7 +6,7 @@ const expressSession = require("express-session");
 const bodyParser = require("body-parser");
 const { sessionSecret } = require("./config/default.config");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
-const { createZoomMeeting } = require("./utils/zoom.utils.js");
+
 const logger = require("./middlewares/logger.middleware");
 const {
   requireUserAuth,
@@ -91,7 +91,7 @@ app.use("/api/v1/health-check", (req, res, next) => {
     .status(200)
     .json({ message: "Health check passed", status: "success" });
 });
-// app.use(logUserInteraction);
+app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
 
 //API DOCS ROUTE
