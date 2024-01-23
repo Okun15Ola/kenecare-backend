@@ -86,6 +86,119 @@ const newDoctorAppointmentEmail = async ({
   }
 };
 
+const adminDoctorCouncilRegistrationEmail = async ({
+  doctorEmail,
+  doctorName,
+  appointmentDate,
+  appointmentTime,
+  symptoms,
+  patientNameOnPrescription,
+  patientMobileNumber,
+}) => {
+  try {
+    const message = {
+      to: doctorEmail,
+      from: mailer.from,
+      subject: "Request for Approval: Medical Council Document Submission",
+      text: "Kenecare Admin Notification",
+      html: `<h1>Dear Dr. ${doctorName}. </h1>
+    <p>This is a notification email for a newly booked patient appointment in your schedule.</p> 
+    <h4>Appointment Details:</h4>
+    <ul>
+      <li>Date: ${appointmentDate} </li>
+      <li>Time: ${appointmentTime} </li>
+      <li>Patient's Name: ${patientNameOnPrescription.toUpperCase()}</li>
+      <li>Patient's Contact: ${patientMobileNumber}</li>
+      <li>Patient's Symptoms: <strong style="color:red;">${symptoms}</strong> </li>
+    </ul> 
+    <p>If, for any reason, you are unable to attend to this appointment, or if there are any changes, please <a href="https://doctor.kenecare.com/login">click here to login to your dashboard</a> and notify the patient at your earliest convenience.</p>
+    <p>Thank you for your dedication to providing excellent patient care on Kenecare (SL).</p>`,
+    };
+    const result = await sendGrid.send(message).catch((err) => {
+      throw err;
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
+  try {
+    const message = {
+      to: doctorEmail,
+      from: mailer.from,
+      subject:
+        "Approval Process for Your Medical Council Registration Document on Kenecare.",
+      html: `<h1>Dear Dr. ${doctorName}. </h1>
+    <p>
+    Thank you for submitting your Medical Council Document information for approval on the Kenecare platform. We appreciate your commitment to providing quality healthcare services to our community. We understand the importance of a swift approval process, and we're pleased to inform you that our team is dedicated to reviewing your submission promptly. The approval process typically takes 8 hours or less.
+    </p>
+    <p>Once your document has gone through the approval process, you will receive an email notification confirming the status of your profile. If your document meets our requirements, you will be able to start receiving appointments on the Kenecare platform.</p>
+    <p> We appreciate your patience and cooperation during this process. If you have any questions or concerns, please feel free to reach out to our support team at [support@email.com]. We are here to assist you in any way we can.
+    Thank you for being a valued member of the Kenecare community. We look forward to having you on board and contributing to the well-being of our users.</p>
+    
+    <footer>
+      <p>Kenecare Support Team</p>
+      <p>support@kenecare.com</p>
+      <p><a href="https://kenecare.com">Kenecare.com</a></p>
+    </footer>
+    
+    `,
+    };
+    const result = await sendGrid.send(message).catch((err) => {
+      throw err;
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+const doctorAppointmentApprovalEmail = async ({
+  patientEmail,
+  patientNameOnPrescription,
+  symptoms,
+  appointmentDate,
+  appointmentTime,
+  patientName,
+  doctorName,
+  meetingJoinLink,
+}) => {
+  try {
+    const message = {
+      to: patientEmail,
+      from: mailer.from,
+      subject: `Kenecare Medical Appointment with Dr. ${doctorName} Approved`,
+      html: `<h1>Dear ${patientName}. </h1>
+    <p>We are please to inform you that your Kenecare Medical Appointment with Dr. ${doctorName} has been approved. The details of your appointment are as follows: </p>
+    <ul>
+      <li>Patient's Name: ${patientNameOnPrescription.toUpperCase()}</li>
+      <li>Symptoms: <strong>${symptoms}</strong></li>
+      <li>Date: ${appointmentDate}</li>
+      <li>Time: ${appointmentTime}</li>
+    </ul>
+    <p>To Join the virtual meeting please <a href="${meetingJoinLink}">CLICK HERE</a> or copy and paste this link in your browser: ${meetingJoinLink}</p>
+
+    <p>Please ensure that you have a stable internet connection and a device with a camera and microphone for the virtual consultation.</p>
+
+    <p>An SMS notification would be sent 30 minutes before the scheduled start time as a reminder. If you encounter any issues or have any questions, feel free to to send us an email to support@kenecare or call this TOLL FREE line 4545. </p>
+    
+    <footer>
+      <p>Kenecare Support Team</p>
+      <p>support@kenecare.com</p>
+      <p><a href="https://kenecare.com">Kenecare.com</a></p>
+    </footer>
+    
+    `,
+    };
+    const done = await sendGrid.send(message).catch((error) => {
+      throw error;
+    });
+
+    console.log(done);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 const paymentCanceledPatientAppointmentEmail = async ({
   patientEmail,
   patientName,
@@ -113,4 +226,7 @@ module.exports = {
   newPatientAppointmentEmail,
   newDoctorAppointmentEmail,
   paymentCanceledPatientAppointmentEmail,
+  doctorCouncilRegistrationEmail,
+  adminDoctorCouncilRegistrationEmail,
+  doctorAppointmentApprovalEmail,
 };
