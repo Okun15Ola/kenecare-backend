@@ -13,7 +13,7 @@ exports.getAllPatients = () => {
 
 exports.getPatientById = (id) => {
   const sql =
-    "SELECT patient_id, first_name,middle_name,last_name, gender,dob, patients.user_id,  mobile_number,  user_type, is_account_active FROM patients INNER JOIN users ON patients.user_id = users.user_id  WHERE patient_id = ? LIMIT 1;";
+    "SELECT patient_id, first_name,middle_name,last_name, gender,dob, patients.user_id,  mobile_number,email,  user_type, is_account_active FROM patients INNER JOIN users ON patients.user_id = users.user_id  WHERE patient_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [id], (err, result) => {
       if (err) return reject(err);

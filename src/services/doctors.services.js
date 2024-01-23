@@ -2,6 +2,7 @@ const dbObject = require("../db/db.doctors");
 const Response = require("../utils/response.utils");
 const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
 const { getUserById } = require("../db/db.users");
+const { doctorCouncilRegistrationEmail, adminDoctorCouncilRegistrationEmail } = require("../utils/email.utils");
 
 exports.getAllDoctors = async () => {
   try {
@@ -22,6 +23,8 @@ exports.getAllDoctors = async () => {
           qualifications,
           consultation_fee: consultationFee,
           city_name: location,
+          latitude,
+          longitude,
           years_of_experience: yearOfExperience,
           is_profile_approved: isProfileApproved,
           mobile_number: mobileNumber,
@@ -43,6 +46,69 @@ exports.getAllDoctors = async () => {
             qualifications,
             consultationFee,
             location,
+            latitude,
+            longitude,
+            yearOfExperience,
+            isProfileApproved,
+            mobileNumber,
+            email,
+            userType,
+            isAccountActive,
+          };
+        }
+      );
+
+      return Response.SUCCESS({ data: doctors });
+    }
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.getDoctorByQuery = async ({ locationId, query }) => {
+  try {
+    const rawData = await dbObject.getDoctorByQuery({ locationId, query });
+    if (rawData) {
+      const doctors = rawData.map(
+        ({
+          doctor_id: doctorId,
+          title,
+          first_name: firstName,
+          middle_name: middleName,
+          last_name: lastName,
+          gender,
+          professional_summary: professionalSummary,
+          profile_pic_url,
+          profilePic,
+          specialization_name: specialization,
+          qualifications,
+          consultation_fee: consultationFee,
+          city_name: location,
+          latitude,
+          longitude,
+          years_of_experience: yearOfExperience,
+          is_profile_approved: isProfileApproved,
+          mobile_number: mobileNumber,
+          email,
+          user_type: userType,
+          is_account_active: isAccountActive,
+        }) => {
+          return {
+            doctorId,
+            title,
+            firstName,
+            middleName,
+            lastName,
+            gender,
+            professionalSummary,
+            profile_pic_url,
+            profilePic,
+            specialization,
+            qualifications,
+            consultationFee,
+            location,
+            latitude,
+            longitude,
             yearOfExperience,
             isProfileApproved,
             mobileNumber,
@@ -236,9 +302,106 @@ exports.createDoctorProfile = async ({
     });
 
     //TODO send an email with further instructions
+    Promise.all([
+      await doctorCouncilRegistrationEmail({}),
+      await adminDoctorCouncilRegistrationEmail({}),
+    ]);
+    //TODO Send Email to admins
+
     return Response.CREATED({
       message:
         "Doctor profile created successfully. Please check your email for further instructions",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+/**
+ * createDoctorCouncilRegistration({
+      userId,
+      councilId,
+      regNumber,
+      regYear,
+      certIssuedDate,
+      certExpirtyDate,
+      file,
+    });
+ */
+exports.createDoctorCouncilRegistration = async ({
+  userId,
+  councilId,
+  regNumber,
+  regYear,
+  certIssuedDate,
+  certExpiryDate,
+  file,
+}) => {
+  try {
+    if (!file) {
+      return Response.BAD_REQUEST({
+        message: "Please upload medical council registration certificate.",
+      });
+    }
+    const { user_type: userType } = await getUserById(userId);
+
+    if (userType !== USERTYPE.DOCTOR) {
+      return Response.UNAUTHORIZED({
+        message: "Unauthorized Action.",
+      });
+    }
+    const { doctor_id: doctorId } = await dbObject.getDoctorByUserId(userId);
+    if (!doctorId) {
+      return Response.BAD_REQUEST({
+        message: "Doctor Profile does not exist please create a profile. ",
+      });
+    }
+
+    const councilRegistrationExist =
+      await dbObject.getDoctorsCouncilRegistrationById(doctorId);
+
+    if (councilRegistrationExist) {
+      const {
+        council_registration_id: councilRegistrationId,
+        registration_status: registrationStatus,
+        reject_reason: rejectReason,
+      } = councilRegistrationExist;
+
+      //TODO check if it has been approved
+      if (registrationStatus === "pending") {
+        return Response.BAD_REQUEST({
+          message:
+            "Medical Council Registration PENDING. Approval takes up to 48 hours, if you're experiencing any delays plese contact the admin for further instructions.",
+        });
+      }
+      if (registrationStatus === "rejected") {
+        return Response.BAD_REQUEST({
+          message: `Medical Council Registration was rejected by admin. Reason: ${rejectReason}`,
+        });
+      }
+
+      if (registrationStatus === "approved") {
+        return Response.NOT_MODIFIED();
+      }
+    }
+
+    const done = await dbObject.createDoctorMedicalCouncilRegistration({
+      doctorId,
+      councilId,
+      regNumber,
+      regYear,
+      certIssuedDate,
+      certExpiryDate,
+      filename: file.filename,
+    });
+
+    console.log(done);
+    //TODO send an email with further instructions
+
+    return Response.CREATED({
+      message:
+        "Medical Council Registration Successfully Submitted. Your information is awaiting approval. You will be notified by email when once your profile has been approved.",
     });
   } catch (error) {
     console.error(error);

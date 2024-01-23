@@ -4,6 +4,7 @@ const { Validate } = require("../../../validations/validate");
 const {
   GetDoctorProfileController,
   CreateDoctorProfileController,
+  CreateDoctorCouncilRegistration,
   UpdateDoctorProfileByIdController,
   UpdateDoctorProfilePictureController,
 } = require("../../../controllers/doctors/profile.controller");
@@ -11,7 +12,10 @@ const { getCityById } = require("../../../db/db.cities");
 const { getSpecializationById } = require("../../../db/db.specializations");
 const { getDoctorById } = require("../../../db/db.doctors");
 const { USERTYPE } = require("../../../utils/enum.utils");
-const { localProfilePicUploader } = require("../../../utils/file-upload.utils");
+const {
+  localProfilePicUploader,
+  localMediaUploader,
+} = require("../../../utils/file-upload.utils");
 
 router.get("/profile", GetDoctorProfileController);
 router.post(
@@ -210,5 +214,11 @@ router.patch(
   ],
   Validate,
   UpdateDoctorProfilePictureController
+);
+
+router.post(
+  "/council-registration",
+  localMediaUploader.single("regCertificate"),
+  CreateDoctorCouncilRegistration
 );
 module.exports = router;

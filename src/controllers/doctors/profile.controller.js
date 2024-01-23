@@ -2,6 +2,7 @@ const logger = require("../../middlewares/logger.middleware");
 const {
   getDoctorByUser,
   createDoctorProfile,
+  createDoctorCouncilRegistration,
   updateDoctorProfile,
   updateDoctorProfilePicture,
 } = require("../../services/doctors.services");
@@ -10,6 +11,7 @@ const GetDoctorProfileController = async (req, res, next) => {
   try {
     const id = parseInt(req.user.id);
     const response = await getDoctorByUser(id);
+    console.log(response);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -47,6 +49,29 @@ const CreateDoctorProfileController = async (req, res, next) => {
       consultationFee: consultationfee,
       cityId: city,
       yearOfExperience: yearOfExperience,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+const CreateDoctorCouncilRegistration = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { file } = req;
+    const { councilId, regNumber, regYear, certIssuedDate, certExpiryDate } =
+      req.body;
+
+    const response = await createDoctorCouncilRegistration({
+      userId,
+      councilId,
+      regNumber,
+      regYear,
+      certIssuedDate,
+      certExpiryDate,
+      file,
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
@@ -112,6 +137,7 @@ const UpdateDoctorProfilePictureController = async (req, res, next) => {
 module.exports = {
   GetDoctorProfileController,
   CreateDoctorProfileController,
+  CreateDoctorCouncilRegistration,
   UpdateDoctorProfileByIdController,
   UpdateDoctorProfilePictureController,
 };

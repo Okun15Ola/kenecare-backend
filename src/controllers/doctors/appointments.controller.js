@@ -5,6 +5,7 @@ const {
   postponeDoctorAppointment,
   approveDoctorAppointment,
   cancelDoctorAppointment,
+  startDoctorAppointment,
 } = require("../../services/doctor.appointments.services");
 
 exports.GetDoctorAppointmentsController = async (req, res, next) => {
@@ -70,6 +71,24 @@ exports.PostponeDoctorAppointmentController = async (req, res, next) => {
       req.body;
 
     const response = await postponeDoctorAppointment({
+      userId,
+      appointmentId,
+      postponeDate,
+      postponedReason,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+exports.StartDoctorAppointmentController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id);
+    const appointmentId = parseInt(req.params.id);
+
+    const response = await startDoctorAppointment({
       userId,
       appointmentId,
       postponeDate,

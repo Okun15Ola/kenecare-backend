@@ -3,6 +3,8 @@ const { getDoctorByUserId } = require("../db/db.doctors");
 const { getUserById } = require("../db/db.users");
 const { USERTYPE, VERIFICATIONSTATUS } = require("../utils/enum.utils");
 const Response = require("../utils/response.utils");
+const { doctorAppointmentApprovalEmail } = require("../utils/email.utils");
+const { getPatientById } = require("../db/db.patients");
 
 exports.getDoctorAppointments = async (userId) => {
   try {
@@ -214,7 +216,13 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
       });
     }
-    const { is_profile_approved, doctor_id: doctorId } = doctor;
+
+    const {
+      is_profile_approved,
+      doctor_id: doctorId,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
+    } = doctor;
 
     // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
     //   return Response.UNAUTHORIZED({
@@ -236,9 +244,16 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     const {
       patient_id: patientId,
       patient_mobile_number,
+      first_name: firstName,
+      last_name: lastName,
+      patient_name_on_prescription: patientNameOnPrescription,
+      appointment_date: appointmentDate,
+      appointment_time: appoinmentTime,
+      patient_symptoms: symptoms,
       appointment_status,
     } = rawData;
 
+    // SEND A RESPONSE IF THE APPOINTMENT HAS PREVIOUSLY BEEN APPROVED
     if (appointment_status === "approved") {
       return Response.NOT_MODIFIED();
     }
@@ -248,6 +263,98 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentId,
       doctorId,
     });
+
+    const patient = await getPatientById(patientId);
+
+    if (patient) {
+      const { email } = patient || null;
+
+      if (email) {
+        // Send a email notification to the user
+        await doctorAppointmentApprovalEmail({
+          doctorName: `${doctorFirstName} ${doctorLastName}`,
+          patientName: `${firstName} ${lastName}`,
+          patientNameOnPrescription,
+          appointmentDate,
+          appoinmentTime,
+          symptoms,
+          meetingJoinLink:
+            "https://us02web.zoom.us/j/81495440003?pwd=dUpYSWZxWW9FdjdkRG9NVTFkUFd5UT09",
+          patientEmail: email,
+        });
+      } else {
+        //TODO SEND AN SMS NOTIFICATION TO PATIENT FOR APPROVED APPOINTMENT
+      }
+    }
+
+    return Response.SUCCESS({
+      message: "Medical Appointment Approved Successfully",
+    });
+  } catch (error) {
+    throw error;
+  }
+};
+exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
+  try {
+    const user = await getUserById(userId);
+
+    if (!user) {
+      return Response.NOT_FOUND({ message: "User Not Found" });
+    }
+
+    const { user_type } = user;
+
+    if (user_type !== USERTYPE.DOCTOR) {
+      return Response.UNAUTHORIZED({
+        message:
+          "Unauthorized access. You must register as a doctor to perform this action",
+      });
+    }
+
+    const doctor = await getDoctorByUserId(userId);
+
+    if (!doctor) {
+      return Response.NOT_FOUND({
+        message:
+          "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
+      });
+    }
+    const { is_profile_approved, doctor_id: doctorId } = doctor;
+
+    // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
+    //   return Response.UNAUTHORIZED({
+    //     message:
+    //       "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
+    //   });
+    // }
+
+    // Get doctor's appointment by ID
+    const rawData = await dbObject.getDoctorAppointmentById({
+      doctorId,
+      appointmentId,
+    });
+
+    //Check if the appointment exists
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Specified Appointment Not Found! Please Try Again!",
+      });
+    }
+
+    //Extract patient id from appointment to get patient email
+    const {
+      patient_id: patientId,
+      patient_mobile_number,
+      appointment_status,
+    } = rawData;
+
+    if (appointment_status !== "approved") {
+      //UPDATE appointment status to 'approved'
+      await dbObject.approveDoctorAppointmentById({
+        appointmentId,
+        doctorId,
+      });
+    }
 
     //TODO Send a notification(email,sms) to the user
 
@@ -432,22 +539,4 @@ exports.getDoctorAppointmentByDateRange = async ({ id, status }) => {
     console.error(error);
     throw error;
   }
-};
-exports.deleteBlog = async (id) => {
-  try {
-    const result = await isBlogExist(id);
-    if (!result) {
-      return Response.NOT_FOUND({ message: "Blog Not Found" });
-    }
-    await dbObject.deleteBlogById(id);
-    return Response.SUCCESS({ message: "Blog Deleted Successfully" });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-
-const isBlogExist = async (id) => {
-  const rawData = await dbObject.getBlogById(id);
-  return !!rawData;
 };

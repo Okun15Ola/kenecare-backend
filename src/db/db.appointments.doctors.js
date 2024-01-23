@@ -28,7 +28,7 @@ exports.getDoctorAppointmentById = ({ doctorId, appointmentId }) => {
 };
 exports.approveDoctorAppointmentById = ({ doctorId, appointmentId }) => {
   const sql =
-    "UPDATE medical_appointments SET appointment_status = 'approved' WHERE appointment_id = ? AND doctor_id = ?;";
+    "UPDATE medical_appointments SET appointment_status = 'approved', cancelled_reason = NULL, cancelled_at = NULL, canceled_by = NULL, postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL WHERE appointment_id = ? AND doctor_id = ?;";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [appointmentId, doctorId], (error, results) => {
@@ -44,7 +44,7 @@ exports.cancelDoctorAppointmentById = ({
   cancelReason,
 }) => {
   const sql =
-    "UPDATE medical_appointments SET appointment_status = 'canceled', canceled_by = 'doctor', cancelled_reason = ?  WHERE appointment_id = ? AND doctor_id = ?;";
+    "UPDATE medical_appointments SET appointment_status = 'canceled', canceled_by = 'doctor', cancelled_reason = ?, postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL  WHERE appointment_id = ? AND doctor_id = ?;";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
@@ -65,7 +65,7 @@ exports.postponeDoctorAppointmentById = ({
   postponedDate,
 }) => {
   const sql =
-    "UPDATE medical_appointments SET appointment_status = 'postponed', postponed_by = 'doctor', postponed_reason = ?, postponed_date = ? WHERE appointment_id = ? AND doctor_id = ?;";
+    "UPDATE medical_appointments SET appointment_status = 'postponed', postponed_by = 'doctor', postponed_reason = ?, postponed_date = ?, cancelled_reason = ?, cancelled_at =  NULL, canceled_by = ? WHERE appointment_id = ? AND doctor_id = ?;";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(

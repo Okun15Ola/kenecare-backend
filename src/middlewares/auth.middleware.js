@@ -49,12 +49,12 @@ const requireUserAuth = async (req, res, next) => {
         })
       );
     }
+    return res.status(400).json(
+      Response.BAD_REQUEST({
+        message: "Authentication Failed! Please Try Again",
+      })
+    );
   }
-  return res.status(400).json(
-    Response.BAD_REQUEST({
-      message: "Authentication Failed! Please Try Again",
-    })
-  );
 };
 
 const requireAdminAuth = async (req, res, next) => {

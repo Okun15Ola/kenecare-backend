@@ -6,6 +6,7 @@ const expressSession = require("express-session");
 const bodyParser = require("body-parser");
 const { sessionSecret } = require("./config/default.config");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
+const { createZoomMeeting } = require("./utils/zoom.utils.js");
 const logger = require("./middlewares/logger.middleware");
 const {
   requireUserAuth,
@@ -59,6 +60,7 @@ app.use(
     crossOriginResourcePolicy: false,
   })
 );
+
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
