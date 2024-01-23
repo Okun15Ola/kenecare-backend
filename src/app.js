@@ -15,6 +15,7 @@ const {
 const {
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
+  SUCCESS,
   BAD_REQUEST,
 } = require("./utils/response.utils.js");
 
@@ -89,7 +90,7 @@ app.use(function (req, res, next) {
 app.use("/api/v1/health-check", (req, res, next) => {
   return res
     .status(200)
-    .json({ message: "Health check passed", status: "success" });
+    .json(SUCCESS({ message: "Health Check Passed. API Working!!!" }));
 });
 app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
