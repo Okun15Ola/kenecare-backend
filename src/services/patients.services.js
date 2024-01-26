@@ -47,10 +47,45 @@ exports.getAllPatients = async () => {
     throw error;
   }
 };
-exports.getPatientById = async (patientId) => {
+exports.getPatientById = async (id) => {
   try {
-    const rawData = await dbObject.getAllPatients();
-    console.log(rawData);
+    const rawData = await dbObject.getPatientById(id);
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Patient Not Found" });
+    }
+    const {
+      patient_id: patientId,
+      title,
+      first_name: firstName,
+      middle_name: middleName,
+      last_name: lastName,
+      gender,
+      profile_pic_url: profilePic,
+      dob,
+      mobile_number: mobileNumber,
+      email,
+      user_type: userType,
+      is_account_active: isAccountActive,
+      is_online: isOnline,
+    } = rawData;
+
+    const patient = {
+      patientId,
+      title,
+      firstName,
+      middleName,
+      lastName,
+      gender,
+      profilePic,
+      dob,
+      mobileNumber,
+      email,
+      userType,
+      isAccountActive,
+      isOnline,
+    };
+
+    return Response.SUCCESS({ data: patient });
   } catch (error) {
     console.error(error);
     throw error;
