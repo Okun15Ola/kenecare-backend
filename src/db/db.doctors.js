@@ -140,6 +140,7 @@ exports.createDoctor = ({
     );
   });
 };
+
 exports.createDoctorMedicalCouncilRegistration = ({
   doctorId,
   councilId,
@@ -170,6 +171,19 @@ exports.createDoctorMedicalCouncilRegistration = ({
     );
   });
 };
+
+exports.getDoctorMedicalCouncilRegistration = ({ doctorId }) => {
+
+  const sql =
+    "SELECT council_registration_id, dcr.doctor_id,first_name,last_name,gender, specialization_name, council_name, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, fullname as 'verified_by' FROM doctors_council_registration as dcr INNER JOIN doctors on dcr.doctor_id = doctors.doctor_id INNER JOIN medical_councils on dcr.medical_council_id = medical_councils.council_id INNER JOIN specializations on doctors.specialization_id = specializations.specialization_id LEFT JOIN admins on dcr.verified_by = admins.admin_id WHERE dcr.doctor_id = ? LIMIT 1; ";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [doctorId], (err, result) => {
+      if (err) return reject(err);
+      return resolve(result);
+    });
+  });
+};
+
 exports.updateDoctorById = ({
   doctorId,
   title,

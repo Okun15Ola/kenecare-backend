@@ -2,7 +2,10 @@ const dbObject = require("../db/db.doctors");
 const Response = require("../utils/response.utils");
 const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
 const { getUserById } = require("../db/db.users");
-const { doctorCouncilRegistrationEmail, adminDoctorCouncilRegistrationEmail } = require("../utils/email.utils");
+const {
+  doctorCouncilRegistrationEmail,
+  adminDoctorCouncilRegistrationEmail,
+} = require("../utils/email.utils");
 
 exports.getAllDoctors = async () => {
   try {
@@ -198,6 +201,48 @@ exports.getDoctorByUser = async (id) => {
   }
 };
 
+exports.getDoctorCouncilRegistration = async (id) => {
+  try {
+    //Get profile from database
+    const rawData = await dbObject.getDoctorByUserId(id);
+
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
+    }
+
+    //destruct properties from database object
+    const {
+      doctor_id: doctorId,
+      user_type: userType,
+      user_id: userId,
+      is_account_active: isAccountActive,
+    } = rawData;
+
+    //Check if the profile requested belongs to the requesting user
+    //Check if the user type is a doctor
+    if (id !== userId || userType !== USERTYPE.DOCTOR) {
+      return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
+    }
+
+    //TODO Check if the profile has been verified
+    // if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
+    //   return Response.UNAUTHORIZED({
+    //     message:
+    //       "Requested Doctor Profile has not been approved. Please contact admin for further information",
+    //   });
+    // }
+
+    const data = await dbObject.getDoctorMedicalCouncilRegistration({
+      doctorId,
+    });
+
+    return Response.SUCCESS({ data });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 exports.getDoctorById = async (doctorId) => {
   try {
     //Get profile from database
@@ -351,7 +396,12 @@ exports.createDoctorCouncilRegistration = async ({
         message: "Unauthorized Action.",
       });
     }
-    const { doctor_id: doctorId } = await dbObject.getDoctorByUserId(userId);
+    const {
+      doctor_id: doctorId,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
+      email: doctorEmail,
+    } = await dbObject.getDoctorByUserId(userId);
     if (!doctorId) {
       return Response.BAD_REQUEST({
         message: "Doctor Profile does not exist please create a profile. ",
@@ -372,7 +422,7 @@ exports.createDoctorCouncilRegistration = async ({
       if (registrationStatus === "pending") {
         return Response.BAD_REQUEST({
           message:
-            "Medical Council Registration PENDING. Approval takes up to 48 hours, if you're experiencing any delays plese contact the admin for further instructions.",
+            "Medical Council Registration PENDING. Approval takes up to 48 hours, if you're experiencing any delays please contact the admin for further instructions.",
         });
       }
       if (registrationStatus === "rejected") {
@@ -396,12 +446,21 @@ exports.createDoctorCouncilRegistration = async ({
       filename: file.filename,
     });
 
-    console.log(done);
-    //TODO send an email with further instructions
+    //send an email with further instructions
+
+    await Promise.all([
+      adminDoctorCouncilRegistrationEmail({
+        doctorName: `${doctorFirstName} ${doctorLastName}`,
+      }),
+      doctorCouncilRegistrationEmail({
+        doctorEmail,
+        doctorName: `${doctorFirstName} ${doctorLastName}`,
+      }),
+    ]);
 
     return Response.CREATED({
       message:
-        "Medical Council Registration Successfully Submitted. Your information is awaiting approval. You will be notified by email when once your profile has been approved.",
+        "Medical Council Registration Successfully Submitted. Your information is awaiting approval. You will be notified by email when once your documents are approved.",
     });
   } catch (error) {
     console.error(error);

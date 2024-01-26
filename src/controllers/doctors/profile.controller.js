@@ -1,6 +1,7 @@
 const logger = require("../../middlewares/logger.middleware");
 const {
   getDoctorByUser,
+  getDoctorCouncilRegistration,
   createDoctorProfile,
   createDoctorCouncilRegistration,
   updateDoctorProfile,
@@ -12,6 +13,17 @@ const GetDoctorProfileController = async (req, res, next) => {
     const id = parseInt(req.user.id);
     const response = await getDoctorByUser(id);
     console.log(response);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+const GetDoctorCouncilRegistrationController = async (req, res, next) => {
+  try {
+    const id = parseInt(req.user.id);
+    const response = await getDoctorCouncilRegistration(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -136,6 +148,7 @@ const UpdateDoctorProfilePictureController = async (req, res, next) => {
 };
 module.exports = {
   GetDoctorProfileController,
+  GetDoctorCouncilRegistrationController,
   CreateDoctorProfileController,
   CreateDoctorCouncilRegistration,
   UpdateDoctorProfileByIdController,

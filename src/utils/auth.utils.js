@@ -52,15 +52,6 @@ const generateAdminJwtAccessToken = (admin) => {
   }
 };
 
-// const generateVerificationToken = () => {
-//   try {
-//     return crypto.randomBytes(3).toString("hex").toUpperCase();
-//   } catch (error) {
-//     console.error(error);
-//     throw error;
-//   }
-// };
-
 const generateVerificationToken = () => {
   // Generate a random 3-byte (6-digit) hexadecimal number
   const randomBytes = crypto.randomBytes(3);

@@ -5,14 +5,12 @@ const {
   sendGridSenderEmail,
 } = require("../config/default.config");
 
-sendGrid.setApiKey(
-  "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"
-);
+sendGrid.setApiKey(sendGridApiKey);
 
 const mailer = {
   from: {
     name: "KENECARE (SL)",
-    email: "chinedum.eke@imo-tech.com",
+    email: sendGridSenderEmail,
   },
 };
 
@@ -86,37 +84,23 @@ const newDoctorAppointmentEmail = async ({
   }
 };
 
-const adminDoctorCouncilRegistrationEmail = async ({
-  doctorEmail,
-  doctorName,
-  appointmentDate,
-  appointmentTime,
-  symptoms,
-  patientNameOnPrescription,
-  patientMobileNumber,
-}) => {
+const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
   try {
     const message = {
-      to: doctorEmail,
+      to: "comroland85@gmail.com",
       from: mailer.from,
       subject: "Request for Approval: Medical Council Document Submission",
       text: "Kenecare Admin Notification",
-      html: `<h1>Dear Dr. ${doctorName}. </h1>
-    <p>This is a notification email for a newly booked patient appointment in your schedule.</p> 
-    <h4>Appointment Details:</h4>
-    <ul>
-      <li>Date: ${appointmentDate} </li>
-      <li>Time: ${appointmentTime} </li>
-      <li>Patient's Name: ${patientNameOnPrescription.toUpperCase()}</li>
-      <li>Patient's Contact: ${patientMobileNumber}</li>
-      <li>Patient's Symptoms: <strong style="color:red;">${symptoms}</strong> </li>
-    </ul> 
-    <p>If, for any reason, you are unable to attend to this appointment, or if there are any changes, please <a href="https://doctor.kenecare.com/login">click here to login to your dashboard</a> and notify the patient at your earliest convenience.</p>
-    <p>Thank you for your dedication to providing excellent patient care on Kenecare (SL).</p>`,
+      html: `<h3>Dear KENECARE ADMIN</h3>
+    <p>This is a notification email to bring to your attention that Dr. ${doctorName} submitted their Medical Council Registration Document on Kenecare that requires your approval</p> 
+   
+    <p>The approval process is expected to take 48 hours or less. Once approved, the doctor will be eligible to receive appointments from users seeking healthcare services.</p>
+    `,
     };
     const result = await sendGrid.send(message).catch((err) => {
       throw err;
     });
+    console.log(result);
   } catch (error) {
     throw error;
   }
@@ -147,6 +131,8 @@ const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
     const result = await sendGrid.send(message).catch((err) => {
       throw err;
     });
+
+    console.log(result);
   } catch (error) {
     throw error;
   }

@@ -3,6 +3,7 @@ const { body, param } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   GetDoctorProfileController,
+  GetDoctorCouncilRegistrationController,
   CreateDoctorProfileController,
   CreateDoctorCouncilRegistration,
   UpdateDoctorProfileByIdController,
@@ -253,4 +254,5 @@ router.post(
   Validate,
   CreateDoctorCouncilRegistration
 );
+router.get("/council-registration", GetDoctorCouncilRegistrationController);
 module.exports = router;
