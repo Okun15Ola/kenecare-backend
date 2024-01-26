@@ -5,6 +5,7 @@ const { USERTYPE, VERIFICATIONSTATUS } = require("../utils/enum.utils");
 const Response = require("../utils/response.utils");
 const { doctorAppointmentApprovalEmail } = require("../utils/email.utils");
 const { getPatientById } = require("../db/db.patients");
+const { createZoomMeeting } = require("../utils/zoom.utils");
 
 exports.getDoctorAppointments = async (userId) => {
   try {
@@ -248,7 +249,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       last_name: lastName,
       patient_name_on_prescription: patientNameOnPrescription,
       appointment_date: appointmentDate,
-      appointment_time: appoinmentTime,
+      appointment_time: appointmentTime,
       patient_symptoms: symptoms,
       appointment_status,
     } = rawData;
@@ -258,11 +259,38 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       return Response.NOT_MODIFIED();
     }
 
+    //TODO GENERATE ZOOM MEETING LINK
+    const {
+      zoomMeetingID,
+      zoomMeetingUUID,
+      zoomMeetingTopic,
+      zoomMeetingJoinURL,
+      zoomMeetingStartURL,
+      zoomMeetingEncPassword,
+      zoomMeetingPassword,
+    } = await createZoomMeeting({
+      patientName: patientNameOnPrescription,
+      appointmentDate,
+      appointmentStartTime: appointmentTime,
+      doctorName: `${doctorFirstName} ${doctorLastName}`,
+    });
+
     //UPDATE appointment status to 'approved'
     await dbObject.approveDoctorAppointmentById({
       appointmentId,
       doctorId,
+      meetingId,
     });
+
+    //TODO INSERT ZOOM MEETING INFO TO DATABASE
+    // await dbObject.createNewZoomMeeting({
+    //   meetingId:zoomMeetingID,
+    //   meetingUUID:zoomMeetingUUID,
+    //   meetingTopic:zoomMeetingTopic,
+    //   joinUrl:zoomMeetingJoinURL,
+    //   startUrl:zoomMeetingStartURL,
+    //   encryptedPassword:zoomMeetingEncPassword,
+    // });
 
     const patient = await getPatientById(patientId);
 
@@ -276,7 +304,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
           patientName: `${firstName} ${lastName}`,
           patientNameOnPrescription,
           appointmentDate,
-          appoinmentTime,
+          appoinmentTime: appointmentTime,
           symptoms,
           meetingJoinLink:
             "https://us02web.zoom.us/j/81495440003?pwd=dUpYSWZxWW9FdjdkRG9NVTFkUFd5UT09",

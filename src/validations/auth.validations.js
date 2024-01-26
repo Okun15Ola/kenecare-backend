@@ -133,13 +133,13 @@ exports.VerifyTokenValidations = [
   param("token")
     .notEmpty()
     .withMessage("Verification Token is required")
-    .toUpperCase()
+    .isLength({ max: 6, min: 6 })
     .trim()
     .escape()
     .custom(async (token, { req }) => {
       const user = await getUserByToken(token);
       if (!user) {
-        throw new Error("Invalid Verification Token");
+        throw new Error("Invalid AUTH Token. Please enter a valid AUTH Token");
       }
       req.user = user;
       return true;

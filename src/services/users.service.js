@@ -5,7 +5,7 @@ const {
 } = require("../utils/auth.utils");
 const { USERTYPE, VERIFICATIONSTATUS, STATUS } = require("../utils/enum.utils");
 const { hashUsersPassword } = require("../utils/auth.utils");
-const { sendTokenSMS } = require("../utils/sms.utils");
+const { sendAuthTokenSMS } = require("../utils/sms.utils");
 const Response = require("../utils/response.utils");
 
 exports.getUsers = async () => {
@@ -140,9 +140,11 @@ exports.registerNewUser = async ({
     await dbObject.createNewUser(user);
 
     // Send TOKEN VIA SMS
-    await sendTokenSMS({ token: vToken, mobileNumber });
+    await sendAuthTokenSMS({ token: vToken, mobileNumber });
 
-    return Response.CREATED({ message: "Account Created Successfully" });
+    return Response.CREATED({
+      message: "Account Created Successfully. Please Proceed to verification",
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -260,7 +262,7 @@ exports.loginUser = async (user) => {
       });
 
       // send sms notifcation with 2fa token
-      await sendTokenSMS({ token, mobileNumber });
+      await sendAuthTokenSMS({ token, mobileNumber });
       return Response.SUCCESS({ message: "2FA Token Sent successfully" });
     }
 
@@ -325,7 +327,7 @@ exports.requestUserLoginOtp = async (user) => {
     });
 
     //send sms with generated token
-    await sendTokenSMS({ token, mobileNumber });
+    await sendAuthTokenSMS({ token, mobileNumber });
 
     //return response to user
     return Response.SUCCESS({ message: "Login OTP Sent successfully" });
@@ -366,7 +368,7 @@ exports.verifyUserLoginOtp = async (user) => {
         token,
       });
       // send sms notifcation with 2fa token
-      await sendTokenSMS({ token, mobileNumber });
+      await sendAuthTokenSMS({ token, mobileNumber });
       return { message: "2FA Token Sent successfully", data: null };
     }
 

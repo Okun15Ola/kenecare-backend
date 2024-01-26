@@ -44,6 +44,10 @@ services:
       - TWILIO_PHONE_NUMBER=$TWILIO_PHONE_NUMBER
       - SENDGRID_API_KEY=$SENDGRID_API_KEY
       - SENDGRID_EMAIL=$SENDGRID_EMAIL
+      - SMS_HIVE_CLIENT_ID=$SMS_HIVE_CLIENT_ID
+      - SMS_HIVE_CLIENT_SECRET=$SMS_HIVE_CLIENT_SECRET
+      - SMS_HIVE_AUTH_TOKEN=$SMS_HIVE_AUTH_TOKEN
+      - SMS_HIVE_URL=$SMS_HIVE_URL
     volumes:
       - kenecare-app-data-staging:/usr/src/app/src/public/upload
 

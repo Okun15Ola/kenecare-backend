@@ -1,6 +1,22 @@
 const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
+const fs = require("fs");
+
+const mediaUploadDirectory = path.join(__dirname, "../public/upload/media/");
+
+const profileUploadDirectory = path.join(
+  __dirname,
+  "../public/upload/profile_pics/"
+);
+
+const directories = [mediaUploadDirectory, profileUploadDirectory];
+
+directories.forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpeg|jpg|png|pdf/;
@@ -25,19 +41,13 @@ const AWSUploader = multer({
 });
 
 const localMediaStore = multer.diskStorage({
-  destination: (req, file, cb) => {
-    console.log(req.body);
-    cb(null, path.join(__dirname, "../public/upload/media/"));
-  },
+  destination: mediaUploadDirectory,
   filename: (req, file, cb) => {
     generateUniqueFileName(file, cb);
   },
 });
 const localProfilePictureStore = multer.diskStorage({
-  destination: (req, file, cb) => {
-    console.log(req.body);
-    cb(null, path.join(__dirname, "../public/upload/profile_pics/"));
-  },
+  destination: profileUploadDirectory,
   filename: (req, file, cb) => {
     generateUniqueFileName(file, cb);
   },

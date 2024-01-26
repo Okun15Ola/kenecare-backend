@@ -16,6 +16,8 @@ exports.getPatientAppointments = async (userId) => {
 
     const rawData = await dbObject.getAllPatientAppointments(patientId);
 
+    console.log(rawData[0]);
+
     const appointments = rawData.map(
       ({
         appointment_id: appointmentId,
@@ -31,7 +33,7 @@ exports.getPatientAppointments = async (userId) => {
         consultation_fee_paid: consultationFees,
         specialty_name: specialty,
         time_slot: timeSlot,
-        meeting_url: meetingUrl,
+        meeting_id: meetingId,
         start_time: appointmentStartTime,
         end_time: appointmentEndTime,
         appointment_status: appointmentStatus,
@@ -56,7 +58,7 @@ exports.getPatientAppointments = async (userId) => {
           consultationFees,
           specialty,
           timeSlot,
-          meetingUrl,
+          meetingId,
           appointmentStartTime,
           appointmentEndTime,
           appointmentStatus,

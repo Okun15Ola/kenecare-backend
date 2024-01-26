@@ -11,8 +11,6 @@ const {
   zoomApiUrl,
 } = require("../config/default.config");
 
-console.log(zoomApiUrl);
-
 const getZoomAccessToken = async () => {
   try {
     const response = await axios.post(

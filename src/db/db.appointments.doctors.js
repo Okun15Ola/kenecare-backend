@@ -26,18 +26,58 @@ exports.getDoctorAppointmentById = ({ doctorId, appointmentId }) => {
     });
   });
 };
-exports.approveDoctorAppointmentById = ({ doctorId, appointmentId }) => {
+exports.approveDoctorAppointmentById = ({
+  doctorId,
+  appointmentId,
+  meetingId,
+}) => {
   const sql =
-    "UPDATE medical_appointments SET appointment_status = 'approved', cancelled_reason = NULL, cancelled_at = NULL, canceled_by = NULL, postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL WHERE appointment_id = ? AND doctor_id = ?;";
+    "UPDATE medical_appointments SET appointment_status = 'approved', meeting_id = ? cancelled_reason = NULL, cancelled_at = NULL, canceled_by = NULL, postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL WHERE appointment_id = ? AND doctor_id = ?;";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [appointmentId, doctorId], (error, results) => {
-      if (error) return reject(error);
+    connectionPool.query(
+      sql,
+      [meetingId, appointmentId, doctorId],
+      (error, results) => {
+        if (error) return reject(error);
 
-      return resolve(results);
-    });
+        return resolve(results);
+      }
+    );
   });
 };
+
+exports.createNewZoomMeeting = ({
+  meetingId,
+  meetingUUID,
+  meetingTopic,
+  joinUrl,
+  startUrl,
+  encryptedPassword,
+}) => {
+  const sql =
+    "INSERT INTO zoom_meetings (zoom_id, zoom_uuid, meeting_topic, join_url,start_url,encrypted_password) VALUES (?,?,?,?,?,?);";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(
+      sql,
+      [
+        meetingId,
+        meetingUUID,
+        meetingTopic,
+        joinUrl,
+        startUrl,
+        encryptedPassword,
+      ],
+      (error, results) => {
+        if (error) return reject(error);
+
+        return resolve(results);
+      }
+    );
+  });
+};
+
 exports.cancelDoctorAppointmentById = ({
   doctorId,
   appointmentId,

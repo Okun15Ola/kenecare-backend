@@ -3,10 +3,10 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const expressSession = require("express-session");
+const path = require("path");
 const bodyParser = require("body-parser");
 const { sessionSecret } = require("./config/default.config");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
-
 const logger = require("./middlewares/logger.middleware");
 const {
   requireUserAuth,
@@ -65,7 +65,10 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + "/public"));
+app.use(
+  "/user-profile",
+  express.static(path.join(__dirname, "public/upload/profile_pics"))
+);
 app.use(express.static(__dirname + "/public/upload/media"));
 app.use(
   expressSession({
