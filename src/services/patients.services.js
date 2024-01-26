@@ -7,6 +7,58 @@ const moment = require("moment");
 exports.getAllPatients = async () => {
   try {
     const rawData = await dbObject.getAllPatients();
+
+    const patients = rawData.map(
+      ({
+        patient_id: patientId,
+        title,
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
+        gender,
+        profile_pic_url: profilePic,
+        dob,
+        mobile_number: mobileNumber,
+        email,
+        user_type: userType,
+        is_account_active: isAccountActive,
+        is_online: isOnline,
+      }) => {
+        return {
+          patientId,
+          title,
+          firstName,
+          middleName,
+          lastName,
+          gender,
+          profilePic,
+          dob,
+          mobileNumber,
+          email,
+          userType,
+          isAccountActive,
+          isOnline,
+        };
+      }
+    );
+    return Response.SUCCESS({ data: patients });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.getPatientById = async (patientId) => {
+  try {
+    const rawData = await dbObject.getAllPatients();
+    console.log(rawData);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.getPatientsTestimonial = async () => {
+  try {
+    const rawData = await dbObject.getAllPatients();
     console.log(rawData);
   } catch (error) {
     console.error(error);

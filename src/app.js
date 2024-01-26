@@ -8,6 +8,8 @@ const bodyParser = require("body-parser");
 const { sessionSecret } = require("./config/default.config");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
 const logger = require("./middlewares/logger.middleware");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocs = require("./utils/swagger.utils.js");
 const {
   requireUserAuth,
   requireAdminAuth,
@@ -18,8 +20,6 @@ const {
   SUCCESS,
   BAD_REQUEST,
 } = require("./utils/response.utils.js");
-
-//API ROUTES
 
 //INDEX ROUTES
 const indexRouter = require("./routes/api/index.routes.js");
@@ -50,7 +50,7 @@ const adminSymptomsRouter = require("./routes/api/admin/common-symptoms.routes")
 const adminSpecialtiesRouter = require("./routes/api/admin/specialties.routes");
 const adminFaqRouter = require("./routes/api/admin/faq.routes");
 const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
-const swaggerUi = require("swagger-ui-express");
+const adminPatientsRouter = require("./routes/api/admin/patients.routes.js");
 
 const app = express();
 
@@ -95,11 +95,10 @@ app.use("/api/v1/health-check", (req, res, next) => {
     .status(200)
     .json(SUCCESS({ message: "Health Check Passed. API Working!!!" }));
 });
-app.use(logUserInteraction);
+// app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
 
 //API DOCS ROUTE
-const swaggerDocs = require("./utils/swagger.utils.js");
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 //AUTH ROUTES
@@ -145,6 +144,7 @@ app.use("/api/v1/admin/services", adminServicesRouter);
 app.use("/api/v1/admin/specializations", adminSpecializationsRoute);
 app.use("/api/v1/admin/specialties", adminSpecialtiesRouter);
 app.use("/api/v1/admin/user-types", adminAccountsRouter);
+app.use("/api/v1/admin/patients", adminPatientsRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {

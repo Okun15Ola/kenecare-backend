@@ -1,32 +1,14 @@
 const router = require("express").Router();
-const Response = require("../../../utils/response.utils");
+const {
+  GetPatientsController,
+  GetPatientByIdController,
+  GetPatientTestimonialsController,
+} = require("../../../controllers/admin/patients.controller");
 
-router.get("/", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+router.get("/", GetPatientsController);
 
-router.post("/:id", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
-
-router.post("/", (req, res, next) => {
-  try {
-    console.log("Welcome Home");
-  } catch (error) {
-    console.error(error);
-    next(error);
-  }
-});
+router.get("/:id", GetPatientByIdController);
+router.get("/testimonials", GetPatientTestimonialsController);
 
 router.put("/:id", (req, res, next) => {
   try {
@@ -45,3 +27,5 @@ router.delete("/:id", (req, res, next) => {
     next(error);
   }
 });
+
+module.exports = router;

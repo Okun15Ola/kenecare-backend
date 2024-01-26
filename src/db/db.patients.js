@@ -1,10 +1,11 @@
 const { connectionPool } = require("./db.connection");
 
 exports.getAllPatients = () => {
-  const sqlQuery = "SELECT * FROM patients;";
+  const sql =
+    "SELECT patient_id, title, first_name, middle_name, last_name, gender, profile_pic_url, dob, mobile_number, email, user_type, is_account_active, is_online FROM patients INNER JOIN users on patients.user_id = users.user_id;";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sqlQuery, (err, result) => {
-      if (err) return reject(err);
+    connectionPool.query(sql, (error, result) => {
+      if (error) return reject(error);
 
       return resolve(result);
     });
@@ -13,10 +14,10 @@ exports.getAllPatients = () => {
 
 exports.getPatientById = (id) => {
   const sql =
-    "SELECT patient_id, first_name,middle_name,last_name, gender,dob, patients.user_id,  mobile_number,email,  user_type, is_account_active FROM patients INNER JOIN users ON patients.user_id = users.user_id  WHERE patient_id = ? LIMIT 1;";
+    "SELECT patient_id, title, first_name,middle_name,last_name, gender,profile_pic_url, dob, mobile_number,email,  user_type, is_account_active, is_online FROM patients INNER JOIN users ON patients.user_id = users.user_id  WHERE patient_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [id], (err, result) => {
-      if (err) return reject(err);
+    connectionPool.query(sql, [id], (error, result) => {
+      if (error) return reject(error);
       return resolve(result[0]);
     });
   });
