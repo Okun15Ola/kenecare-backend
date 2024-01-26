@@ -50,7 +50,8 @@ const adminSymptomsRouter = require("./routes/api/admin/common-symptoms.routes")
 const adminSpecialtiesRouter = require("./routes/api/admin/specialties.routes");
 const adminFaqRouter = require("./routes/api/admin/faq.routes");
 const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
-const adminPatientsRouter = require("./routes/api/admin/patients.routes.js");
+const adminPatientsRouter = require("./routes/api/admin/patients.routes");
+const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes");
 
 const app = express();
 
@@ -132,7 +133,7 @@ app.use("/api/v1/payments", requireUserAuth, appointmentPaymentRoutes);
 //TODO Add a middle ware to authenticate ADMIN JWT
 app.use("/api/v1/admin/auth", adminAuthRouter);
 app.use("/api/v1/admin/accounts", adminAccountsRouter);
-app.use("/api/v1/admin/appointments", adminAccountsRouter);
+app.use("/api/v1/admin/appointments", adminAppointmentsRouter);
 app.use("/api/v1/admin/blog-categories", adminBlogCategoriesRouter);
 app.use("/api/v1/admin/blogs", requireAdminAuth, adminBlogsRouter);
 app.use("/api/v1/admin/cities", requireAdminAuth, adminCitiesRouter);
