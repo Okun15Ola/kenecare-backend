@@ -59,22 +59,13 @@ exports.getDoctorsByCityId = (cityId) => {
   });
 };
 
-// exports.getDoctorsBySpecialityId = (specialityId) => {
-//   const sql = "SELECT * FROM doctors WHERE specialization_id = ?;";
-//   return new Promise((resolve, reject) => {
-//     connectionPool.query(sql, [specialityId], (err, result) => {
-//       if (err) return reject(err);
-//       return resolve(result);
-//     });
-//   });
-// };
-
 exports.getDoctorsBySpecializationId = (specializationId) => {
-  const sql = "SELECT * FROM doctors WHERE specialization_id = ?;";
+  const sql =
+    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, specialization_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN specializations ON doctors.specialization_id = specializations.specialization_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctors.specialization_id = ?";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [specializationId], (err, result) => {
+    connectionPool.query(sql, [specializationId], (err, results) => {
       if (err) return reject(err);
-      return resolve(result);
+      return resolve(results);
     });
   });
 };
@@ -173,7 +164,6 @@ exports.createDoctorMedicalCouncilRegistration = ({
 };
 
 exports.getDoctorMedicalCouncilRegistration = ({ doctorId }) => {
-
   const sql =
     "SELECT council_registration_id, dcr.doctor_id,first_name,last_name,gender, specialization_name, council_name, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, fullname as 'verified_by' FROM doctors_council_registration as dcr INNER JOIN doctors on dcr.doctor_id = doctors.doctor_id INNER JOIN medical_councils on dcr.medical_council_id = medical_councils.council_id INNER JOIN specializations on doctors.specialization_id = specializations.specialization_id LEFT JOIN admins on dcr.verified_by = admins.admin_id WHERE dcr.doctor_id = ? LIMIT 1; ";
   return new Promise((resolve, reject) => {

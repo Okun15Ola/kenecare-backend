@@ -23,8 +23,6 @@ if (nodeEnv === "development") {
   baseUrl = "http://172.25.54.187:8500";
 }
 
-console.log(baseUrl);
-
 const getAccessToken = async (next) => {
   try {
     const { data } = await axios

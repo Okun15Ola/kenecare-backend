@@ -129,6 +129,67 @@ exports.getDoctorByQuery = async ({ locationId, query }) => {
     throw error;
   }
 };
+exports.getDoctorBySpecialtyId = async (specialityId) => {
+  try {
+    const rawData = await dbObject.getDoctorsBySpecializationId(specialityId);
+    if (rawData) {
+      const doctors = rawData.map(
+        ({
+          doctor_id: doctorId,
+          title,
+          first_name: firstName,
+          middle_name: middleName,
+          last_name: lastName,
+          gender,
+          professional_summary: professionalSummary,
+          profile_pic_url,
+          profilePic,
+          specialization_name: specialization,
+          qualifications,
+          consultation_fee: consultationFee,
+          city_name: location,
+          latitude,
+          longitude,
+          years_of_experience: yearOfExperience,
+          is_profile_approved: isProfileApproved,
+          mobile_number: mobileNumber,
+          email,
+          user_type: userType,
+          is_account_active: isAccountActive,
+        }) => {
+          return {
+            doctorId,
+            title,
+            firstName,
+            middleName,
+            lastName,
+            gender,
+            professionalSummary,
+            profile_pic_url,
+            profilePic,
+            specialization,
+            qualifications,
+            consultationFee: `SLE ${parseInt(consultationFee)}`,
+            location,
+            latitude,
+            longitude,
+            yearOfExperience,
+            isProfileApproved,
+            mobileNumber,
+            email,
+            userType,
+            isAccountActive,
+          };
+        }
+      );
+
+      return Response.SUCCESS({ data: doctors });
+    }
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 exports.getDoctorByUser = async (id) => {
   try {

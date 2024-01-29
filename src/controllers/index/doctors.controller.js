@@ -2,6 +2,7 @@ const logger = require("../../middlewares/logger.middleware");
 const {
   getAllDoctors,
   getDoctorByUserId,
+  getDoctorBySpecialtyId,
   getDoctorByQuery,
 } = require("../../services/doctors.services.js");
 const { getDoctorById } = require("../../db/db.doctors.js");
@@ -10,9 +11,17 @@ exports.GetDoctorsController = async (req, res, next) => {
   try {
     let response = null;
     if (Object.keys(req.query).length > 0) {
-      const { locationId, q: query } = req.query;
-      //GET DOCTORS BY LOCATION
-      response = await getDoctorByQuery({ locationId, query });
+      const {
+        locationId,
+        q: query,
+        specialty_id: specialtyId,
+      } = req.query || null;
+      if (specialtyId) {
+        response = await getDoctorBySpecialtyId(specialtyId);
+      } else {
+        //GET DOCTORS BY LOCATION
+        response = await getDoctorByQuery({ locationId, query });
+      }
     } else {
       //GET ALL DOCTORS.
       response = await getAllDoctors();

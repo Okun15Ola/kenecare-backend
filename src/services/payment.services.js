@@ -1,6 +1,6 @@
 const moment = require("moment");
 const {
-  getAppointmentByUUID,
+  getPatientAppointmentByUUID,
   deleteAppointmentById,
 } = require("../db/db.appointments.patients");
 const {
@@ -45,7 +45,7 @@ exports.processAppointmentPayment = async ({
       speciality_name: specialty,
       appointment_date: appointmentDate,
       appointment_time: appointmentTime,
-    } = await getAppointmentByUUID(consultationId);
+    } = await getPatientAppointmentByUUID(consultationId);
 
     if (!appointmentId) {
       return Response.NOT_FOUND({ message: "Medical Appointment Not Found." });
@@ -66,9 +66,9 @@ exports.processAppointmentPayment = async ({
       });
     }
 
-    // if (transactionID !== null && paymentStatus === "success") {
-    //   return Response.NOT_MODIFIED();
-    // }
+    if (transactionID !== null && paymentStatus === "success") {
+      return Response.NOT_MODIFIED();
+    }
 
     const { status, txnid: transactionId } = await checkTransactionStatus({
       orderId,
@@ -83,7 +83,7 @@ exports.processAppointmentPayment = async ({
     }
 
     //TODO Update appointment payment status
-    const done = await updateAppointmentPaymentStatus({
+    await updateAppointmentPaymentStatus({
       paymentId,
       paymentStatus: status.toLowerCase(),
       transactionId,
@@ -151,7 +151,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
     //TODO Check if the user canelling the payment is the authorized user that booked the appointment
 
     //Get appointment by UUID
-    const rawData = await getAppointmentByUUID(consultationId);
+    const rawData = await getPatientAppointmentByUUID(consultationId);
     //Check if the appointment exists
     if (!rawData) {
       return Response.BAD_REQUEST({
@@ -161,8 +161,28 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
 
     const { appointment_id: appointmentId } = rawData;
 
-    //TODO Delete the apppointment and appointment paymetn from the database
-    const [deletedPayment, deletedAppointment] = await Promise.all([
+    const {
+      payment_id: paymentId,
+      order_id: orderId,
+      amount_paid: amountPaid,
+      payment_token: paymentToken,
+      transaction_id: transactionID,
+      payment_status: paymentStatus,
+    } = await getAppointmentPaymentByAppointmentId(appointmentId);
+
+    if (!paymentId) {
+      return Response.BAD_REQUEST({
+        message: "Error processing payment. Please try again",
+      });
+    }
+
+    if (transactionID !== null && paymentStatus === "success") {
+      console.log("Appointment already booked");
+      return Response.NOT_MODIFIED();
+    }
+
+    //Delete the apppointment and appointment paymetn from the database
+    await Promise.all([
       deleteAppointmentPaymentByAppointmentId({ appointmentId }),
       deleteAppointmentById({ appointmentId }),
     ]);
@@ -171,8 +191,11 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
     // await paymentCanceledPatientAppointmentEmail({
 
     // })
-    return Response.SUCCESS({ message: "Meical Appointment Cancelled " });
+    return Response.SUCCESS({
+      message: "Medical Appointment Cancelled Successfully.",
+    });
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };
