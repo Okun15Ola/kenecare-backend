@@ -18,6 +18,7 @@ const hashUsersPassword = async (password) => {
   }
 };
 
+
 const comparePassword = async ({ plainPassword, hashedPassword }) => {
   try {
     return await bcryptjs.compare(plainPassword, hashedPassword);
