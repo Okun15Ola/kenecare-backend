@@ -1,10 +1,16 @@
 const logger = require("../../middlewares/logger.middleware");
 const {
-  createMedicalDocument,
+  createPatientMedicalDocument,
+  getPatientMedicalDocuments,
+  getPatientMedicalDocument,
+  deletePatientMedicalDocument,
+  updatePatientMedicalDocument,
 } = require("../../services/patients.documents.services");
 exports.GetAllMedicalRecordsController = async (req, res, next) => {
   try {
-    return res.send("Get All Patient's Medical Records");
+    const userId = parseInt(req.user.id);
+    const response = await getPatientMedicalDocuments(userId);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -13,7 +19,10 @@ exports.GetAllMedicalRecordsController = async (req, res, next) => {
 };
 exports.GetMedicalRecordByIDController = async (req, res, next) => {
   try {
-    return res.send("Get Patient's Medical Record By ID");
+    const userId = parseInt(req.user.id);
+    const docId = parseInt(req.params.id);
+    const response = await getPatientMedicalDocument({ docId, userId });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -22,10 +31,15 @@ exports.GetMedicalRecordByIDController = async (req, res, next) => {
 };
 exports.CreateMedicalReocrdController = async (req, res, next) => {
   try {
-   
     const userId = parseInt(req.user.id);
     const { file } = req.file ? req : null;
-    const response = await createMedicalDocument({ userId, file });
+    const { documentTitle } = req.body || null;
+
+    const response = await createPatientMedicalDocument({
+      userId,
+      file,
+      documentTitle,
+    });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -35,7 +49,19 @@ exports.CreateMedicalReocrdController = async (req, res, next) => {
 };
 exports.UpdateMedicalReocrdByIdController = async (req, res, next) => {
   try {
-    return res.send("Update Patient's Medical Record By ID");
+    const userId = parseInt(req.user.id);
+    const docId = parseInt(req.params.id);
+
+    const { file } = req.file ? req : null;
+    const { documentTitle } = req.body || null;
+
+    const response = await updatePatientMedicalDocument({
+      userId,
+      file,
+      docId,
+      documentTitle,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -45,7 +71,13 @@ exports.UpdateMedicalReocrdByIdController = async (req, res, next) => {
 
 exports.DeletemedicaRecordByIdController = async (req, res, next) => {
   try {
-    return res.send("Update Patient's Medical Record By ID");
+    const userId = parseInt(req.user.id);
+    const docId = parseInt(req.params.id);
+    const response = await deletePatientMedicalDocument({
+      documentId: docId,
+      userId,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);

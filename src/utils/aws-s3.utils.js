@@ -1,7 +1,14 @@
 const fs = require("fs");
 const crypto = require("crypto");
 const AWS = require("aws-sdk");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
 const {
   awsAccessSecretKey,
   awsAccessKeyId,
@@ -9,9 +16,7 @@ const {
   awsBucketName,
 } = require("../config/default.config");
 
-
-
-const S3 = new S3Client({
+const s3Client = new S3Client({
   credentials: {
     secretAccessKey: awsAccessSecretKey,
     accessKeyId: awsAccessKeyId,
@@ -19,20 +24,54 @@ const S3 = new S3Client({
   region: awsRegion,
 });
 
-const uploadFileToS3Bucket = async (file) => {
-  if (file) {
+const uploadFileToS3Bucket = async ({ fileName, buffer, mimetype }) => {
+  try {
+    if (fileName && buffer && mimetype) {
+      const params = {
+        Bucket: awsBucketName,
+        Key: fileName,
+        Body: buffer,
+        ContentType: mimetype,
+      };
+
+      const command = new PutObjectCommand(params);
+      return await s3Client.send(command);
+    }
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+const getFileFromS3Bucket = async (fileName) => {
+  try {
     const params = {
       Bucket: awsBucketName,
-      Key: file.originalname,
-      Body: file.buffer,
-      ContentType: file.mimitype,
+      Key: fileName,
     };
-
-    const command = new PutObjectCommand(params);
-    return await S3.send(command);
+    const command = new GetObjectCommand(params);
+    return await getSignedUrl(s3Client, command, {
+      expiresIn: 3600,
+    });
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
+};
+
+const deleteFileFromS3Bucket = async (fileName) => {
+  try {
+    const params = {
+      Bucket: awsBucketName,
+      Key: fileName,
+    };
+    const command = new DeleteObjectCommand(params);
+    return await s3Client.send(command);
+  } catch (error) {}
 };
 
 module.exports = {
   uploadFileToS3Bucket,
+  getFileFromS3Bucket,
+  deleteFileFromS3Bucket,
 };
