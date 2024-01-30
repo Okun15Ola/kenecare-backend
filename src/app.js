@@ -22,20 +22,21 @@ const {
 } = require("./utils/response.utils.js");
 
 //INDEX ROUTES
-const indexRouter = require("./routes/api/index.routes.js");
+const indexRouter = require("./routes/api/index.routes");
 
 //AUTHENTICATION ROUTER
 const authRouter = require("./routes/api/auth.routes");
 
 //DOCTORS ROUTER
 const doctorsProfileRouter = require("./routes/api/doctors/profile.routes");
-const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.routes.js");
+const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.routes");
 
 //PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
-const patientAppointmentRouter = require("./routes/api/patients/appointments.routes.js");
-const patientMedicalRecordRouter = require("./routes/api/patients/medical-records.routes.js");
-const appointmentPaymentRoutes = require("./routes/api/patients/appointment.payments.routes.js");
+const patientAppointmentRouter = require("./routes/api/patients/appointments.routes");
+const patientMedicalRecordRouter = require("./routes/api/patients/medical-records.routes");
+const patientMedicalHistoryRouter = require("./routes/api/patients/medical-history.routes");
+const appointmentPaymentRoutes = require("./routes/api/patients/appointment.payments.routes");
 
 //ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
@@ -66,11 +67,11 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(
-//   "/user-profile",
-//   express.static(path.join(__dirname, "public/upload/profile_pics"))
-// );
-// app.use(express.static(__dirname + "/public/upload/media"));
+app.use(
+  "/user-profile",
+  express.static(path.join(__dirname, "public/upload/profile_pics"))
+);
+app.use(express.static(__dirname + "/public/upload/media"));
 app.use(
   expressSession({
     secret: sessionSecret,
@@ -124,6 +125,11 @@ app.use(
   "/api/v1/patients/medical-records",
   requireUserAuth,
   patientMedicalRecordRouter
+);
+app.use(
+  "/api/v1/patients/medical-info",
+  requireUserAuth,
+  patientMedicalHistoryRouter
 );
 
 //PAYMENT ROUTES

@@ -11,15 +11,17 @@ exports.LoginValidations = [
   body("mobileNumber")
     .notEmpty()
     .withMessage("Mobile Number is required")
-    .matches(/^\+(?:[0-9]?){1,3}[0-9]{6,14}$/)
-    .withMessage("Mobile Number must be in international format(e.g +XXX)")
+    .matches(/^\+(232)?(\d{8})$/)
+    .withMessage("Mobile Number must be a registered SL (+232) number")
     .trim()
     .escape()
     .custom(async (mobileNumber, { req }) => {
       const user = await getUserByMobileNumber(mobileNumber);
 
       if (!user) {
-        throw new Error("Not A registered Mobile Number");
+        throw new Error(
+          "Mobile Number or Password is incorrect. Please try again"
+        );
       }
       req.user = user;
     }),
@@ -44,11 +46,13 @@ exports.LoginValidations = [
           const { accountVerified, accountActive } = user;
 
           if (accountVerified !== VERIFICATIONSTATUS.VERIFIED) {
-            throw new Error("Account Not Verified");
+            throw new Error(
+              "Account Not Verified. Please verify account before proceeding"
+            );
           }
           if (accountActive !== STATUS.ACTIVE) {
             throw new Error(
-              "Account Has Been Disabled. Please Contact Support."
+              "Account Has Been Disabled. Please Contact Kenecare Support for further instructions."
             );
           }
         }
@@ -60,8 +64,8 @@ exports.OTPLoginValidation = [
   body("mobileNumber")
     .notEmpty()
     .withMessage("Mobile Number is required")
-    .matches(/^\+(?:[0-9]?){1,3}[0-9]{6,14}$/)
-    .withMessage("Mobile Number must be in international format(e.g +XXX)")
+    .matches(/^\+(232)?(\d{8})$/)
+    .withMessage("Mobile Number must be a regsitered SL (+232) number")
     .trim()
     .escape()
     .custom(async (mobileNumber, { req }) => {
@@ -74,10 +78,12 @@ exports.OTPLoginValidation = [
         const { accountVerified, accountActive } = user;
 
         if (accountVerified !== VERIFICATIONSTATUS.VERIFIED) {
-          throw new Error("Account Not Verified");
+          throw new Error("Account Not Verified. Please verify and try again");
         }
         if (accountActive !== STATUS.ACTIVE) {
-          throw new Error("Account Has Been Disabled. Please Contact Support.");
+          throw new Error(
+            "Account Has Been Disabled. Please Contact Kenecare Support for further instrcutions."
+          );
         }
         req.user = user;
       }
@@ -89,15 +95,16 @@ exports.RegisterValidations = [
     .notEmpty()
     .withMessage("Mobile Number is required")
     .toLowerCase()
-    .matches(/^\+(?:[0-9]?){1,3}[0-9]{6,14}$/)
-    .withMessage("Mobile Number must be in international format(e.g +XXX)")
-    .isLength({ min: 9, max: 20 })
+    .matches(/^\+(232)?(\d{8})$/)
+    .withMessage("Mobile Number must be a registered SL (+232) number.")
     .trim()
     .escape()
     .custom(async (mobileNumber, { req }) => {
       const user = await getUserByMobileNumber(mobileNumber);
       if (user) {
-        throw new Error("Mobile Number Already Exist");
+        throw new Error(
+          "Mobile Number Already Exist. Please try using a different number"
+        );
       }
       return true;
     }),
@@ -108,7 +115,9 @@ exports.RegisterValidations = [
     .custom(async (email, { req }) => {
       const user = await getUserByEmail(email);
       if (user) {
-        throw new Error("Email already exist");
+        throw new Error(
+          "Email already exist. Please try using a different email"
+        );
       }
       return true;
     }),
@@ -127,7 +136,9 @@ exports.RegisterValidations = [
       if (value !== req.body.password) return false;
       return true;
     })
-    .withMessage("Passwords do not match"),
+    .withMessage(
+      "Passwords do not match. Ensure password and confirm password are the same."
+    ),
 ];
 exports.VerifyTokenValidations = [
   param("token")

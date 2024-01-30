@@ -2,7 +2,7 @@ const { connectionPool } = require("./db.connection");
 
 exports.getAllDoctors = () => {
   const sqlQuery =
-    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, specialization_name, qualifications,consultation_fee, city_name,latitude,longitude, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN specializations ON doctors.specialization_id = specializations.specialization_id INNER JOIN cities ON doctors.city_id = cities.city_id;";
+    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, speciality_name, qualifications,consultation_fee, city_name,latitude,longitude, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id INNER JOIN cities ON doctors.city_id = cities.city_id;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sqlQuery, (err, result) => {
       if (err) return reject(err);
@@ -13,7 +13,7 @@ exports.getAllDoctors = () => {
 };
 exports.getDoctorByQuery = ({ locationId, query }) => {
   const sqlQuery =
-    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, specialization_name, qualifications,consultation_fee, city_name,latitude,longitude, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN specializations ON doctors.specialization_id = specializations.specialization_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctors.city_id = ? AND (doctors.first_name LIKE ? OR doctors.middle_name LIKE ? OR doctors.last_name LIKE ? OR specialization_name LIKE ?);";
+    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, speciality_name, qualifications,consultation_fee, city_name,latitude,longitude, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctors.city_id = ? AND (doctors.first_name LIKE ? OR doctors.middle_name LIKE ? OR doctors.last_name LIKE ? OR speciality_name LIKE ?);";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sqlQuery,
@@ -29,7 +29,7 @@ exports.getDoctorByQuery = ({ locationId, query }) => {
 
 exports.getDoctorById = (doctorId) => {
   const sql =
-    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, specialization_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN specializations ON doctors.specialization_id = specializations.specialization_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctor_id = ? LIMIT 1;";
+    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, speciality_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctor_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [doctorId], (err, result) => {
       if (err) return reject(err);
@@ -40,7 +40,7 @@ exports.getDoctorById = (doctorId) => {
 
 exports.getDoctorByUserId = (userId) => {
   const sql =
-    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, specialization_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN specializations ON doctors.specialization_id = specializations.specialization_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctors.user_id = ? LIMIT 1;";
+    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, speciality_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctors.user_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [userId], (err, result) => {
       if (err) return reject(err);
@@ -60,11 +60,14 @@ exports.getDoctorsByCityId = (cityId) => {
 };
 
 exports.getDoctorsBySpecializationId = (specializationId) => {
+  console.log(specializationId);
   const sql =
-    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, specialization_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN specializations ON doctors.specialization_id = specializations.specialization_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctors.specialization_id = ?";
+    "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, speciality_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctors.specialization_id = ?";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [specializationId], (err, results) => {
       if (err) return reject(err);
+
+      console.log(results);
       return resolve(results);
     });
   });
@@ -106,7 +109,7 @@ exports.createDoctor = ({
   yearOfExperience,
 }) => {
   const sql =
-    "INSERT INTO doctors (user_id,title,first_name,middle_name,last_name,gender,professional_summary,specialization_id,qualifications,consultation_fee,city_id,years_of_experience) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
+    "INSERT INTO doctors (user_id,title,first_name,middle_name,last_name,gender,professional_summary,speciality_id,qualifications,consultation_fee,city_id,years_of_experience) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
@@ -165,7 +168,7 @@ exports.createDoctorMedicalCouncilRegistration = ({
 
 exports.getDoctorMedicalCouncilRegistration = ({ doctorId }) => {
   const sql =
-    "SELECT council_registration_id, dcr.doctor_id,first_name,last_name,gender, specialization_name, council_name, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, fullname as 'verified_by' FROM doctors_council_registration as dcr INNER JOIN doctors on dcr.doctor_id = doctors.doctor_id INNER JOIN medical_councils on dcr.medical_council_id = medical_councils.council_id INNER JOIN specializations on doctors.specialization_id = specializations.specialization_id LEFT JOIN admins on dcr.verified_by = admins.admin_id WHERE dcr.doctor_id = ? LIMIT 1; ";
+    "SELECT council_registration_id, dcr.doctor_id,first_name,last_name,gender, speciality_name, council_name, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, fullname as 'verified_by' FROM doctors_council_registration as dcr INNER JOIN doctors on dcr.doctor_id = doctors.doctor_id INNER JOIN medical_councils on dcr.medical_council_id = medical_councils.council_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id LEFT JOIN admins on dcr.verified_by = admins.admin_id WHERE dcr.doctor_id = ? LIMIT 1; ";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [doctorId], (err, result) => {
       if (err) return reject(err);
@@ -189,7 +192,7 @@ exports.updateDoctorById = ({
   yearOfExperience,
 }) => {
   const sql =
-    "UPDATE doctors SET title = ? ,first_name = ?,middle_name = ?,last_name = ?,gender = ?,professional_summary = ?,specialization_id = ?,qualifications = ?,consultation_fee = ?,city_id = ?,years_of_experience = ? WHERE doctor_id = ?";
+    "UPDATE doctors SET title = ? ,first_name = ?,middle_name = ?,last_name = ?,gender = ?,professional_summary = ?,speciality_id = ?,qualifications = ?,consultation_fee = ?,city_id = ?,years_of_experience = ? WHERE doctor_id = ?";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,

@@ -105,6 +105,7 @@ exports.createPatientMedicalInfo = ({
     );
   });
 };
+
 exports.getPatientMedicalInfoByPatientId = (patientId) => {
   const sql =
     "SELECT * from patient_medical_history WHERE patient_id = ? LIMIT 1;";
@@ -144,5 +145,46 @@ exports.updatePatientProfilePictureByUserId = ({ userId, imageUrl }) => {
       if (err) return reject(err);
       return resolve(result);
     });
+  });
+};
+
+exports.updatePatientMedicalHistory = ({
+  patientId,
+  height,
+  weight,
+  allergies,
+  isDisabled,
+  disabilityDesc,
+  tobaccoIntake,
+  tobaccoIntakeFreq,
+  alcoholIntake,
+  alcoholIntakeFreq,
+  caffineIntake,
+  caffineIntakeFreq,
+}) => {
+  const sql =
+    "UPDATE patient_medical_history  SET height = ?, weight =? ,allergies =? ,is_patient_disabled=? ,disability_description=? ,tobacco_use=? , tobacco_use_frequency=? , alcohol_use=? , alcohol_use_frequency=? , caffine_use=? , caffine_use_frequency=? WHERE patient_id = ?;";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(
+      sql,
+      [
+        height,
+        weight,
+        allergies,
+        isDisabled,
+        disabilityDesc,
+        tobaccoIntake,
+        tobaccoIntakeFreq,
+        alcoholIntake,
+        alcoholIntakeFreq,
+        caffineIntake,
+        caffineIntakeFreq,
+        patientId,
+      ],
+      (err, result) => {
+        if (err) return reject(err);
+        return resolve(result);
+      }
+    );
   });
 };

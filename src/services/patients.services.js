@@ -3,6 +3,8 @@ const Response = require("../utils/response.utils");
 const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
 const { getUserById } = require("../db/db.users");
 const moment = require("moment");
+const path = require("path");
+const fs = require("fs");
 
 exports.getAllPatients = async () => {
   try {

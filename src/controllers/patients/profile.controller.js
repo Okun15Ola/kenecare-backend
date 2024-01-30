@@ -1,12 +1,9 @@
-const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   getPatientByUser,
-  getAllPatients,
   createPatientProfile,
   updatePatientProfile,
   updatePatientProfilePicture,
-  createPatientMedicalInfo,
 } = require("../../services/patients.services");
 
 exports.GetPatientProfileController = async (req, res, next) => {
@@ -20,6 +17,7 @@ exports.GetPatientProfileController = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.CreatePatientProfileController = async (req, res, next) => {
   try {
     console.log(req.body);
@@ -41,52 +39,7 @@ exports.CreatePatientProfileController = async (req, res, next) => {
     next(error);
   }
 };
-exports.CreatePatientMedicalInfoController = async (req, res, next) => {
-  try {
-    console.log(req.body);
-    const { id } = req.user;
-    const {
-      height,
-      weight,
-      allergies,
-      familyMedicalHistory,
-      surgries,
-      isDisabled,
-      disabilityDesc,
-      useTobacco,
-      tobaccoIntakeFreq,
-      alcoholIntake,
-      alcoholIntakeFreq,
-      caffineIntake,
-      caffineIntakeFreq,
-      reacreationalDrugIntake,
-      reacreationalDrugIntakeFreq,
-    } = req.body;
-    const response = await createPatientMedicalInfo({
-      userId: id,
-      height,
-      weight,
-      allergies,
-      familyMedicalHistory,
-      surgries,
-      isDisabled,
-      disabilityDesc,
-      useTobacco,
-      tobaccoIntakeFreq,
-      alcoholIntake,
-      alcoholIntakeFreq,
-      caffineIntake,
-      caffineIntakeFreq,
-      reacreationalDrugIntake,
-      reacreationalDrugIntakeFreq,
-    });
-    return res.status(response.statusCode).json(response);
-  } catch (error) {
-    console.error(error);
-    logger.error(error);
-    next(error);
-  }
-};
+
 exports.UpdatePatientProfileController = async (req, res, next) => {
   try {
     console.log(req.body);

@@ -1,11 +1,11 @@
 const logger = require("../../middlewares/logger.middleware");
 const {
   getAllDoctors,
+  getDoctorById,
   getDoctorByUserId,
   getDoctorBySpecialtyId,
   getDoctorByQuery,
 } = require("../../services/doctors.services.js");
-const { getDoctorById } = require("../../db/db.doctors.js");
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {
@@ -37,8 +37,9 @@ exports.GetDoctorsController = async (req, res, next) => {
 
 exports.GetDoctorByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
-    const response = await getDoctorById(id);
+    const doctorId = parseInt(req.params.id);
+    const response = await getDoctorById(doctorId);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);

@@ -5,7 +5,6 @@ const { Validate } = require("../../../validations/validate");
 const {
   GetPatientProfileController,
   CreatePatientProfileController,
-  CreatePatientMedicalInfoController,
   UpdatePatientProfileController,
   UpdatePatientProfilePictureController,
 } = require("../../../controllers/patients/profile.controller");
@@ -14,7 +13,6 @@ const { USERTYPE } = require("../../../utils/enum.utils");
 const { localProfilePicUploader } = require("../../../utils/file-upload.utils");
 
 router.get("/profile", GetPatientProfileController);
-
 router.post(
   "/profile",
   [
@@ -52,7 +50,6 @@ router.post(
   Validate,
   CreatePatientProfileController
 );
-router.post("/medical-info", CreatePatientMedicalInfoController);
 router.put(
   "/profile/",
   [
@@ -95,4 +92,5 @@ router.patch(
   localProfilePicUploader.single("profilepic"),
   UpdatePatientProfilePictureController
 );
+
 module.exports = router;
