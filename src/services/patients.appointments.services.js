@@ -1,3 +1,4 @@
+const moment = require("moment");
 const dbObject = require("../db/db.appointments.patients");
 const { getPatientByUserId } = require("../db/db.patients");
 const { getDoctorAppointByDate } = require("../db/db.appointments.doctors");
@@ -16,6 +17,7 @@ exports.getPatientAppointments = async (userId) => {
 
     const rawData = await dbObject.getAllPatientAppointments(patientId);
 
+    console.log(rawData[0]);
     const appointments = rawData.map(
       ({
         appointment_id: appointmentId,
@@ -27,6 +29,7 @@ exports.getPatientAppointments = async (userId) => {
         doctor_first_name: doctorFirstName,
         doctor_last_name: doctorLastName,
         appointment_type: appointmentType,
+        appointment_date: appointmentDate,
         patient_name_on_prescription: patientNameOnPrescription,
         patient_mobile_number: patientMobileNumber,
         patient_symptoms: patientSymptoms,
@@ -53,6 +56,7 @@ exports.getPatientAppointments = async (userId) => {
           username: `${firstName} ${lastName}`,
           doctorId: doctorId,
           doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+          appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
           appointmentType,
           patientNameOnPrescription,
           patientMobileNumber,
@@ -71,7 +75,7 @@ exports.getPatientAppointments = async (userId) => {
           postponedReason,
           postponeDate,
           postponedBy,
-          createdAt,
+          createdAt: moment(createdAt).format("YYYY-MM-DD"),
         };
       }
     );
@@ -106,6 +110,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       doctor_first_name: doctorFirstName,
       doctor_last_name: doctorLastName,
       appointment_type: appointmentType,
+      appointment_date: appointmentDate,
       patient_name_on_prescription: patientNameOnPrescription,
       patient_mobile_number: patientMobileNumber,
       patient_symptoms: patientSymptoms,
@@ -134,6 +139,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       doctorId: doctorId,
       doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
       appointmentType,
+      appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
       patientNameOnPrescription,
       patientMobileNumber,
       patientSymptoms,
@@ -151,7 +157,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       postponedReason,
       postponeDate,
       postponedBy,
-      createdAt,
+      createdAt: moment(createdAt).format("YYYY-MM-DD"),
     };
 
     return Response.SUCCESS({ data: appointment });
@@ -338,10 +344,6 @@ exports.createPatientAppointment = async ({
       orderId: genUUID,
       amount: consultationFee,
     });
-
-    console.log(paymentUrl);
-    console.log(notificationToken);
-    console.log(paymentToken);
 
     //TODO create new appointment payments record
     const done = await createAppointmentPayment({
