@@ -1,5 +1,5 @@
 const app = require("./app");
-const { appPort } = require("./config/default.config");
+const { appPort, appBaseURL } = require("./config/default.config");
 const { connectionPool } = require("./db/db.connection");
 
 connectionPool.getConnection((err, connection) => {
@@ -15,7 +15,7 @@ connectionPool.getConnection((err, connection) => {
       if (err) {
         console.error("There was an error running the server:", err);
       } else {
-        console.info(`Server running on http://localhost:${appPort}`);
+        console.info(`Server running on ${appBaseURL}:${appPort}`);
       }
     });
   }

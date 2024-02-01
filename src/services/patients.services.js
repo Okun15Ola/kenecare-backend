@@ -5,6 +5,7 @@ const { getUserById } = require("../db/db.users");
 const moment = require("moment");
 const path = require("path");
 const fs = require("fs");
+const { appBaseURL } = require("../config/default.config");
 
 exports.getAllPatients = async () => {
   try {
@@ -93,10 +94,19 @@ exports.getPatientById = async (id) => {
     throw error;
   }
 };
-exports.getPatientsTestimonial = async () => {
+
+exports.getPatientsTestimonial = async (userId) => {
   try {
+    const patient = await dbObject.getPatientByUserId(userId);
+    if (!patient) {
+      return Response.NOT_FOUND({
+        message:
+          "Patient Profile Not Found please create one before proceeding",
+      });
+    }
     const rawData = await dbObject.getAllPatients();
     console.log(rawData);
+    return Response.SUCCESS({ data: null });
   } catch (error) {
     console.error(error);
     throw error;
@@ -143,7 +153,7 @@ exports.getPatientByUser = async (id) => {
       gender,
       dateOfBirth: moment(dateOfBirth).format("YYYY-MM-DD"),
       mobileNumber,
-      profilePic,
+      profilePic: `${appBaseURL}/user-profile/${profilePic}`,
     };
 
     return Response.SUCCESS({ data: patient });
@@ -315,7 +325,12 @@ exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
         "../public/upload/profile_pics/",
         profile_pic_url
       );
-      fs.unlinkSync(file);
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+        console.log("File deleted");
+      } else {
+        console.log("Files does not exists");
+      }
     }
 
     await dbObject.updatePatientProfilePictureByUserId({

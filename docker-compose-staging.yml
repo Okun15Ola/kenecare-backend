@@ -24,7 +24,6 @@ services:
       - APP_PORT=$APP_PORT
       - SESSION_SECRET=$SESSION_SECRET
       - API_BASE_URL=$API_BASE_URL
-      - FRONTEND_URL=$FRONTEND_URL
       - PATIENTS_JWT_SECRET=$PATIENTS_JWT_SECRET
       - ADMINS_JWT_SECRET=$ADMINS_JWT_SECRET
       - JWT_AUDIENCE=$JWT_AUDIENCE
@@ -51,28 +50,7 @@ services:
     volumes:
       - kenecare-app-data-staging:/usr/src/app/src/public/upload
 
-  # db:
-  #   image: mysql:8.0.2
-  #   container_name: mysql-db
-  #   restart: unless-stopped
-  #   # command: --default-authentication-plugin=mysql_native_password
-  #   env_file: ./.env
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
-  #     - MYSQL_PASSWORD=$MYSQL_PASSWORD
-  #     - MYSQL_DATABASE=$MYSQL_DATABASE
-  #     - MYSQL_USER=$MYSQL_USER
-  #   ports:
-  #     - 3307:3306
-  #   volumes:
-  #     - ./src/db/kenecare.sql:/docker-entrypoint-initdb.d/init.sql
-  #     - kenecare-db-data-staging:/var/lib/mysql
-  #   networks:
-  #     - mysql-db-net
-
 volumes:
-  # kenecare-db-data-staging:
-  #   name: kenecare-db-data-staging
   kenecare-app-data-staging:
     name: kenecare-app-data-staging
 
@@ -80,6 +58,3 @@ networks:
   kenecare-staging-net:
     name: kenecare-staging-net
     driver: bridge
-  # mysql-db-net:
-  #   name: mysql-db-net
-  #   driver: bridge
