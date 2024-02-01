@@ -45,7 +45,7 @@ exports.getAdminppointments = async () => {
           patientNameOnPrescription,
           patientMobileNumber,
           patientSymptoms,
-          consultationFees: `SLE ${parseInt(consultationFees)}`,
+          consultationFees: `${parseInt(consultationFees)}`,
           specialty,
           timeSlot,
           meetingId,

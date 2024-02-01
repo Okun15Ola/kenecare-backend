@@ -40,6 +40,7 @@ const appointmentPaymentRoutes = require("./routes/api/patients/appointment.paym
 
 //ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
+const adminCouncilRegistrationRouter = require("./routes/api/admin/doctors.council-registration.routes");
 const adminSpecializationsRoute = require("./routes/api/admin/specializations.routes");
 const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
 const adminAccountsRouter = require("./routes/api/admin/admin.accounts.routes");
@@ -49,6 +50,7 @@ const adminCitiesRouter = require("./routes/api/admin/cities.routes");
 const adminServicesRouter = require("./routes/api/admin/services.routes");
 const adminSymptomsRouter = require("./routes/api/admin/common-symptoms.routes");
 const adminSpecialtiesRouter = require("./routes/api/admin/specialties.routes");
+const adminTestimonialsRoute = require("./routes/api/admin/testimonials.routes");
 const adminFaqRouter = require("./routes/api/admin/faq.routes");
 const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
 const adminPatientsRouter = require("./routes/api/admin/patients.routes");
@@ -138,20 +140,38 @@ app.use("/api/v1/payments", requireUserAuth, appointmentPaymentRoutes);
 //ADMIN ROUTES
 //TODO Add a middle ware to authenticate ADMIN JWT
 app.use("/api/v1/admin/auth", adminAuthRouter);
-app.use("/api/v1/admin/accounts", adminAccountsRouter);
+app.use("/api/v1/admin/accounts", requireAdminAuth, adminAccountsRouter);
 app.use("/api/v1/admin/appointments", adminAppointmentsRouter);
-app.use("/api/v1/admin/blog-categories", adminBlogCategoriesRouter);
+app.use(
+  "/api/v1/admin/blog-categories",
+  requireAdminAuth,
+  adminBlogCategoriesRouter
+);
 app.use("/api/v1/admin/blogs", requireAdminAuth, adminBlogsRouter);
 app.use("/api/v1/admin/cities", requireAdminAuth, adminCitiesRouter);
 app.use("/api/v1/admin/symptoms", requireAdminAuth, adminSymptomsRouter);
 app.use("/api/v1/admin/doctors", adminDoctorsRoute);
 app.use("/api/v1/admin/faqs", requireAdminAuth, adminFaqRouter);
-app.use("/api/v1/admin/medical-councils", adminMedicalCouncilRouter);
-app.use("/api/v1/admin/services", adminServicesRouter);
-app.use("/api/v1/admin/specializations", adminSpecializationsRoute);
-app.use("/api/v1/admin/specialties", adminSpecialtiesRouter);
+app.use(
+  "/api/v1/admin/medical-councils",
+  requireAdminAuth,
+  adminMedicalCouncilRouter
+);
+app.use("/api/v1/admin/services", requireAdminAuth, adminServicesRouter);
+app.use(
+  "/api/v1/admin/specializations",
+  requireAdminAuth,
+  adminSpecializationsRoute
+);
+app.use("/api/v1/admin/testimonials", requireAdminAuth, adminTestimonialsRoute);
+app.use("/api/v1/admin/specialties", requireAdminAuth, adminSpecialtiesRouter);
 app.use("/api/v1/admin/user-types", adminAccountsRouter);
-app.use("/api/v1/admin/patients", adminPatientsRouter);
+app.use("/api/v1/admin/patients", requireAdminAuth, adminPatientsRouter);
+app.use(
+  "/api/v1/admin/council-regsitrations",
+  requireAdminAuth,
+  adminCouncilRegistrationRouter
+);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {

@@ -60,14 +60,12 @@ exports.getDoctorsByCityId = (cityId) => {
 };
 
 exports.getDoctorsBySpecializationId = (specializationId) => {
-  console.log(specializationId);
   const sql =
     "SELECT doctor_id, title,first_name,middle_name,last_name, gender,professional_summary,profile_pic_url, speciality_name, qualifications,consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id,  mobile_number, email, user_type, is_account_active FROM doctors INNER JOIN users ON doctors.user_id = users.user_id INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id INNER JOIN cities ON doctors.city_id = cities.city_id WHERE doctors.specialization_id = ?";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [specializationId], (err, results) => {
       if (err) return reject(err);
 
-      console.log(results);
       return resolve(results);
     });
   });
@@ -94,6 +92,29 @@ exports.getDoctorsCouncilRegistrationById = (doctorId) => {
     });
   });
 };
+
+exports.getAllMedicalCouncilRegistration = () => {
+  const sql = "SELECT council_registration_id, first_name, last_name, speciality_name, profile_pic_url, council_name, years_of_experience,is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date,registration_status, rejection_reason, verified_by, doctors_council_registration.created_at FROM doctors_council_registration INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id;";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, (err, results) => {
+      if (err) return reject(err);
+
+      return resolve(results);
+    });
+  });
+};
+exports.getMedicalCouncilRegistrationById = (registrationId) => {
+  const sql =
+    "SELECT * FROM doctors_council_registration WHERE council_registration_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [registrationId], (err, results) => {
+      if (err) return reject(err);
+
+      return resolve(results);
+    });
+  });
+};
+
 exports.createDoctor = ({
   userId,
   title,

@@ -63,14 +63,16 @@ exports.UpdatePatientProfileController = async (req, res, next) => {
 };
 exports.UpdatePatientProfilePictureController = async (req, res, next) => {
   try {
-    const { id } = req.user;
-    const imageUrl = req.file.filename;
+    if (req.file) {
+      const { id } = req.user;
+      const imageUrl = req.file.filename;
 
-    const response = await updatePatientProfilePicture({
-      userId: id,
-      imageUrl,
-    });
-    return res.status(response.statusCode).json(response);
+      const response = await updatePatientProfilePicture({
+        userId: id,
+        imageUrl,
+      });
+      return res.status(response.statusCode).json(response);
+    }
   } catch (error) {
     console.error(error);
     logger.error(error);

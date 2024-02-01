@@ -4,13 +4,17 @@ const {
   GetTestimonialByIDController,
   CreateTestimonialController,
   UpdateTestimonialByIdController,
-  UpdateTestimonialStatusController,
+  ApproveTestimonialController,
+  DenyTestimonialController,
   DeleteTestimonialByIdController,
 } = require("../../../controllers/admin/testimonials.controller");
 
 router.get("/", GetTestimonialsController);
-router.post("/:id", GetTestimonialByIDController);
+router.get("/:id", GetTestimonialByIDController);
 router.post("/", CreateTestimonialController);
 router.put("/:id", UpdateTestimonialByIdController);
-router.patch("/:id/:status", UpdateTestimonialStatusController);
+router.patch("/:id/approve", ApproveTestimonialController);
+router.patch("/:id/deny", DenyTestimonialController);
 router.delete("/:id", DeleteTestimonialByIdController);
+
+module.exports = router;
