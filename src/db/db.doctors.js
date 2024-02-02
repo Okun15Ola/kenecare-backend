@@ -94,7 +94,8 @@ exports.getDoctorsCouncilRegistrationById = (doctorId) => {
 };
 
 exports.getAllMedicalCouncilRegistration = () => {
-  const sql = "SELECT council_registration_id, first_name, last_name, speciality_name, profile_pic_url, council_name, years_of_experience,is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date,registration_status, rejection_reason, verified_by, doctors_council_registration.created_at FROM doctors_council_registration INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id;";
+  const sql =
+    "SELECT council_registration_id,doctors_council_registration.doctor_id, first_name, last_name, speciality_name, profile_pic_url, council_name, years_of_experience,is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date,registration_status, rejection_reason, verified_by, doctors_council_registration.created_at FROM doctors_council_registration INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, (err, results) => {
       if (err) return reject(err);
@@ -105,12 +106,12 @@ exports.getAllMedicalCouncilRegistration = () => {
 };
 exports.getMedicalCouncilRegistrationById = (registrationId) => {
   const sql =
-    "SELECT * FROM doctors_council_registration WHERE council_registration_id = ?";
+    "SELECT council_registration_id,doctors_council_registration.doctor_id, first_name, last_name, speciality_name, profile_pic_url, council_name, years_of_experience,is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date,registration_status, rejection_reason, verified_by, doctors_council_registration.created_at FROM doctors_council_registration INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id WHERE council_registration_id =? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [registrationId], (err, results) => {
       if (err) return reject(err);
 
-      return resolve(results);
+      return resolve(results[0]);
     });
   });
 };
@@ -242,6 +243,42 @@ exports.updateDoctorProfilePictureById = ({ doctorId, imageUrl }) => {
   const sql = "UPDATE doctors SET profile_pic_url = ? WHERE doctor_id = ?";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [imageUrl, doctorId], (err, result) => {
+      if (err) return reject(err);
+      return resolve(result);
+    });
+  });
+};
+exports.approveDoctorProfileByDoctorId = ({ doctorId, approvedBy }) => {
+  const sql =
+    "UPDATE doctors SET is_profile_approved = 1, approved_by = ? WHERE doctor_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [approvedBy, doctorId], (err, result) => {
+      if (err) return reject(err);
+      return resolve(result);
+    });
+  });
+};
+exports.approveDoctorMedicalCouncilRegistrationById = ({
+  registrationId,
+  approvedBy,
+}) => {
+  const sql =
+    "UPDATE doctors_council_registration SET registration_status = 'approved', verified_by = ? WHERE council_registration_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [approvedBy, registrationId], (err, result) => {
+      if (err) return reject(err);
+      return resolve(result);
+    });
+  });
+};
+exports.rejectDoctorMedicalCouncilRegistrationById = ({
+  registrationId,
+  approvedBy,
+}) => {
+  const sql =
+    "UPDATE doctors_council_registration SET registration_status = 'rejected', verified_by = ? WHERE council_registration_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [approvedBy, registrationId], (err, result) => {
       if (err) return reject(err);
       return resolve(result);
     });

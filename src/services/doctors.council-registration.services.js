@@ -1,3 +1,4 @@
+const moment = require("moment");
 const dbObject = require("../db/db.doctors");
 const Response = require("../utils/response.utils");
 const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
@@ -5,16 +6,25 @@ const { getUserById } = require("../db/db.users");
 const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
+  doctorCouncilRegistrationApprovedEmail,
 } = require("../utils/email.utils");
+const { appBaseURL } = require("../config/default.config");
 
-exports.getCouncilRegistrations = async () => {
+exports.getAllCouncilRegistrations = async () => {
   try {
     const rawData = await dbObject.getAllMedicalCouncilRegistration();
+
     const registrations = rawData.map(
       ({
         council_registration_id: registrationId,
         doctor_id: doctorId,
-        medical_council_id: councilId,
+        first_name: firstName,
+        last_name: lastName,
+        specialty_name: specialty,
+        profile_pic_url: doctorPic,
+        council_name: councilName,
+        years_of_experience: yearsOfExperience,
+        is_profile_approved: isProfileApproved,
         registration_number: regNumber,
         registration_year: regYear,
         registration_document_url: regDocumentUrl,
@@ -26,13 +36,17 @@ exports.getCouncilRegistrations = async () => {
       }) => {
         return {
           registrationId,
-          doctorId,
-          councilId,
+          doctor: `${firstName} ${lastName}`,
+          specialty,
+          doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
+          councilName,
+          yearsOfExperience,
+          isProfileApproved,
           regNumber,
           regYear,
           regDocumentUrl,
-          certIssuedDate,
-          certExpiryDate,
+          certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
+          certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
           regStatus,
           rejectionReason,
           verifiedBy,
@@ -45,7 +59,152 @@ exports.getCouncilRegistrations = async () => {
     throw error;
   }
 };
+
 exports.getCouncilRegistration = async (id) => {
+  try {
+    const rawData = await dbObject.getMedicalCouncilRegistrationById(id);
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Medical Council Registration Not Found",
+      });
+    }
+    const {
+      council_registration_id: registrationId,
+      doctor_id: doctorId,
+      first_name: firstName,
+      last_name: lastName,
+      specialty_name: specialty,
+      profile_pic_url: doctorPic,
+      council_name: councilName,
+      years_of_experience: yearsOfExperience,
+      is_profile_approved: isProfileApproved,
+      registration_number: regNumber,
+      registration_year: regYear,
+      registration_document_url: regDocumentUrl,
+      certificate_issued_date: certIssuedDate,
+      certificate_expiry_date: certExpiryDate,
+      registration_status: regStatus,
+      rejection_reason: rejectionReason,
+      verified_by: verifiedBy,
+    } = rawData;
+
+    const registration = {
+      registrationId,
+      doctor: `${firstName} ${lastName}`,
+      specialty,
+      doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
+      councilName,
+      yearsOfExperience,
+      isProfileApproved,
+      regNumber,
+      regYear,
+      regDocumentUrl,
+      certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
+      certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
+      regStatus,
+      rejectionReason,
+      verifiedBy,
+    };
+
+    return Response.SUCCESS({ data: registration });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.approveCouncilRegistration = async ({ regId, userId }) => {
+  try {
+    const rawData = await dbObject.getMedicalCouncilRegistrationById(regId);
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Medical Council Registration Not Found",
+      });
+    }
+
+    const {
+      registration_status,
+      doctor_id: doctorId,
+      first_name: firstName,
+      last_name: lastName,
+    } = rawData;
+
+    if (registration_status === "approved") {
+      return Response.NOT_MODIFIED();
+    }
+
+    const [doctor, done] = await Promise.allSettled([
+      dbObject.getDoctorById(doctorId),
+      dbObject.approveDoctorMedicalCouncilRegistrationById({
+        registrationId: regId,
+        approvedBy: userId,
+      }),
+    ]).catch((error) => {
+      console.log(error);
+      throw error;
+    });
+
+    const { email: doctorEmail } = doctor.value;
+
+    //TODO send email notification to doctor upon approval
+    await doctorCouncilRegistrationApprovedEmail({
+      doctorEmail,
+      doctorName: `${firstName} ${lastName}`,
+    });
+    return Response.SUCCESS({
+      message: "Doctor's Medical Council Registration Approved Successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.rejectCouncilRegistration = async ({ regId, userId }) => {
+  try {
+    const rawData = await dbObject.getMedicalCouncilRegistrationById(regId);
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Medical Council Registration Not Found",
+      });
+    }
+
+    const {
+      registration_status,
+      doctor_id: doctorId,
+      first_name: firstName,
+      last_name: lastName,
+    } = rawData;
+
+    if (registration_status === "rejected") {
+      return Response.NOT_MODIFIED();
+    }
+
+    const [doctor, done] = await Promise.allSettled([
+      dbObject.getDoctorById(doctorId),
+      dbObject.rejectDoctorMedicalCouncilRegistrationById({
+        registrationId: regId,
+        approvedBy: userId,
+      }),
+    ]).catch((error) => {
+      console.log(error);
+      throw error;
+    });
+
+    const { email: doctorEmail } = doctor.value;
+
+    //TODO send email notification to doctor upon approval
+    await doctorCouncilRegistrationApprovedEmail({
+      doctorEmail,
+      doctorName: `${firstName} ${lastName}`,
+    });
+    return Response.SUCCESS({
+      message: "Doctor's Medical Council Registration Rejected Successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.getCouncilRegistrationByDoctorId = async (doctorId) => {
   try {
     const rawData = await dbObject.getMedicalCouncilRegistrationById(id);
     const registrations = rawData.map(
@@ -84,17 +243,6 @@ exports.getCouncilRegistration = async (id) => {
   }
 };
 
-/**
- * createDoctorCouncilRegistration({
-      userId,
-      councilId,
-      regNumber,
-      regYear,
-      certIssuedDate,
-      certExpirtyDate,
-      file,
-    });
- */
 exports.createDoctorCouncilRegistration = async ({
   userId,
   councilId,

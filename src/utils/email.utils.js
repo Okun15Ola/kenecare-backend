@@ -105,6 +105,7 @@ const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
     throw error;
   }
 };
+
 const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
   try {
     const message = {
@@ -117,6 +118,40 @@ const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
     Thank you for submitting your Medical Council Document information for approval on the Kenecare platform. We appreciate your commitment to providing quality healthcare services to our community. We understand the importance of a swift approval process, and we're pleased to inform you that our team is dedicated to reviewing your submission promptly. The approval process typically takes 8 hours or less.
     </p>
     <p>Once your document has gone through the approval process, you will receive an email notification confirming the status of your profile. If your document meets our requirements, you will be able to start receiving appointments on the Kenecare platform.</p>
+    <p> We appreciate your patience and cooperation during this process. If you have any questions or concerns, please feel free to reach out to our support team at [support@email.com]. We are here to assist you in any way we can.
+    Thank you for being a valued member of the Kenecare community. We look forward to having you on board and contributing to the well-being of our users.</p>
+    
+    <footer>
+      <p>Kenecare Support Team</p>
+      <p>support@kenecare.com</p>
+      <p><a href="https://kenecare.com">Kenecare.com</a></p>
+    </footer>
+    
+    `,
+    };
+    const result = await sendGrid.send(message).catch((err) => {
+      throw err;
+    });
+
+    console.log(result);
+  } catch (error) {
+    throw error;
+  }
+};
+
+const doctorCouncilRegistrationApprovedEmail = async ({
+  doctorEmail,
+  doctorName,
+}) => {
+  try {
+    const message = {
+      to: doctorEmail,
+      from: mailer.from,
+      subject: "Medical Council Registration Approved",
+      html: `<h1>Dear Dr. ${doctorName}. </h1>
+    <p>
+    Thank you for submitting your Medical Council Document information for approval on the Kenecare platform. Your council registration document has been approved successfully, you can now start receiving appointments from patient s on Kenecare. 
+    </p>
     <p> We appreciate your patience and cooperation during this process. If you have any questions or concerns, please feel free to reach out to our support team at [support@email.com]. We are here to assist you in any way we can.
     Thank you for being a valued member of the Kenecare community. We look forward to having you on board and contributing to the well-being of our users.</p>
     
@@ -215,4 +250,5 @@ module.exports = {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
   doctorAppointmentApprovalEmail,
+  doctorCouncilRegistrationApprovedEmail,
 };

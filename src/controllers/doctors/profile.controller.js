@@ -12,7 +12,6 @@ const GetDoctorProfileController = async (req, res, next) => {
   try {
     const id = parseInt(req.user.id);
     const response = await getDoctorByUser(id);
-    console.log(response);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -135,10 +134,13 @@ const UpdateDoctorProfileByIdController = async (req, res, next) => {
 const UpdateDoctorProfilePictureController = async (req, res, next) => {
   try {
     if (req.file) {
-      const doctorId = parseInt(req.params.id);
-      const response = await up;
-
-      return res.sendStatus(200);
+      const { id } = req.user;
+      const imageUrl = req.file.filename;
+      const response = await updateDoctorProfilePicture({
+        userId: id,
+        imageUrl,
+      });
+      return res.status(response.statusCode).json(response);
     }
   } catch (error) {
     console.error(error);

@@ -6,6 +6,7 @@ const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
 } = require("../utils/email.utils");
+const { appBaseURL } = require("../config/default.config");
 
 exports.getAllDoctors = async () => {
   try {
@@ -20,8 +21,7 @@ exports.getAllDoctors = async () => {
           last_name: lastName,
           gender,
           professional_summary: professionalSummary,
-          profile_pic_url,
-          profilePic,
+          profile_pic_url: profilePic,
           speciality_name: specialization,
           qualifications,
           consultation_fee: consultationFee,
@@ -43,8 +43,7 @@ exports.getAllDoctors = async () => {
             lastName,
             gender,
             professionalSummary,
-            profile_pic_url,
-            profilePic,
+            profilePic: `${appBaseURL}/user-profile/${profilePic}`,
             specialization,
             qualifications,
             consultationFee,
@@ -81,8 +80,7 @@ exports.getDoctorByQuery = async ({ locationId, query }) => {
           last_name: lastName,
           gender,
           professional_summary: professionalSummary,
-          profile_pic_url,
-          profilePic,
+          profile_pic_url: profilePic,
           speciality_name: specialization,
           qualifications,
           consultation_fee: consultationFee,
@@ -104,8 +102,7 @@ exports.getDoctorByQuery = async ({ locationId, query }) => {
             lastName,
             gender,
             professionalSummary,
-            profile_pic_url,
-            profilePic,
+            profilePic: `${appBaseURL}/user-profile/${profilePic}`,
             specialization,
             qualifications,
             consultationFee,
@@ -142,8 +139,7 @@ exports.getDoctorBySpecialtyId = async (specialityId) => {
           last_name: lastName,
           gender,
           professional_summary: professionalSummary,
-          profile_pic_url,
-          profilePic,
+          profile_pic_url: profilePic,
           speciality_name: specialization,
           qualifications,
           consultation_fee: consultationFee,
@@ -165,8 +161,7 @@ exports.getDoctorBySpecialtyId = async (specialityId) => {
             lastName,
             gender,
             professionalSummary,
-            profile_pic_url,
-            profilePic,
+            profilePic: `${appBaseURL}/user-profile/${profilePic}`,
             specialization,
             qualifications,
             consultationFee: `SLE ${parseInt(consultationFee)}`,
@@ -235,6 +230,14 @@ exports.getDoctorByUser = async (id) => {
     //   });
     // }
 
+    //TODO Check if the profile is active
+    // if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
+    //   return Response.UNAUTHORIZED({
+    //     message:
+    //       "Requested Doctor Profile has not been approved. Please contact admin for further information",
+    //   });
+    // }
+
     const doctor = {
       doctorId,
       userId,
@@ -246,7 +249,7 @@ exports.getDoctorByUser = async (id) => {
       mobileNumber,
       email,
       professionalSummary,
-      profilePic,
+      profilePic: `${appBaseURL}/user-profile/${profilePic}`,
       specialization,
       qualifications,
       consultationFees,
@@ -310,7 +313,7 @@ exports.getDoctorById = async (doctorId) => {
     const rawData = await dbObject.getDoctorById(doctorId);
 
     if (!rawData) {
-      return Response.NOT_FOUND({ message: "Doctor Not Found" });
+      return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
     //destruct properties from database object
     const {
@@ -346,7 +349,7 @@ exports.getDoctorById = async (doctorId) => {
       mobileNumber,
       email,
       professionalSummary,
-      profilePic,
+      profilePic: `${appBaseURL}/user-profile/${profilePic}`,
       specialization,
       qualifications,
       consultationFees,
@@ -424,17 +427,6 @@ exports.createDoctorProfile = async ({
   }
 };
 
-/**
- * createDoctorCouncilRegistration({
-      userId,
-      councilId,
-      regNumber,
-      regYear,
-      certIssuedDate,
-      certExpirtyDate,
-      file,
-    });
- */
 exports.createDoctorCouncilRegistration = async ({
   userId,
   councilId,
@@ -576,17 +568,26 @@ exports.updateDoctorProfile = async ({
     throw error;
   }
 };
-exports.updateDoctorProfilePicture = async ({ doctorId, imageUrl }) => {
+exports.updateDoctorProfilePicture = async ({ userId, imageUrl }) => {
   try {
-    const { profile_pic_url } = await dbObject.getDoctorById;
+    const doctor = await dbObject.getDoctorByUserId(userId);
+    if (!doctor) {
+      return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
+    }
+    const { doctor_id: doctorId, profile_pic_url } = doctor;
     if (profile_pic_url) {
       // delete old profile pic from file system
       const file = path.join(
         __dirname,
-        "../public/upload/profilepics/",
+        "../public/upload/profile_pics/",
         profile_pic_url
       );
-      fs.unlinkSync(file);
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+        console.log("File deleted");
+      } else {
+        console.log("Files does not exists");
+      }
     }
 
     await dbObject.updateDoctorProfilePictureById({
@@ -596,6 +597,32 @@ exports.updateDoctorProfilePicture = async ({ doctorId, imageUrl }) => {
 
     return Response.SUCCESS({
       message: "Doctor's profile picture updated successfully.",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+exports.approveDoctorProfile = async ({ doctorId, approvedBy }) => {
+  try {
+    const doctor = await dbObject.getDoctorById(doctorId);
+    if (!doctor) {
+      return Response.NOT_FOUND({ message: "Doctor Not Found" });
+    }
+
+    const { is_profile_approved: isProfileApproved } = doctor;
+    if (isProfileApproved) {
+      return Response.NOT_MODIFIED();
+    }
+    await dbObject.approveDoctorProfileByDoctorId({
+      doctorId,
+      approvedBy,
+    });
+
+    //TODO send profile approval message to doctor
+    return Response.SUCCESS({
+      message: "Doctor profile approved successfully.",
     });
   } catch (error) {
     console.error(error);

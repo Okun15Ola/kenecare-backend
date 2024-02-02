@@ -1,6 +1,6 @@
 const dbObject = require("../db/db.testimonials");
 const Response = require("../utils/response.utils");
-
+const { appBaseURL } = require("../config/default.config");
 exports.getTestimonials = async () => {
   try {
     const rawData = await dbObject.getAllTestimonials();
@@ -20,7 +20,7 @@ exports.getTestimonials = async () => {
           return {
             testimonialId,
             patientName: `${firstName} ${lastName}`,
-            patientPic,
+            patientPic: `${appBaseURL}/user-profile/${patientPic}`,
             content,
             isActive,
             isApproved,

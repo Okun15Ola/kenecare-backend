@@ -150,7 +150,7 @@ app.use(
 app.use("/api/v1/admin/blogs", requireAdminAuth, adminBlogsRouter);
 app.use("/api/v1/admin/cities", requireAdminAuth, adminCitiesRouter);
 app.use("/api/v1/admin/symptoms", requireAdminAuth, adminSymptomsRouter);
-app.use("/api/v1/admin/doctors", adminDoctorsRoute);
+app.use("/api/v1/admin/doctors", requireAdminAuth, adminDoctorsRoute);
 app.use("/api/v1/admin/faqs", requireAdminAuth, adminFaqRouter);
 app.use(
   "/api/v1/admin/medical-councils",

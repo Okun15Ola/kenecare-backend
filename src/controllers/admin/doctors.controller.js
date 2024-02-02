@@ -4,6 +4,7 @@ const {
   getAllDoctors,
   getDoctorsCouncilRegistration,
   getDoctorByUserId,
+  approveDoctorProfile,
 } = require("../../services/doctors.services.js");
 const { getDoctorById } = require("../../db/db.doctors.js");
 
@@ -55,8 +56,15 @@ exports.UpdateDoctorByIdController = async (req, res, next) => {
     next(error);
   }
 };
-exports.UpdateDoctorStatusController = async (req, res, next) => {
+exports.ApproveDoctorAccountController = async (req, res, next) => {
   try {
+    const { id } = req.params;
+    const userId = parseInt(req.user.id);
+    const response = await approveDoctorProfile({
+      doctorId: id,
+      approvedBy: userId,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);

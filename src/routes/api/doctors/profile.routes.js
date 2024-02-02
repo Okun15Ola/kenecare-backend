@@ -185,36 +185,36 @@ router.put(
   UpdateDoctorProfileByIdController
 );
 router.patch(
-  "/profile/:id/picture",
+  "/profile/",
   localProfilePicUploader.single("profilepic"),
-  [
-    param("id")
-      .notEmpty()
-      .withMessage("Doctor ID is required")
-      .isNumeric({ no_symbols: true })
-      .isInt({ allow_leading_zeroes: false, gt: 0 })
-      .withMessage("Doctor ID must be a positive integer")
-      .trim()
-      .escape()
-      .custom(async (id, { req }) => {
-        const data = await getDoctorById(id);
+  // [
+  //   param("id")
+  //     .notEmpty()
+  //     .withMessage("Doctor ID is required")
+  //     .isNumeric({ no_symbols: true })
+  //     .isInt({ allow_leading_zeroes: false, gt: 0 })
+  //     .withMessage("Doctor ID must be a positive integer")
+  //     .trim()
+  //     .escape()
+  //     .custom(async (id, { req }) => {
+  //       const data = await getDoctorById(id);
 
-        if (!data) {
-          throw new Error("Doctor Profile Not Found");
-        }
-        const { is_profile_approved, user_id, user_type } = data;
-        if (req.user.id !== user_id || user_type !== USERTYPE.DOCTOR) {
-          throw new Error("Unauthorized Accoun Access");
-        }
-        // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
-        //   throw new Error(
-        //     "Requested Doctor Profile has not been approved. Please contact admin for further information"
-        //   );
-        // }
-        return true;
-      }),
-  ],
-  Validate,
+  //       if (!data) {
+  //         throw new Error("Doctor Profile Not Found");
+  //       }
+  //       const { is_profile_approved, user_id, user_type } = data;
+  //       if (req.user.id !== user_id || user_type !== USERTYPE.DOCTOR) {
+  //         throw new Error("Unauthorized Accoun Access");
+  //       }
+  //       // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
+  //       //   throw new Error(
+  //       //     "Requested Doctor Profile has not been approved. Please contact admin for further information"
+  //       //   );
+  //       // }
+  //       return true;
+  //     }),
+  // ],
+  // Validate,
   UpdateDoctorProfilePictureController
 );
 
