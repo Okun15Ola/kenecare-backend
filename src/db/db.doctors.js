@@ -81,9 +81,9 @@ exports.getDoctorsByHospitalId = (hospitalId) => {
   });
 };
 
-exports.getDoctorsCouncilRegistrationById = (doctorId) => {
+exports.getCouncilRegistrationByDoctorId = (doctorId) => {
   const sql =
-    "SELECT * FROM doctors_council_registration WHERE doctor_id = ? LIMIT 1;";
+    "SELECT council_registration_id, dcr.doctor_id,first_name,last_name, gender, speciality_name, profile_pic_url, council_name, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, fullname as 'verified_by' FROM doctors_council_registration as dcr INNER JOIN doctors on dcr.doctor_id = doctors.doctor_id INNER JOIN medical_councils on dcr.medical_council_id = medical_councils.council_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id LEFT JOIN admins on dcr.verified_by = admins.admin_id WHERE dcr.doctor_id = ? LIMIT 1; ";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [doctorId], (err, result) => {
       if (err) return reject(err);
@@ -104,11 +104,24 @@ exports.getAllMedicalCouncilRegistration = () => {
     });
   });
 };
-exports.getMedicalCouncilRegistrationById = (registrationId) => {
+exports.getCouncilRegistrationById = (registrationId) => {
   const sql =
-    "SELECT council_registration_id,doctors_council_registration.doctor_id, first_name, last_name, speciality_name, profile_pic_url, council_name, years_of_experience,is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date,registration_status, rejection_reason, verified_by, doctors_council_registration.created_at FROM doctors_council_registration INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id WHERE council_registration_id =? LIMIT 1;";
+    "SELECT council_registration_id,doctors_council_registration.doctor_id, first_name, last_name, speciality_name, profile_pic_url, council_name, years_of_experience,is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date,registration_status, rejection_reason, verified_by, doctors_council_registration.created_at FROM doctors_council_registration INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id WHERE council_registration_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [registrationId], (err, results) => {
+      if (err) return reject(err);
+
+      console.log(results);
+
+      return resolve(results[0]);
+    });
+  });
+};
+exports.getCouncilRegistrationByRegNumber = (registrationNumber) => {
+  const sql =
+    "SELECT council_registration_id,doctors_council_registration.doctor_id, first_name, last_name, speciality_name, profile_pic_url, council_name, years_of_experience,is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date,registration_status, rejection_reason, verified_by, doctors_council_registration.created_at FROM doctors_council_registration INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id WHERE registration_number = ? LIMIT 1;";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [registrationNumber], (err, results) => {
       if (err) return reject(err);
 
       return resolve(results[0]);
@@ -131,7 +144,7 @@ exports.createDoctor = ({
   yearOfExperience,
 }) => {
   const sql =
-    "INSERT INTO doctors (user_id,title,first_name,middle_name,last_name,gender,professional_summary,speciality_id,qualifications,consultation_fee,city_id,years_of_experience) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
+    "INSERT INTO doctors (user_id,title,first_name,middle_name,last_name,gender,professional_summary,specialization_id,qualifications,consultation_fee,city_id,years_of_experience) VALUES (?,?,?,?,?,?,?,?,?,?,?,?);";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
@@ -187,6 +200,38 @@ exports.createDoctorMedicalCouncilRegistration = ({
     );
   });
 };
+exports.updateDoctorMedicalCouncilRegistration = ({
+  registrationId,
+  doctorId,
+  councilId,
+  regNumber,
+  regYear,
+  certIssuedDate,
+  certExpiryDate,
+  filename,
+}) => {
+  const sql =
+    "UPDATE doctors_council_registration SET medical_council_id = ?, registration_number = ? , registration_year = ?, registration_document_url = ?, certificate_issued_date = ? , certificate_expiry_date = ? WHERE council_registration_id = ? AND doctor_id = ? ;";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(
+      sql,
+      [
+        councilId,
+        regNumber,
+        regYear,
+        filename,
+        certIssuedDate,
+        certExpiryDate,
+        registrationId,
+        doctorId,
+      ],
+      (err, result) => {
+        if (err) return reject(err);
+        return resolve(result);
+      }
+    );
+  });
+};
 
 exports.getDoctorMedicalCouncilRegistration = ({ doctorId }) => {
   const sql =
@@ -214,7 +259,7 @@ exports.updateDoctorById = ({
   yearOfExperience,
 }) => {
   const sql =
-    "UPDATE doctors SET title = ? ,first_name = ?,middle_name = ?,last_name = ?,gender = ?,professional_summary = ?,speciality_id = ?,qualifications = ?,consultation_fee = ?,city_id = ?,years_of_experience = ? WHERE doctor_id = ?";
+    "UPDATE doctors SET title = ? ,first_name = ?,middle_name = ?,last_name = ?,gender = ?,professional_summary = ?,specialization_id = ?,qualifications = ?,consultation_fee = ?,city_id = ?,years_of_experience = ? WHERE doctor_id = ?";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,

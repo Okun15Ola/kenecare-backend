@@ -19,6 +19,7 @@ const {
   INTERNAL_SERVER_ERROR,
   SUCCESS,
   BAD_REQUEST,
+  UNAUTHORIZED,
 } = require("./utils/response.utils.js");
 
 //INDEX ROUTES
@@ -30,6 +31,7 @@ const authRouter = require("./routes/api/auth.routes");
 //DOCTORS ROUTER
 const doctorsProfileRouter = require("./routes/api/doctors/profile.routes");
 const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.routes");
+const doctorsCounculRegistrationRouter = require("./routes/api/doctors/council-registration.routes");
 
 //PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
@@ -71,9 +73,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   "/user-profile",
+  requireUserAuth,
   express.static(path.join(__dirname, "public/upload/profile_pics"))
 );
-app.use(express.static(__dirname + "/public/upload/media"));
+
+app.use(
+  "/docs/admin",
+  requireAdminAuth,
+  express.static(path.join(__dirname, "public/upload/media"))
+);
 app.use(
   expressSession({
     secret: sessionSecret,
@@ -110,6 +118,11 @@ app.use("/api/v1/auth", authRouter);
 
 //DOCTORS ROUTES
 app.use("/api/v1/doctors", requireUserAuth, doctorsProfileRouter);
+app.use(
+  "/api/v1/doctors/council-registration",
+  requireUserAuth,
+  doctorsCounculRegistrationRouter
+);
 app.use(
   "/api/v1/doctors/appointments",
   requireUserAuth,
@@ -182,9 +195,21 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
   logger.error(err);
+
   let statusCode = 500;
   let errorMessage = "Internal Server Error";
 
+  if (err.code === "LIMIT_FILE_SIZE") {
+    statusCode = 400;
+    errorMessage = "Select File Size too large. Max File Size: 2MB";
+
+    return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
+  }
+  if (err.code === "INVALID_FILE_TYPE") {
+    statusCode = 400;
+
+    return res.status(statusCode).json(NOT_FOUND({ message: err.message }));
+  }
   if (err.code === 404) {
     statusCode = 404;
     errorMessage = "The requested resource could not be found.";

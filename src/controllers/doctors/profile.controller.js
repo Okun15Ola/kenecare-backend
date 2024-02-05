@@ -68,6 +68,7 @@ const CreateDoctorProfileController = async (req, res, next) => {
     next(error);
   }
 };
+
 const CreateDoctorCouncilRegistration = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -91,10 +92,37 @@ const CreateDoctorCouncilRegistration = async (req, res, next) => {
     next(error);
   }
 };
+const UpdateCouncilRegistrationController = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const registrationId = parseInt(req.params.id);
+    console.log(registrationId);
+    return;
+    const { file } = req;
+    const { councilId, regNumber, regYear, certIssuedDate, certExpiryDate } =
+      req.body;
+
+    const response = await createDoctorCouncilRegistration({
+      userId,
+      councilId,
+      regNumber,
+      regYear,
+      certIssuedDate,
+      certExpiryDate,
+      file,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+
 const UpdateDoctorProfileByIdController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id);
-    const doctorId = parseInt(req.params.id);
+
     const {
       title,
       firstname,
@@ -110,7 +138,6 @@ const UpdateDoctorProfileByIdController = async (req, res, next) => {
     } = req.body;
 
     const response = await updateDoctorProfile({
-      doctorId,
       userId,
       title,
       firstName: firstname,
@@ -124,6 +151,7 @@ const UpdateDoctorProfileByIdController = async (req, res, next) => {
       cityId: city,
       yearOfExperience: yearOfExperience,
     });
+
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -151,6 +179,7 @@ const UpdateDoctorProfilePictureController = async (req, res, next) => {
 module.exports = {
   GetDoctorProfileController,
   GetDoctorCouncilRegistrationController,
+  UpdateCouncilRegistrationController,
   CreateDoctorProfileController,
   CreateDoctorCouncilRegistration,
   UpdateDoctorProfileByIdController,

@@ -41,6 +41,7 @@ exports.getDoctorAppointments = async (userId) => {
 
     //Get doctor's appointments
     const rawData = await dbObject.getAppointmentsByDoctorId(doctorId);
+
     const appointments = rawData.map(
       ({
         appointment_id: appointmentId,
@@ -49,6 +50,8 @@ exports.getDoctorAppointments = async (userId) => {
         first_name: firstName,
         last_name: lastName,
         doctor_id: doctor,
+        appointment_date: appointmentDate,
+        appointment_time: appointmentTime,
         appointment_type: appointmentType,
         patient_name_on_prescription: patientNameOnPrescription,
         patient_mobile_number: patientMobileNumber,
@@ -56,7 +59,7 @@ exports.getDoctorAppointments = async (userId) => {
         consultation_fee: consultationFees,
         speciality_name: specialty,
         time_slot: timeSlot,
-        meeting_url: meetingUrl,
+        meeting_id: meetingId,
         start_time: appointmentStartTime,
         end_time: appointmentEndTime,
         appointment_status: appointmentStatus,
@@ -73,6 +76,8 @@ exports.getDoctorAppointments = async (userId) => {
           appointmentUUID,
           patient,
           doctor,
+          appointmentDate,
+          appointmentTime,
           appointmentType,
           patientNameOnPrescription,
           patientMobileNumber,
@@ -80,7 +85,7 @@ exports.getDoctorAppointments = async (userId) => {
           consultationFees,
           specialty,
           timeSlot,
-          meetingUrl,
+          meetingId,
           appointmentStartTime,
           appointmentEndTime,
           appointmentStatus,
@@ -140,18 +145,22 @@ exports.getDoctorAppointment = async ({ userId, appointmentId }) => {
     });
 
     const {
-      appointment_id: id,
+      appointment_id: appointmentId,
       appointment_uuid: appointmentUUID,
+      patient_id: patient,
       first_name: firstName,
       last_name: lastName,
+      doctor_id: docId,
+      appointment_date: appointmentDate,
+      appointment_time: appointmentTime,
       appointment_type: appointmentType,
       patient_name_on_prescription: patientNameOnPrescription,
       patient_mobile_number: patientMobileNumber,
       patient_symptoms: patientSymptoms,
-      consultation_fee_paid: consultationFees,
-      specialty_name: specialty,
+      consultation_fee: consultationFees,
+      speciality_name: specialty,
       time_slot: timeSlot,
-      meeting_url: meetingUrl,
+      meeting_id: meetingId,
       start_time: appointmentStartTime,
       end_time: appointmentEndTime,
       appointment_status: appointmentStatus,
@@ -165,9 +174,12 @@ exports.getDoctorAppointment = async ({ userId, appointmentId }) => {
     } = rawData;
 
     const appointment = {
-      appointmentId: id,
+      appointmentId,
       appointmentUUID,
-      username: `${firstName} ${lastName}`,
+      patient,
+      doctor,
+      appointmentDate,
+      appointmentTime,
       appointmentType,
       patientNameOnPrescription,
       patientMobileNumber,
@@ -175,7 +187,7 @@ exports.getDoctorAppointment = async ({ userId, appointmentId }) => {
       consultationFees,
       specialty,
       timeSlot,
-      meetingUrl,
+      meetingId,
       appointmentStartTime,
       appointmentEndTime,
       appointmentStatus,

@@ -45,6 +45,13 @@ exports.ApproveCouncilRegistrationController = async (req, res, next) => {
 
 exports.DenyCouncilRegistrationController = async (req, res, next) => {
   try {
+    const userId = parseInt(req.user.id);
+    const regId = parseInt(req.params.id);
+    const response = await approveCouncilRegistration({
+      regId,
+      userId,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);

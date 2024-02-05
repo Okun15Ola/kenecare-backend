@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const moment = require("moment");
 const dbObject = require("../db/db.doctors");
 const Response = require("../utils/response.utils");
@@ -10,70 +12,44 @@ const {
 } = require("../utils/email.utils");
 const { appBaseURL } = require("../config/default.config");
 
-exports.getAllCouncilRegistrations = async () => {
+//DOCTORS
+exports.getDoctorCouncilRegistration = async (id) => {
   try {
-    const rawData = await dbObject.getAllMedicalCouncilRegistration();
+    //Get profile from database
+    const doctor = await dbObject.getDoctorByUserId(id);
 
-    const registrations = rawData.map(
-      ({
-        council_registration_id: registrationId,
-        doctor_id: doctorId,
-        first_name: firstName,
-        last_name: lastName,
-        specialty_name: specialty,
-        profile_pic_url: doctorPic,
-        council_name: councilName,
-        years_of_experience: yearsOfExperience,
-        is_profile_approved: isProfileApproved,
-        registration_number: regNumber,
-        registration_year: regYear,
-        registration_document_url: regDocumentUrl,
-        certificate_issued_date: certIssuedDate,
-        certificate_expiry_date: certExpiryDate,
-        registration_status: regStatus,
-        rejection_reason: rejectionReason,
-        verified_by: verifiedBy,
-      }) => {
-        return {
-          registrationId,
-          doctor: `${firstName} ${lastName}`,
-          specialty,
-          doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
-          councilName,
-          yearsOfExperience,
-          isProfileApproved,
-          regNumber,
-          regYear,
-          regDocumentUrl,
-          certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
-          certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
-          regStatus,
-          rejectionReason,
-          verifiedBy,
-        };
-      }
-    );
-    return Response.SUCCESS({ data: registrations });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-
-exports.getCouncilRegistration = async (id) => {
-  try {
-    const rawData = await dbObject.getMedicalCouncilRegistrationById(id);
-    if (!rawData) {
-      return Response.NOT_FOUND({
-        message: "Medical Council Registration Not Found",
-      });
+    if (!doctor) {
+      return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
+
+    //destruct properties from database object
+    const {
+      doctor_id: doctorId,
+      user_type: userType,
+      user_id: userId,
+      is_account_active: isAccountActive,
+    } = doctor;
+
+    //Check if the profile requested belongs to the requesting user
+    //Check if the user type is a doctor
+    if (id !== userId || userType !== USERTYPE.DOCTOR) {
+      return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
+    }
+
+    //TODO Check if the profile has been verified
+    // if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
+    //   return Response.UNAUTHORIZED({
+    //     message:
+    //       "Requested Doctor Profile has not been approved. Please contact admin for further information",
+    //   });
+    // }
+
+    const rawData = await dbObject.getCouncilRegistrationByDoctorId(doctorId);
     const {
       council_registration_id: registrationId,
-      doctor_id: doctorId,
       first_name: firstName,
       last_name: lastName,
-      specialty_name: specialty,
+      speciality_name: specialty,
       profile_pic_url: doctorPic,
       council_name: councilName,
       years_of_experience: yearsOfExperience,
@@ -98,7 +74,7 @@ exports.getCouncilRegistration = async (id) => {
       isProfileApproved,
       regNumber,
       regYear,
-      regDocumentUrl,
+      regDocumentUrl: `${appBaseURL}/doctors/council-registration/doc/${regDocumentUrl}`,
       certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
       certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
       regStatus,
@@ -107,136 +83,6 @@ exports.getCouncilRegistration = async (id) => {
     };
 
     return Response.SUCCESS({ data: registration });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-exports.approveCouncilRegistration = async ({ regId, userId }) => {
-  try {
-    const rawData = await dbObject.getMedicalCouncilRegistrationById(regId);
-    if (!rawData) {
-      return Response.NOT_FOUND({
-        message: "Medical Council Registration Not Found",
-      });
-    }
-
-    const {
-      registration_status,
-      doctor_id: doctorId,
-      first_name: firstName,
-      last_name: lastName,
-    } = rawData;
-
-    if (registration_status === "approved") {
-      return Response.NOT_MODIFIED();
-    }
-
-    const [doctor, done] = await Promise.allSettled([
-      dbObject.getDoctorById(doctorId),
-      dbObject.approveDoctorMedicalCouncilRegistrationById({
-        registrationId: regId,
-        approvedBy: userId,
-      }),
-    ]).catch((error) => {
-      console.log(error);
-      throw error;
-    });
-
-    const { email: doctorEmail } = doctor.value;
-
-    //TODO send email notification to doctor upon approval
-    await doctorCouncilRegistrationApprovedEmail({
-      doctorEmail,
-      doctorName: `${firstName} ${lastName}`,
-    });
-    return Response.SUCCESS({
-      message: "Doctor's Medical Council Registration Approved Successfully",
-    });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-exports.rejectCouncilRegistration = async ({ regId, userId }) => {
-  try {
-    const rawData = await dbObject.getMedicalCouncilRegistrationById(regId);
-    if (!rawData) {
-      return Response.NOT_FOUND({
-        message: "Medical Council Registration Not Found",
-      });
-    }
-
-    const {
-      registration_status,
-      doctor_id: doctorId,
-      first_name: firstName,
-      last_name: lastName,
-    } = rawData;
-
-    if (registration_status === "rejected") {
-      return Response.NOT_MODIFIED();
-    }
-
-    const [doctor, done] = await Promise.allSettled([
-      dbObject.getDoctorById(doctorId),
-      dbObject.rejectDoctorMedicalCouncilRegistrationById({
-        registrationId: regId,
-        approvedBy: userId,
-      }),
-    ]).catch((error) => {
-      console.log(error);
-      throw error;
-    });
-
-    const { email: doctorEmail } = doctor.value;
-
-    //TODO send email notification to doctor upon approval
-    await doctorCouncilRegistrationApprovedEmail({
-      doctorEmail,
-      doctorName: `${firstName} ${lastName}`,
-    });
-    return Response.SUCCESS({
-      message: "Doctor's Medical Council Registration Rejected Successfully",
-    });
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
-exports.getCouncilRegistrationByDoctorId = async (doctorId) => {
-  try {
-    const rawData = await dbObject.getMedicalCouncilRegistrationById(id);
-    const registrations = rawData.map(
-      ({
-        council_registration_id: registrationId,
-        doctor_id: doctorId,
-        medical_council_id: councilId,
-        registration_number: regNumber,
-        registration_year: regYear,
-        registration_document_url: regDocumentUrl,
-        certificate_issued_date: certIssuedDate,
-        certificate_expiry_date: certExpiryDate,
-        registration_status: regStatus,
-        rejection_reason: rejectionReason,
-        verified_by: verifiedBy,
-      }) => {
-        return {
-          registrationId,
-          doctorId,
-          councilId,
-          regNumber,
-          regYear,
-          regDocumentUrl,
-          certIssuedDate,
-          certExpiryDate,
-          regStatus,
-          rejectionReason,
-          verifiedBy,
-        };
-      }
-    );
-    return Response.SUCCESS({ data: registrations });
   } catch (error) {
     console.error(error);
     throw error;
@@ -278,7 +124,7 @@ exports.createDoctorCouncilRegistration = async ({
     }
 
     const councilRegistrationExist =
-      await dbObject.getDoctorsCouncilRegistrationById(doctorId);
+      await dbObject.getCouncilRegistrationByDoctorId(doctorId);
 
     if (councilRegistrationExist) {
       const {
@@ -330,6 +176,289 @@ exports.createDoctorCouncilRegistration = async ({
     return Response.CREATED({
       message:
         "Medical Council Registration Successfully Submitted. Your information is awaiting approval. You will be notified by email when once your documents are approved.",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+exports.updateDoctorCouncilRegistration = async ({
+  registrationId,
+  userId,
+  councilId,
+  regNumber,
+  regYear,
+  certIssuedDate,
+  certExpiryDate,
+  file,
+}) => {
+  try {
+    if (!file) {
+      return Response.BAD_REQUEST({
+        message: "Please upload medical council registration document.",
+      });
+    }
+    const { user_type: userType } = await getUserById(userId);
+
+    if (userType !== USERTYPE.DOCTOR) {
+      return Response.UNAUTHORIZED({
+        message: "Unauthorized Action.",
+      });
+    }
+    const {
+      doctor_id: doctorId,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
+      email: doctorEmail,
+    } = await dbObject.getDoctorByUserId(userId);
+
+    if (!doctorId) {
+      return Response.BAD_REQUEST({
+        message: "Doctor Profile does not exist please create a profile. ",
+      });
+    }
+
+    const {
+      council_registration_id: councilRegistrationId,
+      registration_status: registrationStatus,
+      reject_reason: rejectReason,
+      registration_document_url: documentUrl,
+    } = await dbObject.getCouncilRegistrationById(registrationId);
+
+    if (documentUrl) {
+      // delete old profile pic from file system
+      const file = path.join(__dirname, "../public/upload/media/", documentUrl);
+
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+        console.log("File deleted");
+      } else {
+        console.log("Files does not exists");
+      }
+    }
+
+    await dbObject.updateDoctorMedicalCouncilRegistration({
+      registrationId,
+      doctorId,
+      certExpiryDate,
+      certIssuedDate,
+      regNumber,
+      councilId,
+      filename: file.filename,
+      regYear,
+    });
+
+    //send an email with further instructions
+
+    // await Promise.all([
+    //   adminDoctorCouncilRegistrationEmail({
+    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
+    //   }),
+    //   doctorCouncilRegistrationEmail({
+    //     doctorEmail,
+    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
+    //   }),
+    // ]);
+
+    return Response.SUCCESS({
+      message:
+        "Medical Council Registration Successfully Updated. Your information is awaiting approval. You will be notified by email when once your documents are approved.",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+//ADMIN
+exports.getAllCouncilRegistrations = async () => {
+  try {
+    const rawData = await dbObject.getAllMedicalCouncilRegistration();
+
+    const registrations = rawData.map(
+      ({
+        council_registration_id: registrationId,
+        doctor_id: doctorId,
+        first_name: firstName,
+        last_name: lastName,
+        specialty_name: specialty,
+        profile_pic_url: doctorPic,
+        council_name: councilName,
+        years_of_experience: yearsOfExperience,
+        is_profile_approved: isProfileApproved,
+        registration_number: regNumber,
+        registration_year: regYear,
+        registration_document_url: regDocumentUrl,
+        certificate_issued_date: certIssuedDate,
+        certificate_expiry_date: certExpiryDate,
+        registration_status: regStatus,
+        rejection_reason: rejectionReason,
+        verified_by: verifiedBy,
+      }) => {
+        return {
+          registrationId,
+          doctor: `${firstName} ${lastName}`,
+          specialty,
+          doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
+          councilName,
+          yearsOfExperience,
+          isProfileApproved,
+          regNumber,
+          regYear,
+          regDocumentUrl: `${appBaseURL}/admin/council-registration/doc/${regDocumentUrl}`,
+          certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
+          certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
+          regStatus,
+          rejectionReason,
+          verifiedBy,
+        };
+      }
+    );
+    return Response.SUCCESS({ data: registrations });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.getCouncilRegistration = async (id) => {
+  try {
+    const rawData = await dbObject.getCouncilRegistrationById(id);
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Medical Council Registration Not Found",
+      });
+    }
+    const {
+      council_registration_id: registrationId,
+      doctor_id: doctorId,
+      first_name: firstName,
+      last_name: lastName,
+      specialty_name: specialty,
+      profile_pic_url: doctorPic,
+      council_name: councilName,
+      years_of_experience: yearsOfExperience,
+      is_profile_approved: isProfileApproved,
+      registration_number: regNumber,
+      registration_year: regYear,
+      registration_document_url: regDocumentUrl,
+      certificate_issued_date: certIssuedDate,
+      certificate_expiry_date: certExpiryDate,
+      registration_status: regStatus,
+      rejection_reason: rejectionReason,
+      verified_by: verifiedBy,
+    } = rawData;
+
+    const registration = {
+      registrationId,
+      doctor: `${firstName} ${lastName}`,
+      specialty,
+      doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
+      councilName,
+      yearsOfExperience,
+      isProfileApproved,
+      regNumber,
+      regYear,
+      regDocumentUrl: `${appBaseURL}/doctors/council-registration/doc/${regDocumentUrl}`,
+      certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
+      certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
+      regStatus,
+      rejectionReason,
+      verifiedBy,
+    };
+
+    return Response.SUCCESS({ data: registration });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.approveCouncilRegistration = async ({ regId, userId }) => {
+  try {
+    const rawData = await dbObject.getCouncilRegistrationById(regId);
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Medical Council Registration Not Found",
+      });
+    }
+
+    const {
+      registration_status,
+      doctor_id: doctorId,
+      first_name: firstName,
+      last_name: lastName,
+    } = rawData;
+
+    if (registration_status === "approved") {
+      return Response.NOT_MODIFIED();
+    }
+
+    const [doctor, done] = await Promise.allSettled([
+      dbObject.getDoctorById(doctorId),
+      dbObject.approveDoctorMedicalCouncilRegistrationById({
+        registrationId: regId,
+        approvedBy: userId,
+      }),
+    ]).catch((error) => {
+      console.log(error);
+      throw error;
+    });
+
+    const { email: doctorEmail } = doctor.value;
+
+    //TODO send email notification to doctor upon approval
+    await doctorCouncilRegistrationApprovedEmail({
+      doctorEmail,
+      doctorName: `${firstName} ${lastName}`,
+    });
+    return Response.SUCCESS({
+      message: "Doctor's Medical Council Registration Approved Successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.rejectCouncilRegistration = async ({ regId, userId }) => {
+  try {
+    const rawData = await dbObject.getCouncilRegistrationById(regId);
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Medical Council Registration Not Found",
+      });
+    }
+
+    const {
+      registration_status,
+      doctor_id: doctorId,
+      first_name: firstName,
+      last_name: lastName,
+    } = rawData;
+
+    if (registration_status === "rejected") {
+      return Response.NOT_MODIFIED();
+    }
+
+    const [doctor, done] = await Promise.allSettled([
+      dbObject.getDoctorById(doctorId),
+      dbObject.rejectDoctorMedicalCouncilRegistrationById({
+        registrationId: regId,
+        approvedBy: userId,
+      }),
+    ]).catch((error) => {
+      console.log(error);
+      throw error;
+    });
+
+    const { email: doctorEmail } = doctor.value;
+
+    //TODO send email notification to doctor upon approval
+    await doctorCouncilRegistrationApprovedEmail({
+      doctorEmail,
+      doctorName: `${firstName} ${lastName}`,
+    });
+    return Response.SUCCESS({
+      message: "Doctor's Medical Council Registration Rejected Successfully",
     });
   } catch (error) {
     console.error(error);

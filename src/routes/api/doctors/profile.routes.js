@@ -3,11 +3,11 @@ const { body, param } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   GetDoctorProfileController,
-  GetDoctorCouncilRegistrationController,
   CreateDoctorProfileController,
-  CreateDoctorCouncilRegistration,
   UpdateDoctorProfileByIdController,
   UpdateDoctorProfilePictureController,
+  GetDoctorCouncilRegistrationController,
+  CreateDoctorCouncilRegistration,
 } = require("../../../controllers/doctors/profile.controller");
 const { getCityById } = require("../../../db/db.cities");
 const { getSpecializationById } = require("../../../db/db.specializations");
@@ -91,30 +91,30 @@ router.post(
   CreateDoctorProfileController
 );
 router.put(
-  "/profile/:id",
+  "/profile/",
   [
-    param("id")
-      .notEmpty()
-      .withMessage("Doctor ID is required")
-      .isNumeric({ no_symbols: true })
-      .isInt({ allow_leading_zeroes: false, gt: 0 })
-      .withMessage("Doctor ID must be a positive integer")
-      .trim()
-      .escape()
-      .custom(async (id, { req }) => {
-        const data = await getDoctorById(id);
+    // param("id")
+    //   .notEmpty()
+    //   .withMessage("Doctor ID is required")
+    //   .isNumeric({ no_symbols: true })
+    //   .isInt({ allow_leading_zeroes: false, gt: 0 })
+    //   .withMessage("Doctor ID must be a positive integer")
+    //   .trim()
+    //   .escape()
+    //   .custom(async (id, { req }) => {
+    //     const data = await getDoctorById(id);
 
-        if (!data) {
-          throw new Error("Doctor Profile Not Found");
-        }
-        const { is_profile_approved } = data;
-        // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
-        //   throw new Error(
-        //     "Requested Doctor Profile has not been approved. Please contact admin for further information"
-        //   );
-        // }
-        return true;
-      }),
+    //     if (!data) {
+    //       throw new Error("Doctor Profile Not Found");
+    //     }
+    //     const { is_profile_approved } = data;
+    //     // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
+    //     //   throw new Error(
+    //     //     "Requested Doctor Profile has not been approved. Please contact admin for further information"
+    //     //   );
+    //     // }
+    //     return true;
+    //   }),
     body("title").notEmpty().withMessage("Title is required").trim().escape(),
     body("firstname")
       .notEmpty()
@@ -218,41 +218,41 @@ router.patch(
   UpdateDoctorProfilePictureController
 );
 
-router.post(
-  "/council-registration",
-  localMediaUploader.single("regCertificate"),
-  [
-    body("councilId")
-      .notEmpty()
-      .withMessage("Please specify medical council ID")
-      .trim()
-      .escape()
-      .custom(async (id, { req }) => {
-        const data = await getMedicalCouncilById(id);
-        if (!data) {
-          throw new Error("Medical Council Not Found.");
-        }
-        return true;
-      }),
-    body("regNumber")
-      .notEmpty()
-      .withMessage("Registration Number is requred")
-      .trim()
-      .escape()
-      .toUpperCase(),
-    body("certIssuedDate")
-      .notEmpty()
-      .withMessage("Please specify medical council ID")
-      .trim()
-      .escape(),
-    body("certExpiryDate")
-      .notEmpty()
-      .withMessage("Please specify medical council ID")
-      .trim()
-      .escape(),
-  ],
-  Validate,
-  CreateDoctorCouncilRegistration
-);
-router.get("/council-registration", GetDoctorCouncilRegistrationController);
+// router.post(
+//   "/council-registration",
+//   localMediaUploader.single("regCertificate"),
+//   [
+//     body("councilId")
+//       .notEmpty()
+//       .withMessage("Please specify medical council ID")
+//       .trim()
+//       .escape()
+//       .custom(async (id, { req }) => {
+//         const data = await getMedicalCouncilById(id);
+//         if (!data) {
+//           throw new Error("Medical Council Not Found.");
+//         }
+//         return true;
+//       }),
+//     body("regNumber")
+//       .notEmpty()
+//       .withMessage("Registration Number is requred")
+//       .trim()
+//       .escape()
+//       .toUpperCase(),
+//     body("certIssuedDate")
+//       .notEmpty()
+//       .withMessage("Please specify medical council ID")
+//       .trim()
+//       .escape(),
+//     body("certExpiryDate")
+//       .notEmpty()
+//       .withMessage("Please specify medical council ID")
+//       .trim()
+//       .escape(),
+//   ],
+//   Validate,
+//   CreateDoctorCouncilRegistration
+// );
+// router.get("/council-registration", GetDoctorCouncilRegistrationController);
 module.exports = router;

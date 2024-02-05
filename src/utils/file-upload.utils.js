@@ -28,9 +28,9 @@ const fileFilter = (req, file, cb) => {
     return cb(null, true);
   } else {
     const error = new Error("Invalid File Type");
-    error.code = 400;
+    error.code = "INVALID_FILE_TYPE";
     error.message =
-      "Invalid file type. Please upload a JPEG, JPG, PNG, or PDF file.";
+      "INVALID FILE TYPE. Expected File Type: *.jpeg | *.jpg | *.png | *.pdf.";
     cb(error, false);
   }
 };
