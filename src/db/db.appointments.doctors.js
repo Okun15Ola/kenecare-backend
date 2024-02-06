@@ -11,6 +11,8 @@ exports.getAppointmentsByDoctorId = ({ doctorId, page = 1, limit = 20 }) => {
     connectionPool.query(sql, [doctorId], (error, results) => {
       if (error) return reject(error);
 
+      console.log(results);
+
       return resolve(results);
     });
   });
