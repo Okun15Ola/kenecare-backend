@@ -150,21 +150,23 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       doctorId,
     });
 
+    console.log(rawData);
     const {
       appointment_id: appointmentId,
       appointment_uuid: appointmentUUID,
       patient_id: patient,
       first_name: firstName,
       last_name: lastName,
-      doctor_id: docId,
+      doctor_first_name: doctorFirstName,
+      doctor_last_name: doctorLastName,
+      appointment_type: appointmentType,
       appointment_date: appointmentDate,
       appointment_time: appointmentTime,
-      appointment_type: appointmentType,
       patient_name_on_prescription: patientNameOnPrescription,
       patient_mobile_number: patientMobileNumber,
       patient_symptoms: patientSymptoms,
       consultation_fee: consultationFees,
-      speciality_name: specialty,
+      specialty_name: specialty,
       time_slot: timeSlot,
       meeting_id: meetingId,
       join_url: meetingJoinUrl,
@@ -178,21 +180,23 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       postponed_reason: postponedReason,
       postponed_date: postponeDate,
       postponed_by: postponedBy,
-      created_at: createAt,
+      created_at: createdAt,
     } = rawData;
 
     const appointment = {
       appointmentId,
       appointmentUUID,
+      patient,
       username: `${firstName} ${lastName}`,
-      doctor: `Dr. ${doctor.first_name} ${doctor.last_name}`,
-      appointmentDate: moment(appointmentDate, "YYYY-MM-DD", true),
+      doctorId,
+      doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+      appointmentDate,
       appointmentTime,
       appointmentType,
       patientNameOnPrescription,
       patientMobileNumber,
       patientSymptoms,
-      consultationFees,
+      consultationFees: `SLE ${parseInt(consultationFees)}`,
       specialty,
       timeSlot,
       meetingId,
@@ -207,7 +211,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       postponedReason,
       postponeDate,
       postponedBy,
-      createAt,
+      createdAt: moment(createdAt).format("YYYY-MM-DD"),
     };
 
     return Response.SUCCESS({ data: appointment });
