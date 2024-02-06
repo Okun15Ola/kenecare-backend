@@ -11,13 +11,16 @@ const { createAppointmentPayment } = require("../db/db.payments");
 
 const { getPaymentURL } = require("../utils/payment.utils");
 
-exports.getPatientAppointments = async (userId) => {
+exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
     const { patient_id: patientId } = await getPatientByUserId(userId);
 
-    const rawData = await dbObject.getAllPatientAppointments(patientId);
+    const rawData = await dbObject.getAllPatientAppointments({
+      patientId,
+      page,
+      limit,
+    });
 
-    console.log(rawData[0]);
     const appointments = rawData.map(
       ({
         appointment_id: appointmentId,

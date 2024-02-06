@@ -6,8 +6,9 @@ const Response = require("../utils/response.utils");
 const { doctorAppointmentApprovalEmail } = require("../utils/email.utils");
 const { getPatientById } = require("../db/db.patients");
 const { createZoomMeeting } = require("../utils/zoom.utils");
+const moment = require("moment");
 
-exports.getDoctorAppointments = async (userId) => {
+exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
     const user = await getUserById(userId);
 
@@ -40,7 +41,11 @@ exports.getDoctorAppointments = async (userId) => {
     // }
 
     //Get doctor's appointments
-    const rawData = await dbObject.getAppointmentsByDoctorId(doctorId);
+    const rawData = await dbObject.getAppointmentsByDoctorId({
+      doctorId,
+      page,
+      limit,
+    });
 
     const appointments = rawData.map(
       ({
@@ -49,7 +54,7 @@ exports.getDoctorAppointments = async (userId) => {
         patient_id: patient,
         first_name: firstName,
         last_name: lastName,
-        doctor_id: doctor,
+        doctor_id: doctorId,
         appointment_date: appointmentDate,
         appointment_time: appointmentTime,
         appointment_type: appointmentType,
@@ -75,7 +80,7 @@ exports.getDoctorAppointments = async (userId) => {
           appointmentId,
           appointmentUUID,
           patient,
-          doctor,
+          doctorId,
           appointmentDate,
           appointmentTime,
           appointmentType,
@@ -107,27 +112,20 @@ exports.getDoctorAppointments = async (userId) => {
   }
 };
 
-exports.getDoctorAppointment = async ({ userId, appointmentId }) => {
+exports.getDoctorAppointment = async ({ userId, id }) => {
   try {
-    const user = await getUserById(userId);
-
-    if (!user) {
-      return Response.NOT_FOUND({ message: "User Not Found" });
-    }
-
-    const { user_type } = user;
-
-    if (user_type !== USERTYPE.DOCTOR) {
-      return Response.UNAUTHORIZED({ message: "Unauthorized access" });
-    }
-
     const doctor = await getDoctorByUserId(userId);
-
     if (!doctor) {
       return Response.NOT_FOUND({
         message:
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
       });
+    }
+
+    const { user_type } = doctor;
+
+    if (user_type !== USERTYPE.DOCTOR) {
+      return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
     const { is_profile_approved, doctor_id: doctorId } = doctor;
@@ -140,7 +138,7 @@ exports.getDoctorAppointment = async ({ userId, appointmentId }) => {
     // }
 
     const rawData = await dbObject.getDoctorAppointmentById({
-      appointmentId,
+      appointmentId: id,
       doctorId,
     });
 
@@ -161,6 +159,8 @@ exports.getDoctorAppointment = async ({ userId, appointmentId }) => {
       speciality_name: specialty,
       time_slot: timeSlot,
       meeting_id: meetingId,
+      join_url: meetingJoinUrl,
+      start_url: meetingStartUrl,
       start_time: appointmentStartTime,
       end_time: appointmentEndTime,
       appointment_status: appointmentStatus,
@@ -176,9 +176,9 @@ exports.getDoctorAppointment = async ({ userId, appointmentId }) => {
     const appointment = {
       appointmentId,
       appointmentUUID,
-      patient,
-      doctor,
-      appointmentDate,
+      username: `${firstName} ${lastName}`,
+      doctor: `Dr. ${doctor.first_name} ${doctor.last_name}`,
+      appointmentDate: moment(appointmentDate, "YYYY-MM-DD", true),
       appointmentTime,
       appointmentType,
       patientNameOnPrescription,
@@ -188,6 +188,8 @@ exports.getDoctorAppointment = async ({ userId, appointmentId }) => {
       specialty,
       timeSlot,
       meetingId,
+      meetingJoinUrl,
+      meetingStartUrl,
       appointmentStartTime,
       appointmentEndTime,
       appointmentStatus,

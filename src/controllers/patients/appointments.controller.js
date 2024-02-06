@@ -7,8 +7,11 @@ const {
 
 exports.GetAppointmentsController = async (req, res, next) => {
   try {
+    let page = req.query.page ? req.query.page : 1;
+    let limit = req.query.limit ? req.query.limit : 20;
+
     const userId = parseInt(req.user.id);
-    const response = await getPatientAppointments(userId);
+    const response = await getPatientAppointments({ userId, page, limit });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -21,7 +24,7 @@ exports.GetAppointmentsByIDController = async (req, res, next) => {
     const userId = parseInt(req.user.id);
     const appointmentId = parseInt(req.params.id);
 
-    const response = await getPatientAppointment({userId, id:appointmentId});
+    const response = await getPatientAppointment({ userId, id: appointmentId });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

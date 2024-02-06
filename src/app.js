@@ -154,7 +154,11 @@ app.use("/api/v1/payments", requireUserAuth, appointmentPaymentRoutes);
 //TODO Add a middle ware to authenticate ADMIN JWT
 app.use("/api/v1/admin/auth", adminAuthRouter);
 app.use("/api/v1/admin/accounts", requireAdminAuth, adminAccountsRouter);
-app.use("/api/v1/admin/appointments", adminAppointmentsRouter);
+app.use(
+  "/api/v1/admin/appointments",
+  requireAdminAuth,
+  adminAppointmentsRouter
+);
 app.use(
   "/api/v1/admin/blog-categories",
   requireAdminAuth,

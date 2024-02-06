@@ -3,7 +3,7 @@ const Response = require("../utils/response.utils");
 
 exports.getAdminppointments = async () => {
   try {
-    const rawData = await dbObject.getAllAppointments();
+    const rawData = await dbObject.getAllAppointments({ page: 1, limit: 10 });
 
     const appointments = rawData.map(
       ({

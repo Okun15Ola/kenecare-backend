@@ -4,8 +4,15 @@ const {
   GetAdminAppointmentByIdController,
   GetAdminAppointmentsByDoctorIdController,
 } = require("../../../controllers/admin/appointments.controller");
+const {
+  calculatePaginationInfo,
+} = require("../../../middlewares/paginator.middleware");
 
-router.get("/", GetAdminAppointmentsController);
+router.get(
+  "/",
+  calculatePaginationInfo("medical_appointments"),
+  GetAdminAppointmentsController
+);
 
 router.get("/:id", GetAdminAppointmentByIdController);
 router.get("/:id", GetAdminAppointmentByIdController);
