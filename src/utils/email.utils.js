@@ -40,14 +40,15 @@ const newPatientAppointmentEmail = async ({
     <p>If you need to reschedule or have any questions regarding your appointment, please feel free to contact our office at 88 Pademba Road or send an email to support@kenecare.com. We kindly ask that you login at least 15 minutes before your scheduled appointment </p> 
     <p>Thank you for choosing Kenecare (SL) for your healthcare needs. We value your trust in us and are committed to making your experience as comfortable and efficient as possible.</p>`,
     };
-    const result = await sendGrid.send(message).catch((err) => {
+    await sendGrid.send(message).catch((err) => {
       throw err;
     });
-    console.log(result);
   } catch (error) {
+    console.error(error);
     throw error;
   }
 };
+
 const newDoctorAppointmentEmail = async ({
   doctorEmail,
   doctorName,
@@ -76,10 +77,11 @@ const newDoctorAppointmentEmail = async ({
     <p>If, for any reason, you are unable to attend to this appointment, or if there are any changes, please <a href="https://doctor.kenecare.com/login">click here to login to your dashboard</a> and notify the patient at your earliest convenience.</p>
     <p>Thank you for your dedication to providing excellent patient care on Kenecare (SL).</p>`,
     };
-    const result = await sendGrid.send(message).catch((err) => {
+    await sendGrid.send(message).catch((err) => {
       throw err;
     });
   } catch (error) {
+    console.error(error);
     throw error;
   }
 };
@@ -102,6 +104,28 @@ const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
     });
     console.log(result);
   } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+const adminDoctorProfileRegistrationEmail = async ({ doctorName }) => {
+  try {
+    const message = {
+      to: "isha.fofanah@imo-tech.com",
+      from: mailer.from,
+      subject: "Request for Approval: Doctor Profile",
+      text: "Kenecare Admin Notification",
+      html: `<h3>Dear KENECARE ADMIN</h3>
+    <p>This is a notification email to bring to your attention that Dr. ${doctorName} has just created their doctor's profile on KENECARE that requires your approval. Please login to your admin dashboard and process their approval so that they can start using the KENECARE platform.</p> 
+   
+    <p>The approval process is expected to take 48 hours or less. Once approved, the doctor will be eligible to receive appointments from users seeking healthcare services.</p>
+    `,
+    };
+    await sendGrid.send(message).catch((err) => {
+      throw err;
+    });
+  } catch (error) {
+    console.error(error);
     throw error;
   }
 };
@@ -135,6 +159,7 @@ const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
 
     console.log(result);
   } catch (error) {
+    console.error(error);
     throw error;
   }
 };
@@ -169,10 +194,11 @@ const doctorCouncilRegistrationApprovedEmail = async ({
 
     console.log(result);
   } catch (error) {
+    console.error(error);
     throw error;
   }
 };
-const doctorAppointmentApprovalEmail = async ({
+const patientAppointmentApprovalEmail = async ({
   patientEmail,
   patientNameOnPrescription,
   symptoms,
@@ -209,13 +235,11 @@ const doctorAppointmentApprovalEmail = async ({
     
     `,
     };
-    const done = await sendGrid.send(message).catch((error) => {
+    await sendGrid.send(message).catch((error) => {
       throw error;
     });
-
-    console.log(done);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw error;
   }
 };
@@ -235,10 +259,11 @@ const paymentCanceledPatientAppointmentEmail = async ({
     <br />
     <p>Thank you for choosing Kenecare for your healthcare needs. We value your trust in us and are committed to making your experience as comfortable and efficient as possible.</p>`,
     };
-    const result = await sendGrid.send(message).catch((err) => {
+    await sendGrid.send(message).catch((err) => {
       throw err;
     });
   } catch (error) {
+    console.error(error);
     throw error;
   }
 };
@@ -249,6 +274,7 @@ module.exports = {
   paymentCanceledPatientAppointmentEmail,
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
-  doctorAppointmentApprovalEmail,
+  adminDoctorProfileRegistrationEmail,
+  patientAppointmentApprovalEmail,
   doctorCouncilRegistrationApprovedEmail,
 };

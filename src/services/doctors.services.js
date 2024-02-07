@@ -5,6 +5,7 @@ const { getUserById } = require("../db/db.users");
 const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
+  adminDoctorProfileRegistrationEmail,
 } = require("../utils/email.utils");
 const { appBaseURL } = require("../config/default.config");
 
@@ -43,7 +44,9 @@ exports.getAllDoctors = async () => {
             lastName,
             gender,
             professionalSummary,
-            profilePic: `${appBaseURL}/user-profile/${profilePic}`,
+            profilePic: profilePic
+              ? `${appBaseURL}/user-profile/${profilePic}`
+              : null,
             specialization,
             qualifications,
             consultationFee,
@@ -102,7 +105,9 @@ exports.getDoctorByQuery = async ({ locationId, query }) => {
             lastName,
             gender,
             professionalSummary,
-            profilePic: `${appBaseURL}/user-profile/${profilePic}`,
+            profilePic: profilePic
+              ? `${appBaseURL}/user-profile/${profilePic}`
+              : null,
             specialization,
             qualifications,
             consultationFee,
@@ -161,7 +166,9 @@ exports.getDoctorBySpecialtyId = async (specialityId) => {
             lastName,
             gender,
             professionalSummary,
-            profilePic: `${appBaseURL}/user-profile/${profilePic}`,
+            profilePic: profilePic
+              ? `${appBaseURL}/user-profile/${profilePic}`
+              : null,
             specialization,
             qualifications,
             consultationFee: `SLE ${parseInt(consultationFee)}`,
@@ -250,7 +257,9 @@ exports.getDoctorByUser = async (id) => {
       mobileNumber,
       email,
       professionalSummary,
-      profilePic: `${appBaseURL}/user-profile/${profilePic}`,
+      profilePic: profilePic
+        ? `${appBaseURL}/user-profile/${profilePic}`
+        : null,
       specialization,
       qualifications,
       consultationFees,
@@ -308,7 +317,9 @@ exports.getDoctorById = async (doctorId) => {
       mobileNumber,
       email,
       professionalSummary,
-      profilePic: `${appBaseURL}/user-profile/${profilePic}`,
+      profilePic: profilePic
+        ? `${appBaseURL}/user-profile/${profilePic}`
+        : null,
       specialization,
       qualifications,
       consultationFees,
@@ -369,16 +380,14 @@ exports.createDoctorProfile = async ({
       yearOfExperience,
     });
 
-    //TODO send an email with further instructions
-    Promise.all([
-      await doctorCouncilRegistrationEmail({}),
-      await adminDoctorCouncilRegistrationEmail({}),
-    ]);
-    //TODO Send Email to admins
+    // Send Email to admins
+    await adminDoctorProfileRegistrationEmail({
+      doctorName: `${firstName} ${middleName} ${lastName}`,
+    });
 
     return Response.CREATED({
       message:
-        "Doctor profile created successfully. Please check your email for further instructions",
+        "Doctor profile created successfully. Please proceed to submitting Medical Council Registration Information.",
     });
   } catch (error) {
     console.error(error);

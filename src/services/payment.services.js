@@ -33,6 +33,21 @@ exports.processAppointmentPayment = async ({
     }
 
     //TODO check if the user is the authorized user making the payment
+    const {
+      patient_id: patientId,
+      email: patientEmail,
+      first_name,
+      last_name,
+    } = await getPatientByUserId(userId);
+
+    const appointment = await getPatientAppointmentByUUID({
+      patientId,
+      appointmentUUID: consultationId,
+    });
+
+    if (!appointment) {
+      return Response.NOT_FOUND({ message: "Appointment Not Found" });
+    }
 
     const {
       appointment_id: appointmentId,
@@ -45,12 +60,17 @@ exports.processAppointmentPayment = async ({
       speciality_name: specialty,
       appointment_date: appointmentDate,
       appointment_time: appointmentTime,
-    } = await getPatientAppointmentByUUID(consultationId);
+    } = appointment;
 
-    if (!appointmentId) {
-      return Response.NOT_FOUND({ message: "Medical Appointment Not Found." });
+    const appointmentPaymentRecord = await getAppointmentPaymentByAppointmentId(
+      appointmentId
+    );
+
+    if (!appointmentPaymentRecord) {
+      return Response.BAD_REQUEST({
+        message: "Error processing payment. Please try again",
+      });
     }
-
     const {
       payment_id: paymentId,
       order_id: orderId,
@@ -58,13 +78,7 @@ exports.processAppointmentPayment = async ({
       payment_token: paymentToken,
       transaction_id: transactionID,
       payment_status: paymentStatus,
-    } = await getAppointmentPaymentByAppointmentId(appointmentId);
-
-    if (!paymentId) {
-      return Response.BAD_REQUEST({
-        message: "Error processing payment. Please try again",
-      });
-    }
+    } = appointmentPaymentRecord;
 
     if (transactionID !== null && paymentStatus === "success") {
       return Response.NOT_MODIFIED();
@@ -89,13 +103,8 @@ exports.processAppointmentPayment = async ({
       transactionId,
     });
 
-    const [patient, user, doctor] = await Promise.all([
-      getPatientByUserId(userId),
-      getUserById(userId),
-      getDoctorById(doctorId),
-    ]);
+    const doctor = await getDoctorById(doctorId);
 
-    const { email: patientEmail } = user;
     const {
       first_name: doctorFirstName,
       last_name: doctorLastName,
@@ -124,7 +133,7 @@ exports.processAppointmentPayment = async ({
         }),
       ]);
     } else {
-      //send email to doctor
+      //SEND  EMAIL TO DOCTOR
       await newDoctorAppointmentEmail({
         doctorEmail,
         doctorName: `${doctorFirstName} ${doctorLastName}`,
@@ -132,13 +141,16 @@ exports.processAppointmentPayment = async ({
         appointmentTime,
         symptoms,
       });
+
+      //TODO SEND SMS TO PATIENT
     }
 
     return Response.CREATED({
       message:
-        "Appointment Created Successfully. A confirmation email has been sent.",
+        "Appointment Created Successfully. A confirmation has been sent.",
     });
   } catch (error) {
+    console.log(error.message);
     throw error;
   }
 };

@@ -46,6 +46,34 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     throw error;
   }
 };
+
+const appointmentApprovalSms = async ({
+  patientName,
+  mobileNumber,
+  doctorName,
+  patientNameOnPrescription,
+  appointmentDate,
+  appointmentTime,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear ${patientName}, your appointment with Dr. ${doctorName} has been approved.\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nAn Email notification will be sent 30 minutes before the scheduled appointment with link to join the virtual meeting.\n\nKENECARE TEAM`,
+    });
+
+    config.data = data;
+    const response = await axios.request(config).catch((error) => {
+      throw error;
+    });
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 exports.sendVerificationSuccessSMS = async ({ token, mobileNumber }) => {
   try {
     const response = await client.messages.create({
@@ -61,12 +89,7 @@ exports.sendVerificationSuccessSMS = async ({ token, mobileNumber }) => {
   }
 };
 
-const buildRegistrationTokenSMS = function (token) {
-  const message = `Your Kenecare Token is: ${token}. \n Do not share with anyone`;
-
-  return message;
-};
-
 module.exports = {
   sendAuthTokenSMS,
+  appointmentApprovalSms,
 };

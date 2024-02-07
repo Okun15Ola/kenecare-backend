@@ -3,10 +3,11 @@ const { getDoctorByUserId } = require("../db/db.doctors");
 const { getUserById } = require("../db/db.users");
 const { USERTYPE, VERIFICATIONSTATUS } = require("../utils/enum.utils");
 const Response = require("../utils/response.utils");
-const { doctorAppointmentApprovalEmail } = require("../utils/email.utils");
+const { patientAppointmentApprovalEmail } = require("../utils/email.utils");
 const { getPatientById } = require("../db/db.patients");
 const { createZoomMeeting } = require("../utils/zoom.utils");
 const moment = require("moment");
+const { appointmentApprovalSms } = require("../utils/sms.utils");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
@@ -334,7 +335,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       doctorId,
       appointmentId,
     });
-    
+
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
@@ -373,46 +374,52 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       doctorName: `${doctorFirstName} ${doctorLastName}`,
     });
 
-    //UPDATE appointment status to 'approved'
-    await dbObject.approveDoctorAppointmentById({
-      appointmentId,
-      doctorId,
-      meetingId,
+    //TODO INSERT ZOOM MEETING INFO TO DATABASE
+    const { insertId: meetingId } = await dbObject.createNewZoomMeeting({
+      meetingId: zoomMeetingID.toString(),
+      meetingUUID: zoomMeetingUUID,
+      meetingTopic: zoomMeetingTopic,
+      joinUrl: zoomMeetingJoinURL,
+      startUrl: zoomMeetingStartURL,
+      encryptedPassword: zoomMeetingEncPassword,
     });
 
-    //TODO INSERT ZOOM MEETING INFO TO DATABASE
-    // await dbObject.createNewZoomMeeting({
-    //   meetingId:zoomMeetingID,
-    //   meetingUUID:zoomMeetingUUID,
-    //   meetingTopic:zoomMeetingTopic,
-    //   joinUrl:zoomMeetingJoinURL,
-    //   startUrl:zoomMeetingStartURL,
-    //   encryptedPassword:zoomMeetingEncPassword,
-    // });
+    const [done, patient] = await Promise.allSettled([
+      dbObject.approveDoctorAppointmentById({
+        appointmentId,
+        doctorId,
+        meetingId,
+      }),
+      getPatientById(patientId),
+    ]);
 
-    const patient = await getPatientById(patientId);
+    const { mobile_number: mobileNumber } = patient.value;
 
-    if (patient) {
-      const { email } = patient || null;
+    await appointmentApprovalSms({
+      doctorName: `${doctorFirstName} ${doctorLastName}`,
+      patientName: `${firstName} ${lastName}`,
+      patientNameOnPrescription,
+      mobileNumber,
+      appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+      appointmentTime,
+    });
 
-      if (email) {
-        // Send a email notification to the user
-        await doctorAppointmentApprovalEmail({
-          doctorName: `${doctorFirstName} ${doctorLastName}`,
-          patientName: `${firstName} ${lastName}`,
-          patientNameOnPrescription,
-          appointmentDate,
-          appoinmentTime: appointmentTime,
-          symptoms,
-          meetingJoinLink:
-            "https://us02web.zoom.us/j/81495440003?pwd=dUpYSWZxWW9FdjdkRG9NVTFkUFd5UT09",
-          patientEmail: email,
-        });
-      } else {
-        //TODO SEND AN SMS NOTIFICATION TO PATIENT FOR APPROVED APPOINTMENT
-      }
-    }
-
+    // if (email) {
+    //   // Send a email notification to the user
+    //   await patientAppointmentApprovalEmail({
+    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
+    //     patientName: `${firstName} ${lastName}`,
+    //     patientNameOnPrescription,
+    //     appointmentDate,
+    //     appoinmentTime: appointmentTime,
+    //     symptoms,
+    //     meetingJoinLink:
+    //       "https://us02web.zoom.us/j/81495440003?pwd=dUpYSWZxWW9FdjdkRG9NVTFkUFd5UT09",
+    //     patientEmail: email,
+    //   });
+    // } else {
+    //   //TODO SEND AN SMS NOTIFICATION TO PATIENT FOR APPROVED APPOINTMENT
+    // }
     return Response.SUCCESS({
       message: "Medical Appointment Approved Successfully",
     });

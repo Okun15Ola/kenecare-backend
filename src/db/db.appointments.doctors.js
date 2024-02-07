@@ -35,7 +35,7 @@ exports.approveDoctorAppointmentById = ({
   meetingId,
 }) => {
   const sql =
-    "UPDATE medical_appointments SET appointment_status = 'approved', meeting_id = ? cancelled_reason = NULL, cancelled_at = NULL, canceled_by = NULL, postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL WHERE appointment_id = ? AND doctor_id = ?;";
+    "UPDATE medical_appointments SET appointment_status = 'approved', meeting_id = ?, cancelled_reason = NULL, cancelled_at = NULL, canceled_by = NULL, postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL WHERE appointment_id = ? AND doctor_id = ?;";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(

@@ -67,7 +67,7 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
           doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
           appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
           appointmentTime,
-          appointmentType,
+          appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
           patientNameOnPrescription,
           patientMobileNumber,
           patientSymptoms,
@@ -154,7 +154,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       username: `${firstName} ${lastName}`,
       doctorId: doctorId,
       doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-      appointmentType,
+      appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
       appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
       patientNameOnPrescription,
       patientMobileNumber,
@@ -240,7 +240,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
       username: `${firstName} ${lastName}`,
       doctorId: doctorId,
       doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-      appointmentType,
+      appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
       appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
       patientNameOnPrescription,
       patientMobileNumber,
@@ -287,21 +287,14 @@ exports.createPatientAppointment = async ({
   try {
     //DONE Get patient Id from logged in user
 
-    const [patient, user, doctor, doctorAppoinments] = await Promise.all([
+    const [patient, doctor] = await Promise.all([
       getPatientByUserId(userId),
-      getUserById(userId),
       getDoctorById(doctorId),
-      getDoctorAppointByDate({ doctorId, appointmentDate }),
     ]);
 
     const { patient_id: patientId } = patient;
-    const { email: patientEmail } = user;
-    const {
-      email: doctorEmail,
-      first_name: doctorFirstName,
-      last_name: doctorLastName,
-      consultation_fee: consultationFee,
-    } = doctor;
+
+    const { consultation_fee: consultationFee } = doctor;
 
     //DONE check if patient profile exist for the user booking appointment
     if (!patientId) {
@@ -310,15 +303,6 @@ exports.createPatientAppointment = async ({
           "User must be registered as a patient before booking an appointment",
       });
     }
-
-    //DONE Check if the number of appointment for the selected doctor and selected date is more than 10
-
-    // if (doctorsAppointmentForDate.length >= 10) {
-    //   return Response.BAD_REQUEST({
-    //     message:
-    //       "Maximum appointment for doctor reached for the selected date. Please choose an earlier date",
-    //   });
-    // }
 
     //TODO Check if the selected doctor's timeslot is available,
 
@@ -340,37 +324,7 @@ exports.createPatientAppointment = async ({
         appointmentTime,
       });
 
-    //DONE Send email notification to doctor and patient
-    // if (patientEmail) {
-    //   await Promise.allSettled([
-    //     newPatientAppointmentEmail({
-    //       patientName: patientName.toUpperCase(),
-    //       patientEmail,
-    //       appointmentDate,
-    //       appointmentTime,
-    //       doctorName: `${doctorFirstName} ${doctorLastName}`,
-    //     }),
-    //     newDoctorAppointmentEmail({
-    //       doctorEmail,
-    //       doctorName: `${doctorFirstName} ${doctorLastName}`,
-    //       appointmentDate,
-    //       appointmentTime,
-    //       symptoms,
-    //     }),
-    //   ]);
-    // } else {
-    //   //send email to doctor
-    //   await newDoctorAppointmentEmail({
-    //     doctorEmail,
-    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
-    //     appointmentDate,
-    //     appointmentTime,
-    //     symptoms,
-    //   });
-    // }
-
-    //TODO Get and send payment url to process payment
-
+    //Get and send payment url to process payment
     const {
       payment_url: paymentUrl,
       notif_token: notificationToken,
@@ -380,8 +334,8 @@ exports.createPatientAppointment = async ({
       amount: consultationFee,
     });
 
-    //TODO create new appointment payments record
-    const done = await createAppointmentPayment({
+    // create new appointment payments record
+    await createAppointmentPayment({
       appointmentId,
       amountPaid: consultationFee,
       orderId: genUUID,
@@ -389,8 +343,6 @@ exports.createPatientAppointment = async ({
       paymentToken,
       notificationToken,
     });
-
-    console.log(done);
 
     return Response.CREATED({
       message: "Appointment Booked Successfully. Proceed to payment.",
