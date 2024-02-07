@@ -28,6 +28,7 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
         patient_id: patient,
         first_name: firstName,
         last_name: lastName,
+        gender,
         doctor_id: doctorId,
         doctor_first_name: doctorFirstName,
         doctor_last_name: doctorLastName,
@@ -52,12 +53,16 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
         postponed_date: postponeDate,
         postponed_by: postponedBy,
         created_at: createdAt,
+        payment_method: paymentMethod,
+        payment_status: paymentStatus,
+        transactionId: paymentTransactionId,
       }) => {
         return {
           appointmentId,
           appointmentUUID,
           patient,
           username: `${firstName} ${lastName}`,
+          gender,
           doctorId: doctorId,
           doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
           appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
@@ -74,6 +79,9 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
           appointmentStartTime,
           appointmentEndTime,
           appointmentStatus,
+          paymentMethod,
+          paymentStatus,
+          paymentTransactionId,
           cancelledReason,
           cancelledAt,
           cancelledBy,
@@ -134,6 +142,9 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       postponed_date: postponeDate,
       postponed_by: postponedBy,
       created_at: createdAt,
+      payment_method: paymentMethod,
+      payment_status: paymentStatus,
+      transactionId: paymentTransactionId,
     } = rawData;
 
     const appointment = {
@@ -156,6 +167,9 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       appointmentStartTime,
       appointmentEndTime,
       appointmentStatus,
+      paymentMethod,
+      paymentStatus,
+      paymentTransactionId,
       cancelledReason,
       cancelledAt,
       cancelledBy,
@@ -172,76 +186,92 @@ exports.getPatientAppointment = async ({ userId, id }) => {
   }
 };
 
-exports.getPatientAppointmentByUUID = async (uuid) => {
+exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
   try {
-    // const { patient_id: patientId } = await getPatientByUserId(userId);
+    const { patient_id: patientId } = await getPatientByUserId(userId);
 
-    const rawData = await dbObject.getPatientAppointmentByUUID(uuid);
+    const rawData = await dbObject.getPatientAppointmentByUUID({
+      patientId,
+      uuId,
+    });
 
-    const appointments = rawData.map(
-      ({
-        appointment_id: appointmentId,
-        appointment_uuid: appointmentUUID,
-        patient_id: patient,
-        first_name: firstName,
-        last_name: lastName,
-        doctor_id: doctor,
-        appointment_type: appointmentType,
-        patient_name_on_prescription: patientNameOnPrescription,
-        patient_mobile_number: patientMobileNumber,
-        patient_symptoms: patientSymptoms,
-        consultation_fee: consultationFees,
-        specialty_name: specialty,
-        time_slot: timeSlot,
-        meeting_id: meetingId,
-        join_url: meetingJoinUrl,
-        start_time: appointmentStartTime,
-        end_time: appointmentEndTime,
-        appointment_status: appointmentStatus,
-        cancelled_reason: cancelledReason,
-        cancelled_at: cancelledAt,
-        cancelled_by: cancelledBy,
-        postponed_reason: postponedReason,
-        postponed_date: postponeDate,
-        postponed_by: postponedBy,
-        created_at: createAt,
-      }) => {
-        return {
-          appointmentId,
-          appointmentUUID,
-          patient,
-          username: `${firstName} ${lastName}`,
-          doctorId: doctorId,
-          doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-          appointmentType,
-          patientNameOnPrescription,
-          patientMobileNumber,
-          patientSymptoms,
-          consultationFees: `SLE ${parseInt(consultationFees)}`,
-          specialty,
-          timeSlot,
-          meetingId,
-          meetingJoinUrl,
-          appointmentStartTime,
-          appointmentEndTime,
-          appointmentStatus,
-          cancelledReason,
-          cancelledAt,
-          cancelledBy,
-          postponedReason,
-          postponeDate,
-          postponedBy,
-          createAt,
-        };
-      }
-    );
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Appointment Not Found" });
+    }
 
-    return Response.SUCCESS({ data: appointments });
+    const {
+      appointment_id: appointmentId,
+      appointment_uuid: appointmentUUID,
+      patient_id: patient,
+      first_name: firstName,
+      last_name: lastName,
+      doctor_id: doctorId,
+      doctor_first_name: doctorFirstName,
+      doctor_last_name: doctorLastName,
+      appointment_type: appointmentType,
+      appointment_date: appointmentDate,
+      patient_name_on_prescription: patientNameOnPrescription,
+      patient_mobile_number: patientMobileNumber,
+      patient_symptoms: patientSymptoms,
+      consultation_fee: consultationFees,
+      specialty_name: specialty,
+      time_slot: timeSlot,
+      meeting_id: meetingId,
+      join_url: meetingJoinUrl,
+      start_time: appointmentStartTime,
+      end_time: appointmentEndTime,
+      appointment_status: appointmentStatus,
+      cancelled_reason: cancelledReason,
+      cancelled_at: cancelledAt,
+      cancelled_by: cancelledBy,
+      postponed_reason: postponedReason,
+      postponed_date: postponeDate,
+      postponed_by: postponedBy,
+      created_at: createdAt,
+      payment_method: paymentMethod,
+      payment_status: paymentStatus,
+      transactionId: paymentTransactionId,
+    } = rawData;
+
+    const appointment = {
+      appointmentId,
+      appointmentUUID,
+      patient,
+      username: `${firstName} ${lastName}`,
+      doctorId: doctorId,
+      doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+      appointmentType,
+      appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+      patientNameOnPrescription,
+      patientMobileNumber,
+      patientSymptoms,
+      consultationFees: `SLE ${parseInt(consultationFees)}`,
+      specialty,
+      timeSlot,
+      meetingId,
+      meetingJoinUrl,
+      appointmentStartTime,
+      appointmentEndTime,
+      appointmentStatus,
+      paymentMethod,
+      paymentStatus,
+      paymentTransactionId,
+      cancelledReason,
+      cancelledAt,
+      cancelledBy,
+      postponedReason,
+      postponeDate,
+      postponedBy,
+      createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    };
+
+    return Response.SUCCESS({ data: appointment });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
+
 exports.createPatientAppointment = async ({
   userId,
   doctorId,

@@ -6,7 +6,7 @@ exports.getAllPatientAppointments = ({ patientId, page = 1, limit = 20 }) => {
 
   const offset = (page - 1) * limit;
 
-  const sql = `SELECT appointment_id,appointment_uuid, p.patient_id, p.first_name, p.last_name, d.doctor_id, d.first_name AS 'doctor_first_name', d.last_name AS 'doctor_last_name', appointment_type, medical_appointments.consultation_fee, appointment_date, appointment_time, time_slot_id, patient_name_on_prescription, patient_mobile_number, patient_symptoms,  speciality_name,  medical_appointments.meeting_id, join_url, start_url, start_time, end_time, appointment_status, cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason, medical_appointments.created_at, medical_appointments.updated_at FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id LEFT JOIN zoom_meetings on medical_appointments.meeting_id = zoom_meetings.zoom_id  WHERE medical_appointments.patient_id = ? ORDER BY medical_appointments.created_at DESC  LIMIT ${limit} OFFSET ${offset} ;`;
+  const sql = `SELECT medical_appointments.appointment_id,appointment_uuid, p.patient_id, p.first_name, p.last_name,p.gender, d.doctor_id, d.first_name AS 'doctor_first_name', d.last_name AS 'doctor_last_name', appointment_type, medical_appointments.consultation_fee, appointment_date, appointment_time, time_slot_id, patient_name_on_prescription, patient_mobile_number, patient_symptoms,  speciality_name,  medical_appointments.meeting_id, join_url, start_url, start_time, end_time, appointment_status, cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason, medical_appointments.created_at, medical_appointments.updated_at, amount_paid, currency, payment_method, order_id, transaction_id, payment_status FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN appointment_payments on medical_appointments.appointment_id = appointment_payments.appointment_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id LEFT JOIN zoom_meetings on medical_appointments.meeting_id = zoom_meetings.zoom_id  WHERE medical_appointments.patient_id = ? AND payment_status = 'success' ORDER BY medical_appointments.created_at DESC LIMIT ${limit} OFFSET ${offset} ;`;
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [patientId], (error, results) => {
@@ -18,28 +18,29 @@ exports.getAllPatientAppointments = ({ patientId, page = 1, limit = 20 }) => {
 };
 
 exports.getPatientAppointmentById = ({ patientId, appointmentId }) => {
-  const sql = "CALL Sp_GetPatientMedicalAppointmentById(?,?);";
+  const sql = `SELECT medical_appointments.appointment_id,appointment_uuid, p.patient_id, p.first_name, p.last_name,p.gender, d.doctor_id, d.first_name AS 'doctor_first_name', d.last_name AS 'doctor_last_name', appointment_type, medical_appointments.consultation_fee, appointment_date, appointment_time, time_slot_id, patient_name_on_prescription, patient_mobile_number, patient_symptoms,  speciality_name,  medical_appointments.meeting_id, join_url, start_url, start_time, end_time, appointment_status, cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason, medical_appointments.created_at, medical_appointments.updated_at, amount_paid, currency, payment_method, order_id, transaction_id, payment_status FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN appointment_payments on medical_appointments.appointment_id = appointment_payments.appointment_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id LEFT JOIN zoom_meetings on medical_appointments.meeting_id = zoom_meetings.zoom_id  WHERE medical_appointments.patient_id = ? AND payment_status = 'success' AND medical_appointments.appointment_id = ? LIMIT 1;`;
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [patientId, appointmentId], (error, results) => {
       if (error) return reject(error);
 
-      const [result] = results;
-      return resolve(result[0]);
+      return resolve(results[0]);
     });
   });
 };
-exports.getPatientAppointmentByUUID = (appointmentUUID) => {
-  console.log(appointmentUUID);
-  const sql =
-    "SELECT appointment_id,appointment_uuid,p.patient_id,p.first_name,p.last_name,d.doctor_id,d.first_name as 'doctor_first_name',d.last_name as 'doctor_last_name',appointment_type,appointment_date,appointment_time,time_slot_id,patient_name_on_prescription,patient_mobile_number,patient_symptoms, speciality_name, meeting_id,start_time,end_time,appointment_status,cancelled_reason,cancelled_at,canceled_by,postponed_by,postponed_date,postponed_reason,medical_appointments.created_at,medical_appointments.updated_at FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id WHERE medical_appointments.appointment_uuid = ?  LIMIT 1;";
+exports.getPatientAppointmentByUUID = ({ patientId, appointmentUUID }) => {
+  const sql = `SELECT medical_appointments.appointment_id,appointment_uuid, p.patient_id, p.first_name, p.last_name,p.gender, d.doctor_id, d.first_name AS 'doctor_first_name', d.last_name AS 'doctor_last_name', appointment_type, medical_appointments.consultation_fee, appointment_date, appointment_time, time_slot_id, patient_name_on_prescription, patient_mobile_number, patient_symptoms,  speciality_name,  medical_appointments.meeting_id, join_url, start_url, start_time, end_time, appointment_status, cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason, medical_appointments.created_at, medical_appointments.updated_at, amount_paid, currency, payment_method, order_id, transaction_id, payment_status FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN appointment_payments on medical_appointments.appointment_id = appointment_payments.appointment_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id LEFT JOIN zoom_meetings on medical_appointments.meeting_id = zoom_meetings.zoom_id  WHERE medical_appointments.patient_id = ? AND payment_status = 'success' AND medical_appointments.appointment_uui = ? LIMIT 1;`;
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [appointmentUUID], (error, results) => {
-      if (error) return reject(error);
+    connectionPool.query(
+      sql,
+      [patientId, appointmentUUID],
+      (error, results) => {
+        if (error) return reject(error);
 
-      return resolve(results[0]);
-    });
+        return resolve(results[0]);
+      }
+    );
   });
 };
 

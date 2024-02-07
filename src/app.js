@@ -73,7 +73,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   "/user-profile",
-  requireUserAuth,
   express.static(path.join(__dirname, "public/upload/profile_pics"))
 );
 

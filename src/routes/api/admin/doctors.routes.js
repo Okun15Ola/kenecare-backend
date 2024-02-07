@@ -9,6 +9,7 @@ const {
 } = require("../../../controllers/admin/doctors.controller");
 
 router.get("/", GetDoctorsController);
+router.get("/:id", GetDoctorByIDController);
 router.get("/council-registration", GetDoctorsCouncilRegistrationController);
 router.post("/:id", GetDoctorByIDController);
 router.put("/:id", UpdateDoctorByIdController);

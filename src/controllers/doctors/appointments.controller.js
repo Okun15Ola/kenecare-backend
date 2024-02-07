@@ -6,14 +6,28 @@ const {
   approveDoctorAppointment,
   cancelDoctorAppointment,
   startDoctorAppointment,
+  getDoctorAppointmentByDateRange,
 } = require("../../services/doctor.appointments.services");
 
 exports.GetDoctorAppointmentsController = async (req, res, next) => {
   try {
+    const userId = parseInt(req.user.id);
+    const startDate = req.query.startDate ? req.query.startDate : null;
+    const endDate = req.query.endDate ? req.query.endDate : null;
     let page = req.query.page ? req.query.page : 1;
     let limit = req.query.limit ? req.query.limit : 20;
 
-    const userId = parseInt(req.user.id);
+    if (startDate && endDate) {
+      const response = await getDoctorAppointmentByDateRange({
+        userId,
+        startDate,
+        endDate,
+        page,
+        limit,
+      });
+      return res.status(response.statusCode).json(response);
+    }
+
     const response = await getDoctorAppointments({ userId, page, limit });
     return res.status(response.statusCode).json(response);
   } catch (error) {
