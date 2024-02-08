@@ -8,6 +8,9 @@ const {
   adminDoctorProfileRegistrationEmail,
 } = require("../utils/email.utils");
 const { appBaseURL } = require("../config/default.config");
+const { doctorProfileApprovalSms } = require("../utils/sms.utils");
+const path = require("path");
+const fs = require("fs");
 
 exports.getAllDoctors = async () => {
   try {
@@ -275,12 +278,12 @@ exports.getDoctorByUser = async (id) => {
   }
 };
 
-exports.getDoctorById = async (doctorId) => {
+exports.getDoctorById = async (id) => {
   try {
     //Get profile from database
-    const rawData = await dbObject.getDoctorById(doctorId);
+    const data = await dbObject.getDoctorById(id);
 
-    if (!rawData) {
+    if (!data) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
     //destruct properties from database object
@@ -304,7 +307,7 @@ exports.getDoctorById = async (doctorId) => {
       email,
       user_type: userType,
       is_account_active: isAccountActive,
-    } = rawData;
+    } = data;
 
     const doctor = {
       doctorId,
@@ -476,6 +479,7 @@ exports.updateDoctorProfilePicture = async ({ userId, imageUrl }) => {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
     const { doctor_id: doctorId, profile_pic_url } = doctor;
+
     if (profile_pic_url) {
       // delete old profile pic from file system
       const file = path.join(
@@ -512,16 +516,25 @@ exports.approveDoctorProfile = async ({ doctorId, approvedBy }) => {
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
 
-    const { is_profile_approved: isProfileApproved } = doctor;
+    const {
+      is_profile_approved: isProfileApproved,
+      mobile_number: mobileNumber,
+      first_name: firstName,
+      last_name: lastName,
+    } = doctor;
+
     if (isProfileApproved) {
       return Response.NOT_MODIFIED();
     }
-    await dbObject.approveDoctorProfileByDoctorId({
-      doctorId,
-      approvedBy,
-    });
 
-    //TODO send profile approval message to doctor
+    await Promise.allSettled([
+      dbObject.approveDoctorProfileByDoctorId({ doctorId, approvedBy }),
+      doctorProfileApprovalSms({
+        mobileNumber,
+        doctorName: `${firstName} ${lastName}`,
+      }),
+    ]);
+
     return Response.SUCCESS({
       message: "Doctor profile approved successfully.",
     });

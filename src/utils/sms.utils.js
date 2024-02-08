@@ -40,7 +40,6 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     const response = await axios.request(config).catch((error) => {
       throw error;
     });
-    console.log(response.data);
   } catch (error) {
     console.error(error);
     throw error;
@@ -67,7 +66,24 @@ const appointmentApprovalSms = async ({
     const response = await axios.request(config).catch((error) => {
       throw error;
     });
-    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Good news Dr. ${doctorName}. Your KENECARE doctor profile has been approved.\n\nYou can now start receiving medical appointments from patients. Welcome aboard\n\nKENECARE TEAM`,
+    });
+
+    config.data = data;
+    const response = await axios.request(config).catch((error) => {
+      throw error;
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -92,4 +108,5 @@ exports.sendVerificationSuccessSMS = async ({ token, mobileNumber }) => {
 module.exports = {
   sendAuthTokenSMS,
   appointmentApprovalSms,
+  doctorProfileApprovalSms,
 };

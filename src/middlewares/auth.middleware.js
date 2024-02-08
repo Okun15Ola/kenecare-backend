@@ -89,7 +89,13 @@ const requireAdminAuth = async (req, res, next) => {
     };
     next();
   } catch (error) {
-    console.error(error);
+    if (error.message === "jwt expired") {
+      return res.status(401).json(
+        Response.UNAUTHORIZED({
+          message: "Session Expired. Please Login Again",
+        })
+      );
+    }
     return res.status(400).json(
       Response.BAD_REQUEST({
         message: "Authentication Failed! Please Try Again",

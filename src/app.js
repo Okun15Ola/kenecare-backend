@@ -147,7 +147,7 @@ app.use(
 );
 
 //PAYMENT ROUTES
-app.use("/api/v1/payments", requireUserAuth, appointmentPaymentRoutes);
+app.use("/api/v1/payments", appointmentPaymentRoutes);
 
 //ADMIN ROUTES
 //TODO Add a middle ware to authenticate ADMIN JWT
@@ -220,7 +220,7 @@ app.use((err, req, res, next) => {
     return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
   }
 
-  console.log(err);
+  // console.log(err.message);
   return res
     .status(statusCode)
     .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));

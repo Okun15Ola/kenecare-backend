@@ -497,6 +497,7 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
     throw error;
   }
 };
+
 exports.cancelDoctorAppointment = async ({
   userId,
   appointmentId,

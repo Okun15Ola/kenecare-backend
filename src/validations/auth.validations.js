@@ -5,7 +5,8 @@ const {
   getUserByToken,
 } = require("../services/users.service");
 const { comparePassword } = require("../utils/auth.utils");
-const { STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
+const { STATUS, VERIFICATIONSTATUS, USERTYPE } = require("../utils/enum.utils");
+const { getDoctorByUserId } = require("../db/db.doctors");
 
 exports.LoginValidations = [
   body("mobileNumber")
@@ -23,6 +24,47 @@ exports.LoginValidations = [
           "Mobile Number or Password is incorrect. Please try again"
         );
       }
+      const {
+        is2faEnabled,
+        userId,
+        email,
+        userType,
+        accountVerified,
+        accountActive,
+      } = user;
+
+      //TODO Check if the account is verified
+      if (accountVerified !== STATUS.ACTIVE) {
+        throw new Error(
+          "Unverified Account. Please Verify Account Before Attempting to Login"
+        );
+      }
+
+      if (accountActive !== STATUS.ACTIVE) {
+        return Response.UNAUTHORIZED({
+          message:
+            "Account Suspended. Please contact support for futher instructions",
+        });
+      }
+
+      if (userType === USERTYPE.DOCTOR) {
+        //get doctor profile
+        const doctor = await getDoctorByUserId(userId);
+        if (!doctor) {
+          throw new Error(
+            "Doctor profile not found. Please complete profile setup before logging in"
+          );
+        }
+
+        const { is_profile_approved: isProfileApproved } = doctor;
+
+        if (!isProfileApproved) {
+          throw new Error(
+            "Doctor Profile has not been approved. Please contact support"
+          );
+        }
+      }
+
       req.user = user;
     }),
   body("password")

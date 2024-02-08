@@ -1,11 +1,11 @@
 const moment = require("moment");
+const { v4: uuidv4 } = require("uuid");
 const dbObject = require("../db/db.appointments.patients");
 const { getPatientByUserId } = require("../db/db.patients");
 const { getDoctorAppointByDate } = require("../db/db.appointments.doctors");
 const { getUserById } = require("../db/db.users");
 const { USER_TYPE } = require("../utils/enum.utils");
 const Response = require("../utils/response.utils");
-const { v4: uuidv4 } = require("uuid");
 const { getDoctorById } = require("../db/db.doctors");
 const { createAppointmentPayment } = require("../db/db.payments");
 

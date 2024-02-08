@@ -82,10 +82,11 @@ exports.CancelDoctorAppointmentController = async (req, res, next) => {
 
 exports.PostponeDoctorAppointmentController = async (req, res, next) => {
   try {
+    res.end();
+    return;
     const userId = parseInt(req.user.id);
     const appointmentId = parseInt(req.params.id);
-    const { postponeReason: postponedReason, postponedTo: postponeDate } =
-      req.body;
+    const { reason: postponedReason, postponedDate: postponeDate } = req.body;
 
     const response = await postponeDoctorAppointment({
       userId,

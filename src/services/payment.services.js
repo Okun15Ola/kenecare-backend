@@ -2,6 +2,7 @@ const moment = require("moment");
 const {
   getPatientAppointmentByUUID,
   deleteAppointmentById,
+  getAppointmentByUUID,
 } = require("../db/db.appointments.patients");
 const {
   paymentCanceledPatientAppointmentEmail,
@@ -19,31 +20,16 @@ const {
 } = require("../db/db.payments");
 const { checkTransactionStatus } = require("../utils/payment.utils");
 const { getUserById } = require("../db/db.users");
-const { getPatientByUserId } = require("../db/db.patients");
+const { getPatientByUserId, getPatientById } = require("../db/db.patients");
 const { getDoctorById } = require("../db/db.doctors");
 
-exports.processAppointmentPayment = async ({
-  userId,
-  consultationId,
-  referrer,
-}) => {
+exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
   try {
     if (!consultationId || referrer !== "kenecare.com") {
       return Response.BAD_REQUEST({ message: "Error Processing Request" });
     }
 
-    //TODO check if the user is the authorized user making the payment
-    const {
-      patient_id: patientId,
-      email: patientEmail,
-      first_name,
-      last_name,
-    } = await getPatientByUserId(userId);
-
-    const appointment = await getPatientAppointmentByUUID({
-      patientId,
-      appointmentUUID: consultationId,
-    });
+    const appointment = await getAppointmentByUUID(consultationId);
 
     if (!appointment) {
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
@@ -51,6 +37,7 @@ exports.processAppointmentPayment = async ({
 
     const {
       appointment_id: appointmentId,
+      patient_id: patientId,
       first_name: userFirstName,
       last_name: userLastName,
       doctor_id: doctorId,
@@ -81,6 +68,7 @@ exports.processAppointmentPayment = async ({
     } = appointmentPaymentRecord;
 
     if (transactionID !== null && paymentStatus === "success") {
+      console.log("Modiefied already")
       return Response.NOT_MODIFIED();
     }
 
@@ -92,24 +80,26 @@ exports.processAppointmentPayment = async ({
 
     if (status !== "SUCCESS") {
       return Response.BAD_REQUEST({
-        message: "Payment Failed. Please try again",
+        message: "Processing Payment Failed. Please try again",
       });
     }
 
-    //TODO Update appointment payment status
-    await updateAppointmentPaymentStatus({
-      paymentId,
-      paymentStatus: status.toLowerCase(),
-      transactionId,
-    });
+    const [sts, doctor, patient] = await Promise.allSettled([
+      updateAppointmentPaymentStatus({
+        paymentId,
+        paymentStatus: status.toLowerCase(),
+        transactionId,
+      }),
+      getDoctorById(doctorId),
+      getPatientById(patientId),
+    ]);
 
-    const doctor = await getDoctorById(doctorId);
-
+    const { email: patientEmail } = patient.value;
     const {
       first_name: doctorFirstName,
       last_name: doctorLastName,
       email: doctorEmail,
-    } = doctor;
+    } = doctor.value;
 
     //DONE Send email notification to doctor and patient
     if (patientEmail) {

@@ -2,11 +2,11 @@ const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   getAllDoctors,
+  getDoctorById,
   getDoctorsCouncilRegistration,
   getDoctorByUserId,
   approveDoctorProfile,
 } = require("../../services/doctors.services.js");
-const { getDoctorById } = require("../../db/db.doctors.js");
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {
@@ -31,8 +31,9 @@ exports.GetDoctorsCouncilRegistrationController = async (req, res, next) => {
 
 exports.GetDoctorByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
-    const response = await getDoctorById(id);
+    const { id: doctorId } = req.params;
+    const response = await getDoctorById(doctorId);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -58,10 +59,11 @@ exports.UpdateDoctorByIdController = async (req, res, next) => {
 };
 exports.ApproveDoctorAccountController = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { id: doctorId } = req.params;
     const userId = parseInt(req.user.id);
+
     const response = await approveDoctorProfile({
-      doctorId: id,
+      doctorId,
       approvedBy: userId,
     });
     return res.status(response.statusCode).json(response);

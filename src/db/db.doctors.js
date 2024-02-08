@@ -111,8 +111,6 @@ exports.getCouncilRegistrationById = (registrationId) => {
     connectionPool.query(sql, [registrationId], (err, results) => {
       if (err) return reject(err);
 
-      console.log(results);
-
       return resolve(results[0]);
     });
   });
@@ -299,6 +297,7 @@ exports.approveDoctorProfileByDoctorId = ({ doctorId, approvedBy }) => {
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [approvedBy, doctorId], (err, result) => {
       if (err) return reject(err);
+
       return resolve(result);
     });
   });

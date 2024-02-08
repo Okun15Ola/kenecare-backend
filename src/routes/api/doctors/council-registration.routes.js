@@ -56,9 +56,10 @@ router.post(
       .toUpperCase()
       .custom(async (regNumber, { req }) => {
         const data = await getCouncilRegistrationByRegNumber(regNumber);
+        console.log(data);
         if (data) {
           throw new Error(
-            `A record with specified Registration Number ${regNumber} alredy exists. Please try a different registration number`
+            `Medical Council Registration Number ${regNumber} already exists. Please try a different registration number`
           );
         }
         return true;
