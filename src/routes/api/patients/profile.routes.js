@@ -41,8 +41,13 @@ router.post(
       .notEmpty()
       .withMessage("Date of Birth is required")
       .custom((value, { req }) => {
-        if (moment(value, "DD/MM/YYYY").isAfter(moment())) {
+        const formattedDate = moment(value).format("YYYY-MM-DD");
+        if (moment(formattedDate).isAfter(moment())) {
           throw new Error("Birth date must not be earlier than today");
+        }
+
+        if (moment().diff(formattedDate, "years") < 18) {
+          throw new Error("Must be at least 18 years old");
         }
         return true;
       }),
