@@ -22,6 +22,7 @@ const { checkTransactionStatus } = require("../utils/payment.utils");
 const { getUserById } = require("../db/db.users");
 const { getPatientByUserId, getPatientById } = require("../db/db.patients");
 const { getDoctorById } = require("../db/db.doctors");
+const { appointmentBookedSms } = require("../utils/sms.utils");
 
 exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
   try {
@@ -94,7 +95,7 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       getPatientById(patientId),
     ]);
 
-    const { email: patientEmail } = patient.value;
+    const { email: patientEmail, mobile_number: mobileNumber } = patient.value;
     const {
       first_name: doctorFirstName,
       last_name: doctorLastName,
@@ -134,7 +135,15 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
         symptoms,
       });
 
-      //TODO SEND SMS TO PATIENT
+      // SEND SMS TO PATIENT
+      await appointmentBookedSms({
+        mobileNumber,
+        patientName: `${userFirstName} ${userLastName}`,
+        doctorName: `${doctorFirstName} ${doctorLastName}`,
+        patientNameOnPrescription,
+        appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+        appointmentTime,
+      });
     }
 
     return Response.CREATED({

@@ -71,6 +71,31 @@ const appointmentApprovalSms = async ({
     throw error;
   }
 };
+const appointmentBookedSms = async ({
+  mobileNumber,
+  patientName,
+  doctorName,
+  patientNameOnPrescription,
+  appointmentDate,
+  appointmentTime,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear ${patientName}, you have successfully booked a medical appointment with Dr. ${doctorName}\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nAn Email notification will be sent 30 minutes before the scheduled appointment with link to join the virtual meeting.\n\nKENECARE TEAM`,
+    });
+
+    config.data = data;
+    const response = await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
   try {
     const data = JSON.stringify({
@@ -108,5 +133,6 @@ exports.sendVerificationSuccessSMS = async ({ token, mobileNumber }) => {
 module.exports = {
   sendAuthTokenSMS,
   appointmentApprovalSms,
+  appointmentBookedSms,
   doctorProfileApprovalSms,
 };
