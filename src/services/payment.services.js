@@ -68,7 +68,7 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
     } = appointmentPaymentRecord;
 
     if (transactionID !== null && paymentStatus === "success") {
-      console.log("Modiefied already")
+      console.log("Modiefied already");
       return Response.NOT_MODIFIED();
     }
 
@@ -129,6 +129,8 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
         doctorName: `${doctorFirstName} ${doctorLastName}`,
         appointmentDate,
         appointmentTime,
+        patientNameOnPrescription,
+        patientMobileNumber,
         symptoms,
       });
 
