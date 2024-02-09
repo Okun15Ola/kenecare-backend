@@ -34,7 +34,9 @@ exports.getAllPatients = async () => {
           middleName,
           lastName,
           gender,
-          profilePic,
+          profilePic: profilePic
+            ? `${appBaseURL}/user-profile/${profilePic}`
+            : null,
           dob,
           mobileNumber,
           email,
@@ -79,7 +81,7 @@ exports.getPatientById = async (id) => {
       middleName,
       lastName,
       gender,
-      profilePic,
+      profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
       dob,
       mobileNumber,
       email,
@@ -153,7 +155,7 @@ exports.getPatientByUser = async (id) => {
       gender,
       dateOfBirth: moment(dateOfBirth).format("YYYY-MM-DD"),
       mobileNumber,
-      profilePic: `${appBaseURL}/user-profile/${profilePic}`,
+      profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
     };
 
     return Response.SUCCESS({ data: patient });
