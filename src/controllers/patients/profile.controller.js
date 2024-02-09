@@ -20,8 +20,6 @@ exports.GetPatientProfileController = async (req, res, next) => {
 
 exports.CreatePatientProfileController = async (req, res, next) => {
   try {
-    console.log(req.body);
-
     const { id } = req.user;
     const { firstname, middlename, lastname, gender, dateOfBirth } = req.body;
     const response = await createPatientProfile({
@@ -42,8 +40,6 @@ exports.CreatePatientProfileController = async (req, res, next) => {
 
 exports.UpdatePatientProfileController = async (req, res, next) => {
   try {
-    console.log(req.body);
-
     const { id } = req.user;
     const { firstname, middlename, lastname, gender, dateOfBirth } = req.body;
     const response = await updatePatientProfile({

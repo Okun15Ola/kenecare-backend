@@ -186,9 +186,8 @@ exports.createPatientProfile = async ({
       });
     }
 
-    const formattedDate = moment(dateOfBirth, "DD/MM/YYYY").format(
-      "YYYY-MM-DD"
-    );
+    const formattedDate = moment(dateOfBirth).format("YYYY-MM-DD");
+
 
     await dbObject.createPatient({
       userId,
