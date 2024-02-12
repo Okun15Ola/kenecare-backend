@@ -10,7 +10,7 @@ module.exports = {
   awsAccessSecretKey: env.AWS_ACCESS_SECRET_KEY,
   awsAccessKeyId: env.AWS_ACCESS_KEY_ID,
   awsRegion: env.AWS_REGION,
-  frontendURL: env.FRONTEND_URL,
+  clientAppUrl: env.CLIENT_APP_URL,
   timeSlotInterval: env.TIME_SLOT_INTERVAL,
   nodeEnv: env.NODE_ENV,
   dbHost: env.DB_HOST,

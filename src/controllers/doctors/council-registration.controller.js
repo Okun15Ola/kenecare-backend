@@ -53,6 +53,8 @@ const GetDoctorCouncilRegistrationDocumentController = async (
         .status(404)
         .json(Response.NOT_FOUND({ message: "Document Not Found" }));
     }
+
+    //TODO Check if the registration belongs to the requesting doctor
     return res.sendFile(
       path.join(__dirname, `../../public/upload/media/${req.params.filename}`)
     );
