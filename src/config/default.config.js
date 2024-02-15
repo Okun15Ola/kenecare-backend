@@ -50,4 +50,8 @@ module.exports = {
   zoomAccessTokenUrl: env.ZOOM_ACCESS_TOKEN_URL,
   zoomApiUrl: env.ZOOM_API_URL,
   kenecareAdminEmail: env.KENECARE_ADMIN_EMAIL,
+  kenecareSupportEmail: env.KENECARE_SUPPORT_EMAIL,
+  kenecareMeetingEmail: env.KENECARE_MEETING_EMAIL,
+  kenecareInfoEmail: env.KENECARE_INFO_EMAIL,
+  kenecareAppointmentsEmail: env.KENECARE_APPOINTMENTS_EMAIL,
 };

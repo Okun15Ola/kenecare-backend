@@ -6,6 +6,7 @@ const moment = require("moment");
 const path = require("path");
 const fs = require("fs");
 const { appBaseURL } = require("../config/default.config");
+const { deleteFile } = require("../utils/file-upload.utils");
 
 exports.getAllPatients = async () => {
   try {
@@ -81,7 +82,9 @@ exports.getPatientById = async (id) => {
       middleName,
       lastName,
       gender,
-      profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
+      profilePic: profilePic
+        ? `${appBaseURL}/user-profile/${profilePic}`
+        : null,
       dob,
       mobileNumber,
       email,
@@ -155,7 +158,9 @@ exports.getPatientByUser = async (id) => {
       gender,
       dateOfBirth: moment(dateOfBirth).format("YYYY-MM-DD"),
       mobileNumber,
-      profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
+      profilePic: profilePic
+        ? `${appBaseURL}/user-profile/${profilePic}`
+        : null,
     };
 
     return Response.SUCCESS({ data: patient });
@@ -189,7 +194,6 @@ exports.createPatientProfile = async ({
     }
 
     const formattedDate = moment(dateOfBirth).format("YYYY-MM-DD");
-
 
     await dbObject.createPatient({
       userId,
@@ -326,12 +330,7 @@ exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
         "../public/upload/profile_pics/",
         profile_pic_url
       );
-      if (fs.existsSync(file)) {
-        fs.unlinkSync(file);
-        console.log("File deleted");
-      } else {
-        console.log("Files does not exists");
-      }
+      await deleteFile(file);
     }
 
     await dbObject.updatePatientProfilePictureByUserId({

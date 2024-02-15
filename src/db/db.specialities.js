@@ -51,16 +51,20 @@ exports.createNewSpecialty = ({ name, description, image, inputtedBy }) => {
     );
   });
 };
-exports.updateSpecialtiyById = ({ id, name, description }) => {
+exports.updateSpecialtiyById = ({ id, name, description, image }) => {
   const sql =
-    "UPDATE medical_specialities SET speciality_name = ?, speciality_description = ?  WHERE speciality_id = ?";
+    "UPDATE medical_specialities SET speciality_name = ?, speciality_description = ?, image_url = ?  WHERE speciality_id = ?";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [name, description, id], (error, results) => {
-      if (error) return reject(error);
+    connectionPool.query(
+      sql,
+      [name, description, image, id],
+      (error, results) => {
+        if (error) return reject(error);
 
-      return resolve(results);
-    });
+        return resolve(results);
+      }
+    );
   });
 };
 exports.updateSpecialtiyStatusById = ({ id, status }) => {

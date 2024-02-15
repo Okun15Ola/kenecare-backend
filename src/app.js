@@ -60,6 +60,7 @@ const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes"
 
 const app = express();
 
+app.disable("x-powered-by");
 app.use(cors());
 app.use(
   helmet({
@@ -75,6 +76,10 @@ app.use(
   "/user-profile",
   express.static(path.join(__dirname, "public/upload/profile_pics"))
 );
+
+
+
+app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
 
 app.use(
   "/docs/admin",

@@ -15,7 +15,6 @@ localMediaUploader.single("image");
 
 exports.GetSpecialtiesController = async (req, res, next) => {
   try {
-    
     const response = await getSpecialties();
     return res.status(response.statusCode).json(response);
   } catch (error) {
@@ -40,16 +39,14 @@ exports.GetSpecialtyByIDController = async (req, res, next) => {
 exports.CreateSpecialtyController = async (req, res, next) => {
   try {
     if (req.file) {
+      const userId = parseInt(req.user.id);
       const image = req.file.filename;
-
       const { name, description } = req.body;
-
       const response = await createSpecialty({
         name,
         description,
         image,
-
-        inputtedBy: 1,
+        inputtedBy: userId,
       });
       return res.status(response.statusCode).json(response);
     }
@@ -62,15 +59,19 @@ exports.CreateSpecialtyController = async (req, res, next) => {
 
 exports.UpdateSpecialtyByIdController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
-    const { name, description } = req.body;
+    if (req.file) {
+      const image = req.file.filename;
+      const id = parseInt(req.params.id);
+      const { name, description } = req.body;
 
-    const response = await updateSpecialty({
-      id,
-      name,
-      description,
-    });
-    return res.status(response.statusCode).json(response);
+      const response = await updateSpecialty({
+        id,
+        name,
+        image,
+        description,
+      });
+      return res.status(response.statusCode).json(response);
+    }
   } catch (error) {
     console.error(error);
     logger.error(error);

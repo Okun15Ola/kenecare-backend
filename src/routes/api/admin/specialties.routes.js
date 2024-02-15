@@ -27,6 +27,7 @@ router.post(
 );
 router.put(
   "/:id",
+  localMediaUploader.single("image"),
   UpdateSpecialtyValidation,
   Validate,
   UpdateSpecialtyByIdController

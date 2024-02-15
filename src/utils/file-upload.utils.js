@@ -95,10 +95,25 @@ const generateFileName = (file) => {
   return randomString + fileExtension;
 };
 
+const deleteFile = async (filePath) => {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log("File deleted");
+    } else {
+      console.log("File Not Found");
+    }
+  } catch (error) {
+    console.log("FILE_DELETE_ERROR", error);
+    throw error;
+  }
+};
+
 module.exports = {
   localMediaUploader,
   localProfilePicUploader,
   AWSUploader,
   generateFileName,
   tempUpload,
+  deleteFile,
 };

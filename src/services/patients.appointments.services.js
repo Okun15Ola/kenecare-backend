@@ -21,6 +21,8 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
       limit,
     });
 
+    console.log(rawData[0]);
+
     const appointments = rawData.map(
       ({
         appointment_id: appointmentId,
@@ -39,6 +41,7 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
         patient_mobile_number: patientMobileNumber,
         patient_symptoms: patientSymptoms,
         consultation_fee: consultationFees,
+        specialization_id: specialtyId,
         specialty_name: specialty,
         time_slot: timeSlot,
         meeting_id: meetingId,
@@ -72,6 +75,7 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
           patientMobileNumber,
           patientSymptoms,
           consultationFees: `SLE ${parseInt(consultationFees)}`,
+          specialtyId,
           specialty,
           timeSlot,
           meetingId,
@@ -128,6 +132,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       patient_mobile_number: patientMobileNumber,
       patient_symptoms: patientSymptoms,
       consultation_fee: consultationFees,
+      specialization_id: specialtyId,
       specialty_name: specialty,
       time_slot: timeSlot,
       meeting_id: meetingId,
@@ -160,6 +165,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       patientMobileNumber,
       patientSymptoms,
       consultationFees: `SLE ${parseInt(consultationFees)}`,
+      specialtyId,
       specialty,
       timeSlot,
       meetingId,
@@ -214,6 +220,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
       patient_mobile_number: patientMobileNumber,
       patient_symptoms: patientSymptoms,
       consultation_fee: consultationFees,
+      specialization_id: specialtyId,
       specialty_name: specialty,
       time_slot: timeSlot,
       meeting_id: meetingId,
@@ -246,6 +253,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
       patientMobileNumber,
       patientSymptoms,
       consultationFees: `SLE ${parseInt(consultationFees)}`,
+      specialtyId,
       specialty,
       timeSlot,
       meetingId,

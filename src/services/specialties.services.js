@@ -3,6 +3,9 @@ const Response = require("../utils/response.utils");
 const { STATUS } = require("../utils/enum.utils");
 const fs = require("fs");
 const path = require("path");
+const he = require("he");
+const { deleteFile } = require("../utils/file-upload.utils");
+const { appBaseURL } = require("../config/default.config");
 
 exports.getSpecialties = async () => {
   const rawData = await dbObject.getAllSpecialties();
@@ -11,7 +14,7 @@ exports.getSpecialties = async () => {
     ({
       speciality_id: specialtyId,
       speciality_name: specialtyName,
-      description,
+      speciality_description: description,
       tags,
       image_url: imageUrl,
       is_active: isActive,
@@ -19,10 +22,10 @@ exports.getSpecialties = async () => {
     }) => {
       return {
         specialtyId,
-        specialtyName,
-        description,
+        specialtyName: he.decode(specialtyName),
+        description: he.decode(description),
         tags,
-        imageUrl,
+        imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
         isActive,
         inputtedBy,
       };
@@ -33,7 +36,7 @@ exports.getSpecialties = async () => {
 
 exports.getSpecialtyByName = async (name) => {
   try {
-    const rawData = await dbObject.getSpecialtiyByName(name);
+    const rawData = await dbObject.getSpecialtyByName(name);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
@@ -41,7 +44,7 @@ exports.getSpecialtyByName = async (name) => {
     const {
       speciality_id: specialtyId,
       speciality_name: specialtyName,
-      description,
+      speciality_description: description,
       image_url: imageUrl,
       tags,
       is_active: isActive,
@@ -50,10 +53,10 @@ exports.getSpecialtyByName = async (name) => {
 
     const specialty = {
       specialtyId,
-      specialtyName,
-      description,
+      specialtyName: he.decode(specialtyName),
+      description: he.decode(description),
       tags,
-      imageUrl,
+      imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
       isActive,
       inputtedBy,
     };
@@ -74,7 +77,7 @@ exports.getSpecialtyById = async (id) => {
     const {
       speciality_id: specialtyId,
       speciality_name: specialtyName,
-      description,
+      speciality_description: description,
       image_url: imageUrl,
       is_active: isActive,
       inputted_by: inputtedBy,
@@ -82,9 +85,9 @@ exports.getSpecialtyById = async (id) => {
 
     const specialty = {
       specialtyId,
-      specialtyName,
-      description,
-      imageUrl,
+      specialtyName: he.decode(specialtyName),
+      description: he.decode(description),
+      imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
       isActive,
       inputtedBy,
     };
@@ -112,15 +115,26 @@ exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
   }
 };
 
-exports.updateSpecialty = async ({ id, name, description }) => {
+exports.updateSpecialty = async ({ id, name, image, description }) => {
   try {
-    await dbObject.updateSpecialtiyById({
-      id,
-      name,
-      description,
-    });
+    const rawData = await dbObject.getSpecialtiyById(id);
+    if (rawData) {
+      console.log(rawData);
+      const { image_url } = rawData;
 
-    return Response.SUCCESS({ message: "Specialty Updated Successfully" });
+      if (image_url) {
+        const file = path.join(__dirname, "../public/upload/media/", image_url);
+        await deleteFile(file);
+      }
+      await dbObject.updateSpecialtiyById({
+        id,
+        name,
+        image,
+        description,
+      });
+
+      return Response.SUCCESS({ message: "Specialty Updated Successfully" });
+    }
   } catch (error) {
     console.error(error);
     throw error;
