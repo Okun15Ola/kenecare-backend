@@ -4,7 +4,7 @@ const {
   sendGridApiKey,
   sendGridSenderEmail,
 } = require("../config/default.config");
-
+const { kenecareAdminEmail } = require("../config/default.config");
 sendGrid.setApiKey(sendGridApiKey);
 
 const mailer = {
@@ -89,7 +89,7 @@ const newDoctorAppointmentEmail = async ({
 const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
   try {
     const message = {
-      to: "comroland85@gmail.com",
+      to: kenecareAdminEmail,
       from: mailer.from,
       subject: "Request for Approval: Medical Council Document Submission",
       text: "Kenecare Admin Notification",
@@ -111,7 +111,7 @@ const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
 const adminDoctorProfileRegistrationEmail = async ({ doctorName }) => {
   try {
     const message = {
-      to: "isha.fofanah@imo-tech.com",
+      to: kenecareAdminEmail,
       from: mailer.from,
       subject: "Request for Approval: Doctor Profile",
       text: "Kenecare Admin Notification",
@@ -198,6 +198,7 @@ const doctorCouncilRegistrationApprovedEmail = async ({
     throw error;
   }
 };
+
 const patientAppointmentApprovalEmail = async ({
   patientEmail,
   patientNameOnPrescription,

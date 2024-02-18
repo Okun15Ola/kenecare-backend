@@ -20,7 +20,7 @@ const {
 } = require("../config/default.config");
 let baseUrl = apiBaseURL;
 if (nodeEnv === "development") {
-  baseUrl = "http://172.25.54.187:8500";
+  baseUrl = "https://0355-197-215-23-171.ngrok-free.app";
 }
 
 const getAccessToken = async (next) => {
@@ -63,7 +63,7 @@ const getPaymentURL = async ({ orderId, amount }) => {
           amount: Number(amount),
           return_url: `${baseUrl}${omReturnURL}?consultationId=${orderId}&referrer=kenecare.com`,
           cancel_url: `${baseUrl}${omCancelURL}?consultationId=${orderId}&referrer=kenecare.com`,
-          notif_url: `${baseUrl}${omNotificationURL}`,
+          notif_url: `${baseUrl}${omNotificationURL}?consultationId=${orderId}&referrer=kenecare.com`,
           lang: "en",
           reference: "Kenecare",
         },

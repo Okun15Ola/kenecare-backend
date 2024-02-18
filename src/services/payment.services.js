@@ -101,28 +101,7 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       email: doctorEmail,
     } = doctor.value;
 
-    //DONE Send email notification to doctor and patient
-    if (patientEmail) {
-      await Promise.allSettled([
-        newPatientAppointmentEmail({
-          patientName: `${userFirstName} ${userLastName}`,
-          patientEmail,
-          appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
-          appointmentTime,
-          doctorName: `${doctorFirstName} ${doctorLastName}`,
-          patientNameOnPrescription,
-        }),
-        await newDoctorAppointmentEmail({
-          doctorEmail,
-          doctorName: `${doctorFirstName} ${doctorLastName}`,
-          appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
-          appointmentTime,
-          patientNameOnPrescription,
-          patientMobileNumber,
-          symptoms,
-        }),
-      ]);
-    } else {
+    await Promise.allSettled([
       //SEND  EMAIL TO DOCTOR
       await newDoctorAppointmentEmail({
         doctorEmail,
@@ -132,8 +111,7 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
         patientNameOnPrescription,
         patientMobileNumber,
         symptoms,
-      });
-
+      }),
       // SEND SMS TO PATIENT
       await appointmentBookedSms({
         mobileNumber,
@@ -142,8 +120,8 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
         patientNameOnPrescription,
         appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
         appointmentTime,
-      });
-    }
+      }),
+    ]);
 
     return Response.CREATED({
       message:
