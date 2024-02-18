@@ -38,7 +38,7 @@ exports.getAllPatients = async () => {
           profilePic: profilePic
             ? `${appBaseURL}/user-profile/${profilePic}`
             : null,
-          dob,
+          dob: moment(dob).format("MMM-DD"),
           mobileNumber,
           email,
           userType,
@@ -75,6 +75,24 @@ exports.getPatientById = async (id) => {
       is_online: isOnline,
     } = rawData;
 
+    //TODO Get medical Record details
+    const medicalRecord = await dbObject.getPatientMedicalInfoByPatientId(
+      patientId
+    );
+    const {
+      height,
+      weight,
+      allergies,
+      is_patient_disabled: isDisabled,
+      disability_description: disabilityDesc,
+      tobacco_use: tobaccoIntake,
+      tobacco_use_frequency: tobaccoIntakeFreq,
+      alcohol_use: alcoholIntake,
+      alcohol_use_frequency: alcoholIntakeFreq,
+      caffine_use: caffineIntake,
+      caffine_use_frequency: caffineIntakeFreq,
+    } = medicalRecord || null;
+
     const patient = {
       patientId,
       title,
@@ -85,10 +103,23 @@ exports.getPatientById = async (id) => {
       profilePic: profilePic
         ? `${appBaseURL}/user-profile/${profilePic}`
         : null,
-      dob,
+      dob: moment(dob).format("MMM-DD"),
       mobileNumber,
       email,
       userType,
+      medicalInfo: {
+        height,
+        weight,
+        allergies,
+        isDisabled: isDisabled !== 0,
+        disabilityDesc,
+        tobaccoIntake: tobaccoIntake !== null,
+        tobaccoIntakeFreq,
+        alcoholIntake: alcoholIntake !== 0,
+        alcoholIntakeFreq,
+        caffineIntake: caffineIntake !== null,
+        caffineIntakeFreq,
+      },
       isAccountActive,
       isOnline,
     };
@@ -132,16 +163,19 @@ exports.getPatientByUser = async (id) => {
     //destruct properties from database object
     const {
       patient_id: patientId,
+      title,
       first_name: firstName,
       middle_name: middleName,
       last_name: lastName,
       gender,
-      dob: dateOfBirth,
-      user_id: userId,
-      mobile_number: mobileNumber,
       profile_pic_url: profilePic,
+      dob,
+      mobile_number: mobileNumber,
+      email,
+      user_id: userId,
       user_type: userType,
       is_account_active: isAccountActive,
+      is_online: isOnline,
     } = rawData;
 
     //TODO Check if the profile requested belongs to the requesting user
@@ -149,18 +183,54 @@ exports.getPatientByUser = async (id) => {
       return Response.UNAUTHORIZED({ message: "Unauthorized account access." });
     }
 
+    //TODO Get medical Record details
+    const medicalRecord = await dbObject.getPatientMedicalInfoByPatientId(
+      patientId
+    );
+
+    const {
+      height,
+      weight,
+      allergies,
+      is_patient_disabled: isDisabled,
+      disability_description: disabilityDesc,
+      tobacco_use: tobaccoIntake,
+      tobacco_use_frequency: tobaccoIntakeFreq,
+      alcohol_use: alcoholIntake,
+      alcohol_use_frequency: alcoholIntakeFreq,
+      caffine_use: caffineIntake,
+      caffine_use_frequency: caffineIntakeFreq,
+    } = medicalRecord || null;
+
     const patient = {
       patientId,
-      userId,
+      title,
       firstName,
       middleName,
       lastName,
       gender,
-      dateOfBirth: moment(dateOfBirth).format("YYYY-MM-DD"),
-      mobileNumber,
       profilePic: profilePic
         ? `${appBaseURL}/user-profile/${profilePic}`
         : null,
+      dob: moment(dob).format("MMM-DD"),
+      mobileNumber,
+      email,
+      userType,
+      medicalInfo: {
+        height,
+        weight,
+        allergies,
+        isDisabled: isDisabled !== 0,
+        disabilityDesc,
+        tobaccoIntake: tobaccoIntake !== null,
+        tobaccoIntakeFreq,
+        alcoholIntake: alcoholIntake !== 0,
+        alcoholIntakeFreq,
+        caffineIntake: caffineIntake !== null,
+        caffineIntakeFreq,
+      },
+      isAccountActive,
+      isOnline,
     };
 
     return Response.SUCCESS({ data: patient });
