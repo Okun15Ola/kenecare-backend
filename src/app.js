@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const crypto = require("crypto");
 const cors = require("cors");
 const helmet = require("helmet");
 const expressSession = require("express-session");
@@ -21,6 +22,7 @@ const {
   BAD_REQUEST,
   UNAUTHORIZED,
 } = require("./utils/response.utils.js");
+const { zoomSecretToken } = require("./config/default.config.js");
 
 //INDEX ROUTES
 const indexRouter = require("./routes/api/index.routes");
@@ -77,8 +79,6 @@ app.use(
   express.static(path.join(__dirname, "public/upload/profile_pics"))
 );
 
-
-
 app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
 
 app.use(
@@ -111,6 +111,57 @@ app.use("/api/v1/health-check", (req, res, next) => {
     .status(200)
     .json(SUCCESS({ message: "Health Check Passed. API Working!!!" }));
 });
+
+app.post("/webhooks", (req, res, next) => {
+  try {
+    const { body } = req;
+
+    console.log(body);
+    const message = `v0:${
+      req.headers["x-zm-request-timestamp"]
+    }:${JSON.stringify(req.body)}`;
+
+    const hashForVerify = crypto
+      .createHmac("sha256", zoomSecretToken)
+      .update(message)
+      .digest("hex");
+
+    const signature = `v0=${hashForVerify}`;
+
+    if (req.headers["x-zm-signature"] === signature) {
+      console.log("Valid Zoom Signature");
+
+      //check for url validation event
+      if (body.event === "endpoint.url_validation") {
+        const { plainToken } = body.payload;
+        const hashForValidate = crypto
+          .createHmac("sha256", zoomSecretToken)
+          .update(req.body.payload.plainToken)
+          .digest("hex");
+
+        return res.status(200).json({
+          plainToken,
+          encryptedToken: hashForValidate,
+        });
+      }
+
+      if (body.event === "meeting.started") {
+        //meeting was started
+        console.log("Meeting started");
+      }
+      if (body.event === "meeting.ended") {
+        //meeting was ended
+        console.log("meeting ended");
+      }
+
+      return res.sendStatus(200);
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+});
+
 // app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
 
