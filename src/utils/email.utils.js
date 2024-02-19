@@ -198,6 +198,44 @@ const doctorCouncilRegistrationApprovedEmail = async ({
     throw error;
   }
 };
+const doctorCouncilRegistrationRejectedEmail = async ({
+  doctorEmail,
+  doctorName,
+  rejectionReason,
+}) => {
+  try {
+    const message = {
+      to: doctorEmail,
+      from: mailer.from,
+      subject: "Medical Council Registration Reject",
+      html: `<h1>Dear Dr. ${doctorName}. </h1>
+    <p>
+    Thank you for submitting your Medical Council Document information for approval on the Kenecare platform. Your council registration document was rejected by Kenecare Admin.
+    </p>
+    <p>
+    Reason for Rejection: ${rejectionReason}
+    </p>
+    <p> We appreciate your patience and cooperation during this process. If you have any questions or concerns, please feel free to reach out to our support team at [support@email.com]. We are here to assist you in any way we can.
+    Thank you for being a valued member of the Kenecare community. We look forward to having you on board and contributing to the well-being of our users.</p>
+    
+    <footer>
+      <p>Kenecare Support Team</p>
+      <p>support@kenecare.com</p>
+      <p><a href="https://kenecare.com">Kenecare.com</a></p>
+    </footer>
+    
+    `,
+    };
+    const result = await sendGrid.send(message).catch((err) => {
+      throw err;
+    });
+
+    console.log(result);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 const patientAppointmentApprovalEmail = async ({
   patientEmail,
@@ -278,4 +316,5 @@ module.exports = {
   adminDoctorProfileRegistrationEmail,
   patientAppointmentApprovalEmail,
   doctorCouncilRegistrationApprovedEmail,
+  doctorCouncilRegistrationRejectedEmail,
 };
