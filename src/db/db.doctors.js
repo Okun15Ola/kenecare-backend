@@ -317,14 +317,19 @@ exports.approveDoctorMedicalCouncilRegistrationById = ({
 };
 exports.rejectDoctorMedicalCouncilRegistrationById = ({
   registrationId,
+  rejectionReason,
   approvedBy,
 }) => {
   const sql =
-    "UPDATE doctors_council_registration SET registration_status = 'rejected', verified_by = ? WHERE council_registration_id = ?";
+    "UPDATE doctors_council_registration SET registration_status = 'rejected', rejection_reason= ?, verified_by = ? WHERE council_registration_id = ?";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [approvedBy, registrationId], (err, result) => {
-      if (err) return reject(err);
-      return resolve(result);
-    });
+    connectionPool.query(
+      sql,
+      [rejectionReason, approvedBy, registrationId],
+      (err, result) => {
+        if (err) return reject(err);
+        return resolve(result);
+      }
+    );
   });
 };
