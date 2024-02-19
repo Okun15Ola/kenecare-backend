@@ -3,12 +3,12 @@ const {
   GetCouncilRegistrationController,
   GetCouncilRegistrationByIdController,
   ApproveCouncilRegistrationController,
-  DenyCouncilRegistrationController,
+  RejectCouncilRegistrationController,
 } = require("../../../controllers/admin/doctors.council-registration.controller");
 
 router.get("/", GetCouncilRegistrationController);
 router.get("/:id", GetCouncilRegistrationByIdController);
 router.patch("/:id/approve", ApproveCouncilRegistrationController);
-router.patch("/:id/reject", DenyCouncilRegistrationController);
+router.patch("/:id/reject", RejectCouncilRegistrationController);
 
 module.exports = router;

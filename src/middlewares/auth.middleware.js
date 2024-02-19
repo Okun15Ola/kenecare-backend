@@ -42,15 +42,14 @@ const requireUserAuth = async (req, res, next) => {
     next();
   } catch (error) {
     if (error.message === "jwt expired") {
-      return res.status(400).json(
-        Response.BAD_REQUEST({
-          message:
-            "Authentication Failed! Session Expired Please Login to Continue",
+      return res.status(401).json(
+        Response.UNAUTHORIZED({
+          message: "Session Expired Please Login to Continue",
         })
       );
     }
-    return res.status(400).json(
-      Response.BAD_REQUEST({
+    return res.status(401).json(
+      Response.UNAUTHORIZED({
         message: "Authentication Failed! Please Try Again",
       })
     );

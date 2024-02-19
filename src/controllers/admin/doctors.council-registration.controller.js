@@ -3,6 +3,7 @@ const {
   getAllCouncilRegistrations,
   getCouncilRegistration,
   approveCouncilRegistration,
+  rejectCouncilRegistration,
 } = require("../../services/doctors.council-registration.services");
 
 exports.GetCouncilRegistrationController = async (req, res, next) => {
@@ -43,11 +44,14 @@ exports.ApproveCouncilRegistrationController = async (req, res, next) => {
   }
 };
 
-exports.DenyCouncilRegistrationController = async (req, res, next) => {
+exports.RejectCouncilRegistrationController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id);
     const regId = parseInt(req.params.id);
-    const response = await approveCouncilRegistration({
+    const { rejectionReason } = req.body;
+
+    const response = await rejectCouncilRegistration({
+      rejectionReason,
       regId,
       userId,
     });

@@ -9,6 +9,7 @@ const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
   doctorCouncilRegistrationApprovedEmail,
+  doctorCouncilRegistrationRejectedEmail,
 } = require("../utils/email.utils");
 const { appBaseURL } = require("../config/default.config");
 
@@ -417,7 +418,11 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
     throw error;
   }
 };
-exports.rejectCouncilRegistration = async ({ regId, userId }) => {
+exports.rejectCouncilRegistration = async ({
+  regId,
+  rejectionReason,
+  userId,
+}) => {
   try {
     const rawData = await dbObject.getCouncilRegistrationById(regId);
     if (!rawData) {
@@ -441,6 +446,7 @@ exports.rejectCouncilRegistration = async ({ regId, userId }) => {
       dbObject.getDoctorById(doctorId),
       dbObject.rejectDoctorMedicalCouncilRegistrationById({
         registrationId: regId,
+        rejectionReason,
         approvedBy: userId,
       }),
     ]).catch((error) => {
@@ -451,7 +457,7 @@ exports.rejectCouncilRegistration = async ({ regId, userId }) => {
     const { email: doctorEmail } = doctor.value;
 
     //TODO send email notification to doctor upon approval
-    await doctorCouncilRegistrationApprovedEmail({
+    await doctorCouncilRegistrationRejectedEmail({
       doctorEmail,
       doctorName: `${firstName} ${lastName}`,
     });
