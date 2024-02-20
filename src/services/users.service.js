@@ -388,3 +388,29 @@ exports.verifyUserLoginOtp = async (user) => {
     throw error;
   }
 };
+
+exports.resendVerificationOTP = async ({ phoneNumber, user }) => {
+  try {
+    if (!user) {
+      return Response.BAD_REQUEST({ message: "Error Resending OTP" });
+    }
+    const {
+      verification_token: token,
+      is_verified,
+      mobile_number: mobileNumber,
+    } = user;
+
+    if (token && is_verified !== STATUS.ACTIVE) {
+      // Send TOKEN VIA SMS
+      await sendAuthTokenSMS({ token, mobileNumber });
+      return Response.SUCCESS({
+        message: "Verification OTP resent succesfully",
+      });
+    } else {
+      return Response.NOT_MODIFIED();
+    }
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
