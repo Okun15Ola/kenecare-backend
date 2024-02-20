@@ -8,6 +8,7 @@ const {
   RequestLoginOTPController,
   VerifyLoginOTPController,
   ForgotPasswordController,
+  ResendVerificationOTPController,
 } = require("../../controllers/auth.controller");
 const {
   LoginValidations,
@@ -17,6 +18,8 @@ const {
 } = require("../../validations/auth.validations");
 
 const { requireUserAuth } = require("../../middlewares/auth.middleware");
+const { body } = require("express-validator");
+const { getUserByMobileNumber } = require("../../db/db.users");
 /**
  * @swagger
  * /api/v1/auth/authenticate:
@@ -665,5 +668,30 @@ router.put(
  *                        example: Internal Server Error
  */
 router.post("/forgot-password", ForgotPasswordController);
+
+router.post(
+  "/otp-resend",
+  [
+    body("phoneNumber")
+      .notEmpty()
+      .withMessage("Phone Number is required")
+      .trim()
+      .escape()
+      .custom(async (value, { req }) => {
+        const data = await getUserByMobileNumber(value);
+
+        if (!data) {
+          throw new Error(
+            "BAD_REQUEST. Error Resending OTP. Please check mobile number"
+          );
+        }
+      
+        req.user = data;
+        return true;
+      }),
+  ],
+  Validate,
+  ResendVerificationOTPController
+);
 
 module.exports = router;
