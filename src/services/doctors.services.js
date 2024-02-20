@@ -205,6 +205,8 @@ exports.getDoctorByUser = async (id) => {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
+    console.log(rawData);
+
     //destruct properties from database object
     const {
       doctor_id: doctorId,
@@ -215,6 +217,7 @@ exports.getDoctorByUser = async (id) => {
       gender,
       professional_summary: professionalSummary,
       profile_pic_url: profilePic,
+      specialization_id: specialtyId,
       speciality_name: specialization,
       qualifications,
       consultation_fee: consultationFees,
@@ -263,6 +266,7 @@ exports.getDoctorByUser = async (id) => {
       profilePic: profilePic
         ? `${appBaseURL}/user-profile/${profilePic}`
         : null,
+      specialtyId,
       specialization,
       qualifications,
       consultationFees,
