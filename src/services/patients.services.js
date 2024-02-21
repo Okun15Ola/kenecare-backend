@@ -309,7 +309,6 @@ exports.createPatientMedicalInfo = async ({
       patientId
     );
     if (medicalInfoExist) {
-      console.log(medicalInfoExist);
       return Response.BAD_REQUEST({
         message:
           "Medical Information Already Exist for the current user. Please update",
@@ -358,20 +357,8 @@ exports.updatePatientProfile = async ({
       });
     }
 
-    const medicalInfoExist = await dbObject.getPatientMedicalInfoByPatientId(
-      patientId
-    );
-    if (!medicalInfoExist) {
-      console.log(medicalInfoExist);
-      return Response.BAD_REQUEST({
-        message: "Medical Information Not Found for user",
-      });
-    }
-    const formattedDate = moment(dateOfBirth, "DD/MM/YYYY").format(
-      "YYYY-MM-DD"
-    );
+    const formattedDate = moment(dateOfBirth).format("YYYY-MM-DD");
 
-    console.log("Medical Info Exist");
     await dbObject.updatePatientById({
       patientId,
       firstName,

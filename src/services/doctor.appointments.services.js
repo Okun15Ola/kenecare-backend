@@ -7,7 +7,10 @@ const { patientAppointmentApprovalEmail } = require("../utils/email.utils");
 const { getPatientById } = require("../db/db.patients");
 const { createZoomMeeting } = require("../utils/zoom.utils");
 const moment = require("moment");
-const { appointmentApprovalSms } = require("../utils/sms.utils");
+const {
+  appointmentApprovalSms,
+  appointmentPostponedSms,
+} = require("../utils/sms.utils");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
@@ -609,7 +612,15 @@ exports.postponeDoctorAppointment = async ({
       doctorId,
       appointmentId,
     });
-    const { patient_id } = rawData;
+    const {
+      patient_id,
+      appointment_status,
+      patient_name_on_prescription,
+      first_name,
+      last_name,
+      doctor_first_name,
+      doctor_last_name,
+    } = rawData;
 
     if (appointment_status === "postponed") {
       return Response.NOT_MODIFIED();
@@ -622,6 +633,14 @@ exports.postponeDoctorAppointment = async ({
     });
 
     //TODO Send a notification(email,sms) to the user
+    await appointmentPostponedSms({
+      patientName: `${first_name} ${last_name}`,
+      patientNameOnPrescription: patient_name_on_prescription,
+      mobileNumber,
+      doctorName,
+      appointmentDate: postponeDate,
+      appointmentTime,
+    });
 
     return Response.SUCCESS({
       message:

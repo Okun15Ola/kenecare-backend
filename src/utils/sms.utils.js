@@ -70,7 +70,36 @@ const appointmentApprovalSms = async ({
     console.error(error);
     throw error;
   }
-};
+}; 
+
+const appointmentPostponedSms = async ({
+  patientName,
+  mobileNumber,
+  doctorName,
+  patientNameOnPrescription,
+  appointmentDate,
+  appointmentTime,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear ${patientName}, your appointment with Dr. ${doctorName} has been postponed to a new date.\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nAn Email notification will be sent 30 minutes before the scheduled appointment with link to join the virtual meeting.\n\nKENECARE TEAM`,
+    });
+
+    config.data = data;
+    const response = await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}; 
+
+
+
 const appointmentBookedSms = async ({
   mobileNumber,
   patientName,
@@ -96,6 +125,7 @@ const appointmentBookedSms = async ({
     throw error;
   }
 };
+
 const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
   try {
     const data = JSON.stringify({
@@ -133,6 +163,7 @@ exports.sendVerificationSuccessSMS = async ({ token, mobileNumber }) => {
 module.exports = {
   sendAuthTokenSMS,
   appointmentApprovalSms,
+  appointmentPostponedSms,
   appointmentBookedSms,
   doctorProfileApprovalSms,
 };

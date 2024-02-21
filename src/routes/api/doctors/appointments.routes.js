@@ -14,6 +14,11 @@ const {
   getDoctorAppointmentById,
 } = require("../../../db/db.appointments.doctors");
 const { getDoctorByUserId } = require("../../../db/db.doctors");
+const {
+  validateAppointmentPostponedDate,
+  validateAppointmentTime,
+  validateNewAppointmentDate,
+} = require("../../../utils/time.utils");
 let data = null;
 router.get("/", GetDoctorAppointmentsController);
 router.get("/:id", GetDoctorAppointmentsByIDController);
@@ -49,28 +54,20 @@ router.patch(
         if (!data) {
           throw new Error("Specified Appontment Not Found");
         }
-        const { appointment_date: aptDate, appointment_status: aptStatus } =
-          data;
-        const submittedValue = moment(value, "YYYY-MM-DD", true);
 
-        const currentMoment = moment();
-        const threeDaysLater = currentMoment.clone().add(3, "days");
+        validateNewAppointmentDate({
+          date: value,
+          time: req.body.postponedTime,
+        });
 
-        if (!submittedValue.isValid()) {
-          throw new Error("Invalid Date format");
-        }
+        return true;
+      }),
 
-        //check if the value is not an old date
-        if (currentMoment.isAfter(submittedValue)) {
-          throw new Error("Postpone Date must be a future date");
-        }
-
-        if (submittedValue.isAfter(threeDaysLater)) {
-          throw new Error(
-            "Postpone date must not be more than 3 days from today's date"
-          );
-        }
-
+    body("postponedTime")
+      .notEmpty()
+      .withMessage("Specify new appointment time")
+      .custom(async (value, { req }) => {
+        validateAppointmentTime(value);
         return true;
       }),
   ],

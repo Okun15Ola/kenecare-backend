@@ -108,12 +108,12 @@ exports.postponeDoctorAppointmentById = ({
   postponedDate,
 }) => {
   const sql =
-    "UPDATE medical_appointments SET appointment_status = 'postponed', postponed_by = 'doctor', postponed_reason = ?, postponed_date = ?, cancelled_reason = ?, cancelled_at =  NULL, canceled_by = ? WHERE appointment_id = ? AND doctor_id = ?;";
+    "UPDATE medical_appointments SET appointment_status = 'postponed', postponed_by = 'doctor', postponed_reason = ?, postponed_date = ?,appointment_date = ?, cancelled_reason = NULL, cancelled_at =  NULL, canceled_by = NULL WHERE appointment_id = ? AND doctor_id = ?;";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [postponedReason, postponedDate, appointmentId, doctorId],
+      [postponedReason, postponedDate, postponedDate, appointmentId, doctorId],
       (error, results) => {
         if (error) return reject(error);
 

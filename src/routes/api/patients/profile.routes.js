@@ -42,8 +42,11 @@ router.post(
       .withMessage("Date of Birth is required")
       .custom((value, { req }) => {
         const formattedDate = moment(value).format("YYYY-MM-DD");
+        if (!moment(formattedDate).isValid()) {
+          throw new Error("Invalid date format. Expected format (YYYY-MM-DD)");
+        }
         if (moment(formattedDate).isAfter(moment())) {
-          throw new Error("Birth date must not be earlier than today");
+          throw new Error("Birth date must not be a future date");
         }
 
         if (moment().diff(formattedDate, "years") < 18) {
@@ -83,8 +86,17 @@ router.put(
       .notEmpty()
       .withMessage("Date of Birth is required")
       .custom((value, { req }) => {
-        if (moment(value, "DD/MM/YYYY").isAfter(moment())) {
-          throw new Error("Birth date must not be earlier than today");
+        const formattedDate = moment(value).format("YYYY-MM-DD");
+        console.log("Formatted Date:", formattedDate);
+        if (!moment(formattedDate).isValid()) {
+          throw new Error("Invalid date format. Expected format (YYYY-MM-DD)");
+        }
+        if (moment(formattedDate).isAfter(moment())) {
+          throw new Error("Birth date must not be a future date");
+        }
+
+        if (moment().diff(formattedDate, "years") < 18) {
+          throw new Error("Must be at least 18 years old");
         }
         return true;
       }),
