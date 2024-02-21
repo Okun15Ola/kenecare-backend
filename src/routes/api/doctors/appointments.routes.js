@@ -14,7 +14,7 @@ const {
   getDoctorAppointmentById,
 } = require("../../../db/db.appointments.doctors");
 const { getDoctorByUserId } = require("../../../db/db.doctors");
-
+let data = null;
 router.get("/", GetDoctorAppointmentsController);
 router.get("/:id", GetDoctorAppointmentsByIDController);
 
@@ -30,13 +30,14 @@ router.patch(
       .custom(async (value, { req }) => {
         const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
 
-        const data = await getDoctorAppointmentById({
+        data = await getDoctorAppointmentById({
           doctorId,
           appointmentId: value,
         });
         if (!data) {
-          throw new Error("Appontment Not Found");
+          throw new Error("Specified Appontment Not Found");
         }
+
         return true;
       }),
     body("postponedDate")
@@ -45,18 +46,29 @@ router.patch(
       .custom(async (value, { req }) => {
         const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
 
-        const data = await getDoctorAppointmentById({
-          doctorId,
-          appointmentId: req.params.id,
-        });
         if (!data) {
-          throw new Error("Appontment Not Found");
+          throw new Error("Specified Appontment Not Found");
         }
         const { appointment_date: aptDate, appointment_status: aptStatus } =
           data;
+        const submittedValue = moment(value, "YYYY-MM-DD", true);
 
-        if (moment(value).isAfter(moment())) {
-          return new Error("New Date must be an earlier date.");
+        const currentMoment = moment();
+        const threeDaysLater = currentMoment.clone().add(3, "days");
+
+        if (!submittedValue.isValid()) {
+          throw new Error("Invalid Date format");
+        }
+
+        //check if the value is not an old date
+        if (currentMoment.isAfter(submittedValue)) {
+          throw new Error("Postpone Date must be a future date");
+        }
+
+        if (submittedValue.isAfter(threeDaysLater)) {
+          throw new Error(
+            "Postpone date must not be more than 3 days from today's date"
+          );
         }
 
         return true;

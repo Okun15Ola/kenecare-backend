@@ -602,30 +602,14 @@ exports.postponeDoctorAppointment = async ({
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
       });
     }
-    const { is_profile_approved, doctor_id: doctorId } = doctor;
-
-    // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
-    //   return Response.UNAUTHORIZED({
-    //     message:
-    //       "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
-    //   });
-    // }
+    const { doctor_id: doctorId } = doctor;
 
     //TODO Check if the appointment exist
     const rawData = await dbObject.getDoctorAppointmentById({
       doctorId,
       appointmentId,
     });
-    if (!rawData) {
-      return Response.NOT_FOUND({ message: "Appointment Not Found" });
-    }
-
-    //Extract patient id from appointment to get patient email
-    const {
-      patient_id: patientId,
-      patient_mobile_number,
-      appointment_status,
-    } = rawData;
+    const { patient_id } = rawData;
 
     if (appointment_status === "postponed") {
       return Response.NOT_MODIFIED();
