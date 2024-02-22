@@ -2,7 +2,9 @@ const moment = require("moment");
 const { v4: uuidv4 } = require("uuid");
 const dbObject = require("../db/db.appointments.patients");
 const { getPatientByUserId } = require("../db/db.patients");
-const { getDoctorAppointByDate } = require("../db/db.appointments.doctors");
+const {
+  getDoctorAppointByDateAndTime,
+} = require("../db/db.appointments.doctors");
 const { getUserById } = require("../db/db.users");
 const { USER_TYPE } = require("../utils/enum.utils");
 const Response = require("../utils/response.utils");
@@ -20,8 +22,6 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
       page,
       limit,
     });
-
-    console.log(rawData[0]);
 
     const appointments = rawData.map(
       ({
@@ -313,7 +313,18 @@ exports.createPatientAppointment = async ({
     }
 
     //TODO Check if the selected doctor's timeslot is available,
+    const timeBooked = await getDoctorAppointByDateAndTime({
+      doctorId,
+      date: appointmentDate,
+      time: appointmentTime,
+    });
 
+    if (timeBooked) {
+      return Response.BAD_REQUEST({
+        message:
+          "An appointment has already been booked for the specified time, please select a new appointment time",
+      });
+    }
     //Generate a unique ID for each appointment
     const genUUID = uuidv4();
 

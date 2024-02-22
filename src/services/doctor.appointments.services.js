@@ -582,7 +582,8 @@ exports.postponeDoctorAppointment = async ({
   userId,
   appointmentId,
   postponedReason,
-  postponeDate,
+  postponedDate,
+  postponedTime,
 }) => {
   try {
     const user = await getUserById(userId);
@@ -626,13 +627,28 @@ exports.postponeDoctorAppointment = async ({
       return Response.NOT_MODIFIED();
     }
 
+    //check if the date and time has already been booked
+    const timeBooked = await dbObject.getDoctorAppointByDateAndTime({
+      doctorId,
+      date: postponedDate,
+      time: postponedTime,
+    });
+    
+    if (timeBooked) {
+      return Response.BAD_REQUEST({
+        message:
+          "An appointment has already been booked for the specified time on that date. Please choose another time.",
+      });
+    }
     //UPDATE appointment status to 'approved'
     await dbObject.postponeDoctorAppointmentById({
+      postponedReason,
+      postponedDate: postponeDate,
       appointmentId,
       doctorId,
     });
 
-    //TODO Send a notification(email,sms) to the user
+    // Send a notification(email,sms) to the user
     await appointmentPostponedSms({
       patientName: `${first_name} ${last_name}`,
       patientNameOnPrescription: patient_name_on_prescription,

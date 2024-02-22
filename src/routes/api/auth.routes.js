@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const logger = require("../../middlewares/logger.middleware");
+const rateLimit = require("../../utils/rate-limit.utils");
 const { Validate } = require("../../validations/validate");
 const {
   LoginController,
@@ -16,10 +17,11 @@ const {
   OTPLoginValidation,
   VerifyTokenValidations,
 } = require("../../validations/auth.validations");
-
 const { requireUserAuth } = require("../../middlewares/auth.middleware");
 const { body } = require("express-validator");
 const { getUserByMobileNumber } = require("../../db/db.users");
+
+rateLimit(router);
 /**
  * @swagger
  * /api/v1/auth/authenticate:
@@ -685,7 +687,7 @@ router.post(
             "BAD_REQUEST. Error Resending OTP. Please check mobile number"
           );
         }
-      
+
         req.user = data;
         return true;
       }),

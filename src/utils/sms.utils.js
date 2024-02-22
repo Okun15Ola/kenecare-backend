@@ -70,7 +70,7 @@ const appointmentApprovalSms = async ({
     console.error(error);
     throw error;
   }
-}; 
+};
 
 const appointmentPostponedSms = async ({
   patientName,
@@ -96,9 +96,7 @@ const appointmentPostponedSms = async ({
     console.error(error);
     throw error;
   }
-}; 
-
-
+};
 
 const appointmentBookedSms = async ({
   mobileNumber,
@@ -144,16 +142,23 @@ const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
     throw error;
   }
 };
-
-exports.sendVerificationSuccessSMS = async ({ token, mobileNumber }) => {
+const documentSharedWithDoctorSMS = async ({
+  mobileNumber,
+  doctorName,
+  patientName,
+}) => {
   try {
-    const response = await client.messages.create({
-      from: twilioPhoneNumber,
-      to: "+23299822683",
-      body: "Your Kenecare Account was succefully verified",
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Hi! Dr. ${doctorName}. ${patientName} just shared a medical document with you. Login to your dashboard to access medical document`,
     });
 
-    console.log(response.sid);
+    config.data = data;
+    const response = await axios.request(config).catch((error) => {
+      throw error;
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -166,4 +171,5 @@ module.exports = {
   appointmentPostponedSms,
   appointmentBookedSms,
   doctorProfileApprovalSms,
+  documentSharedWithDoctorSMS,
 };

@@ -39,6 +39,7 @@ const doctorsCounculRegistrationRouter = require("./routes/api/doctors/council-r
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
 const patientAppointmentRouter = require("./routes/api/patients/appointments.routes");
 const patientMedicalRecordRouter = require("./routes/api/patients/medical-records.routes");
+const patientSharedMedicalDocumentRouter = require("./routes/api/patients/shared-docs.routes.js");
 const patientMedicalHistoryRouter = require("./routes/api/patients/medical-history.routes");
 const appointmentPaymentRoutes = require("./routes/api/patients/appointment.payments.routes");
 
@@ -112,6 +113,7 @@ app.use("/api/v1/health-check", (req, res, next) => {
     .json(SUCCESS({ message: "Health Check Passed. API Working!!!" }));
 });
 
+//TODO MOVE TO A SEPERATE ROUTE FILE
 app.post("/webhooks", (req, res, next) => {
   try {
     const { body } = req;
@@ -197,6 +199,11 @@ app.use(
   patientMedicalRecordRouter
 );
 app.use(
+  "/api/v1/patients/shared-docs",
+  requireUserAuth,
+  patientSharedMedicalDocumentRouter
+);
+app.use(
   "/api/v1/patients/medical-info",
   requireUserAuth,
   patientMedicalHistoryRouter
@@ -276,7 +283,6 @@ app.use((err, req, res, next) => {
     return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
   }
 
-  // console.log(err.message);
   return res
     .status(statusCode)
     .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));

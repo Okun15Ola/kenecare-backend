@@ -5,9 +5,6 @@ const validateNewAppointmentDate = ({ date, time = null }) => {
     const submittedDate = moment(moment(date).format("YYYY-MM-DD"));
     const currentMoment = moment(moment().format("YYYY-MM-DD"));
 
-    const startTime = moment("08:00", "HH:mm");
-    const endTime = moment("18:00", "HH:mm");
-
     //check if the date is a valid date
     if (!submittedDate.isValid()) {
       throw new Error("Invalid Date format");
@@ -16,8 +13,6 @@ const validateNewAppointmentDate = ({ date, time = null }) => {
     if (currentMoment.isAfter(submittedDate)) {
       throw new Error("New date must be a future date.");
     }
-
-    
 
     return null;
   } catch (error) {

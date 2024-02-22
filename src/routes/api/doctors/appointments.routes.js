@@ -49,16 +49,11 @@ router.patch(
       .notEmpty()
       .withMessage("New Appointment Date is required")
       .custom(async (value, { req }) => {
-        const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
-
         if (!data) {
           throw new Error("Specified Appontment Not Found");
         }
 
-        validateNewAppointmentDate({
-          date: value,
-          time: req.body.postponedTime,
-        });
+        validateAppointmentPostponedDate(value);
 
         return true;
       }),

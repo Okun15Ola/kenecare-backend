@@ -1,13 +1,11 @@
 const router = require("express").Router();
 const {
-  GetAllMedicalRecordsController,
-  GetMedicalRecordByIDController,
-  CreateMedicalReocrdController,
-  UpdateMedicalReocrdByIdController,
-  DeletemedicaRecordByIdController,
   ShareMedicalDocumentController,
+  GetAllSharedMedicalDocumentsController,
+  GetSharedMedicalDocumentByIDController,
+  UpdateSharedMedicalDocumentByIdController,
+  DeleteSharedMedicalDocumentByIdController,
 } = require("../../../controllers/patients/medical-record.controller");
-const { AWSUploader } = require("../../../utils/file-upload.utils");
 const {
   CreateNewMedicalRecordValidation,
   ShareMedicalDocumentValidation,
@@ -15,35 +13,19 @@ const {
 const { param } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 
-router.get("/", GetAllMedicalRecordsController);
-router.get("/:id", GetMedicalRecordByIDController);
-
+router.get("/", GetAllSharedMedicalDocumentsController);
+router.get("/:id", GetSharedMedicalDocumentByIDController);
 router.post(
   "/",
-  AWSUploader.single("medicalDocument"),
-  CreateNewMedicalRecordValidation,
-  Validate,
-  CreateMedicalReocrdController
-);
-router.post(
-  "/share",
   ShareMedicalDocumentValidation,
   Validate,
   ShareMedicalDocumentController
 );
-router.post(
-  "/",
-  AWSUploader.single("medicalDocument"),
-  CreateNewMedicalRecordValidation,
-  Validate,
-  CreateMedicalReocrdController
-);
 router.put(
   "/:id",
-  AWSUploader.single("medicalDocument"),
-  CreateNewMedicalRecordValidation,
+  ShareMedicalDocumentValidation,
   Validate,
-  UpdateMedicalReocrdByIdController
+  UpdateSharedMedicalDocumentByIdController
 );
 router.delete(
   "/:id",
@@ -57,7 +39,7 @@ router.delete(
       }),
   ],
   Validate,
-  DeletemedicaRecordByIdController
+  DeleteSharedMedicalDocumentByIdController
 );
 
 module.exports = router;
