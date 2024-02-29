@@ -21,7 +21,7 @@ const { requireUserAuth } = require("../../middlewares/auth.middleware");
 const { body } = require("express-validator");
 const { getUserByMobileNumber } = require("../../db/db.users");
 
-rateLimit(router);
+// rateLimit(router);
 /**
  * @swagger
  * /api/v1/auth/authenticate:

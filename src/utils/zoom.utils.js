@@ -55,7 +55,7 @@ const createZoomMeeting = async ({
         agenda: `Kenecare Medical Appointment`,
         settings: {
           waiting_room: false,
-          join_before_host: false,
+          join_before_host: true,
           host_video: true,
           participant_video: true,
         },

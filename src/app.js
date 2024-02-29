@@ -23,6 +23,7 @@ const {
   UNAUTHORIZED,
 } = require("./utils/response.utils.js");
 const { zoomSecretToken } = require("./config/default.config.js");
+const moment = require("moment");
 
 //INDEX ROUTES
 const indexRouter = require("./routes/api/index.routes");
@@ -60,6 +61,10 @@ const adminFaqRouter = require("./routes/api/admin/faq.routes");
 const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
 const adminPatientsRouter = require("./routes/api/admin/patients.routes");
 const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes");
+const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings.js");
+const {
+  getAppointmentByMeetingId,
+} = require("./db/db.appointments.doctors.js");
 
 const app = express();
 
@@ -114,7 +119,7 @@ app.use("/api/v1/health-check", (req, res, next) => {
 });
 
 //TODO MOVE TO A SEPERATE ROUTE FILE
-app.post("/webhooks", (req, res, next) => {
+app.post("/webhooks", async (req, res, next) => {
   try {
     const { body } = req;
 
@@ -149,11 +154,26 @@ app.post("/webhooks", (req, res, next) => {
 
       if (body.event === "meeting.started") {
         //meeting was started
-        console.log("Meeting started");
+        //TODO SEND NOTIFICATION TO PATIENT THAT THE MEETING HAS STARTED
+        const { start_time, id } = body.payload.object;
+
+        const data = await getZoomMeetingByZoomId(id);
+        if (data) {
+          const { meeting_id } = data;
+          console.log("MEETING_ID", meeting_id);
+          const appointment = await getAppointmentByMeetingId(meeting_id);
+          console.log(appointment);
+          if (appointment) {
+            //update appointment start time
+            const startTime = moment(start_time).format("HH:mm");
+            console.log("Start Time", startTime);
+          }
+        }
       }
       if (body.event === "meeting.ended") {
         //meeting was ended
         console.log("meeting ended");
+        //TODO UPDATE MEETING STATUS TO COMPLETED and remove join and start url
       }
 
       return res.sendStatus(200);

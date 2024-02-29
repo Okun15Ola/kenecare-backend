@@ -28,6 +28,21 @@ exports.getDoctorAppointmentById = ({ doctorId, appointmentId }) => {
     });
   });
 };
+exports.getAppointmentByMeetingId = (meetingId) => {
+  console.log("MMETINGFFSFDSFDS", meetingId);
+  // const sql =
+  //   "SELECT medical_appointments.appointment_id,appointment_uuid, p.patient_id, p.first_name, p.last_name, d.doctor_id, d.first_name AS 'doctor_first_name', d.last_name AS 'doctor_last_name', appointment_type, medical_appointments.consultation_fee, appointment_date, appointment_time, time_slot_id, patient_name_on_prescription, patient_mobile_number, patient_symptoms,  d.specialization_id, speciality_name,  medical_appointments.meeting_id, join_url, start_url, start_time, end_time, appointment_status, cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason, medical_appointments.created_at, medical_appointments.updated_at amount_paid, currency, payment_method, order_id, transaction_id, payment_status FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id INNER JOIN appointment_payments on medical_appointments.appointment_id = appointment_payments.appointment_id LEFT JOIN zoom_meetings on medical_appointments.meeting_id = zoom_meetings.meeting_id  WHERE medical_appointments.meeting_id = ? LIMIT 1";
+
+  const sql = "SELECT * FROM medical_appointments WHERE meeting_id = ? LIMIT 1";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [meetingId], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results[0]);
+    });
+  });
+};
 
 exports.approveDoctorAppointmentById = ({
   doctorId,
@@ -49,35 +64,28 @@ exports.approveDoctorAppointmentById = ({
     );
   });
 };
-
-exports.createNewZoomMeeting = ({
-  meetingId,
-  meetingUUID,
-  meetingTopic,
-  joinUrl,
-  startUrl,
-  encryptedPassword,
-}) => {
+exports.updateAppointmentStartTime = ({ appointmentId, startTime }) => {
   const sql =
-    "INSERT INTO zoom_meetings (zoom_id, zoom_uuid, meeting_topic, join_url,start_url,encrypted_password) VALUES (?,?,?,?,?,?);";
+    "UPDATE medical_appointments SET start_time = ? WHERE appointment_id = ?;";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(
-      sql,
-      [
-        meetingId,
-        meetingUUID,
-        meetingTopic,
-        joinUrl,
-        startUrl,
-        encryptedPassword,
-      ],
-      (error, results) => {
-        if (error) return reject(error);
+    connectionPool.query(sql, [startTime, appointmentId], (error, results) => {
+      if (error) return reject(error);
 
-        return resolve(results);
-      }
-    );
+      return resolve(results);
+    });
+  });
+};
+exports.updateAppointmentEndTime = ({ appointmentId, endTime }) => {
+  const sql =
+    "UPDATE medical_appointments SET end_time = ?, appointment_status = 'completed' WHERE appointment_id = ?;";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [endTime, appointmentId], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results);
+    });
   });
 };
 
@@ -163,5 +171,36 @@ exports.getDoctorAppointByDateAndTime = ({
 
       return resolve(results[0]);
     });
+  });
+};
+
+exports.createNewZoomMeeting = ({
+  meetingId,
+  meetingUUID,
+  meetingTopic,
+  joinUrl,
+  startUrl,
+  encryptedPassword,
+}) => {
+  const sql =
+    "INSERT INTO zoom_meetings (zoom_id, zoom_uuid, meeting_topic, join_url,start_url,encrypted_password) VALUES (?,?,?,?,?,?);";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(
+      sql,
+      [
+        meetingId,
+        meetingUUID,
+        meetingTopic,
+        joinUrl,
+        startUrl,
+        encryptedPassword,
+      ],
+      (error, results) => {
+        if (error) return reject(error);
+
+        return resolve(results);
+      }
+    );
   });
 };

@@ -387,6 +387,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       encryptedPassword: zoomMeetingEncPassword,
     });
 
+    console.log("MEETING_ID", meetingId);
     const [done, patient] = await Promise.allSettled([
       dbObject.approveDoctorAppointmentById({
         appointmentId,
@@ -407,22 +408,6 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentTime,
     });
 
-    // if (email) {
-    //   // Send a email notification to the user
-    //   await patientAppointmentApprovalEmail({
-    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
-    //     patientName: `${firstName} ${lastName}`,
-    //     patientNameOnPrescription,
-    //     appointmentDate,
-    //     appoinmentTime: appointmentTime,
-    //     symptoms,
-    //     meetingJoinLink:
-    //       "https://us02web.zoom.us/j/81495440003?pwd=dUpYSWZxWW9FdjdkRG9NVTFkUFd5UT09",
-    //     patientEmail: email,
-    //   });
-    // } else {
-    //   //TODO SEND AN SMS NOTIFICATION TO PATIENT FOR APPROVED APPOINTMENT
-    // }
     return Response.SUCCESS({
       message: "Medical Appointment Approved Successfully",
     });
@@ -633,7 +618,7 @@ exports.postponeDoctorAppointment = async ({
       date: postponedDate,
       time: postponedTime,
     });
-    
+
     if (timeBooked) {
       return Response.BAD_REQUEST({
         message:

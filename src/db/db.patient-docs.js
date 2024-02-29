@@ -154,6 +154,7 @@ exports.getPatientSharedMedicalDocuments = (patientId) => {
     });
   });
 };
+
 exports.getSharedMedicalDocumentsByDoctorId = (doctorId) => {
   const sql =
     "SELECT mds.sharing_id, mds.document_id, pmd.document_uuid, pmd.document_title, mds.patient_id, p.first_name as 'patient_first_name', p.last_name as 'patient_last_name', d.first_name as 'doctor_first_name' ,d.last_name as 'doctor_last_name', mds.note, mds.created_at FROM medical_document_sharing as mds INNER JOIN patient_medical_documents as pmd on mds.document_id = pmd.medical_document_id INNER JOIN patients as p on mds.patient_id = p.patient_id INNER JOIN doctors as d on mds.doctor_id = d.doctor_id WHERE mds.doctor_id = ?;";
