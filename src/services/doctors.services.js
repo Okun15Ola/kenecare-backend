@@ -211,8 +211,6 @@ exports.getDoctorByUser = async (id) => {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
-    console.log(rawData);
-
     //destruct properties from database object
     const {
       doctor_id: doctorId,

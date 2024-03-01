@@ -31,14 +31,6 @@ exports.getDoctorCouncilRegistration = async (id) => {
       return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
     }
 
-    //TODO Check if the profile has been verified
-    // if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
-    //   return Response.UNAUTHORIZED({
-    //     message:
-    //       "Requested Doctor Profile has not been approved. Please contact admin for further information",
-    //   });
-    // }
-
     const data = await dbObject.getDoctorMedicalCouncilRegistration({
       doctorId,
     });

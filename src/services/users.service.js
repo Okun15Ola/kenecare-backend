@@ -213,7 +213,7 @@ exports.verifyRegistrationOTP = async ({ token, user }) => {
       data: {
         token: accessToken,
         type: userType,
-        isVerified: accountVerified,
+        isVerified: VERIFICATIONSTATUS.VERIFIED,
         isActive: accountActive,
       },
     });

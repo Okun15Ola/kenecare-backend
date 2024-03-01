@@ -79,19 +79,36 @@ exports.getPatientById = async (id) => {
     const medicalRecord = await dbObject.getPatientMedicalInfoByPatientId(
       patientId
     );
-    const {
-      height,
-      weight,
-      allergies,
-      is_patient_disabled: isDisabled,
-      disability_description: disabilityDesc,
-      tobacco_use: tobaccoIntake,
-      tobacco_use_frequency: tobaccoIntakeFreq,
-      alcohol_use: alcoholIntake,
-      alcohol_use_frequency: alcoholIntakeFreq,
-      caffine_use: caffineIntake,
-      caffine_use_frequency: caffineIntakeFreq,
-    } = medicalRecord || null;
+
+    let medicalInfo = null;
+    if (medicalRecord) {
+      const {
+        height,
+        weight,
+        allergies,
+        is_patient_disabled: isDisabled,
+        disability_description: disabilityDesc,
+        tobacco_use: tobaccoIntake,
+        tobacco_use_frequency: tobaccoIntakeFreq,
+        alcohol_use: alcoholIntake,
+        alcohol_use_frequency: alcoholIntakeFreq,
+        caffine_use: caffineIntake,
+        caffine_use_frequency: caffineIntakeFreq,
+      } = medicalRecord;
+      medicalInfo = {
+           height,
+           weight,
+           allergies,
+           isDisabled: isDisabled !== 0,
+           disabilityDesc,
+           tobaccoIntake: tobaccoIntake !== null,
+           tobaccoIntakeFreq,
+           alcoholIntake: alcoholIntake !== 0,
+           alcoholIntakeFreq,
+           caffineIntake: caffineIntake !== null,
+           caffineIntakeFreq,
+         };
+    }
 
     const patient = {
       patientId,
@@ -107,19 +124,7 @@ exports.getPatientById = async (id) => {
       mobileNumber,
       email,
       userType,
-      medicalInfo: {
-        height,
-        weight,
-        allergies,
-        isDisabled: isDisabled !== 0,
-        disabilityDesc,
-        tobaccoIntake: tobaccoIntake !== null,
-        tobaccoIntakeFreq,
-        alcoholIntake: alcoholIntake !== 0,
-        alcoholIntakeFreq,
-        caffineIntake: caffineIntake !== null,
-        caffineIntakeFreq,
-      },
+      medicalInfo: medicalInfo ? medicalInfo : null,
       isAccountActive,
       isOnline,
     };

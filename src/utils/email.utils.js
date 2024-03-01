@@ -5,6 +5,7 @@ const {
   sendGridSenderEmail,
 } = require("../config/default.config");
 const { kenecareAdminEmail } = require("../config/default.config");
+const c = require("config");
 sendGrid.setApiKey(sendGridApiKey);
 
 const mailer = {
@@ -121,9 +122,11 @@ const adminDoctorProfileRegistrationEmail = async ({ doctorName }) => {
     <p>The approval process is expected to take 48 hours or less. Once approved, the doctor will be eligible to receive appointments from users seeking healthcare services.</p>
     `,
     };
-    await sendGrid.send(message).catch((err) => {
+    const done = await sendGrid.send(message).catch((err) => {
+      console.log(err);
       throw err;
     });
+    console.log(done);
   } catch (error) {
     console.error(error);
     throw error;
