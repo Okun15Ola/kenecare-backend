@@ -26,16 +26,20 @@ exports.getTestimonialById = (testimonialId) => {
   });
 };
 
-exports.createNewTestimonial = ({ patientId, content }) => {
+exports.createNewTestimonial = ({ patientId, content, inputtedBy }) => {
   const sql =
-    "INSERT INTO patients_testimonial (patient_id, testimonial_content) VALUES (?,?)";
+    "INSERT INTO patients_testimonial (patient_id, testimonial_content, is_approved, is_active, approved_by) VALUES (?,?,?,?,?)";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [patientId, content], (error, results) => {
-      if (error) return reject(error);
+    connectionPool.query(
+      sql,
+      [patientId, content, 1, 1, inputtedBy],
+      (error, results) => {
+        if (error) return reject(error);
 
-      return resolve(results);
-    });
+        return resolve(results);
+      }
+    );
   });
 };
 exports.updateTestimonialById = ({ testimonialId, patientId, content }) => {

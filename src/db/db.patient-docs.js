@@ -168,8 +168,6 @@ exports.getSharedMedicalDocumentsByDoctorId = (doctorId) => {
   });
 };
 exports.getPatientSharedMedicalDocument = ({ patientId, documentId }) => {
-  console.log("PATIENT_ID: ", patientId);
-  console.log("DOCUMENT_ID: ", documentId);
   const sql =
     "SELECT mds.sharing_id, mds.document_id, pmd.document_uuid, pmd.document_title, mds.patient_id, p.first_name as 'patient_first_name', p.last_name as 'patient_last_name', d.first_name as 'doctor_first_name' ,d.last_name as 'doctor_last_name', mds.note, mds.created_at FROM medical_document_sharing as mds INNER JOIN patient_medical_documents as pmd on mds.document_id = pmd.medical_document_id INNER JOIN patients as p on mds.patient_id = p.patient_id INNER JOIN doctors as d on mds.doctor_id = d.doctor_id WHERE mds.patient_id = ? AND mds.document_id = ? LIMIT 1;";
 
@@ -177,7 +175,6 @@ exports.getPatientSharedMedicalDocument = ({ patientId, documentId }) => {
     connectionPool.query(sql, [patientId, documentId], (error, results) => {
       if (error) return reject(error);
 
-      console.log(results);
       return resolve(results[0]);
     });
   });

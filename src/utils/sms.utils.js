@@ -152,7 +152,7 @@ const documentSharedWithDoctorSMS = async ({
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Hi! Dr. ${doctorName}. ${patientName} just shared a medical document with you. Login to your dashboard to access medical document`,
+      content: `Hi! Dr. ${doctorName}.\n\n${patientName} just shared a medical document with you. Login to your dashboard to access medical document`,
     });
 
     config.data = data;

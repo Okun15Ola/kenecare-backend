@@ -3,6 +3,7 @@ const logger = require("../../middlewares/logger.middleware");
 const {
   getTestimonials,
   getTestimonialById,
+  createTestimonial,
   approveTestimonialById,
   denyTestimonialById,
 } = require("../../services/testimonials.services");
@@ -60,6 +61,14 @@ exports.DenyTestimonialController = async (req, res, next) => {
 };
 exports.CreateTestimonialController = async (req, res, next) => {
   try {
+    const userId = parseInt(req.user.id);
+    const { patientId, content } = req.body;
+    const response = await createTestimonial({
+      userId,
+      patientId,
+      content,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
