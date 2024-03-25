@@ -7,6 +7,7 @@ const {
 const { comparePassword } = require("../utils/auth.utils");
 const { STATUS, VERIFICATIONSTATUS, USERTYPE } = require("../utils/enum.utils");
 const { getDoctorByUserId } = require("../db/db.doctors");
+const { getUserById } = require("../db/db.users");
 
 exports.LoginValidations = [
   body("mobileNumber")
@@ -175,8 +176,7 @@ exports.RegisterValidations = [
     .notEmpty()
     .withMessage("Confirm Password is required")
     .custom((value, { req }) => {
-      if (value !== req.body.password) return false;
-      return true;
+      return !(value !== req.body.password);
     })
     .withMessage(
       "Passwords do not match. Ensure password and confirm password are the same."
@@ -198,15 +198,43 @@ exports.VerifyTokenValidations = [
       return true;
     }),
 ];
+
 exports.UpdatePasswordValidations = [
-  body("oldPassword").notEmpty().withMessage("Password is required").trim(),
-  body("newPassword").notEmpty().withMessage("Password is required").trim(),
-  body("confirmNewPassword")
+  body("currentPassword")
     .notEmpty()
-    .withMessage("Confirm Password is required")
+    .withMessage("Current Password is required")
+    .trim()
+    .custom(async (value, { req }) => {
+      const user = await getUserById(req.user.id);
+      if (user) {
+        const { password } = user;
+        const isMatch = await comparePassword({
+          plainPassword: value,
+          hashedPassword: password,
+        });
+        if (!isMatch) {
+          throw new Error("Incorrect Current Password");
+        }
+        req.user = user;
+        return true;
+      }
+    }),
+  body("newPassword")
+    .notEmpty()
+    .withMessage("New Password is required")
+    .trim()
+    .matches(/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/)
+    .withMessage(
+      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character"
+    ),
+  body("confirmNewPassword")
+    .trim()
     .custom((value, { req }) => {
-      if (value !== req.body.newPassword) return false;
+      if (value === "") {
+        throw new Error("Confirm Password is required");
+      } else if (value !== req.body.newPassword) {
+        throw new Error("Passwords don't match");
+      }
       return true;
-    })
-    .withMessage("Passwords do not match"),
+    }),
 ];

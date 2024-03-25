@@ -6,6 +6,7 @@ const {
   verifyUserLoginOtp,
   resendVerificationOTP,
   sendVerificationOTP,
+  updateUserPassword,
 } = require("../services/users.service");
 
 const Response = require("../utils/response.utils");
@@ -96,8 +97,10 @@ exports.ForgotPasswordController = async (req, res, next) => {
 };
 exports.UpdatePasswordController = async (req, res, next) => {
   try {
-    //Update Password Controller
-    const { otp } = req.params;
+    const { newPassword } = req.body;
+    const { user } = req;
+    const response = await updateUserPassword({ newPassword, user });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);

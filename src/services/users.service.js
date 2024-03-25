@@ -421,7 +421,7 @@ exports.sendVerificationOTP = async (userId) => {
       return Response.BAD_REQUEST({ message: "Error Sending OTP" });
     }
 
-    const user = await d
+    const user = await d;
     const {
       is_verified,
       is_account_active,
@@ -462,6 +462,37 @@ exports.verifyRequestedOTP = async ({ phoneNumber, user }) => {
     } else {
       return Response.NOT_MODIFIED();
     }
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+exports.updateUserPassword = async ({ newPassword, user }) => {
+  try {
+    if (!user) {
+      return Response.BAD_REQUEST({
+        message: "Error updating password, please try again",
+      });
+    }
+    const {
+      user_id: userId,
+      verification_token: token,
+      is_verified,
+      mobile_number: mobileNumber,
+    } = user;
+
+    const hashedPassword = await hashUsersPassword(newPassword);
+
+    const done = await dbObject.updateUserPasswordById({
+      userId,
+      password: hashedPassword,
+    });
+
+    return Response.SUCCESS({
+      message:
+        "Password Updated Successfully. You'll be redirected to login again",
+    });
   } catch (error) {
     console.error(error);
     throw error;

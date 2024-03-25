@@ -24,7 +24,7 @@ exports.getUserByUsersType = (typeId) => {
 
 exports.getUserById = (userId) => {
   const sql =
-    "SELECT user_id, mobile_number,email,user_type,is_verified,is_account_active,is_online,is_2fa_enabled,notification_token FROM users WHERE user_id = ? LIMIT  1";
+    "SELECT user_id, mobile_number,email,user_type,is_verified,is_account_active,is_online,is_2fa_enabled,notification_token,password FROM users WHERE user_id = ? LIMIT  1";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [userId], (err, result) => {
       if (err) return reject(err);
