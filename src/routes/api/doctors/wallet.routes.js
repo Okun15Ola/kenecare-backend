@@ -28,15 +28,27 @@ router.post(
           const { doctor_id: doctorId } = doctor || null;
           const wallet = await getWalletByDoctorId(doctorId);
           const { wallet_pin } = wallet || null;
-          const isMatch = await comparePassword({
-            plainPassword: value,
-            hashedPassword: wallet_pin,
-          });
-          if (!isMatch) {
-            throw new Error("Incorrect Wallet PIN");
-          }
+          if (wallet_pin) {
+            //check if the pin is the default pin
+            const isDefaultPin = await comparePassword({
+              plainPassword: "1234",
+              hashedPassword: wallet_pin,
+            });
+            if (isDefaultPin) {
+              throw new Error(
+                "Cannot Request Withdrawal with default wallet pin. Please update wallet PIN before proceeding."
+              );
+            }
 
-          return true;
+            const isMatch = await comparePassword({
+              plainPassword: value,
+              hashedPassword: wallet_pin,
+            });
+            if (!isMatch) {
+              throw new Error("Incorrect Wallet PIN");
+            }
+            return true;
+          }
         }
       }),
     body("amount")

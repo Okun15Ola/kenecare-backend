@@ -31,19 +31,32 @@ exports.getDoctorsWallet = async (userId) => {
       const response = await createDoctorWallet({ doctorId, pin: hashedPin });
 
       wallet = await getWalletById(response.insertid);
+      const {
+        doctor_id,
+        first_name: firstName,
+        last_name: lastName,
+        balance,
+      } = wallet;
+      const data = {
+        id: doctor_id,
+        doctorName: `${firstName} ${lastName}`,
+        balance: parseFloat(balance),
+      };
+      return Response.SUCCESS({ data });
+    } else {
+      const {
+        doctor_id,
+        first_name: firstName,
+        last_name: lastName,
+        balance,
+      } = wallet;
+      const data = {
+        id: doctor_id,
+        doctorName: `${firstName} ${lastName}`,
+        balance: parseFloat(balance),
+      };
+      return Response.SUCCESS({ data });
     }
-    const {
-      doctor_id,
-      first_name: firstName,
-      last_name: lastName,
-      balance,
-    } = wallet;
-    const data = {
-      id: doctor_id,
-      doctorName: `${firstName} ${lastName}`,
-      balance: parseFloat(balance),
-    };
-    return Response.SUCCESS({ data });
   } catch (error) {
     console.error("GET DOCTORS WALLET ERROR: ", error);
     throw error;
