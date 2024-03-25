@@ -73,3 +73,16 @@ router.post("/om/notification", async (req, res, next) => {
 });
 
 module.exports = router;
+
+
+// CREATE TABLE doctors_wallet(
+//   wallet_id int auto_increment,
+//   doctor_id int not null,
+//   balance decimal(10, 2) default 0,
+//   wallet_pin varchar(100),
+//   created_at timestamp default current_timestamp,
+//   updated_at timestamp default current_timestamp on update current_timestamp,
+
+//   constraint pk_wallet_id primary key(wallet_id),
+//   constraint fk_wallet_doctor foreign key (doctor_id) references doctors(doctor_id) on update cascade on delete cascade
+// )

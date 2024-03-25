@@ -35,8 +35,6 @@ const calculatePaginationInfo = (tableName) => {
           previousPage,
         };
 
-        console.log(req.paginationInfo);
-
         next();
       }
     } catch (error) {

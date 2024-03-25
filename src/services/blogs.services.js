@@ -1,5 +1,6 @@
 const dbObject = require("../db/db.blogs");
 const Response = require("../utils/response.utils");
+const moment = require("moment");
 exports.getBlogs = async () => {
   try {
     const rawData = await dbObject.getAllBlogs();
@@ -7,14 +8,15 @@ exports.getBlogs = async () => {
     const blogs = rawData.map(
       ({
         blog_id: blogId,
-        blog_category_id: blogCategory,
+        category_name: blogCategory,
         title: blogTitle,
         description,
         image,
         tags,
-        inputted_by: author,
+        author,
         is_featured: featured,
         is_active: isActive,
+        created_at: createdAt,
       }) => {
         return {
           blogId,
@@ -22,10 +24,11 @@ exports.getBlogs = async () => {
           blogTitle,
           description,
           image,
-          tags:JSON.parse(tags),
+          tags: JSON.parse(tags),
           author,
           featured,
           isActive,
+          createdAt: moment(createdAt).format("YYYY-MM-DD"),
         };
       }
     );
@@ -45,14 +48,15 @@ exports.getBlog = async (id) => {
     }
     const {
       blog_id: blogId,
-      blog_category_id: blogCategory,
+      category_name: blogCategory,
       title: blogTitle,
       description,
       image,
       tags,
-      inputted_by: author,
+      author,
       is_featured: featured,
       is_active: isActive,
+      created_at: createdAt,
     } = rawData;
 
     const blog = {
@@ -61,10 +65,11 @@ exports.getBlog = async (id) => {
       blogTitle,
       description,
       image,
-      tags:JSON.parse(tags),
+      tags: JSON.parse(tags),
       author,
       featured,
       isActive,
+      createdAt: moment(createdAt).format("YYYY-MM-DD"),
     };
 
     return Response.SUCCESS({ data: blog });
@@ -83,8 +88,6 @@ exports.createBlog = async ({
   inputtedBy,
 }) => {
   try {
-    
-
     await dbObject.createNewBlog({
       category,
       title,
@@ -135,7 +138,9 @@ exports.updateBlogFeaturedStatus = async ({ id, status }) => {
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     await dbObject.updateBlogFeaturedById({ id, status });
-    return Response.SUCCESS({ message: "Blog Featured Status Updated Successfully" });
+    return Response.SUCCESS({
+      message: "Blog Featured Status Updated Successfully",
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -144,11 +149,11 @@ exports.updateBlogFeaturedStatus = async ({ id, status }) => {
 exports.deleteBlog = async (id) => {
   try {
     const result = await isBlogExist(id);
-   if (!result) {
+    if (!result) {
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     await dbObject.deleteBlogById(id);
-      return Response.SUCCESS({ message: "Blog Deleted Successfully" });
+    return Response.SUCCESS({ message: "Blog Deleted Successfully" });
   } catch (error) {
     console.error(error);
     throw error;
@@ -157,5 +162,5 @@ exports.deleteBlog = async (id) => {
 
 const isBlogExist = async (id) => {
   const rawData = await dbObject.getBlogById(id);
-  return !(!rawData) 
+  return !!rawData;
 };

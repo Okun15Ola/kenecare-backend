@@ -25,12 +25,12 @@ router.post(
   Validate,
   CreateMedicalReocrdController
 );
-router.post(
-  "/share",
-  ShareMedicalDocumentValidation,
-  Validate,
-  ShareMedicalDocumentController
-);
+// router.post(
+//   "/share",
+//   ShareMedicalDocumentValidation,
+//   Validate,
+//   ShareMedicalDocumentController
+// );
 router.post(
   "/",
   AWSUploader.single("medicalDocument"),

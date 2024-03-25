@@ -62,7 +62,6 @@ exports.getZoomMeetings = ({
 };
 
 exports.getZoomMeetingByZoomId = (meetingId) => {
-  console.log(meetingId);
   const sql = "SELECT * FROM zoom_meetings WHERE zoom_id = ? LIMIT 1;";
 
   return new Promise((resolve, reject) => {

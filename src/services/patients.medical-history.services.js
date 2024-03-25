@@ -53,7 +53,7 @@ exports.getPatientMedicalHistory = async (userId) => {
     };
     return Response.SUCCESS({ data: medicalHistory });
   } catch (error) {
-    console.error(error);
+    console.error("GET PATIENT MEDICAL HISTORY ERROR: ", error);
     throw error;
   }
 };
@@ -85,7 +85,6 @@ exports.createPatientMedicalHistory = async ({
       patientId
     );
     if (medicalInfoExist) {
-      console.log(medicalInfoExist);
       return Response.BAD_REQUEST({
         message:
           "Medical Information Already Exist for the current user. Please update",
@@ -110,7 +109,7 @@ exports.createPatientMedicalHistory = async ({
       message: "Patient Medical Info Created Successfully.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("CREATE PATIENT MEDICAL HISTORY ERROR: ", error);
     throw error;
   }
 };
@@ -145,7 +144,7 @@ exports.updatePatientMedicalHistory = async ({
           "Medical History Not Found. Create one before trying to update",
       });
     }
-    const done = await dbObject.updatePatientMedicalHistory({
+    await dbObject.updatePatientMedicalHistory({
       patientId,
       height,
       weight,
@@ -164,7 +163,7 @@ exports.updatePatientMedicalHistory = async ({
       message: "Patient Medical Info Updated Successfully.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("UPDATE PATIENT MEDICAL HISTORY ERROR: ", error);
     throw error;
   }
 };

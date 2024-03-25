@@ -11,7 +11,6 @@ const { sendTokenSMS } = require("../utils/sms.utils");
 exports.getAdmins = async () => {
   try {
     const rawData = await dbObject.getAllAdmins();
-    console.log(rawData);
     return rawData;
   } catch (error) {
     console.error(error);
@@ -131,8 +130,8 @@ exports.loginAdmin = async (admin) => {
     });
 
     const accessToken = generateAdminJwtAccessToken({
-      sub:adminId,
-      actSts:accountActive,
+      sub: adminId,
+      actSts: accountActive,
     });
 
     return { message: "Admin Login Successful", data: accessToken };

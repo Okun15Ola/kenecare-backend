@@ -3,8 +3,6 @@ const Response = require("../utils/response.utils");
 exports.getCommonSymptoms = async () => {
   try {
     const rawData = await dbObject.getAllCommonSymptoms();
-
-    console.log(rawData);
     const symptoms = rawData.map(
       ({
         symptom_id: symptomId,
@@ -33,7 +31,7 @@ exports.getCommonSymptoms = async () => {
 
     return Response.SUCCESS({ data: symptoms });
   } catch (error) {
-    console.error(error);
+    console.error("GET ALL COMMON SYMPTOMS ERROR: ", error);
     throw error;
   }
 };
@@ -70,7 +68,7 @@ exports.getCommonSymptom = async (id) => {
 
     return Response.SUCCESS({ data: symptom });
   } catch (error) {
-    console.error(error);
+    console.error("GET COMMON SYMPTOMS BY ID ERROR: ", error);
     throw error;
   }
 };
@@ -96,7 +94,7 @@ exports.createCommonSymptom = async ({
 
     return Response.CREATED({ message: "Common Symptom Created Successfully" });
   } catch (error) {
-    console.error(error);
+    console.error("CREATE COMMON SYMPTOMS ERROR: ", error);
     throw error;
   }
 };
@@ -116,9 +114,11 @@ exports.updateCommonSymptom = async ({
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
     await dbObject.updateCommonSymptomById({ id, symptom });
-    return Response.SUCCESS({ message: "Blog Updated Succcessfully" });
+    return Response.SUCCESS({
+      message: "Common Symptom Updated Succcessfully",
+    });
   } catch (error) {
-    console.error(error);
+    console.error("UPDATE COMMON SYMPTOMS ERROR: ", error);
     throw error;
   }
 };
@@ -129,9 +129,11 @@ exports.updateCommonSymptomStatus = async ({ id, status }) => {
       return Response.NOT_FOUND({ message: "Bog Not Found" });
     }
     await dbObject.updateBlogStatusById({ id, status });
-    return Response.SUCCESS({ message: "Blog Status Updated Successfully" });
+    return Response.SUCCESS({
+      message: "Common Symptom Status Updated Successfully",
+    });
   } catch (error) {
-    console.error(error);
+    console.error("UPDATE COMMON SYMPTOM STATUS ERROR: ", error);
     throw error;
   }
 };
@@ -145,7 +147,7 @@ exports.deleteCommonSymptom = async (id) => {
     await dbObject.deleteCommonSymptomById(id);
     return Response.SUCCESS({ message: "Common Symptom Deleted Successfully" });
   } catch (error) {
-    console.error(error);
+    console.error("DELETE COMMON SYMPTOMS ERROR: ", error);
     throw error;
   }
 };

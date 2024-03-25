@@ -11,4 +11,4 @@ const limiter = (rotuer) => {
     rotuer.use(limit);
   }
 };
-module.exports = limiter;
+module.exports = { limiter };

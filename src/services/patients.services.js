@@ -142,12 +142,11 @@ exports.getPatientsTestimonial = async (userId) => {
     if (!patient) {
       return Response.NOT_FOUND({
         message:
-          "Patient Profile Not Found please create one before proceeding",
+          "Patient Not Found.",
       });
     }
     const rawData = await dbObject.getAllPatients();
-    console.log(rawData);
-    return Response.SUCCESS({ data: null });
+    return Response.SUCCESS({ data: rawData });
   } catch (error) {
     console.error(error);
     throw error;

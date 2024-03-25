@@ -23,6 +23,10 @@ const { getUserById } = require("../db/db.users");
 const { getPatientByUserId, getPatientById } = require("../db/db.patients");
 const { getDoctorById } = require("../db/db.doctors");
 const { appointmentBookedSms } = require("../utils/sms.utils");
+const {
+  updateDoctorWalletBalance,
+  getCurrentWalletBalance,
+} = require("../db/db.doctor-wallet");
 
 exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
   try {
@@ -84,15 +88,30 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       });
     }
 
-    const [sts, doctor, patient] = await Promise.allSettled([
-      updateAppointmentPaymentStatus({
-        paymentId,
-        paymentStatus: status.toLowerCase(),
-        transactionId,
-      }),
-      getDoctorById(doctorId),
-      getPatientById(patientId),
-    ]);
+    //calculate kenecare fee
+    const kenecarePercentage = 0.15;
+    const kenecareFee = parseFloat(amountPaid) * kenecarePercentage;
+    const finalDoctorFee = parseFloat(amountPaid) - parseFloat(kenecareFee);
+
+    const { balance: currentBalance } = await getCurrentWalletBalance(doctorId);
+
+    const newAccountBalance =
+      parseFloat(currentBalance) + parseFloat(finalDoctorFee);
+
+    const [paymentUpdated, balanceUpdated, doctor, patient] =
+      await Promise.allSettled([
+        updateAppointmentPaymentStatus({
+          paymentId,
+          paymentStatus: status.toLowerCase(),
+          transactionId,
+        }),
+        updateDoctorWalletBalance({
+          doctorId,
+          amount: parseFloat(newAccountBalance),
+        }),
+        getDoctorById(doctorId),
+        getPatientById(patientId),
+      ]);
 
     const { email: patientEmail, mobile_number: mobileNumber } = patient.value;
     const {
@@ -128,7 +147,7 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
         "Appointment Created Successfully. A confirmation has been sent.",
     });
   } catch (error) {
-    console.log(error.message);
+    console.error(error);
     throw error;
   }
 };
@@ -167,7 +186,6 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
     }
 
     if (transactionID !== null && paymentStatus === "success") {
-      console.log("Appointment already booked");
       return Response.NOT_MODIFIED();
     }
 
@@ -185,7 +203,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
       message: "Medical Appointment Cancelled Successfully.",
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw error;
   }
 };

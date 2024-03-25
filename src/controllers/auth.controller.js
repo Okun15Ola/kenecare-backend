@@ -5,6 +5,7 @@ const {
   requestUserLoginOtp,
   verifyUserLoginOtp,
   resendVerificationOTP,
+  sendVerificationOTP,
 } = require("../services/users.service");
 
 const Response = require("../utils/response.utils");
@@ -104,9 +105,36 @@ exports.UpdatePasswordController = async (req, res, next) => {
   }
 };
 
-//resend OTP
-
+//resend signup OTP
 exports.ResendVerificationOTPController = async (req, res, next) => {
+  try {
+    const { phoneNumber } = req.body;
+    const { user } = req;
+
+    const response = await resendVerificationOTP({ phoneNumber, user });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+
+//send verification OTP
+exports.SendVerificationOTPController = async (req, res, next) => {
+  try {
+    const { user } = req;
+
+    const response = await sendVerificationOTP(user);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    next(error);
+  }
+};
+//VERIFY verification OTP
+exports.VerifyRequestedOTPController = async (req, res, next) => {
   try {
     const { phoneNumber } = req.body;
     const { user } = req;

@@ -294,11 +294,11 @@ exports.createPatientAppointment = async ({
 }) => {
   try {
     //DONE Get patient Id from logged in user
-
     const [patient, doctor] = await Promise.all([
       getPatientByUserId(userId),
       getDoctorById(doctorId),
     ]);
+    console.log(patient);
 
     const { patient_id: patientId } = patient;
 

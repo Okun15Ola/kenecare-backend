@@ -11,6 +11,7 @@ const { appBaseURL } = require("../config/default.config");
 const { doctorProfileApprovalSms } = require("../utils/sms.utils");
 const path = require("path");
 const fs = require("fs");
+const { createDoctorWallet } = require("../db/db.doctor-wallet");
 
 exports.getAllDoctors = async () => {
   try {
@@ -362,7 +363,8 @@ exports.createDoctorProfile = async ({
       });
     }
 
-    await dbObject.createDoctor({
+    
+    const profileCreated = await dbObject.createDoctor({
       userId,
       title,
       firstName,
@@ -381,6 +383,14 @@ exports.createDoctorProfile = async ({
     await adminDoctorProfileRegistrationEmail({
       doctorName: `${firstName} ${middleName} ${lastName}`,
     });
+
+    //todo create doctor wallet
+    const walletCreated = await createDoctorWallet({
+      doctorId: profileCreated.insertId,
+      pin: "$2a$10$vP7hZi0rsfGzGlI44aKkKOFGpn8pTc5y04dvzXydBBjmfxrA18iD.",
+    });
+
+    console.log(walletCreated);
 
     return Response.CREATED({
       message:
@@ -482,10 +492,7 @@ exports.updateDoctorProfilePicture = async ({ userId, imageUrl }) => {
         profile_pic_url
       );
       if (fs.existsSync(file)) {
-        fs.unlinkSync(file);
-        console.log("File deleted");
-      } else {
-        console.log("Files does not exists");
+        await fs.promises.unlink(file);
       }
     }
 

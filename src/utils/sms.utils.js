@@ -142,6 +142,7 @@ const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
     throw error;
   }
 };
+
 const documentSharedWithDoctorSMS = async ({
   mobileNumber,
   doctorName,
@@ -164,6 +165,42 @@ const documentSharedWithDoctorSMS = async ({
     throw error;
   }
 };
+const withdrawalApprovedSMS = async ({ mobileNumber, doctorName }) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Hi! Dr. ${doctorName}.\n\nYour wallet withdarwal has successfully been approved. You requested amount will be deposited into your respective account shortly.\n\nKENECARE TEAM`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+const withdrawalDeniedSMS = async ({ mobileNumber, doctorName, comment }) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Hi! Dr. ${doctorName}.\n\nYour wallet withdarwal was declined, below is the reason for your request denial.\n\nCOMMENT:\n\n${comment}.\n\nKENECARE TEAM`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 module.exports = {
   sendAuthTokenSMS,
@@ -172,4 +209,6 @@ module.exports = {
   appointmentBookedSms,
   doctorProfileApprovalSms,
   documentSharedWithDoctorSMS,
+  withdrawalApprovedSMS,
+  withdrawalDeniedSMS,
 };

@@ -29,7 +29,6 @@ exports.getDoctorAppointmentById = ({ doctorId, appointmentId }) => {
   });
 };
 exports.getAppointmentByMeetingId = (meetingId) => {
-  console.log("MMETINGFFSFDSFDS", meetingId);
   // const sql =
   //   "SELECT medical_appointments.appointment_id,appointment_uuid, p.patient_id, p.first_name, p.last_name, d.doctor_id, d.first_name AS 'doctor_first_name', d.last_name AS 'doctor_last_name', appointment_type, medical_appointments.consultation_fee, appointment_date, appointment_time, time_slot_id, patient_name_on_prescription, patient_mobile_number, patient_symptoms,  d.specialization_id, speciality_name,  medical_appointments.meeting_id, join_url, start_url, start_time, end_time, appointment_status, cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason, medical_appointments.created_at, medical_appointments.updated_at amount_paid, currency, payment_method, order_id, transaction_id, payment_status FROM medical_appointments INNER JOIN patients as p on medical_appointments.patient_id = p.patient_id INNER JOIN doctors as d on medical_appointments.doctor_id = d.doctor_id INNER JOIN medical_specialities as ms on medical_appointments.speciality_id = ms.speciality_id INNER JOIN appointment_payments on medical_appointments.appointment_id = appointment_payments.appointment_id LEFT JOIN zoom_meetings on medical_appointments.meeting_id = zoom_meetings.meeting_id  WHERE medical_appointments.meeting_id = ? LIMIT 1";
 

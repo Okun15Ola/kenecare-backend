@@ -1,6 +1,7 @@
 const bcryptjs = require("bcryptjs");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const he = require("he");
 const {
   patientJwtSecret,
   adminJwtSecret,
@@ -18,9 +19,17 @@ const hashUsersPassword = async (password) => {
   }
 };
 
+hashUsersPassword("9999").then((value) => {
+  // const encoded = he.encode("password", { encodeEverything: true });
+  // console.log("ENCODED: ", encoded);
+  // const decoded = he.decode(encoded);
+  // console.log("DECODED: ", decoded);
+});
 
 const comparePassword = async ({ plainPassword, hashedPassword }) => {
   try {
+    console.log("PLAIN: ", plainPassword);
+    console.log("HASF: ", hashedPassword);
     return await bcryptjs.compare(plainPassword, hashedPassword);
   } catch (error) {
     console.error(error);

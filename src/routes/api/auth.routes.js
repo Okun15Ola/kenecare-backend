@@ -10,6 +10,8 @@ const {
   VerifyLoginOTPController,
   ForgotPasswordController,
   ResendVerificationOTPController,
+  SendVerificationOTPController,
+  VerifyRequestedOTPController,
 } = require("../../controllers/auth.controller");
 const {
   LoginValidations,
@@ -454,110 +456,7 @@ router.post(
  */
 router.post("/register", RegisterValidations, Validate, RegisterController);
 
-/**
- * @swagger
- *  /api/v1/auth/verify/{token}:
- *    post:
- *       tags:
- *          - Auth
- *       produces:
- *          - application/json
- *       requestBody:
- *          required: true
- *          description: User registration data
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  mobileNumber:
- *                    type: string
- *                    required: true
- *                    example: +23278121212
- *                  password:
- *                    type: string
- *                    required: true
- *                    example: $trongPa$$w0rd
- *                  confirmPassword:
- *                    type: string
- *                    required: true
- *                    example: $trongPa$$w0rd
- *                  userType:
- *                    type: string
- *                    required: true
- *                    example: patient | doctor
- *
- *       responses:
- *          200:
- *            description: Registration Successful
- *            content:
- *              application/json:
- *                schema:
- *                  type: object
- *                  properties:
- *                    status:
- *                      type: string
- *                      example: success
- *                    statusCode:
- *                       type: number
- *                       example: 200
- *                    timestamp:
- *                        type: string
- *                        example: 2023-11-09T11:02:14.952Z
- *                    message:
- *                        type: string
- *                        example: Registration Successful
- *                    data:
- *                        type: string
- *                        example:
- *          400:
- *            description: Bad Request
- *            content:
- *              application/json:
- *                schema:
- *                  type: object
- *                  properties:
- *                    status:
- *                      type: string
- *                      example: error
- *                    statusCode:
- *                       type: number
- *                       example: 400
- *                    timestamp:
- *                        type: string
- *                        example: 2023-11-09T11:02:14.952Z
- *                    message:
- *                        type: string
- *                        example: Validation Error
- *                    errors:
- *                        type: array
- *                        items:
- *                          type: object
- *                          properties:
- *                              msg:
- *                                type: string
- *                                example: Mobile number already exist
- *          500:
- *            description: Internal Server Error
- *            content:
- *              application/json:
- *                schema:
- *                  type: object
- *                  properties:
- *                    status:
- *                      type: string
- *                      example: error
- *                    statusCode:
- *                       type: number
- *                       example: 500
- *                    timestamp:
- *                        type: string
- *                    message:
- *                        type: string
- *                    error:
- *                        type: string
- *                        example: Internal Server Error
- */
+
 router.put(
   "/verify/:token",
   VerifyTokenValidations,
@@ -565,110 +464,7 @@ router.put(
   VerifyRegisterOTPController
 );
 
-/**
- * @swagger
- *  /api/v1/auth/forgot-password:
- *    post:
- *       tags:
- *          - Auth
- *       produces:
- *          - application/json
- *       requestBody:
- *          required: true
- *          description: User registration data
- *          content:
- *            application/json:
- *              schema:
- *                type: object
- *                properties:
- *                  mobileNumber:
- *                    type: string
- *                    required: true
- *                    example: +23278121212
- *                  password:
- *                    type: string
- *                    required: true
- *                    example: $trongPa$$w0rd
- *                  confirmPassword:
- *                    type: string
- *                    required: true
- *                    example: $trongPa$$w0rd
- *                  userType:
- *                    type: string
- *                    required: true
- *                    example: patient | doctor
- *
- *       responses:
- *          200:
- *            description: Registration Successful
- *            content:
- *              application/json:
- *                schema:
- *                  type: object
- *                  properties:
- *                    status:
- *                      type: string
- *                      example: success
- *                    statusCode:
- *                       type: number
- *                       example: 200
- *                    timestamp:
- *                        type: string
- *                        example: 2023-11-09T11:02:14.952Z
- *                    message:
- *                        type: string
- *                        example: Registration Successful
- *                    data:
- *                        type: string
- *                        example:
- *          400:
- *            description: Bad Request
- *            content:
- *              application/json:
- *                schema:
- *                  type: object
- *                  properties:
- *                    status:
- *                      type: string
- *                      example: error
- *                    statusCode:
- *                       type: number
- *                       example: 400
- *                    timestamp:
- *                        type: string
- *                        example: 2023-11-09T11:02:14.952Z
- *                    message:
- *                        type: string
- *                        example: Validation Error
- *                    errors:
- *                        type: array
- *                        items:
- *                          type: object
- *                          properties:
- *                              msg:
- *                                type: string
- *                                example: Mobile number already exist
- *          500:
- *            description: Internal Server Error
- *            content:
- *              application/json:
- *                schema:
- *                  type: object
- *                  properties:
- *                    status:
- *                      type: string
- *                      example: error
- *                    statusCode:
- *                       type: number
- *                       example: 500
- *                    timestamp:
- *                        type: string
- *                    message:
- *                        type: string
- *                    error:
- *                        type: string
- *                        example: Internal Server Error
- */
+
 router.post("/forgot-password", ForgotPasswordController);
 
 router.post(
@@ -695,5 +491,7 @@ router.post(
   Validate,
   ResendVerificationOTPController
 );
+router.post("/otp-request", requireUserAuth, SendVerificationOTPController);
+router.post("/otp-request", requireUserAuth, VerifyRequestedOTPController);
 
 module.exports = router;

@@ -387,7 +387,6 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       encryptedPassword: zoomMeetingEncPassword,
     });
 
-    console.log("MEETING_ID", meetingId);
     const [done, patient] = await Promise.allSettled([
       dbObject.approveDoctorAppointmentById({
         appointmentId,
@@ -545,13 +544,11 @@ exports.cancelDoctorAppointment = async ({
     //TODO Appointment's can only be cancelled 24 hours before the appointment date
 
     //UPDATE appointment status to 'approved'
-    const done = await dbObject.cancelDoctorAppointmentById({
+    await dbObject.cancelDoctorAppointmentById({
       appointmentId,
       doctorId,
       cancelReason,
     });
-
-    console.log(done);
 
     //TODO Send a notification(email,sms) to the user
 

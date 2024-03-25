@@ -261,7 +261,7 @@ exports.createPatientSharedMedicalDocument = async ({
       first_name: firstName,
       last_name: lastName,
     } = patient;
-    const { mobile_number: doctorMobileNumber,first_name,last_name } = doctor;
+    const { mobile_number: doctorMobileNumber, first_name, last_name } = doctor;
     //check if the document was previously shared with the doctor
     const alreadyShared = await getSharedMedicalDocumentByIdAndDoctorId({
       documentId,
@@ -284,12 +284,14 @@ exports.createPatientSharedMedicalDocument = async ({
 
     //TODO send sms alert to doctor
     await documentSharedWithDoctorSMS({
-      doctorName:`${first_name} ${last_name}`,
+      doctorName: `${first_name} ${last_name}`,
       mobileNumber: doctorMobileNumber,
       patientName: `${firstName} ${lastName}`,
     });
 
-    return Response.SUCCESS({message:"Medical Document Shared Successfully"})
+    return Response.SUCCESS({
+      message: "Medical Document Shared Successfully",
+    });
   } catch (error) {
     console.error(error);
     throw error;

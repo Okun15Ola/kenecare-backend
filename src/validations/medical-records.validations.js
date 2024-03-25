@@ -17,6 +17,7 @@ exports.ShareMedicalDocumentValidation = [
     .escape()
     .custom(async (value, { req }) => {
       const data = await getPatientMedicalDocumentById(value);
+      console.log(data);
 
       if (!data) {
         throw new Error("Specified Medical Document Not Found");
@@ -27,7 +28,7 @@ exports.ShareMedicalDocumentValidation = [
 
   body("doctorId")
     .notEmpty()
-    .withMessage("Document Title is required")
+    .withMessage("Doctor Id is required")
     .trim()
     .escape()
     .custom(async (value, { req }) => {

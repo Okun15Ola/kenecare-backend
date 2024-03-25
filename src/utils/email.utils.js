@@ -100,10 +100,9 @@ const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
     <p>The approval process is expected to take 48 hours or less. Once approved, the doctor will be eligible to receive appointments from users seeking healthcare services.</p>
     `,
     };
-    const result = await sendGrid.send(message).catch((err) => {
-      throw err;
+    await sendGrid.send(message).catch((error) => {
+      if (error) throw error;
     });
-    console.log(result);
   } catch (error) {
     console.error(error);
     throw error;
@@ -122,11 +121,53 @@ const adminDoctorProfileRegistrationEmail = async ({ doctorName }) => {
     <p>The approval process is expected to take 48 hours or less. Once approved, the doctor will be eligible to receive appointments from users seeking healthcare services.</p>
     `,
     };
-    const done = await sendGrid.send(message).catch((err) => {
-      console.log(err);
-      throw err;
+    await sendGrid.send(message).catch((error) => {
+      if (error) throw error;
     });
-    console.log(done);
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+const adminWithdrawalRequestEmail = async ({
+  doctorName,
+  amount,
+  paymentMethod,
+  mobileMoneyNumber,
+  bankName,
+  accountName,
+  accountNumber,
+}) => {
+  try {
+    const message = {
+      to: kenecareAdminEmail,
+      from: mailer.from,
+      subject: "Request for Approval: Cash Withdrawal",
+      text: "Kenecare Admin Notification",
+      html: `<h3>Dear KENECARE ADMIN</h3>
+    <p>This is a notification email to bring to your attention that <h5>Dr. ${doctorName}</h5> has requestd a cash withdrawal from their Kenecare Wallet. Please <a href='https://admin.kenecare.com'>login</a> to your admin dashboard and process their cash withdrawal request</p> 
+   
+    <h4>Withdrawal Request Details:</h4>
+    <ul>
+    <li>Requested Amount:  <strong>NLE ${amount}</strong></li>
+     ${
+       paymentMethod == "orange_money"
+         ? `
+        <li>Payment Method: ORANGE MONEY</li>
+         <li>Mobile Money Number:  <strong> ${mobileMoneyNumber}</strong></li>`
+         : `
+         <li>Payment Method: BANK TRANSFER</li>
+        <li>Bank Name:  <strong> ${bankName}</strong></li> 
+        <li>Account Name:  <strong> ${accountName}</strong></li> 
+        <li>Account Number:  <strong> ${accountNumber}</strong></li> 
+        `
+     }
+    </ul>
+    `,
+    };
+    await sendGrid.send(message).catch((error) => {
+      if (error) throw error;
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -156,11 +197,9 @@ const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
     
     `,
     };
-    const result = await sendGrid.send(message).catch((err) => {
+    await sendGrid.send(message).catch((err) => {
       throw err;
     });
-
-    console.log(result);
   } catch (error) {
     console.error(error);
     throw error;
@@ -191,11 +230,9 @@ const doctorCouncilRegistrationApprovedEmail = async ({
     
     `,
     };
-    const result = await sendGrid.send(message).catch((err) => {
+    await sendGrid.send(message).catch((err) => {
       throw err;
     });
-
-    console.log(result);
   } catch (error) {
     console.error(error);
     throw error;
@@ -229,11 +266,9 @@ const doctorCouncilRegistrationRejectedEmail = async ({
     
     `,
     };
-    const result = await sendGrid.send(message).catch((err) => {
-      throw err;
+    await sendGrid.send(message).catch((error) => {
+      if (error) throw error;
     });
-
-    console.log(result);
   } catch (error) {
     console.error(error);
     throw error;
@@ -278,7 +313,7 @@ const patientAppointmentApprovalEmail = async ({
     `,
     };
     await sendGrid.send(message).catch((error) => {
-      throw error;
+      if (error) throw error;
     });
   } catch (error) {
     console.error(error);
@@ -301,8 +336,8 @@ const paymentCanceledPatientAppointmentEmail = async ({
     <br />
     <p>Thank you for choosing Kenecare for your healthcare needs. We value your trust in us and are committed to making your experience as comfortable and efficient as possible.</p>`,
     };
-    await sendGrid.send(message).catch((err) => {
-      throw err;
+    await sendGrid.send(message).catch((error) => {
+      if (error) throw error;
     });
   } catch (error) {
     console.error(error);
@@ -317,6 +352,7 @@ module.exports = {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
   adminDoctorProfileRegistrationEmail,
+  adminWithdrawalRequestEmail,
   patientAppointmentApprovalEmail,
   doctorCouncilRegistrationApprovedEmail,
   doctorCouncilRegistrationRejectedEmail,

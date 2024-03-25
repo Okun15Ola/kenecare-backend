@@ -119,7 +119,6 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
   try {
     const rawData = await dbObject.getSpecialtiyById(id);
     if (rawData) {
-      console.log(rawData);
       const { image_url } = rawData;
 
       if (image_url) {

@@ -148,7 +148,6 @@ exports.getSpecializationById = async (id) => {
  *
  * try {
  *   await createSpecialization(specializationData);
- *   console.log("Specialization created successfully.");
  * } catch (error) {
  *   console.error("Error creating specialization:", error);
  * }

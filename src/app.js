@@ -6,10 +6,11 @@ const helmet = require("helmet");
 const expressSession = require("express-session");
 const path = require("path");
 const bodyParser = require("body-parser");
+const swaggerUi = require("swagger-ui-express");
+const moment = require("moment");
 const { sessionSecret } = require("./config/default.config");
 const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
 const logger = require("./middlewares/logger.middleware");
-const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils.js");
 const {
   requireUserAuth,
@@ -23,7 +24,6 @@ const {
   UNAUTHORIZED,
 } = require("./utils/response.utils.js");
 const { zoomSecretToken } = require("./config/default.config.js");
-const moment = require("moment");
 
 //INDEX ROUTES
 const indexRouter = require("./routes/api/index.routes");
@@ -35,6 +35,8 @@ const authRouter = require("./routes/api/auth.routes");
 const doctorsProfileRouter = require("./routes/api/doctors/profile.routes");
 const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.routes");
 const doctorsCounculRegistrationRouter = require("./routes/api/doctors/council-registration.routes");
+const doctorsWalletRouter = require("./routes/api/doctors/wallet.routes.js");
+const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.routes.js");
 
 //PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
@@ -46,6 +48,7 @@ const appointmentPaymentRoutes = require("./routes/api/patients/appointment.paym
 
 //ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
+const adminWithdrawalsRoute = require("./routes/api/admin/withdrawal-requests.routes.js");
 const adminCouncilRegistrationRouter = require("./routes/api/admin/doctors.council-registration.routes");
 const adminSpecializationsRoute = require("./routes/api/admin/specializations.routes");
 const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
@@ -92,6 +95,7 @@ app.use(
   requireAdminAuth,
   express.static(path.join(__dirname, "public/upload/media"))
 );
+
 app.use(
   expressSession({
     secret: sessionSecret,
@@ -100,17 +104,17 @@ app.use(
   })
 );
 
-app.use(function (req, res, next) {
-  if (!req.path.includes("/api/")) {
-    global.session_user_id = "";
-    global.session_user_full_name = "";
-    if (typeof req.session.userID !== "undefined") {
-      global.session_user_id = req.session.userID;
-      global.session_user_full_name = req.session.userFullName;
-    }
-  }
-  next();
-});
+// app.use(function (req, res, next) {
+//   if (!req.path.includes("/api/")) {
+//     global.session_user_id = "";
+//     global.session_user_full_name = "";
+//     if (typeof req.session.userID !== "undefined") {
+//       global.session_user_id = req.session.userID;
+//       global.session_user_full_name = req.session.userFullName;
+//     }
+//   }
+//   next();
+// });
 
 app.use("/api/v1/health-check", (req, res, next) => {
   return res
@@ -195,6 +199,12 @@ app.use("/api/v1/auth", authRouter);
 
 //DOCTORS ROUTES
 app.use("/api/v1/doctors", requireUserAuth, doctorsProfileRouter);
+app.use("/api/v1/doctors/wallets", requireUserAuth, doctorsWalletRouter);
+app.use(
+  "/api/v1/doctors/available-days",
+  requireUserAuth,
+  doctorsAvailableDaysRouter
+);
 app.use(
   "/api/v1/doctors/council-registration",
   requireUserAuth,
@@ -271,6 +281,7 @@ app.use(
   requireAdminAuth,
   adminCouncilRegistrationRouter
 );
+app.use("/api/v1/admin/withdrawals", requireAdminAuth, adminWithdrawalsRoute);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {
@@ -289,12 +300,16 @@ app.use((err, req, res, next) => {
     statusCode = 400;
     errorMessage = "Select File Size too large. Max File Size: 2MB";
 
-    return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
+    return res.status(statusCode).json(BAD_REQUEST({ message: errorMessage }));
   }
   if (err.code === "INVALID_FILE_TYPE") {
     statusCode = 400;
 
-    return res.status(statusCode).json(NOT_FOUND({ message: err.message }));
+    return res.status(statusCode).json(BAD_REQUEST({ message: err.message }));
+  }
+  if (err.statusCode === 400) {
+    statusCode = 400;
+    return res.status(statusCode).json(BAD_REQUEST({ message: err.message }));
   }
   if (err.code === 404) {
     statusCode = 404;
