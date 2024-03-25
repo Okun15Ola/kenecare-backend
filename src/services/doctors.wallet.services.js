@@ -27,7 +27,8 @@ exports.getDoctorsWallet = async (userId) => {
 
     if (!wallet) {
       //create a new wallet automatically with default pin;
-      const response = await createDoctorWallet({ doctorId });
+      const hashedPin = await hashUsersPassword("1234");
+      const response = await createDoctorWallet({ doctorId, pin: hashedPin });
 
       wallet = await getWalletById(response.insertid);
     }
@@ -57,11 +58,14 @@ exports.updateDoctorWalletPin = async ({ userId, newPin }) => {
     const { doctor_id: doctorId } = doctor;
 
     let wallet = await getWalletByDoctorId(doctorId);
+    const hashedPin = await hashUsersPassword(newPin);
     if (wallet) {
-      const hashedPin = await hashUsersPassword(newPin);
       await updateWalletPin({ doctorId, pin: hashedPin });
-      return Response.SUCCESS({ message: "Wallet Pin Updated Successfully" });
+    } else {
+      await createDoctorWallet({ doctorId, pin: hashedPin });
     }
+
+    return Response.SUCCESS({ message: "Wallet Pin Updated Successfully" });
   } catch (error) {
     console.error("UPDATE WALLET PIN ERROR: ", error);
     throw error;

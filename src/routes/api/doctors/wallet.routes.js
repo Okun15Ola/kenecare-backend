@@ -110,14 +110,16 @@ router.patch(
           const { doctor_id: doctorId } = doctor;
           const wallet = await getWalletByDoctorId(doctorId);
           const { wallet_pin } = wallet || null;
-          const isMatch = await comparePassword({
-            plainPassword: pin,
-            hashedPassword: wallet_pin,
-          });
-          if (!isMatch) {
-            throw new Error("Incorrect Current PIN");
+          if (wallet_pin) {
+            const isMatch = await comparePassword({
+              plainPassword: pin,
+              hashedPassword: wallet_pin,
+            });
+            if (!isMatch) {
+              throw new Error("Incorrect Current PIN");
+            }
+            return true;
           }
-          return true;
         }
       }),
     body("newPin")
