@@ -31,7 +31,7 @@ router.post(
           if (wallet_pin) {
             //check if the pin is the default pin
             const isDefaultPin = await comparePassword({
-              plainPassword: "1234",
+              plainPassword: value,
               hashedPassword: wallet_pin,
             });
             if (isDefaultPin) {
