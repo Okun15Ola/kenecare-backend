@@ -120,8 +120,6 @@ exports.requestWithdrawal = async ({
       const pendingRequest = await getWithdrawalRequestByDoctorId(doctorId);
 
       if (pendingRequest) {
-        console.log(pendingRequest);
-        console.log(moment());
         return Response.BAD_REQUEST({
           message:
             "Cannot Request Withdrawal at this moment, you have a pending request that needs approval before you can request another withdrawal",
@@ -163,8 +161,6 @@ exports.requestWithdrawal = async ({
         }),
       ]);
 
-      console.log("REQUEST CREATED: ", requestCreated);
-      console.log("EMAIL SENT: ", emailSent);
       return Response.CREATED({
         message: "Withdrawal Requested Successfully, Awaiting Approval",
       });

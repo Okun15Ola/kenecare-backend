@@ -298,7 +298,6 @@ exports.createPatientAppointment = async ({
       getPatientByUserId(userId),
       getDoctorById(doctorId),
     ]);
-    console.log(patient);
 
     const { patient_id: patientId } = patient;
 

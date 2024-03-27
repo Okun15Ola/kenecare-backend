@@ -32,20 +32,23 @@ exports.GetBlogByIDController = async (req, res, next) => {
 };
 exports.CreateBlogController = async (req, res, next) => {
   try {
-    //TODO to be changed by actual image file
-    const image = "https://example.com/pic.jpg";
-    const { category, title, content,  featured } = req.body;
-    const tags = JSON.stringify(req.body.tags)
-    const response = await createBlog({
-      category,
-      title,
-      content,
-      image,
-      tags,
-      featured,
-      inputtedBy: 1,
-    });
-    return res.status(response.statusCode).json(response);
+    const file = req.file || null;
+    const userId = parseInt(req.user.id);
+
+    if (file) {
+      const { category, title, content, featured } = req.body;
+      const tags = JSON.stringify(req.body.tags);
+      const response = await createBlog({
+        category,
+        title,
+        content,
+        file,
+        tags,
+        featured,
+        inputtedBy: userId,
+      });
+      return res.status(response.statusCode).json(response);
+    }
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -55,12 +58,21 @@ exports.CreateBlogController = async (req, res, next) => {
 
 exports.UpdateBlogByIdController = async (req, res, next) => {
   try {
-    const image = "https://example.com/pic.jpg";
+    const file = req.file || null;
     const id = parseInt(req.params.id);
-    const { category, title, content,featured } = req.body;
+    const { category, title, content, featured } = req.body;
     const tags = JSON.stringify(req.body.tags);
-    const blog = { category, title, content, tags, image, featured};
-    const response = await updateBlog({ id, blog });
+
+    const response = await updateBlog({
+      id,
+      category,
+      title,
+      content,
+      tags,
+      file,
+      featured,
+    });
+
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

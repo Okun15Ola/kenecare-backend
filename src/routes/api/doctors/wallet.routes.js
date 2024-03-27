@@ -11,7 +11,7 @@ const { getDoctorByUserId } = require("../../../db/db.doctors");
 const { getWalletByDoctorId } = require("../../../db/db.doctor-wallet");
 const { comparePassword } = require("../../../utils/auth.utils");
 
-rateLimit(router);
+// rateLimit(router);
 router.get("/", GetDoctorWalletController);
 router.post(
   "/withdrawal",

@@ -1,12 +1,17 @@
 const dbObject = require("../db/db.blogs");
+const {
+  uploadFileToS3Bucket,
+  getFileFromS3Bucket,
+} = require("../utils/aws-s3.utils");
+const { generateFileName } = require("../utils/file-upload.utils");
 const Response = require("../utils/response.utils");
 const moment = require("moment");
 exports.getBlogs = async () => {
   try {
     const rawData = await dbObject.getAllBlogs();
 
-    const blogs = rawData.map(
-      ({
+    const blogsPromises = rawData.map(
+      async ({
         blog_id: blogId,
         category_name: blogCategory,
         title: blogTitle,
@@ -18,12 +23,13 @@ exports.getBlogs = async () => {
         is_active: isActive,
         created_at: createdAt,
       }) => {
+        const url = await getFileFromS3Bucket(image);
         return {
           blogId,
           blogCategory,
           blogTitle,
           description,
-          image,
+          image: url,
           tags: JSON.parse(tags),
           author,
           featured,
@@ -32,6 +38,8 @@ exports.getBlogs = async () => {
         };
       }
     );
+
+    const blogs = await Promise.all(blogsPromises);
 
     return Response.SUCCESS({ data: blogs });
   } catch (error) {
@@ -59,12 +67,14 @@ exports.getBlog = async (id) => {
       created_at: createdAt,
     } = rawData;
 
+    let url = image ? await getFileFromS3Bucket(image) : null;
+
     const blog = {
       blogId,
       blogCategory,
       blogTitle,
       description,
-      image,
+      image: url,
       tags: JSON.parse(tags),
       author,
       featured,
@@ -82,36 +92,76 @@ exports.createBlog = async ({
   category,
   title,
   content,
-  image,
+  file,
   tags,
   featured,
   inputtedBy,
 }) => {
   try {
-    await dbObject.createNewBlog({
-      category,
-      title,
-      content,
-      image,
-      tags,
-      featured,
-      inputtedBy,
-    });
+    if (file) {
+      const fileName = generateFileName(file);
 
-    return Response.CREATED({ message: "Blog Created Successfully" });
+      const { $metadata } = await uploadFileToS3Bucket({
+        fileName,
+        buffer: file.buffer,
+        mimetype: file.mimetype,
+      });
+
+      if ($metadata.httpStatusCode === 200) {
+        await dbObject.createNewBlog({
+          category,
+          title,
+          content,
+          image: fileName,
+          tags,
+          featured,
+          inputtedBy,
+        });
+        return Response.CREATED({ message: "Blog Created Successfully" });
+      }
+    }
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-exports.updateBlog = async ({ id, blog }) => {
+exports.updateBlog = async ({
+  id,
+  category,
+  title,
+  content,
+  tags,
+  file,
+  featured,
+}) => {
   try {
-    const result = await isBlogExist(id);
-
-    if (!result) {
+    const blog = await dbObject.getBlogById(id);
+    if (!blog) {
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
-    await dbObject.updateBlogById({ id, blog });
+
+    let { image } = blog;
+    let fileName = "";
+    if (file) {
+      fileName = image || generateFileName(file);
+      if (fileName) {
+        uploadFileToS3Bucket({
+          fileName,
+          buffer: file.buffer,
+          mimetype: file.mimetype,
+        });
+      }
+    }
+
+    await dbObject.updateBlogById({
+      id,
+      category,
+      title,
+      content,
+      tags,
+      file: fileName,
+      featured,
+    });
     return Response.SUCCESS({ message: "Blog Updated Succcessfully" });
   } catch (error) {
     console.error(error);

@@ -12,6 +12,7 @@ const { doctorProfileApprovalSms } = require("../utils/sms.utils");
 const path = require("path");
 const fs = require("fs");
 const { createDoctorWallet } = require("../db/db.doctor-wallet");
+const { hashUsersPassword } = require("../utils/auth.utils");
 
 exports.getAllDoctors = async () => {
   try {
@@ -363,7 +364,6 @@ exports.createDoctorProfile = async ({
       });
     }
 
-    
     const profileCreated = await dbObject.createDoctor({
       userId,
       title,
@@ -384,13 +384,11 @@ exports.createDoctorProfile = async ({
       doctorName: `${firstName} ${middleName} ${lastName}`,
     });
 
-    //todo create doctor wallet
-    const walletCreated = await createDoctorWallet({
+    const hashedPin = await hashUsersPassword("1234");
+    await createDoctorWallet({
       doctorId: profileCreated.insertId,
-      pin: "$2a$10$vP7hZi0rsfGzGlI44aKkKOFGpn8pTc5y04dvzXydBBjmfxrA18iD.",
+      pin: hashedPin,
     });
-
-    console.log(walletCreated);
 
     return Response.CREATED({
       message:

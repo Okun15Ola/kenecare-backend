@@ -10,8 +10,7 @@ const Response = require("../utils/response.utils");
 
 exports.getUsers = async () => {
   const rawData = await dbObject.getAllUsers();
-  console.log(rawData);
-  return new Array(5);
+  return rawData;
 };
 
 exports.getUserById = async (userId) => {

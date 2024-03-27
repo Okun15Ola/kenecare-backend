@@ -7,7 +7,6 @@ exports.getAllBlogs = () => {
     connectionPool.query(sql, (error, results) => {
       if (error) return reject(error);
 
-      console.log(results);
       return resolve(results);
     });
   });
@@ -44,15 +43,22 @@ exports.createNewBlog = (blog) => {
   });
 };
 
-exports.updateBlogById = ({ id, blog }) => {
-  const { category, title, content, image, tags, featured } = blog;
+exports.updateBlogById = ({
+  id,
+  category,
+  title,
+  content,
+  tags,
+  file,
+  featured,
+}) => {
   const sql =
     "UPDATE blogs SET blog_category_id = ?, title = ?, description = ?, image = ?, tags = ?, is_featured = ? WHERE blog_id = ?";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [category, title, content, image, tags, featured, id],
+      [category, title, content, file, tags, featured, id],
       (error, results) => {
         if (error) return reject(error);
 

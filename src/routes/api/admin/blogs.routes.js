@@ -7,12 +7,12 @@ const {
   UpdateBlogStatusController,
   DeleteBlogByIdController,
 } = require("../../../controllers/admin/blogs.controller");
-
+const { AWSUploader } = require("../../../utils/file-upload.utils");
 router.get("/", GetBlogsController);
 router.get("/:id", GetBlogByIDController);
-router.post("/", CreateBlogController);
-router.put("/:id", UpdateBlogByIdController);
+router.post("/", AWSUploader.single("image"), CreateBlogController);
+router.put("/:id", AWSUploader.single("image"), UpdateBlogByIdController);
 router.patch("/:id/", UpdateBlogStatusController);
 router.delete("/:id", DeleteBlogByIdController);
 
-module.exports = router
+module.exports = router;
