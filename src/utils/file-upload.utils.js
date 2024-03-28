@@ -56,7 +56,7 @@ const localProfilePictureStore = multer.diskStorage({
 const tempUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fieldSize: 1024 * 1024 * 2,
+    fieldSize: 1024 * 1024 * 5,
   },
   fileFilter,
 });
@@ -64,14 +64,14 @@ const tempUpload = multer({
 const localMediaUploader = multer({
   storage: localMediaStore,
   limits: {
-    fileSize: 1024 * 1024 * 2,
+    fileSize: 1024 * 1024 * 5,
   },
   fileFilter: fileFilter,
 });
 const localProfilePicUploader = multer({
   storage: localProfilePictureStore,
   limits: {
-    fileSize: 1024 * 1024 * 2,
+    fileSize: 1024 * 1024 * 5,
   },
   fileFilter: fileFilter,
 });
