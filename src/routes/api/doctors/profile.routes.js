@@ -18,6 +18,7 @@ const {
   localMediaUploader,
 } = require("../../../utils/file-upload.utils");
 const { getMedicalCouncilById } = require("../../../db/db.medical-councils");
+const { getSpecialtiyById } = require("../../../db/db.specialities");
 
 router.get("/profile", GetDoctorProfileController);
 router.post(
@@ -50,11 +51,11 @@ router.post(
       .withMessage("Specialization is required")
       .isNumeric({ no_symbols: true })
       .isInt({ allow_leading_zeroes: false, gt: 0 })
-      .withMessage("City must be a positive integer")
+      .withMessage("Invalid Specialization")
       .trim()
       .escape()
       .custom(async (id, { req }) => {
-        const data = await getSpecializationById(id);
+        const data = await getSpecialtiyById(id);
         if (!data) {
           throw new Error("Specified Specialization Does not exist");
         }
@@ -69,7 +70,7 @@ router.post(
       .withMessage("City is required")
       .isNumeric({ no_symbols: true })
       .isInt({ allow_leading_zeroes: false, gt: 0 })
-      .withMessage("City must be a positive integer")
+      .withMessage("Invalid City")
       .trim()
       .escape()
       .custom(async (id, { req }) => {
