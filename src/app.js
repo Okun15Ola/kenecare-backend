@@ -298,7 +298,7 @@ app.use((err, req, res, next) => {
 
   if (err.code === "LIMIT_FILE_SIZE") {
     statusCode = 400;
-    errorMessage = "Select File Size too large. Max File Size: 2MB";
+    errorMessage = "Select File Size too large. Max File Size: 5MB";
 
     return res.status(statusCode).json(BAD_REQUEST({ message: errorMessage }));
   }
