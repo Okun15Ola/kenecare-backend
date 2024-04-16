@@ -9,16 +9,21 @@ const {
   UpdateCouncilRegistrationController,
 } = require("../../../controllers/doctors/council-registration.controller");
 
-const { localMediaUploader } = require("../../../utils/file-upload.utils");
+const {
+  localMediaUploader,
+  AWSUploader,
+} = require("../../../utils/file-upload.utils");
 const { getMedicalCouncilById } = require("../../../db/db.medical-councils");
 const {
   getCouncilRegistrationById,
   getCouncilRegistrationByRegNumber,
+  getCouncilRegistrationByDoctorId,
+  getDoctorByUserId,
 } = require("../../../db/db.doctors");
 
 router.post(
   "/",
-  localMediaUploader.single("regCertificate"),
+  AWSUploader.single("regCertificate"),
   [
     body("councilId")
       .notEmpty()
@@ -56,7 +61,6 @@ router.post(
       .toUpperCase()
       .custom(async (regNumber, { req }) => {
         const data = await getCouncilRegistrationByRegNumber(regNumber);
-        console.log(data);
         if (data) {
           throw new Error(
             `Medical Council Registration Number ${regNumber} already exists. Please try a different registration number`
@@ -107,23 +111,8 @@ router.post(
 router.get("/", GetDoctorCouncilRegistrationController);
 router.get("/doc/:filename", GetDoctorCouncilRegistrationDocumentController);
 router.put(
-  "/:id",
-  localMediaUploader.single("regCertificate"),
-  [
-    param("id")
-      .notEmpty()
-      .withMessage("Registration ID is required")
-      .isNumeric({ no_symbols: true })
-      .custom(async (id, { req }) => {
-        const data = await getCouncilRegistrationById(id);
-
-        if (!data) {
-          throw new Error("Medical Council Registration Not Found");
-        }
-        return true;
-      }),
-  ],
-  Validate,
+  "/",
+  AWSUploader.single("regCertificate"),
   UpdateCouncilRegistrationController
 );
 module.exports = router;

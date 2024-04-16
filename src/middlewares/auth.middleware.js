@@ -7,7 +7,8 @@ const {
   jwtAdminAudience,
   jwtIssuer,
 } = require("../config/default.config");
-const { STATUS } = require("../utils/enum.utils");
+const { STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
+const { getUserById } = require("../db/db.users");
 
 const getAuthToken = (req) => {
   const authorizationHeader = req.headers["authorization"];
@@ -36,10 +37,30 @@ const requireUserAuth = async (req, res, next) => {
       issuer: jwtIssuer,
     });
 
-    req.user = {
-      id: decoded.sub,
-    };
-    next();
+    const user = await getUserById(decoded.sub);
+    if (user) {
+      const { is_verified, is_account_active } = user;
+      if (is_verified !== VERIFICATIONSTATUS.VERIFIED) {
+        return res.status(401).json(
+          Response.UNAUTHORIZED({
+            message: "Account Not Verified. Please Verify Account",
+          })
+        );
+      }
+      if (is_account_active !== STATUS.ACTIVE) {
+        return res.status(401).json(
+          Response.UNAUTHORIZED({
+            message:
+              "Account InActive. Please Contact KENECARE SUPPORT for further instruction.",
+          })
+        );
+      }
+      req.user = {
+        id: decoded.sub,
+      };
+
+      next();
+    }
   } catch (error) {
     if (error.message === "jwt expired") {
       return res.status(401).json(

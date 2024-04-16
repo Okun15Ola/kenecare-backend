@@ -1,6 +1,7 @@
 const logger = require("../../middlewares/logger.middleware");
 const {
   getDoctorSharedMedicalDocuments,
+  getDoctorSharedMedicalDocument,
 } = require("../../services/doctors.documents.services");
 
 exports.GetAllSharedMedicalRecordsController = async (req, res, next) => {
@@ -17,8 +18,12 @@ exports.GetAllSharedMedicalRecordsController = async (req, res, next) => {
 exports.GetSharedMedicalRecordByIDController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id);
-    const docId = parseInt(req.params.id);
-    const response = await getPatientMedicalDocument({ docId, userId });
+    const sharingId = parseInt(req.params.id);
+
+    const response = await getDoctorSharedMedicalDocument({
+      userId,
+      sharedDocId: sharingId,
+    });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

@@ -50,30 +50,29 @@ router.get("/om/cancel", async (req, res, next) => {
 });
 
 router.post("/om/notification", async (req, res, next) => {
-   try {
-     const { consultationId, referrer } = req.query;
+  try {
+    const { consultationId, referrer } = req.query;
 
-     const response = await processAppointmentPayment({
-       consultationId,
-       referrer,
-     });
+    const response = await processAppointmentPayment({
+      consultationId,
+      referrer,
+    });
 
-     const { statusCode } = response;
+    const { statusCode } = response;
 
-     if (statusCode === 304) {
-       return res.redirect(clientAppUrl);
-     } else if (statusCode === 400) {
-       return res.redirect(`${clientAppUrl}/paymentFailure`);
-     }
+    if (statusCode === 304) {
+      return res.redirect(clientAppUrl);
+    } else if (statusCode === 400) {
+      return res.redirect(`${clientAppUrl}/paymentFailure`);
+    }
 
-     return res.redirect(`${clientAppUrl}/paymentSuccess`);
-   } catch (error) {
-     next(error);
-   }
+    return res.redirect(`${clientAppUrl}/paymentSuccess`);
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;
-
 
 // CREATE TABLE doctors_wallet(
 //   wallet_id int auto_increment,

@@ -23,11 +23,22 @@ exports.getCommonSymptomById = (id) => {
     });
   });
 };
+exports.getCommonSymptomByName = (name) => {
+  const sql = "SELECT * FROM common_symptoms WHERE symptom_name = ? LIMIT 1";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [name], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results[0]);
+    });
+  });
+};
 exports.createNewCommonSymptom = ({
   name,
   description,
   specialtyId,
-  image,
+  file,
   consultationFee,
   tags,
   inputtedBy,
@@ -38,15 +49,7 @@ exports.createNewCommonSymptom = ({
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [
-        name,
-        description,
-        specialtyId,
-        image,
-        consultationFee,
-        tags,
-        inputtedBy,
-      ],
+      [name, description, specialtyId, file, consultationFee, tags, inputtedBy],
       (error, results) => {
         if (error) return reject(error);
 
@@ -55,22 +58,23 @@ exports.createNewCommonSymptom = ({
     );
   });
 };
+
 exports.updateCommonSymptomById = ({
   id,
   name,
   description,
   specialtyId,
-  image,
+  file,
   consultationFee,
   tags,
 }) => {
   const sql =
-    "UPDATE common_symptoms SET symptom_name = ?, symptom_descriptions, speciality_id = ?, image_url = ?, general_consultation_fee = ?, tags = ? WHERE symptom_id = ?";
+    "UPDATE common_symptoms SET symptom_name = ?, symptom_descriptions =?, speciality_id = ?,image_url=?,  general_consultation_fee = ?, tags = ? WHERE symptom_id = ?";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [name, description, specialtyId, image, consultationFee, tags, id],
+      [name, description, specialtyId, file, consultationFee, tags, id],
       (error, results) => {
         if (error) return reject(error);
 
@@ -79,6 +83,8 @@ exports.updateCommonSymptomById = ({
     );
   });
 };
+
+
 exports.deleteCommonSymptomById = (id) => {
   const sql = "DELETE FROM common_symptoms WHERE symptom_id = ?";
 

@@ -175,7 +175,7 @@ exports.createDoctorMedicalCouncilRegistration = ({
   regYear,
   certIssuedDate,
   certExpiryDate,
-  filename,
+  fileName,
 }) => {
   const sql =
     "INSERT INTO doctors_council_registration (doctor_id, medical_council_id, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date) VALUES (?,?,?,?,?,?,?);";
@@ -187,7 +187,7 @@ exports.createDoctorMedicalCouncilRegistration = ({
         councilId,
         regNumber,
         regYear,
-        filename,
+        fileName,
         certIssuedDate,
         certExpiryDate,
       ],
@@ -206,7 +206,7 @@ exports.updateDoctorMedicalCouncilRegistration = ({
   regYear,
   certIssuedDate,
   certExpiryDate,
-  filename,
+  fileName,
 }) => {
   const sql =
     "UPDATE doctors_council_registration SET medical_council_id = ?, registration_number = ? , registration_year = ?, registration_document_url = ?, certificate_issued_date = ? , certificate_expiry_date = ? WHERE council_registration_id = ? AND doctor_id = ? ;";
@@ -217,7 +217,7 @@ exports.updateDoctorMedicalCouncilRegistration = ({
         councilId,
         regNumber,
         regYear,
-        filename,
+        fileName,
         certIssuedDate,
         certExpiryDate,
         registrationId,

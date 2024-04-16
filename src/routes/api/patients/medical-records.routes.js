@@ -16,7 +16,7 @@ const { param } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 
 router.get("/", GetAllMedicalRecordsController);
-router.get("/:id", GetMedicalRecordByIDController);
+router.get("/:id",  GetMedicalRecordByIDController);
 
 router.post(
   "/",
@@ -31,13 +31,7 @@ router.post(
 //   Validate,
 //   ShareMedicalDocumentController
 // );
-router.post(
-  "/",
-  AWSUploader.single("medicalDocument"),
-  CreateNewMedicalRecordValidation,
-  Validate,
-  CreateMedicalReocrdController
-);
+
 router.put(
   "/:id",
   AWSUploader.single("medicalDocument"),

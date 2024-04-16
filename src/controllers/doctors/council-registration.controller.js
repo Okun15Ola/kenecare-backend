@@ -14,7 +14,6 @@ const Response = require("../../utils/response.utils");
 const GetDoctorCouncilRegistrationController = async (req, res, next) => {
   try {
     const id = parseInt(req.user.id);
-    console.log(id);
     const response = await getDoctorCouncilRegistration(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
@@ -90,14 +89,12 @@ const CreateDoctorCouncilRegistration = async (req, res, next) => {
 const UpdateCouncilRegistrationController = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const registrationId = parseInt(req.params.id);
 
     const { file } = req;
     const { councilId, regNumber, regYear, certIssuedDate, certExpiryDate } =
       req.body;
 
     const response = await updateDoctorCouncilRegistration({
-      registrationId,
       userId,
       councilId,
       regNumber,

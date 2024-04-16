@@ -2,6 +2,7 @@ const router = require("express").Router();
 const {
   GetAllSharedMedicalRecordsController,
   GetSharedMedicalRecordByIDController,
+  DeleteSharedMedicalDocumentByIdController,
 } = require("../../../controllers/doctors/medical-record.controller");
 
 const { param } = require("express-validator");
@@ -22,7 +23,7 @@ router.delete(
       }),
   ],
   Validate,
-  DeletemedicaRecordByIdController
+  DeleteSharedMedicalDocumentByIdController
 );
 
 module.exports = router;
