@@ -36,25 +36,19 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
 };
 exports.CreateCommonSymptomController = async (req, res, next) => {
   try {
-    if (req.file) {
-      const image = req.file.filename;
-      const inputtedBy = parseInt(req.user.id);
-      const { name, description, specialtyId, tags, consultationFee } =
-        req.body;
-      const response = await createCommonSymptom({
-        name,
-        description,
-        specialtyId,
-        image,
-        consultationFee,
-        tags,
-        inputtedBy,
-      });
-      return res.status(response.statusCode).json(response);
-    }
-    return res
-      .status(400)
-      .json(Response.BAD_REQUEST({ message: "Bad Request" }));
+    const { file } = req || null;
+    const inputtedBy = parseInt(req.user.id);
+    const { name, description, specialtyId, tags, consultationFee } = req.body;
+    const response = await createCommonSymptom({
+      name,
+      description,
+      specialtyId,
+      file,
+      consultationFee,
+      tags,
+      inputtedBy,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -64,6 +58,21 @@ exports.CreateCommonSymptomController = async (req, res, next) => {
 
 exports.UpdateCommonSymptomByIdController = async (req, res, next) => {
   try {
+    const { file } = req || null;
+    const inputtedBy = parseInt(req.user.id);
+    const id = parseInt(req.params.id);
+    const { name, description, specialtyId, tags, consultationFee } = req.body;
+    const response = await updateCommonSymptom({
+      id,
+      name,
+      description,
+      specialtyId,
+      file,
+      consultationFee,
+      tags,
+      inputtedBy,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);

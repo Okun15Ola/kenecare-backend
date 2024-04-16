@@ -14,7 +14,7 @@ exports.getAllPatients = () => {
 
 exports.getPatientById = (id) => {
   const sql =
-    "SELECT patient_id, title, first_name,middle_name,last_name, gender,profile_pic_url, dob, mobile_number,email,  user_type, is_account_active, is_online FROM patients INNER JOIN users ON patients.user_id = users.user_id  WHERE patient_id = ? LIMIT 1;";
+    "SELECT patient_id, title, first_name,middle_name,last_name, gender,profile_pic_url, dob,booked_first_appointment, mobile_number,email,  user_type, is_account_active, is_online FROM patients INNER JOIN users ON patients.user_id = users.user_id  WHERE patient_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [id], (error, result) => {
       if (error) return reject(error);
@@ -25,7 +25,7 @@ exports.getPatientById = (id) => {
 
 exports.getPatientByUserId = (userId) => {
   const sql =
-    "SELECT patient_id, first_name,middle_name,last_name, gender,dob, patients.user_id,  mobile_number,email, profile_pic_url, user_type, is_account_active FROM patients INNER JOIN users ON patients.user_id = users.user_id  WHERE patients.user_id = ? LIMIT 1;";
+    "SELECT patient_id, first_name,middle_name,last_name, gender,dob,booked_first_appointment, patients.user_id,  mobile_number,email, profile_pic_url, user_type, is_account_active FROM patients INNER JOIN users ON patients.user_id = users.user_id  WHERE patients.user_id = ? LIMIT 1;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [userId], (err, result) => {
       if (err) return reject(err);
@@ -136,6 +136,16 @@ exports.updatePatientById = ({
         return resolve(result);
       }
     );
+  });
+};
+exports.updatePatientFirstAppointmentStatus = (patientId) => {
+  const sql =
+    "UPDATE patients SET booked_first_appointment = 1 WHERE patient_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [patientId], (err, result) => {
+      if (err) return reject(err);
+      return resolve(result);
+    });
   });
 };
 exports.updatePatientProfilePictureByUserId = ({ userId, imageUrl }) => {

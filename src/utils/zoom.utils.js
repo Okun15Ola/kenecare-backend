@@ -96,12 +96,7 @@ const createZoomMeeting = async ({
   }
 };
 
-// createZoomMeeting({
-//   patientName: "Abdulai Samuel Moiwa",
-//   appointmentDate: "2023-01-25",
-//   appointmentStartTime: "16:00",
-//   doctorName: "Isha Fofanah",
-// });
+
 
 module.exports = {
   createZoomMeeting,

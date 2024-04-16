@@ -51,6 +51,39 @@ exports.createAppointmentPayment = ({
     );
   });
 };
+exports.createFirstAppointmentPayment = ({
+  appointmentId,
+  amountPaid,
+  paymentMethod,
+  orderId,
+  transactionId,
+  paymentToken,
+  notificationToken,
+  status,
+}) => {
+  const sql =
+    "INSERT INTO appointment_payments (appointment_id, amount_paid, payment_method, order_id, transaction_id, payment_token,notification_token, payment_status) VALUES (?,?,?,?,?,?,?,?)";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(
+      sql,
+      [
+        appointmentId,
+        amountPaid,
+        paymentMethod,
+        orderId,
+        transactionId,
+        paymentToken,
+        notificationToken,
+        status,
+      ],
+      (error, results) => {
+        if (error) return reject(error);
+
+        return resolve(results);
+      }
+    );
+  });
+};
 
 exports.updateAppointmentPaymentStatus = ({
   paymentId,

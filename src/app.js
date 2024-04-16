@@ -33,10 +33,12 @@ const authRouter = require("./routes/api/auth.routes");
 
 //DOCTORS ROUTER
 const doctorsProfileRouter = require("./routes/api/doctors/profile.routes");
+const doctorsSharedMedicalDocsRouter = require("./routes/api/doctors/medical-records.routes");
 const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.routes");
 const doctorsCounculRegistrationRouter = require("./routes/api/doctors/council-registration.routes");
 const doctorsWalletRouter = require("./routes/api/doctors/wallet.routes.js");
 const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.routes.js");
+const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.routes.js");
 
 //PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
@@ -192,13 +194,23 @@ app.post("/webhooks", async (req, res, next) => {
 app.use("/api/v1", indexRouter);
 
 //API DOCS ROUTE
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 //AUTH ROUTES
 app.use("/api/v1/auth", authRouter);
 
 //DOCTORS ROUTES
 app.use("/api/v1/doctors", requireUserAuth, doctorsProfileRouter);
+app.use(
+  "/api/v1/doctors/prescriptions",
+  requireUserAuth,
+  doctorsPrescriptionsRouter
+);
+app.use(
+  "/api/v1/doctors/shared-medical-docs",
+  requireUserAuth,
+  doctorsSharedMedicalDocsRouter
+);
 app.use("/api/v1/doctors/wallets", requireUserAuth, doctorsWalletRouter);
 app.use(
   "/api/v1/doctors/available-days",

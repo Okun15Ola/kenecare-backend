@@ -1,7 +1,10 @@
 const moment = require("moment");
 const { v4: uuidv4 } = require("uuid");
 const dbObject = require("../db/db.appointments.patients");
-const { getPatientByUserId } = require("../db/db.patients");
+const {
+  getPatientByUserId,
+  updatePatientFirstAppointmentStatus,
+} = require("../db/db.patients");
 const {
   getDoctorAppointByDateAndTime,
 } = require("../db/db.appointments.doctors");
@@ -9,7 +12,10 @@ const { getUserById } = require("../db/db.users");
 const { USER_TYPE } = require("../utils/enum.utils");
 const Response = require("../utils/response.utils");
 const { getDoctorById } = require("../db/db.doctors");
-const { createAppointmentPayment } = require("../db/db.payments");
+const {
+  createAppointmentPayment,
+  createFirstAppointmentPayment,
+} = require("../db/db.payments");
 
 const { getPaymentURL } = require("../utils/payment.utils");
 
@@ -299,7 +305,10 @@ exports.createPatientAppointment = async ({
       getDoctorById(doctorId),
     ]);
 
-    const { patient_id: patientId } = patient;
+    const {
+      patient_id: patientId,
+      booked_first_appointment: hasBookedFirstAppointment,
+    } = patient;
 
     const { consultation_fee: consultationFee } = doctor;
 
@@ -311,7 +320,7 @@ exports.createPatientAppointment = async ({
       });
     }
 
-    //TODO Check if the selected doctor's timeslot is available,
+    // Check if the selected doctor's timeslot is available,
     const timeBooked = await getDoctorAppointByDateAndTime({
       doctorId,
       date: appointmentDate,
@@ -342,6 +351,28 @@ exports.createPatientAppointment = async ({
         appointmentTime,
       });
 
+    if (!hasBookedFirstAppointment) {
+      await createFirstAppointmentPayment({
+        appointmentId,
+        amountPaid: consultationFee,
+        orderId: genUUID,
+        paymentMethod: "ORNAGE MONEY",
+        transactionId: "FIRST_FREE_APPOINTMENT",
+        paymentToken: "FIRST_FREE_APPOINTMENT",
+        notificationToken: "FIRST_FREE_APPOINTMENT",
+        status: "success",
+      });
+
+      await updatePatientFirstAppointmentStatus(patientId);
+
+      return Response.CREATED({
+        message:
+          "First Free Medical Appointment Booked Successfully. Thank you for choosing Kenecare",
+        data: {
+          paymentUrl: null,
+        },
+      });
+    }
     //Get and send payment url to process payment
     const {
       payment_url: paymentUrl,

@@ -1,13 +1,18 @@
 const dbObject = require("../db/db.common-symptoms");
 const Response = require("../utils/response.utils");
+const {
+  getFileFromS3Bucket,
+  uploadFileToS3Bucket,
+} = require("../utils/aws-s3.utils");
+const { generateFileName } = require("../utils/file-upload.utils");
 exports.getCommonSymptoms = async () => {
   try {
     const rawData = await dbObject.getAllCommonSymptoms();
-    const symptoms = rawData.map(
-      ({
+    const promises = rawData.map(
+      async ({
         symptom_id: symptomId,
         symptom_name: name,
-        symptom_description: description,
+        symptom_descriptions: description,
         speciality_name: specialty,
         image_url: imageUrl,
         general_consultation_fee: consultationFee,
@@ -15,12 +20,13 @@ exports.getCommonSymptoms = async () => {
         is_active: isActive,
         inputted_by: inputtedBy,
       }) => {
+        const url = await getFileFromS3Bucket(imageUrl);
         return {
           symptomId,
           name,
           description,
           specialty,
-          imageUrl,
+          imageUrl: url,
           consultationFee,
           tags,
           isActive,
@@ -28,7 +34,7 @@ exports.getCommonSymptoms = async () => {
         };
       }
     );
-
+    const symptoms = await Promise.all(promises);
     return Response.SUCCESS({ data: symptoms });
   } catch (error) {
     console.error("GET ALL COMMON SYMPTOMS ERROR: ", error);
@@ -45,7 +51,7 @@ exports.getCommonSymptom = async (id) => {
     const {
       symptom_id: symptomId,
       symptom_name: name,
-      symptom_description: description,
+      symptom_descriptions: description,
       specialty_id: specialty,
       image_url: imageUrl,
       general_consultation_fee: consultationFee,
@@ -54,12 +60,14 @@ exports.getCommonSymptom = async (id) => {
       inputted_by: inputtedBy,
     } = rawData;
 
+    const url = await getFileFromS3Bucket(imageUrl);
+
     const symptom = {
       symptomId,
       name,
       description,
       specialty,
-      imageUrl,
+      imageUrl: url,
       consultationFee,
       tags,
       isActive,
@@ -76,23 +84,36 @@ exports.createCommonSymptom = async ({
   name,
   description,
   specialtyId,
-  image,
+  file,
   consultationFee,
   tags,
   inputtedBy,
 }) => {
   try {
-    await dbObject.createNewCommonSymptom({
-      name,
-      description,
-      specialtyId,
-      image,
-      consultationFee,
-      tags,
-      inputtedBy,
-    });
+    if (file) {
+      const fileName = `symptom_${generateFileName(file)}`;
+      const { buffer, mimetype } = file;
 
-    return Response.CREATED({ message: "Common Symptom Created Successfully" });
+      await Promise.all([
+        uploadFileToS3Bucket({
+          buffer,
+          fileName,
+          mimetype,
+        }),
+        dbObject.createNewCommonSymptom({
+          name,
+          description,
+          specialtyId,
+          file: fileName,
+          consultationFee,
+          tags,
+          inputtedBy,
+        }),
+      ]);
+      return Response.CREATED({
+        message: "Common Symptom Created Successfully",
+      });
+    }
   } catch (error) {
     console.error("CREATE COMMON SYMPTOMS ERROR: ", error);
     throw error;
@@ -103,17 +124,36 @@ exports.updateCommonSymptom = async ({
   name,
   description,
   specialtyId,
-  image,
+  file,
   consultationFee,
   tags,
   inputtedBy,
 }) => {
   try {
-    const rawData = await dbObject.getCommonSymptomById(id);
-    if (!rawData) {
-      return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
+    const symptom = await dbObject.getCommonSymptomById(id);
+    if (!symptom) {
+      return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
-    await dbObject.updateCommonSymptomById({ id, symptom });
+
+    const { image_url } = symptom;
+
+    const fileName = image_url || `symptom_${generateFileName(file)}`;
+    if (file) {
+      await uploadFileToS3Bucket({
+        fileName,
+        buffer: file.buffer,
+        mimetype: file.mimetype,
+      });
+    }
+    await dbObject.updateCommonSymptomById({
+      id,
+      name,
+      description,
+      specialtyId,
+      file: fileName,
+      consultationFee,
+      tags,
+    });
     return Response.SUCCESS({
       message: "Common Symptom Updated Succcessfully",
     });
@@ -124,11 +164,11 @@ exports.updateCommonSymptom = async ({
 };
 exports.updateCommonSymptomStatus = async ({ id, status }) => {
   try {
-    const rawData = await dbObject.getBlogById(id);
-    if (!rawData) {
-      return Response.NOT_FOUND({ message: "Bog Not Found" });
+    const symptom = await dbObject.getCommonSymptomById(id);
+    if (!symptom) {
+      return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
-    await dbObject.updateBlogStatusById({ id, status });
+
     return Response.SUCCESS({
       message: "Common Symptom Status Updated Successfully",
     });
@@ -139,9 +179,9 @@ exports.updateCommonSymptomStatus = async ({ id, status }) => {
 };
 exports.deleteCommonSymptom = async (id) => {
   try {
-    const result = await isSymptomExists(id);
-    if (!result) {
-      return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
+    const symptom = await dbObject.getCommonSymptomById(id);
+    if (!symptom) {
+      return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
     await dbObject.deleteCommonSymptomById(id);

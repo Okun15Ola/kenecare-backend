@@ -1,13 +1,32 @@
 const { body } = require("express-validator");
 const { getDoctorById } = require("../db/db.doctors");
 const { getPatientMedicalDocumentById } = require("../db/db.patient-docs");
-
+const { getUserById } = require("../db/db.users");
+const bcrypt = require("bcryptjs");
 exports.CreateNewMedicalRecordValidation = [
   body("documentTitle")
     .notEmpty()
     .withMessage("Document Title is required")
     .trim()
     .escape(),
+  body("password")
+    .trim()
+    .escape()
+    .custom(async (value, { req }) => {
+      if (value === "") {
+        throw new Error("Password is required");
+      }
+      const user = await getUserById(req.user.id);
+      if (user) {
+        const { password } = user;
+
+        const isMatch = await bcrypt.compare(value, password);
+        if (!isMatch) {
+          throw new Error("Incorrect Password");
+        }
+        return true;
+      }
+    }),
 ];
 exports.ShareMedicalDocumentValidation = [
   body("documentId")

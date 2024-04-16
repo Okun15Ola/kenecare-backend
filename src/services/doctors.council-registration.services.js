@@ -12,6 +12,11 @@ const {
   doctorCouncilRegistrationRejectedEmail,
 } = require("../utils/email.utils");
 const { appBaseURL } = require("../config/default.config");
+const {
+  uploadFileToS3Bucket,
+  getFileFromS3Bucket,
+} = require("../utils/aws-s3.utils");
+const { generateFileName } = require("../utils/file-upload.utils");
 
 //DOCTORS
 exports.getDoctorCouncilRegistration = async (id) => {
@@ -62,6 +67,8 @@ exports.getDoctorCouncilRegistration = async (id) => {
       verified_by: verifiedBy,
     } = rawData;
 
+    const url = await getFileFromS3Bucket(regDocumentUrl);
+
     const registration = {
       registrationId,
       doctor: `${firstName} ${lastName}`,
@@ -72,7 +79,7 @@ exports.getDoctorCouncilRegistration = async (id) => {
       isProfileApproved,
       regNumber,
       regYear,
-      regDocumentUrl: `${appBaseURL}/doctors/council-registration/doc/${regDocumentUrl}`,
+      regDocumentUrl: url,
       certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
       certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
       regStatus,
@@ -149,19 +156,28 @@ exports.createDoctorCouncilRegistration = async ({
       }
     }
 
-    const done = await dbObject.createDoctorMedicalCouncilRegistration({
-      doctorId,
-      councilId,
-      regNumber,
-      regYear,
-      certIssuedDate,
-      certExpiryDate,
-      filename: file.filename,
-    });
+    const { buffer, mimetype } = file;
+    const fileName = `council_cert_${generateFileName(file)}`;
 
+    //upload file to AWS
+    //Save record to database
     //send an email with further instructions
 
     await Promise.all([
+      uploadFileToS3Bucket({
+        fileName,
+        buffer: buffer,
+        mimetype: mimetype,
+      }),
+      dbObject.createDoctorMedicalCouncilRegistration({
+        doctorId,
+        councilId,
+        regNumber,
+        regYear,
+        certIssuedDate,
+        certExpiryDate,
+        fileName,
+      }),
       adminDoctorCouncilRegistrationEmail({
         doctorName: `${doctorFirstName} ${doctorLastName}`,
       }),
@@ -182,7 +198,6 @@ exports.createDoctorCouncilRegistration = async ({
 };
 
 exports.updateDoctorCouncilRegistration = async ({
-  registrationId,
   userId,
   councilId,
   regNumber,
@@ -217,33 +232,41 @@ exports.updateDoctorCouncilRegistration = async ({
       });
     }
 
-    const {
-      council_registration_id: councilRegistrationId,
-      registration_status: registrationStatus,
-      reject_reason: rejectReason,
-      registration_document_url: documentUrl,
-    } = await dbObject.getCouncilRegistrationById(registrationId);
-
-    if (documentUrl) {
-      // delete old profile pic from file system
-      const file = path.join(__dirname, "../public/upload/media/", documentUrl);
-
-      if (fs.existsSync(file)) {
-        await fs.promises.unlink(file);
-      }
+    const registration = await dbObject.getCouncilRegistrationByDoctorId(
+      doctorId
+    );
+    if (!registration) {
+      return Response.NOT_FOUND({ message: "Council registration not found" });
     }
 
-    await dbObject.updateDoctorMedicalCouncilRegistration({
-      registrationId,
-      doctorId,
-      certExpiryDate,
-      certIssuedDate,
-      regNumber,
-      councilId,
-      filename: file.filename,
-      regYear,
-    });
+    const {
+      council_registration_id: registrationId,
+      registration_status: registrationStatus,
+      reject_reason: rejectReason,
+      registration_document_url: fileName,
+    } = registration;
 
+    const { buffer, mimetype } = file;
+
+    await Promise.all([
+      uploadFileToS3Bucket({
+        fileName,
+        buffer,
+        mimetype,
+      }),
+      dbObject.updateDoctorMedicalCouncilRegistration({
+        registrationId,
+        doctorId,
+        certExpiryDate,
+        certIssuedDate,
+        regNumber,
+        councilId,
+        fileName,
+        regYear,
+      }),
+    ]);
+
+    //TODO Deactivate doctors profile until registration has been reverified
     //send an email with further instructions
 
     // await Promise.all([
@@ -258,7 +281,7 @@ exports.updateDoctorCouncilRegistration = async ({
 
     return Response.SUCCESS({
       message:
-        "Medical Council Registration Successfully Updated. Your information is awaiting approval. You will be notified by email when once your documents are approved.",
+        "Medical Council Registration Successfully Updated. Your account will be temporarily disabled until after verification has been completed. You will be notified by email when once your documents are approved.",
     });
   } catch (error) {
     console.error(error);
@@ -271,8 +294,8 @@ exports.getAllCouncilRegistrations = async () => {
   try {
     const rawData = await dbObject.getAllMedicalCouncilRegistration();
 
-    const registrations = rawData.map(
-      ({
+    const promises = rawData.map(
+      async ({
         council_registration_id: registrationId,
         doctor_id: doctorId,
         first_name: firstName,
@@ -291,6 +314,7 @@ exports.getAllCouncilRegistrations = async () => {
         rejection_reason: rejectionReason,
         verified_by: verifiedBy,
       }) => {
+        const url = await getFileFromS3Bucket(regDocumentUrl);
         return {
           registrationId,
           doctor: `${firstName} ${lastName}`,
@@ -301,7 +325,7 @@ exports.getAllCouncilRegistrations = async () => {
           isProfileApproved,
           regNumber,
           regYear,
-          regDocumentUrl: `${appBaseURL}/admin/council-registration/doc/${regDocumentUrl}`,
+          regDocumentUrl: url,
           certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
           certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
           regStatus,
@@ -310,6 +334,7 @@ exports.getAllCouncilRegistrations = async () => {
         };
       }
     );
+    const registrations = await Promise.all(promises);
     return Response.SUCCESS({ data: registrations });
   } catch (error) {
     console.error(error);

@@ -1,8 +1,9 @@
 const { body, param, check } = require("express-validator");
+const { getSpecialtiyById } = require("../db/db.specialities");
 const {
-  getSpecialtyByName,
-  getSpecialtiyById,
-} = require("../db/db.specialities");
+  getCommonSymptomByName,
+  getCommonSymptomById,
+} = require("../db/db.common-symptoms");
 
 exports.CreateSymptomValidation = [
   body("name")
@@ -12,9 +13,9 @@ exports.CreateSymptomValidation = [
     .trim()
     .escape()
     .custom(async (name, { req }) => {
-      const data = await getSpecialtyByName(name);
+      const data = await getCommonSymptomByName(name);
       if (data) {
-        throw new Error("Specified Specialty Name Already Exists");
+        throw new Error("Specified  Name Already Exists");
       }
       return true;
     }),
@@ -46,24 +47,25 @@ exports.CreateSymptomValidation = [
       }
       return true;
     }),
+  body("tags").trim().escape(),
 ];
 exports.UpdateSymptomValidation = [
   param("id")
     .notEmpty()
-    .withMessage("Specialty ID is required")
+    .withMessage("Common Symptom ID is required")
     .trim()
     .escape()
     .custom(async (value, { req }) => {
-      const data = await getSpecialtiyById(value);
+      const data = await getCommonSymptomById(value);
+
       if (!data) {
-        console.log(data);
-        throw new Error("Specialty Not Found");
+        throw new Error("Common Symptom Not Found");
       }
       return true;
     }),
   body("name")
     .notEmpty()
-    .withMessage("Specialty Name is required")
+    .withMessage("Common Symptom Name is required")
     .toLowerCase()
     .trim()
     .isLength({ max: 150, min: 3 })
@@ -72,9 +74,31 @@ exports.UpdateSymptomValidation = [
   body("description")
     .notEmpty()
     .withMessage("Description is required")
-    .toLowerCase()
     .trim()
     .escape(),
+  body("consultationFee")
+    .notEmpty()
+    .withMessage("Consultation Fee is required")
+    .isNumeric({ no_symbols: true })
+    .withMessage("Invalid Consultation Fee Specified")
+    .trim()
+    .escape(),
+  body("specialtyId")
+    .notEmpty()
+    .withMessage("Specialty ID is required")
+    .isNumeric({ no_symbols: true })
+    .trim()
+    .escape()
+    .custom(async (value, { req }) => {
+      const id = parseInt(value);
+      const found = await getSpecialtiyById(id);
+
+      if (!found) {
+        throw new Error("Invalid Specialty ID");
+      }
+      return true;
+    }),
+  body("tags").trim().escape(),
 ];
 exports.SpecialtyIDValidation = [
   param("id")
