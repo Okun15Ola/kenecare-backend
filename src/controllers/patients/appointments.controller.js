@@ -45,7 +45,6 @@ exports.CreateAppointmentController = async (req, res, next) => {
       appointmentType,
       appointmentDate,
       appointmentTime,
-      timeSlotId,
     } = req.body;
     const response = await createPatientAppointment({
       userId,
@@ -57,7 +56,6 @@ exports.CreateAppointmentController = async (req, res, next) => {
       symptoms,
       appointmentDate,
       appointmentTime,
-      timeSlotId,
     });
 
     return res.status(response.statusCode).json(response);
