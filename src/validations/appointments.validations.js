@@ -89,12 +89,12 @@ exports.CreateAppointmentValidation = [
     .toLowerCase()
     .trim()
     .escape(),
-  body("timeSlotId")
-    .notEmpty()
-    .withMessage("Time Slot is required")
-    .toLowerCase()
-    .trim()
-    .escape(),
+  // body("timeSlotId")
+  //   .notEmpty()
+  //   .withMessage("Time Slot is required")
+  //   .toLowerCase()
+  //   .trim()
+  //   .escape(),
 ];
 
 exports.SpecialtyIDValidation = [
