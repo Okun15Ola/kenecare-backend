@@ -23,7 +23,7 @@ exports.getCommonSymptoms = async () => {
         const url = await getFileFromS3Bucket(imageUrl);
         return {
           symptomId,
-          name,
+          name: name.toUpperCase(),
           description,
           specialty,
           imageUrl: url,
@@ -64,7 +64,7 @@ exports.getCommonSymptom = async (id) => {
 
     const symptom = {
       symptomId,
-      name,
+      name: name.toUpperCase(),
       description,
       specialty,
       imageUrl: url,
