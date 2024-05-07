@@ -30,11 +30,13 @@ router.post(
           const { wallet_pin } = wallet || null;
           if (wallet_pin) {
             //check if the pin is the default pin
-            const isDefaultPin = await comparePassword({
-              plainPassword: value,
-              hashedPassword: wallet_pin,
-            });
-            if (isDefaultPin) {
+            // const isDefaultPin = await comparePassword({
+            //   plainPassword: value,
+            //   hashedPassword: wallet_pin,
+            // });
+            // console.log(isDefaultPin);
+
+            if (value === 1234) {
               throw new Error(
                 "Cannot Request Withdrawal with default wallet pin. Please update wallet PIN before proceeding."
               );
@@ -118,10 +120,12 @@ router.patch(
         const { id } = req.user;
         const doctor = await getDoctorByUserId(id);
         if (doctor) {
-          const pin = value.toString();
+          const pin = value;
+
           const { doctor_id: doctorId } = doctor;
           const wallet = await getWalletByDoctorId(doctorId);
           const { wallet_pin } = wallet || null;
+
           if (wallet_pin) {
             const isMatch = await comparePassword({
               plainPassword: pin,
@@ -144,8 +148,8 @@ router.patch(
     body("confirmNewPin")
       .notEmpty()
       .withMessage("Confirm Pin is required")
-      .custom(async (value, { req }) => {
-        if (req.body.newPin !== value) {
+      .custom(async (pin, { req }) => {
+        if (req.body.newPin !== pin) {
           throw new Error("PIN don't match");
         }
         return true;

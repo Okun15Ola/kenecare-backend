@@ -45,6 +45,24 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     throw error;
   }
 };
+const sendPrescriptionToken = async ({ token, mobileNumber }) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Your KENECARE Medical Prescription AUTHToken is: ${token}.\n Use this token to access your medical prescription. Do not share with anyone, not even KENECARE TEAM. `,
+    });
+
+    config.data = data;
+    const response = await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 const appointmentApprovalSms = async ({
   patientName,
@@ -204,6 +222,7 @@ const withdrawalDeniedSMS = async ({ mobileNumber, doctorName, comment }) => {
 
 module.exports = {
   sendAuthTokenSMS,
+  sendPrescriptionToken,
   appointmentApprovalSms,
   appointmentPostponedSms,
   appointmentBookedSms,

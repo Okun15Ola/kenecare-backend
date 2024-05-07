@@ -7,6 +7,11 @@ const {
 } = require("../db/db.prescriptions");
 const Response = require("../utils/response.utils");
 const { getUserById } = require("../db/db.users");
+const {
+  generateVerificationToken,
+  hashUsersPassword,
+  encryptText,
+} = require("../utils/auth.utils");
 
 exports.getAppointmentPrescriptions = async (id) => {
   try {
@@ -65,12 +70,28 @@ exports.createPrescription = async ({
       });
     }
 
+    //TODO Generate Prescription Access Token
+    const accessToken = generateVerificationToken();
+
+    //TODO Hash Generated Access Token
+    const hashedToken = await hashUsersPassword(accessToken);
+
+    //TODO Use Hashed Token to encyrpt presctiption
+    const encDiagnosis = encryptText(diagnosis, hashedToken);
+    const encMedicines = encryptText(medicines, hashedToken);
+    const encComment = encryptText(medicines, hashedToken);
+
+    //Save encrypted prescription with access token in database
     await createAppointmentPrescriptions({
       appointmentId,
-      diagnosis,
-      medicines,
-      comment,
+      diagnosis: encDiagnosis,
+      medicines: encMedicines,
+      comment: encComment,
+      accessToken: hashedToken,
     });
+
+    //TODO send access token to user for later use
+    await send
 
     return Response.CREATED({
       message: "Prescription Created Successfully",

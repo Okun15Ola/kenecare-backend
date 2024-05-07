@@ -19,6 +19,20 @@ const hashUsersPassword = async (password) => {
   }
 };
 
+const encryptText = (text, key) => {
+  const cipher = crypto.createCipher("aes-256-cbc", key);
+  let encryptedText = cipher.update(text, "utf8", "hex");
+  encryptedText += cipher.final("hex");
+  return encryptedText;
+};
+
+const decryptText = (encryptedText, key) => {
+  const decipher = crypto.createDecipher("aes-256-cbc", key);
+  let decryptedText = decipher.update(encryptedText, "hex", "utf8");
+  decryptedText += decipher.final("utf8");
+  return decryptedText;
+};
+
 const comparePassword = async ({ plainPassword, hashedPassword }) => {
   try {
     return await bcryptjs.compare(plainPassword, hashedPassword);
@@ -76,4 +90,6 @@ module.exports = {
   generateVerificationToken,
   generateUsersJwtAccessToken,
   generateAdminJwtAccessToken,
+  encryptText,
+  decryptText,
 };

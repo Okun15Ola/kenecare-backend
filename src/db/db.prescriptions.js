@@ -48,13 +48,14 @@ exports.createAppointmentPrescriptions = ({
   diagnosis,
   medicines,
   comment,
+  accessToken,
 }) => {
   const sql =
-    "INSERT INTO appointment_prescriptions (appointment_id, diagnosis, medicines, doctors_comment) VALUES (?,?,?,?);";
+    "INSERT INTO appointment_prescriptions (appointment_id, diagnosis, medicines, doctors_comment, access_jwt) VALUES (?,?,?,?,?);";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [appointmentId, diagnosis, medicines, comment],
+      [appointmentId, diagnosis, medicines, comment, accessToken],
       (err, result) => {
         if (err) return reject(err);
 

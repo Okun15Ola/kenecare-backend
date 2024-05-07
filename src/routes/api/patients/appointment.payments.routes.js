@@ -51,6 +51,7 @@ router.get("/om/cancel", async (req, res, next) => {
 
 router.post("/om/notification", async (req, res, next) => {
   try {
+    console.log("Inside Notification URL");
     const { consultationId, referrer } = req.query;
 
     const response = await processAppointmentPayment({
