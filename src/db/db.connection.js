@@ -20,9 +20,8 @@ const dbConfig = {
   connectionLimit: dbConnectionLimit,
 };
 
-
 const connectionPool = mysql.createPool(dbConfig);
 
 const sessionStore = new MySQLStore(dbConfig);
 
-module.exports = { dbConfig, sessionStore, connectionPool };
+module.exports = { dbConfig, sessionStore, connectionPool }; 

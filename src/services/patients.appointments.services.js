@@ -21,8 +21,15 @@ const { getPaymentURL } = require("../utils/payment.utils");
 
 exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
-    const { patient_id: patientId } = await getPatientByUserId(userId);
+    const patient = await getPatientByUserId(userId);
 
+    if (!patient) {
+      return Response.NOT_FOUND({
+        message:
+          "Patient profile not found please, create profile before proceeding",
+      });
+    }
+    const { patient_id: patientId } = patient;
     const rawData = await dbObject.getAllPatientAppointments({
       patientId,
       page,
@@ -381,6 +388,8 @@ exports.createPatientAppointment = async ({
     } = await getPaymentURL({
       orderId: genUUID,
       amount: consultationFee,
+    }).catch((error) => {
+      throw error;
     });
 
     // create new appointment payments record
@@ -400,7 +409,6 @@ exports.createPatientAppointment = async ({
       },
     });
   } catch (error) {
-    console.error(error);
     throw error;
   }
 };
