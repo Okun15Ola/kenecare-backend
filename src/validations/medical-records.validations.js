@@ -9,24 +9,24 @@ exports.CreateNewMedicalRecordValidation = [
     .withMessage("Document Title is required")
     .trim()
     .escape(),
-  body("password")
-    .trim()
-    .escape()
-    .custom(async (value, { req }) => {
-      if (value === "") {
-        throw new Error("Password is required");
-      }
-      const user = await getUserById(req.user.id);
-      if (user) {
-        const { password } = user;
+  // body("password")
+  //   .trim()
+  //   .escape()
+  //   .custom(async (value, { req }) => {
+  //     if (value === "") {
+  //       throw new Error("Password is required");
+  //     }
+  //     const user = await getUserById(req.user.id);
+  //     if (user) {
+  //       const { password } = user;
 
-        const isMatch = await bcrypt.compare(value, password);
-        if (!isMatch) {
-          throw new Error("Incorrect Password");
-        }
-        return true;
-      }
-    }),
+  //       const isMatch = await bcrypt.compare(value, password);
+  //       if (!isMatch) {
+  //         throw new Error("Incorrect Password");
+  //       }
+  //       return true;
+  //     }
+  //   }),
 ];
 exports.ShareMedicalDocumentValidation = [
   body("documentId")
