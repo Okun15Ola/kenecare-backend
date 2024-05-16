@@ -20,7 +20,7 @@ const {
 } = require("../config/default.config");
 let baseUrl = apiBaseURL;
 if (nodeEnv === "development") {
-  baseUrl = "https://0b5a-102-220-249-246.ngrok-free.app";
+  baseUrl = "https://aa0b-197-215-23-4.ngrok-free.app";
 }
 
 const getAccessToken = async (next) => {

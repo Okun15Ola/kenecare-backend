@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const {
   GetPrescriptionsController,
+  GetAppointmentPrescriptionController,
   GetAppointmentPrescriptionsController,
   CreatePrescriptionController,
   UpdatePrescriptionController,
@@ -44,6 +45,26 @@ router.get(
   ],
   Validate,
   GetAppointmentPrescriptionsController
+);
+router.get(
+  "/:id",
+  [
+    param("id")
+      .notEmpty()
+      .withMessage("Prescription ID is required")
+      .isInt("Invalid Appoitment ID")
+      .trim()
+      .escape()
+      .custom(async (value, { req }) => {
+        const prescription = await getAppointmentPrescriptionById(value);
+        if (!prescription) {
+          throw new Error("Prescription not found");
+        }
+        return true;
+      }),
+  ],
+  Validate,
+  GetAppointmentPrescriptionController
 );
 router.post(
   "/",

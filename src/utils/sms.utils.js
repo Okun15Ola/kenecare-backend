@@ -45,13 +45,13 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     throw error;
   }
 };
-const sendPrescriptionToken = async ({ token, mobileNumber }) => {
+const sendPrescriptionToken = async ({ token,doctorName,  mobileNumber }) => {
   try {
     const data = JSON.stringify({
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Your KENECARE Medical Prescription AUTHToken is: ${token}.\n Use this token to access your medical prescription. Do not share with anyone, not even KENECARE TEAM. `,
+      content: `Your KENECARE Medical Prescription from Dr. ${doctorName} is ready.\n\nUse this token: ${token} to access your medical prescription.\n\nDo not share this token with anyone, not even the KENECARE TEAM. `,
     });
 
     config.data = data;

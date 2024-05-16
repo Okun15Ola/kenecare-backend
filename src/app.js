@@ -47,6 +47,7 @@ const patientMedicalRecordRouter = require("./routes/api/patients/medical-record
 const patientSharedMedicalDocumentRouter = require("./routes/api/patients/shared-docs.routes.js");
 const patientMedicalHistoryRouter = require("./routes/api/patients/medical-history.routes");
 const appointmentPaymentRoutes = require("./routes/api/patients/appointment.payments.routes");
+const patientPrescriptionRoutes = require("./routes/api/patients/prescriptions.routes.js");
 
 //ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
@@ -249,6 +250,11 @@ app.use(
   "/api/v1/patients/medical-info",
   requireUserAuth,
   patientMedicalHistoryRouter
+);
+app.use(
+  "/api/v1/patients/prescriptions",
+  requireUserAuth,
+  patientPrescriptionRoutes
 );
 
 //PAYMENT ROUTES

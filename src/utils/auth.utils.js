@@ -26,7 +26,7 @@ const encryptText = (text, key) => {
   return encryptedText;
 };
 
-const decryptText = (encryptedText, key) => {
+const decryptText = ({ encryptedText, key }) => {
   const decipher = crypto.createDecipher("aes-256-cbc", key);
   let decryptedText = decipher.update(encryptedText, "hex", "utf8");
   decryptedText += decipher.final("utf8");

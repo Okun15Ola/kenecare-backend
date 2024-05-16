@@ -78,19 +78,6 @@ services:
       - kenecare-api-db-data:/var/lib/mysql
     networks:
       - kenecare-net
-  # nginx:
-  #   build:
-  #     context: ./nginx
-  #   image: imotechsl/kenecare-nginx:${ENV}
-  #   container_name: kenecare-nginx-${ENV}
-  #   restart: always
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   depends_on:
-  #     - admin
-  #   networks:
-  #     - kenecare-net
 
 volumes:
   kenecare-api-db-data:
