@@ -45,7 +45,25 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     throw error;
   }
 };
-const sendPrescriptionToken = async ({ token,doctorName,  mobileNumber }) => {
+const sendPasswordResetSMS = async (mobileNumber) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Account Notification. The password for your Kenecare Account ${mobileNumber} was recently changed.`,
+    });
+
+    config.data = data;
+    const response = await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+const sendPrescriptionToken = async ({ token, doctorName, mobileNumber }) => {
   try {
     const data = JSON.stringify({
       from: "KENECARE",
@@ -230,4 +248,5 @@ module.exports = {
   documentSharedWithDoctorSMS,
   withdrawalApprovedSMS,
   withdrawalDeniedSMS,
+  sendPasswordResetSMS,
 };

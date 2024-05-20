@@ -5,7 +5,10 @@ const {
 } = require("../utils/auth.utils");
 const { USERTYPE, VERIFICATIONSTATUS, STATUS } = require("../utils/enum.utils");
 const { hashUsersPassword } = require("../utils/auth.utils");
-const { sendAuthTokenSMS } = require("../utils/sms.utils");
+const {
+  sendAuthTokenSMS,
+  sendPasswordResetSMS,
+} = require("../utils/sms.utils");
 const Response = require("../utils/response.utils");
 
 exports.getUsers = async () => {
@@ -414,24 +417,32 @@ exports.resendVerificationOTP = async ({ phoneNumber, user }) => {
   }
 };
 
-exports.sendVerificationOTP = async (userId) => {
+exports.sendVerificationOTP = async (user) => {
   try {
     if (!user) {
-      return Response.BAD_REQUEST({ message: "Error Sending OTP" });
+      return Response.BAD_REQUEST({
+        message: "Error Sending OTP. Please try again",
+      });
     }
 
-    const user = await d;
+    // const user = await d;
     const {
+      user_id: userId,
       is_verified,
       is_account_active,
       mobile_number: mobileNumber,
     } = user;
 
-    return;
     if (is_verified && is_account_active) {
       const token = generateVerificationToken();
+
+      await dbObject.updateUserVerificationTokenById({
+        userId,
+        token,
+      });
       // Send TOKEN VIA SMS
       await sendAuthTokenSMS({ token, mobileNumber });
+      //return success response to user
       return Response.SUCCESS({
         message: "Verification OTP sent succesfully",
       });
@@ -441,25 +452,24 @@ exports.sendVerificationOTP = async (userId) => {
     throw error;
   }
 };
-exports.verifyRequestedOTP = async ({ phoneNumber, user }) => {
+exports.verifyRequestedOTP = async (user) => {
   try {
     if (!user) {
-      return Response.BAD_REQUEST({ message: "Error Resending OTP" });
+      return Response.BAD_REQUEST({
+        message: "Error verifying token, please try again with a valid token.",
+      });
     }
     const {
+      user_id: userId,
       verification_token: token,
       is_verified,
       mobile_number: mobileNumber,
     } = user;
 
-    if (token && is_verified !== STATUS.ACTIVE) {
-      // Send TOKEN VIA SMS
-      await sendAuthTokenSMS({ token, mobileNumber });
+    if (token && is_verified === STATUS.ACTIVE) {
       return Response.SUCCESS({
-        message: "Verification OTP resent succesfully",
+        message: "OTP Verified Successfully.",
       });
-    } else {
-      return Response.NOT_MODIFIED();
     }
   } catch (error) {
     console.error(error);
@@ -471,9 +481,10 @@ exports.updateUserPassword = async ({ newPassword, user }) => {
   try {
     if (!user) {
       return Response.BAD_REQUEST({
-        message: "Error updating password, please try again",
+        message: "Error updating password, please try again.",
       });
     }
+
     const {
       user_id: userId,
       verification_token: token,
@@ -481,16 +492,27 @@ exports.updateUserPassword = async ({ newPassword, user }) => {
       mobile_number: mobileNumber,
     } = user;
 
+    if (is_verified !== STATUS.ACTIVE) {
+      return Response.BAD_REQUEST({
+        message:
+          "Unverified account, please verify account before performing this action",
+      });
+    }
+
     const hashedPassword = await hashUsersPassword(newPassword);
 
-    const done = await dbObject.updateUserPasswordById({
-      userId,
-      password: hashedPassword,
-    });
+    await Promise.all([
+      dbObject.updateUserPasswordById({
+        userId,
+        password: hashedPassword,
+      }),
+      dbObject.updateUserVerificationTokenById({ userId, token: null }),
+      sendPasswordResetSMS(mobileNumber),
+    ]);
 
     return Response.SUCCESS({
       message:
-        "Password Updated Successfully. You'll be redirected to login again",
+        "Password Reset Successfully. Please login with your new password.",
     });
   } catch (error) {
     console.error(error);
