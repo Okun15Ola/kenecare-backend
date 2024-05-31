@@ -33,10 +33,11 @@ Response.CREATED = ({ data, message }) => {
   };
 };
 
-Response.BAD_REQUEST = ({ message, error }) => {
+Response.BAD_REQUEST = ({ message, error, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",
+    errorCode,
     statusCode: HttpStatus.StatusCodes.BAD_REQUEST,
     timestamp: timestamp,
     message: message,
@@ -44,20 +45,22 @@ Response.BAD_REQUEST = ({ message, error }) => {
   };
 };
 
-Response.UNAUTHORIZED = ({ message, error }) => {
+Response.UNAUTHORIZED = ({ message, error, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",
+    errorCode,
     statusCode: HttpStatus.StatusCodes.UNAUTHORIZED,
     timestamp: timestamp,
     message: message,
     errors: error,
   };
 };
-Response.NOT_FOUND = ({ message, error }) => {
+Response.NOT_FOUND = ({ message, error, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",
+    errorCode,
     statusCode: HttpStatus.StatusCodes.NOT_FOUND,
     timestamp: timestamp,
     message: message,
@@ -65,10 +68,11 @@ Response.NOT_FOUND = ({ message, error }) => {
   };
 };
 
-Response.INTERNAL_SERVER_ERROR = ({ message, error }) => {
+Response.INTERNAL_SERVER_ERROR = ({ message, error, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",
+    errorCode,
     statusCode: HttpStatus.StatusCodes.INTERNAL_SERVER_ERROR,
     timestamp: timestamp,
     message: message,

@@ -7,8 +7,16 @@ const {
   jwtAdminAudience,
   jwtIssuer,
 } = require("../config/default.config");
-const { STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
-const { getUserById } = require("../db/db.users");
+const {
+  STATUS,
+  VERIFICATIONSTATUS,
+  USERTYPE,
+  ERROR_CODES,
+} = require("../utils/enum.utils");
+const { getUserById, updateUserAccountStatusById } = require("../db/db.users");
+const { getDoctorByUserId } = require("../db/db.doctors");
+const { getPatientByUserId } = require("../db/db.patients");
+const { generateUsersJwtAccessToken } = require("../utils/auth.utils");
 
 const getAuthToken = (req) => {
   const authorizationHeader = req.headers["authorization"];
@@ -39,7 +47,12 @@ const requireUserAuth = async (req, res, next) => {
 
     const user = await getUserById(decoded.sub);
     if (user) {
-      const { is_verified, is_account_active } = user;
+      const {
+        user_id: userId,
+        is_verified,
+        is_account_active,
+        user_type: userType,
+      } = user;
       if (is_verified !== VERIFICATIONSTATUS.VERIFIED) {
         return res.status(401).json(
           Response.UNAUTHORIZED({
@@ -54,6 +67,47 @@ const requireUserAuth = async (req, res, next) => {
               "Account InActive. Please Contact KENECARE SUPPORT for further instruction.",
           })
         );
+      }
+
+      //Generate access token for logged in users
+      const accessJwt = generateUsersJwtAccessToken({
+        sub: userId,
+      });
+
+      updateUserAccountStatusById({
+        userId,
+        status: STATUS.ACTIVE,
+      });
+
+      if (userType == USERTYPE.DOCTOR) {
+        const doctorProfile = await getDoctorByUserId(userId);
+        if (!doctorProfile) {
+          //Return access token
+          return Response.SUCCESS({
+            message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
+            data: {
+              token: accessJwt,
+              type: userType,
+              isVerified: is_verified,
+              isActive: is_account_active,
+            },
+          });
+        }
+      }
+
+      if (userType === USERTYPE.PATIENT) {
+        const patientProfile = await getPatientByUserId(user_id);
+        if (!patientProfile) {
+          return Response.SUCCESS({
+            message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
+            data: {
+              token: accessJwt,
+              type: userType,
+              isVerified: is_verified,
+              isActive: is_account_active,
+            },
+          });
+        }
       }
       req.user = {
         id: decoded.sub,
