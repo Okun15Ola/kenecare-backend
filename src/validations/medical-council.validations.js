@@ -19,7 +19,7 @@ exports.CreateMedicalCouncilValidation = [
     .trim()
     .escape()
     .toLowerCase()
-    .custom(async (email, { req }) => {
+    .custom(async (email) => {
       const data = await getMedicalCouncilByEmail(email);
       if (data) {
         throw new Error("That email has already been registered");
@@ -33,7 +33,7 @@ exports.CreateMedicalCouncilValidation = [
     .withMessage("Mobile Number must be in international format(e.g +XXX)")
     .trim()
     .escape()
-    .custom(async (mobileNumber, { req }) => {
+    .custom(async (mobileNumber) => {
       const data = await getMedicalCouncilByMobileNumber(mobileNumber);
       if (data) {
         throw new Error("That mobile number has already been registered");
@@ -48,7 +48,7 @@ exports.UpdateMedicalCouncilValidation = [
     .withMessage("Council ID is required")
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getMedicalCouncilById(id);
       if (!data) {
         throw new Error("Medical Council Not Found");
@@ -83,7 +83,7 @@ exports.MedicalCouncilIDValidation = [
     .withMessage("Council ID is required")
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getMedicalCouncilById(id);
       if (!data) {
         throw new Error("Medical Council Not Found");

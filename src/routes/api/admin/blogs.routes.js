@@ -8,6 +8,7 @@ const {
   DeleteBlogByIdController,
 } = require("../../../controllers/admin/blogs.controller");
 const { AWSUploader } = require("../../../utils/file-upload.utils");
+
 router.get("/", GetBlogsController);
 router.get("/:id", GetBlogByIDController);
 router.post("/", AWSUploader.single("image"), CreateBlogController);

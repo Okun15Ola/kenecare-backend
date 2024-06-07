@@ -15,11 +15,12 @@ const logger = require("../middlewares/logger.middleware");
 
 exports.AuthenticateController = async (req, res, next) => {
   try {
-    //Authenticate Controller
+    // Authenticate Controller
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.LoginController = async (req, res, next) => {
@@ -29,7 +30,7 @@ exports.LoginController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.RequestLoginOTPController = async (req, res, next) => {
@@ -39,7 +40,7 @@ exports.RequestLoginOTPController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.VerifyLoginOTPController = async (req, res, next) => {
@@ -49,7 +50,7 @@ exports.VerifyLoginOTPController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -69,7 +70,7 @@ exports.RegisterController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.VerifyRegisterOTPController = async (req, res, next) => {
@@ -82,13 +83,13 @@ exports.VerifyRegisterOTPController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.ForgotPasswordController = async (req, res, next) => {
   try {
-    //Forgot Password Controller
+    // Forgot Password Controller
     const { phoneNumber, token } = req.body;
     let response = null;
     if (phoneNumber) {
@@ -102,7 +103,7 @@ exports.ForgotPasswordController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.UpdatePasswordController = async (req, res, next) => {
@@ -114,7 +115,7 @@ exports.UpdatePasswordController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.ResetPasswordController = async (req, res, next) => {
@@ -126,11 +127,11 @@ exports.ResetPasswordController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
-//resend signup OTP
+// resend signup OTP
 exports.ResendVerificationOTPController = async (req, res, next) => {
   try {
     const { phoneNumber } = req.body;
@@ -141,11 +142,11 @@ exports.ResendVerificationOTPController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
-//send verification OTP
+// send verification OTP
 exports.SendVerificationOTPController = async (req, res, next) => {
   try {
     const { user } = req;
@@ -155,10 +156,10 @@ exports.SendVerificationOTPController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
-//VERIFY verification OTP
+// VERIFY verification OTP
 exports.VerifyRequestedOTPController = async (req, res, next) => {
   try {
     const { phoneNumber } = req.body;
@@ -169,7 +170,6 @@ exports.VerifyRequestedOTPController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
-

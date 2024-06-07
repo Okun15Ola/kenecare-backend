@@ -1,16 +1,15 @@
-const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   getSpecialties,
   getSpecialtyById,
-  getSpecialtyByName,
+  // getSpecialtyByName,
   createSpecialty,
   updateSpecialty,
   updateSpecialtyStatus,
   deleteSpecialty,
 } = require("../../services/specialties.services");
 const { localMediaUploader } = require("../../utils/file-upload.utils");
-const path = require("path");
+
 localMediaUploader.single("image");
 
 exports.GetSpecialtiesController = async (req, res, next) => {
@@ -20,7 +19,7 @@ exports.GetSpecialtiesController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetSpecialtyByIDController = async (req, res, next) => {
@@ -33,55 +32,51 @@ exports.GetSpecialtyByIDController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.CreateSpecialtyController = async (req, res, next) => {
   try {
-    if (req.file) {
-      const userId = parseInt(req.user.id);
-      const image = req.file.filename;
-      const { name, description } = req.body;
-      const response = await createSpecialty({
-        name,
-        description,
-        image,
-        inputtedBy: userId,
-      });
-      return res.status(response.statusCode).json(response);
-    }
+    const userId = parseInt(req.user.id, 10);
+    const image = req.file.filename || null;
+    const { name, description } = req.body;
+    const response = await createSpecialty({
+      name,
+      description,
+      image,
+      inputtedBy: userId,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.UpdateSpecialtyByIdController = async (req, res, next) => {
   try {
-    if (req.file) {
-      const image = req.file.filename;
-      const id = parseInt(req.params.id);
-      const { name, description } = req.body;
+    const image = req.file.filename || null;
+    const id = parseInt(req.params.id, 10);
+    const { name, description } = req.body;
 
-      const response = await updateSpecialty({
-        id,
-        name,
-        image,
-        description,
-      });
-      return res.status(response.statusCode).json(response);
-    }
+    const response = await updateSpecialty({
+      id,
+      name,
+      image,
+      description,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.UpdateSpecialtyStatusController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
-    const status = parseInt(req.query.status);
+    const id = parseInt(req.params.id, 10);
+    const status = parseInt(req.query.status, 10);
 
     const response = await updateSpecialtyStatus({
       id,
@@ -91,19 +86,19 @@ exports.UpdateSpecialtyStatusController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.DeleteSpecialtyByIdController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
 
     const response = await deleteSpecialty(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

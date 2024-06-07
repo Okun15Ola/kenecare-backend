@@ -1,4 +1,4 @@
-const { body, param, check } = require("express-validator");
+const { body, param } = require("express-validator");
 const { getSpecialtiyById } = require("../db/db.specialities");
 const {
   getCommonSymptomByName,
@@ -12,7 +12,7 @@ exports.CreateSymptomValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (name, { req }) => {
+    .custom(async (name) => {
       const data = await getCommonSymptomByName(name);
       if (data) {
         throw new Error("Specified  Name Already Exists");
@@ -38,8 +38,8 @@ exports.CreateSymptomValidation = [
     .isNumeric({ no_symbols: true })
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
-      const id = parseInt(value);
+    .custom(async (value) => {
+      const id = parseInt(value, 10);
       const found = await getSpecialtiyById(id);
 
       if (!found) {
@@ -55,7 +55,7 @@ exports.UpdateSymptomValidation = [
     .withMessage("Common Symptom ID is required")
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const data = await getCommonSymptomById(value);
 
       if (!data) {
@@ -89,8 +89,8 @@ exports.UpdateSymptomValidation = [
     .isNumeric({ no_symbols: true })
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
-      const id = parseInt(value);
+    .custom(async (value) => {
+      const id = parseInt(value, 10);
       const found = await getSpecialtiyById(id);
 
       if (!found) {
@@ -106,7 +106,7 @@ exports.SpecialtyIDValidation = [
     .withMessage("Specialty ID is required")
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getSpecialtiyById(id);
       if (!data) {
         throw new Error("Specialty Not Found");

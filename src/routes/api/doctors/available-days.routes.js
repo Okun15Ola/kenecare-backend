@@ -2,9 +2,7 @@ const router = require("express").Router();
 const {
   GetDoctorWalletController,
   UpdateWalletPinController,
-  RequestWithdrawalController,
 } = require("../../../controllers/doctors/wallet.controller");
-const { Validate } = require("../../../validations/validate");
 const { limiter: rateLimit } = require("../../../utils/rate-limit.utils");
 
 rateLimit(router);
@@ -18,6 +16,7 @@ router.post("/", (req, res, next) => {
     return res.end();
   } catch (error) {
     console.log(error);
+    return next(error);
   }
 });
 router.patch("/", UpdateWalletPinController);

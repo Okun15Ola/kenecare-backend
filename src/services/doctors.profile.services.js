@@ -1,32 +1,30 @@
 const dbObject = require("../db/db.doctors");
 const Response = require("../utils/response.utils");
-const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
+const { USERTYPE } = require("../utils/enum.utils");
 const { getUserById } = require("../db/db.users");
 const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
 } = require("../utils/email.utils");
-const { appBaseURL } = require("../config/default.config");
 
 exports.getDoctorCouncilRegistration = async (id) => {
   try {
-    //Get profile from database
+    // Get profile from database
     const rawData = await dbObject.getDoctorByUserId(id);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
-    //destruct properties from database object
+    // destruct properties from database object
     const {
       doctor_id: doctorId,
       user_type: userType,
       user_id: userId,
-      is_account_active: isAccountActive,
     } = rawData;
 
-    //Check if the profile requested belongs to the requesting user
-    //Check if the user type is a doctor
+    // Check if the profile requested belongs to the requesting user
+    // Check if the user type is a doctor
     if (id !== userId || userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
     }
@@ -81,12 +79,11 @@ exports.createDoctorCouncilRegistration = async ({
 
     if (councilRegistrationExist) {
       const {
-        council_registration_id: councilRegistrationId,
         registration_status: registrationStatus,
         reject_reason: rejectReason,
       } = councilRegistrationExist;
 
-      //TODO check if it has been approved
+      // TODO check if it has been approved
       if (registrationStatus === "pending") {
         return Response.BAD_REQUEST({
           message:
@@ -117,7 +114,7 @@ exports.createDoctorCouncilRegistration = async ({
       filename: file.filename,
     });
 
-    //send an email with further instructions
+    // send an email with further instructions
 
     await Promise.all([
       adminDoctorCouncilRegistrationEmail({
@@ -177,12 +174,11 @@ exports.updateDoctorCouncilRegistration = async ({
 
     if (councilRegistrationExist) {
       const {
-        council_registration_id: councilRegistrationId,
         registration_status: registrationStatus,
         reject_reason: rejectReason,
       } = councilRegistrationExist;
 
-      //TODO check if it has been approved
+      // TODO check if it has been approved
       if (registrationStatus === "pending") {
         return Response.BAD_REQUEST({
           message:
@@ -213,7 +209,7 @@ exports.updateDoctorCouncilRegistration = async ({
       filename: file.filename,
     });
 
-    //send an email with further instructions
+    // send an email with further instructions
 
     await Promise.all([
       adminDoctorCouncilRegistrationEmail({

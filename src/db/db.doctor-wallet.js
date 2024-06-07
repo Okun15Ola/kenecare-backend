@@ -113,9 +113,7 @@ exports.createWithDrawalRequest = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
-
-

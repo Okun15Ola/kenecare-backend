@@ -38,7 +38,7 @@ exports.createNewTestimonial = ({ patientId, content, inputtedBy }) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -54,7 +54,7 @@ exports.updateTestimonialById = ({ testimonialId, patientId, content }) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

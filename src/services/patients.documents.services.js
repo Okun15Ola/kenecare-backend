@@ -1,10 +1,10 @@
+const { v4: uuidv4 } = require("uuid");
 const {
-  getAllPatientDocs,
   getPatientMedicalDocumentByDocumentId,
   getMedicalDocumentsByPatientId,
   createPatientMedicalDocument,
   deletePatientDocById,
-  updatePatientMedicalDocumentById: updatePatientMedicalDocumentById,
+  updatePatientMedicalDocumentById,
   createPatientDocumentSharing,
   getSharedMedicalDocumentByIdAndDoctorId,
   getPatientSharedMedicalDocuments,
@@ -13,14 +13,11 @@ const {
 } = require("../db/db.patient-docs");
 const { getPatientByUserId } = require("../db/db.patients");
 const Response = require("../utils/response.utils");
-const { awsBucketName } = require("../config/default.config");
 const {
   uploadFileToS3Bucket,
   getFileFromS3Bucket,
   deleteFileFromS3Bucket,
 } = require("../utils/aws-s3.utils");
-const { generateFileName } = require("../utils/file-upload.utils");
-const { v4: uuidv4 } = require("uuid");
 const { documentSharedWithDoctorSMS } = require("../utils/sms.utils");
 const { getDoctorById } = require("../db/db.doctors");
 
@@ -53,7 +50,7 @@ exports.getPatientMedicalDocuments = async (userId) => {
           documentTitle,
           documentUrl: url,
         };
-      }
+      },
     );
 
     const documents = await Promise.all(documentPromises);
@@ -117,36 +114,36 @@ exports.createPatientMedicalDocument = async ({
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
 
-    if (file) {
-      const { patient_id: patientId } = patient;
-
-      const documentUuid = uuidv4();
-
-      const uploaded = await uploadFileToS3Bucket({
-        fileName: documentUuid,
-        buffer: file.buffer,
-        mimetype: file.mimetype,
-      });
-
-      if (uploaded.$metadata.httpStatusCode === 200) {
-        //save to database
-
-        const done = await createPatientMedicalDocument({
-          documentUuid,
-          documentTitle,
-          patientId,
-        });
-
-        //send response to user
-        return Response.CREATED({
-          message: "Medical Document Saved Successfully",
-        });
-      }
-    } else {
+    if (!file) {
       return Response.BAD_REQUEST({
         message: "Please upload medical document file",
       });
     }
+    const { patient_id: patientId } = patient;
+
+    const documentUuid = uuidv4();
+
+    const uploaded = await uploadFileToS3Bucket({
+      fileName: documentUuid,
+      buffer: file.buffer,
+      mimetype: file.mimetype,
+    });
+
+    if (uploaded.$metadata.httpStatusCode !== 200) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Uploading Medical Document, please try again",
+      });
+    }
+    await createPatientMedicalDocument({
+      documentUuid,
+      documentTitle,
+      patientId,
+    });
+
+    // send response to user
+    return Response.CREATED({
+      message: "Medical Document Saved Successfully",
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -178,7 +175,7 @@ exports.updatePatientMedicalDocument = async ({
 
     if (!file) {
       return Response.BAD_REQUEST({
-        message: "Please upload a medical document",
+        message: "Please upload a medical document.",
       });
     }
 
@@ -189,21 +186,24 @@ exports.updatePatientMedicalDocument = async ({
       buffer: file.buffer,
       mimetype: file.mimetype,
     });
-
-    if (uploaded.$metadata.httpStatusCode === 200) {
-      //save to database
-
-      const done = await updatePatientMedicalDocumentById({
-        patientId,
-        documentTitle,
-        documentId: docId,
-      });
-
-      //send response to user
-      return Response.CREATED({
-        message: "Medical Document Updated Successfully",
+    if (uploaded.$metadata.httpStatusCode !== 200) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Uploading Medical Document, please try again",
       });
     }
+
+    // save to database
+
+    await updatePatientMedicalDocumentById({
+      patientId,
+      documentTitle,
+      documentId: docId,
+    });
+
+    // send response to user
+    return Response.CREATED({
+      message: "Medical Document Updated Successfully",
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -238,7 +238,7 @@ exports.deletePatientMedicalDocument = async ({ userId, documentId }) => {
   }
 };
 
-//medical document sharing
+// medical document sharing
 exports.createPatientSharedMedicalDocument = async ({
   userId,
   documentId,
@@ -251,7 +251,7 @@ exports.createPatientSharedMedicalDocument = async ({
       getDoctorById(doctorId),
     ]);
 
-    //TODO move to a middle ware function
+    // TODO move to a middle ware function requirePatientProfile()
     if (!patient) {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
@@ -261,8 +261,12 @@ exports.createPatientSharedMedicalDocument = async ({
       first_name: firstName,
       last_name: lastName,
     } = patient;
-    const { mobile_number: doctorMobileNumber, first_name, last_name } = doctor;
-    //check if the document was previously shared with the doctor
+    const {
+      mobile_number: doctorMobileNumber,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
+    } = doctor;
+    // check if the document was previously shared with the doctor
     const alreadyShared = await getSharedMedicalDocumentByIdAndDoctorId({
       documentId,
       doctorId,
@@ -271,9 +275,9 @@ exports.createPatientSharedMedicalDocument = async ({
       return Response.NOT_MODIFIED();
     }
 
-    //TODO generate OTP
+    // TODO generate OTP
 
-    //create new sharing record in the database
+    // create new sharing record in the database
     await createPatientDocumentSharing({
       documentId,
       patientId,
@@ -282,9 +286,9 @@ exports.createPatientSharedMedicalDocument = async ({
       note,
     });
 
-    //TODO send sms alert to doctor
+    //  send sms alert to doctor
     await documentSharedWithDoctorSMS({
-      doctorName: `${first_name} ${last_name}`,
+      doctorName: `${doctorFirstName} ${doctorLastName}`,
       mobileNumber: doctorMobileNumber,
       patientName: `${firstName} ${lastName}`,
     });
@@ -321,18 +325,16 @@ exports.getPatientSharedMedicalDocuments = async (userId) => {
         doctor_first_name: doctorFirstName,
         doctor_last_name: doctorLastName,
         note,
-      }) => {
-        return {
-          sharingId,
-          documentId,
-          documentUUID,
-          documentTitle,
-          patientId,
-          patientName: `${patientFirstName} ${patientLastName}`,
-          doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-          note,
-        };
-      }
+      }) => ({
+        sharingId,
+        documentId,
+        documentUUID,
+        documentTitle,
+        patientId,
+        patientName: `${patientFirstName} ${patientLastName}`,
+        doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+        note,
+      }),
     );
 
     return Response.SUCCESS({ data });
@@ -351,7 +353,7 @@ exports.getPatientSharedMedicalDocument = async ({ userId, documentId }) => {
 
     const { patient_id: patientId } = patient;
 
-    //create new sharing record in the database
+    // create new sharing record in the database
     const rawData = await getPatientSharedMedicalDocument({
       patientId,
       documentId,
@@ -404,7 +406,7 @@ exports.deletePatientSharedMedicalDocument = async ({ userId, documentId }) => {
 
     const { patient_id: patientId } = patient;
 
-    //create new sharing record in the database
+    // create new sharing record in the database
     await deletePatientSharedMedicalDocument({
       patientId,
       documentId,

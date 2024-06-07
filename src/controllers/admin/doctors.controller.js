@@ -1,12 +1,11 @@
-const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   getAllDoctors,
   getDoctorById,
-  getDoctorsCouncilRegistration,
-  getDoctorByUserId,
+  // getDoctorsCouncilRegistration,
+  // getDoctorByUserId,
   approveDoctorProfile,
-} = require("../../services/doctors.services.js");
+} = require("../../services/doctors.services");
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {
@@ -15,7 +14,7 @@ exports.GetDoctorsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetDoctorsCouncilRegistrationController = async (req, res, next) => {
@@ -25,7 +24,7 @@ exports.GetDoctorsCouncilRegistrationController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -37,30 +36,32 @@ exports.GetDoctorByIDController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.CreateDoctorController = async (req, res, next) => {
   try {
+    return res.send("Created Doctor");
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.UpdateDoctorByIdController = async (req, res, next) => {
   try {
+    return res.send("Updated Doctor");
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.ApproveDoctorAccountController = async (req, res, next) => {
   try {
     const { id: doctorId } = req.params;
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
 
     const response = await approveDoctorProfile({
       doctorId,
@@ -70,15 +71,16 @@ exports.ApproveDoctorAccountController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.DeleteDoctorByIdController = async (req, res, next) => {
   try {
+    return res.send("Deleted Doctor");
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

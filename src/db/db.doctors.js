@@ -22,7 +22,7 @@ exports.getDoctorByQuery = ({ locationId, query }) => {
         if (err) return reject(err);
 
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -163,7 +163,7 @@ exports.createDoctor = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -194,7 +194,7 @@ exports.createDoctorMedicalCouncilRegistration = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -226,7 +226,7 @@ exports.updateDoctorMedicalCouncilRegistration = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -278,7 +278,7 @@ exports.updateDoctorById = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -329,7 +329,7 @@ exports.rejectDoctorMedicalCouncilRegistrationById = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };

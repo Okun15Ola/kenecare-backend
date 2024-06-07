@@ -14,7 +14,7 @@ const {
   getDoctorById,
   getDoctorBySpecialtyId,
   getDoctorByQuery,
-} = require("../../services/doctors.services.js");
+} = require("../../services/doctors.services");
 
 const {
   getMedicalCouncils,
@@ -29,7 +29,6 @@ const {
   getSpecialtyById,
 } = require("../../services/specialties.services");
 const { getTestimonials } = require("../../services/testimonials.services");
-const {} = require("../../services/faq.services");
 
 exports.GetBlogsController = async (req, res, next) => {
   try {
@@ -38,18 +37,18 @@ exports.GetBlogsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetBlogByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const response = await getBlog(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetBlogCategoriesController = async (req, res, next) => {
@@ -59,44 +58,47 @@ exports.GetBlogCategoriesController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetBlogCategoryByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const response = await getBlogCategory(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetCitiesController = async (req, res, next) => {
   try {
     const response = await getCities();
     response.data = response.data.map(
-      ({ cityId, cityName, latitude, longitude }) => {
-        return { cityId, cityName, latitude, longitude };
-      }
+      ({ cityId, cityName, latitude, longitude }) => ({
+        cityId,
+        cityName,
+        latitude,
+        longitude,
+      }),
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetCityByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const response = await getCity(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetCommonSymptomsController = async (req, res, next) => {
@@ -112,35 +114,33 @@ exports.GetCommonSymptomsController = async (req, res, next) => {
         tags,
         consultationFee,
         specialty,
-      }) => {
-        return {
-          symptomId,
-          name,
-          imageUrl,
-          description,
-          consultationFee,
-          specialty,
-          tags,
-        };
-      }
+      }) => ({
+        symptomId,
+        name,
+        imageUrl,
+        description,
+        consultationFee,
+        specialty,
+        tags,
+      }),
     );
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetCommonSymptomByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const response = await getCommonSymptom(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetDoctorsController = async (req, res, next) => {
@@ -155,11 +155,11 @@ exports.GetDoctorsController = async (req, res, next) => {
       if (specialtyId) {
         response = await getDoctorBySpecialtyId(specialtyId);
       } else {
-        //GET DOCTORS BY LOCATION
+        // GET DOCTORS BY LOCATION
         response = await getDoctorByQuery({ locationId, query });
       }
     } else {
-      //GET ALL DOCTORS.
+      // GET ALL DOCTORS.
       response = await getAllDoctors();
     }
 
@@ -167,18 +167,18 @@ exports.GetDoctorsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetDoctorByIDController = async (req, res, next) => {
   try {
-    const doctorId = parseInt(req.params.id);
+    const doctorId = parseInt(req.params.id, 10);
     const response = await getDoctorById(doctorId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetFaqsController = async (req, res, next) => {
@@ -187,7 +187,7 @@ exports.GetFaqsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetFaqByIdController = async (req, res, next) => {
@@ -196,78 +196,91 @@ exports.GetFaqByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetMedicalCouncilsController = async (req, res, next) => {
   try {
     const response = await getMedicalCouncils();
     response.data = response.data.map(
-      ({ councilId, councilName, email, address, mobileNumber }) => {
-        return { councilId, councilName, email, address, mobileNumber };
-      }
+      ({ councilId, councilName, email, address, mobileNumber }) => ({
+        councilId,
+        councilName,
+        email,
+        address,
+        mobileNumber,
+      }),
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetMedicalCouncilByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const response = await getMedicalCouncil(id);
     response.data = response.data.map(
-      ({ councilId, councilName, email, address, mobileNumber }) => {
-        return { councilId, councilName, email, address, mobileNumber };
-      }
+      ({ councilId, councilName, email, address, mobileNumber }) => ({
+        councilId,
+        councilName,
+        email,
+        address,
+        mobileNumber,
+      }),
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetMedicalDegreesController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetMedicalDegreeByIDController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetSectionOneController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetServicesController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetServiceByIDController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetSpecializationsController = async (req, res, next) => {
@@ -277,7 +290,7 @@ exports.GetSpecializationsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetSpecializationByIDController = async (req, res, next) => {
@@ -290,7 +303,7 @@ exports.GetSpecializationByIDController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetSpecialtiesController = async (req, res, next) => {
@@ -298,16 +311,19 @@ exports.GetSpecialtiesController = async (req, res, next) => {
     const response = await getSpecialties();
 
     response.data = response.data.map(
-      ({ specialtyId, specialtyName, description, imageUrl }) => {
-        return { specialtyId, specialtyName, description, imageUrl };
-      }
+      ({ specialtyId, specialtyName, description, imageUrl }) => ({
+        specialtyId,
+        specialtyName,
+        description,
+        imageUrl,
+      }),
     );
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetSpecialtyByIDController = async (req, res, next) => {
@@ -320,23 +336,25 @@ exports.GetSpecialtyByIDController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetUserTypesController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetUserTypeByIDController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetTestimonialsController = async (req, res, next) => {
@@ -345,26 +363,25 @@ exports.GetTestimonialsController = async (req, res, next) => {
 
     response.data = response.data
       .filter((t) => t.isApproved && t.isActive)
-      .map(({ testimonialId, patientName, patientPic, content }) => {
-        return {
-          testimonialId,
-          patientName,
-          patientPic,
-          content,
-        };
-      });
+      .map(({ testimonialId, patientName, patientPic, content }) => ({
+        testimonialId,
+        patientName,
+        patientPic,
+        content,
+      }));
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetTestimonialByIDController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

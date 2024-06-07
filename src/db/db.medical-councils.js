@@ -58,7 +58,7 @@ exports.createNewMedicalCouncil = (council) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -80,7 +80,7 @@ exports.updateMedicalCouncilById = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

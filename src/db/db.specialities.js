@@ -47,7 +47,7 @@ exports.createNewSpecialty = ({ name, description, image, inputtedBy }) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -63,7 +63,7 @@ exports.updateSpecialtiyById = ({ id, name, description, image }) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

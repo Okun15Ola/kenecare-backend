@@ -7,6 +7,7 @@ const {
   updateCityStatus,
   deleteCity,
 } = require("../../services/cities.services");
+
 exports.GetCitiesController = async (req, res, next) => {
   try {
     const response = await getCities();
@@ -14,18 +15,18 @@ exports.GetCitiesController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetCityByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const response = await getCity(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.CreateCityController = async (req, res, next) => {
@@ -43,13 +44,13 @@ exports.CreateCityController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.UpdateCityByIdController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const { name, latitude, longitude } = req.body;
 
     const response = await updateCity({
@@ -63,13 +64,13 @@ exports.UpdateCityByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.UpdateCityStatusController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
-    const status = parseInt(req.query.status);
+    const id = parseInt(req.params.id, 10);
+    const status = parseInt(req.query.status, 10);
 
     const response = await updateCityStatus({ id, status });
 
@@ -77,13 +78,13 @@ exports.UpdateCityStatusController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.DeleteCityByIdController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
 
     const response = await deleteCity(id);
 
@@ -91,6 +92,6 @@ exports.DeleteCityByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

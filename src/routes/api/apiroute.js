@@ -40,7 +40,6 @@
 //   ChangepasswordController.change_password
 // );
 
-
 // apiRoute.post(
 //   "/get_user_profile",
 //   verifyToken,

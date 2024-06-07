@@ -1,4 +1,3 @@
-const moment = require("moment");
 const Response = require("../../utils/response.utils");
 const {
   getAllWithdrawalRequests,
@@ -32,21 +31,19 @@ exports.getAllRequests = async () => {
         bank_name: bankName,
         bank_account_number: bankAccountNumber,
         bank_account_name: bankAccountName,
-      }) => {
-        return {
-          requestId,
-          doctorId,
-          fistName,
-          lastName,
-          requestStatus,
-          requestedAmount,
-          paymentMethod,
-          mobileMoneyNumber,
-          bankName,
-          bankAccountNumber,
-          bankAccountName,
-        };
-      }
+      }) => ({
+        requestId,
+        doctorId,
+        fistName,
+        lastName,
+        requestStatus,
+        requestedAmount,
+        paymentMethod,
+        mobileMoneyNumber,
+        bankName,
+        bankAccountNumber,
+        bankAccountName,
+      }),
     );
     return Response.SUCCESS({ data });
   } catch (error) {
@@ -100,7 +97,7 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
       return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
 
-    let {
+    const {
       request_status: requestStatus,
       doctor_id: doctorId,
       requested_amount: requestedAmount,
@@ -110,23 +107,22 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
       return Response.NOT_MODIFIED();
     }
 
-    let { balance: currentWalletBalance } = await getCurrentWalletBalance(
-      doctorId
-    );
+    let { balance: currentWalletBalance } =
+      await getCurrentWalletBalance(doctorId);
 
     currentWalletBalance = parseFloat(currentWalletBalance);
-    requestedAmount = parseFloat(requestedAmount);
+    const parsedRequestedAmount = parseFloat(requestedAmount);
 
-    if (currentWalletBalance <= requestedAmount) {
+    if (currentWalletBalance <= parsedRequestedAmount) {
       return Response.BAD_REQUEST({
         message: "Insufficient Wallet Balance. Cannot Approve Withdrawal",
       });
 
-      //TODO send sms to doctor due to insufficient balance
+      //  send sms to doctor due to insufficient balance
     }
     const {
-      first_name,
-      last_name,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
       mobile_number: mobileNumber,
     } = await getDoctorById(doctorId);
 
@@ -145,11 +141,11 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
       }),
       withdrawalApprovedSMS({
         mobileNumber,
-        doctorName: `${first_name} ${last_name}`,
+        doctorName: `${doctorFirstName} ${doctorLastName}`,
       }),
     ]);
 
-    //TODO send sms to doctor about approved request
+    //  send sms to doctor about approved request
     return Response.SUCCESS({
       message: "Withdrawal Request Approved Successfully",
     });
@@ -170,8 +166,8 @@ exports.denyRequest = async ({ userId, requestId, comment }) => {
       return Response.NOT_MODIFIED();
     }
     const {
-      first_name,
-      last_name,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
       mobile_number: mobileNumber,
     } = await getDoctorById(doctorId);
     await denyWithdrawalRequest({
@@ -179,10 +175,10 @@ exports.denyRequest = async ({ userId, requestId, comment }) => {
       withdrawalId: requestId,
       comment,
     });
-    //TODO send sms to doctor about declined request
+    //  send sms to doctor about declined request
     withdrawalDeniedSMS({
       mobileNumber,
-      doctorName: `${first_name} ${last_name}`,
+      doctorName: `${doctorFirstName} ${doctorLastName}`,
       comment,
     });
     return Response.SUCCESS({

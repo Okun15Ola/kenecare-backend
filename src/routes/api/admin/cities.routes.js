@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const { param } = require("express-validator");
 const {
   CreateCityValidation,
   UpdateCityValidation,

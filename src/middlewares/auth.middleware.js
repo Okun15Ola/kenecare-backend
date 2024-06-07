@@ -19,7 +19,7 @@ const { getPatientByUserId } = require("../db/db.patients");
 const { generateUsersJwtAccessToken } = require("../utils/auth.utils");
 
 const getAuthToken = (req) => {
-  const authorizationHeader = req.headers["authorization"];
+  const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
     return null;
@@ -37,7 +37,7 @@ const requireUserAuth = async (req, res, next) => {
       return res.status(400).json(
         Response.BAD_REQUEST({
           message: "Invalid/Missing Authentication Token",
-        })
+        }),
       );
     }
     const decoded = jwt.verify(token, patientJwtSecret, {
@@ -46,87 +46,88 @@ const requireUserAuth = async (req, res, next) => {
     });
 
     const user = await getUserById(decoded.sub);
-    if (user) {
-      const {
-        user_id: userId,
-        is_verified,
-        is_account_active,
-        user_type: userType,
-      } = user;
-      if (is_verified !== VERIFICATIONSTATUS.VERIFIED) {
-        return res.status(401).json(
-          Response.UNAUTHORIZED({
-            message: "Account Not Verified. Please Verify Account",
-          })
-        );
-      }
-      if (is_account_active !== STATUS.ACTIVE) {
-        return res.status(401).json(
-          Response.UNAUTHORIZED({
-            message:
-              "Account InActive. Please Contact KENECARE SUPPORT for further instruction.",
-          })
-        );
-      }
-
-      //Generate access token for logged in users
-      const accessJwt = generateUsersJwtAccessToken({
-        sub: userId,
-      });
-
-      updateUserAccountStatusById({
-        userId,
-        status: STATUS.ACTIVE,
-      });
-
-      if (userType == USERTYPE.DOCTOR) {
-        const doctorProfile = await getDoctorByUserId(userId);
-        if (!doctorProfile) {
-          //Return access token
-          return Response.SUCCESS({
-            message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
-            data: {
-              token: accessJwt,
-              type: userType,
-              isVerified: is_verified,
-              isActive: is_account_active,
-            },
-          });
-        }
-      }
-
-      if (userType === USERTYPE.PATIENT) {
-        const patientProfile = await getPatientByUserId(user_id);
-        if (!patientProfile) {
-          return Response.SUCCESS({
-            message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
-            data: {
-              token: accessJwt,
-              type: userType,
-              isVerified: is_verified,
-              isActive: is_account_active,
-            },
-          });
-        }
-      }
-      req.user = {
-        id: decoded.sub,
-      };
-
-      next();
+    if (!user) {
+      return Response.BAD_REQUEST({ message: "An Unexpected Error Occured" });
     }
+    const {
+      user_id: userId,
+      is_verified: isVerified,
+      is_account_active: isAccountActive,
+      user_type: userType,
+    } = user;
+    if (isVerified !== VERIFICATIONSTATUS.VERIFIED) {
+      return res.status(401).json(
+        Response.UNAUTHORIZED({
+          message: "Account Not Verified. Please Verify Account",
+        }),
+      );
+    }
+    if (isAccountActive !== STATUS.ACTIVE) {
+      return res.status(401).json(
+        Response.UNAUTHORIZED({
+          message:
+            "Account InActive. Please Contact KENECARE SUPPORT for further instruction.",
+        }),
+      );
+    }
+
+    // Generate access token for logged in users
+    const accessJwt = generateUsersJwtAccessToken({
+      sub: userId,
+    });
+
+    updateUserAccountStatusById({
+      userId,
+      status: STATUS.ACTIVE,
+    });
+
+    if (userType === USERTYPE.DOCTOR) {
+      const doctorProfile = await getDoctorByUserId(userId);
+      if (!doctorProfile) {
+        // Return access token
+        return Response.SUCCESS({
+          message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
+          data: {
+            token: accessJwt,
+            type: userType,
+            isVerified,
+            isActive: isAccountActive,
+          },
+        });
+      }
+    }
+
+    if (userType === USERTYPE.PATIENT) {
+      const patientProfile = await getPatientByUserId(userId);
+      if (!patientProfile) {
+        return Response.SUCCESS({
+          message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
+          data: {
+            token: accessJwt,
+            type: userType,
+            isVerified,
+            isActive: isAccountActive,
+          },
+        });
+      }
+    }
+    req.user = {
+      id: decoded.sub,
+    };
+
+    return next();
   } catch (error) {
     if (error.message === "jwt expired") {
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message: "Session Expired Please Login to Continue",
-        })
+        }),
       );
     }
     return res.status(401).json(
       Response.UNAUTHORIZED({
         message: "Authentication Failed! Please Try Again",
-      })
+      }),
     );
   }
 };
@@ -139,7 +140,7 @@ const requireAdminAuth = async (req, res, next) => {
       return res.status(400).json(
         Response.BAD_REQUEST({
           message: "Invalid/Missing Authentication Token",
-        })
+        }),
       );
     }
 
@@ -154,26 +155,26 @@ const requireAdminAuth = async (req, res, next) => {
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message: "Account Disabled.Please Contact Support",
-        })
+        }),
       );
     }
 
     req.user = {
       id: sub,
     };
-    next();
+    return next();
   } catch (error) {
     if (error.message === "jwt expired") {
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message: "Session Expired. Please Login Again",
-        })
+        }),
       );
     }
     return res.status(400).json(
       Response.BAD_REQUEST({
         message: "Authentication Failed! Please Try Again",
-      })
+      }),
     );
   }
 };

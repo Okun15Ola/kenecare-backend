@@ -36,7 +36,7 @@ exports.createNewFaq = (blog) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -54,7 +54,7 @@ exports.updateFaqById = ({ id, blog }) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { body, param } = require("express-validator");
+const { body } = require("express-validator");
 const moment = require("moment");
 const { Validate } = require("../../../validations/validate");
 const {
@@ -8,8 +8,7 @@ const {
   UpdatePatientProfileController,
   UpdatePatientProfilePictureController,
 } = require("../../../controllers/patients/profile.controller");
-const { getPatientById } = require("../../../db/db.patients");
-const { USERTYPE } = require("../../../utils/enum.utils");
+
 const { localProfilePicUploader } = require("../../../utils/file-upload.utils");
 
 router.get("/profile", GetPatientProfileController);
@@ -40,7 +39,7 @@ router.post(
     body("dateOfBirth")
       .notEmpty()
       .withMessage("Date of Birth is required")
-      .custom((value, { req }) => {
+      .custom((value) => {
         const formattedDate = moment(value).format("YYYY-MM-DD");
         if (!moment(formattedDate).isValid()) {
           throw new Error("Invalid date format. Expected format (YYYY-MM-DD)");
@@ -56,7 +55,7 @@ router.post(
       }),
   ],
   Validate,
-  CreatePatientProfileController
+  CreatePatientProfileController,
 );
 router.put(
   "/profile/",
@@ -85,7 +84,7 @@ router.put(
     body("dateOfBirth")
       .notEmpty()
       .withMessage("Date of Birth is required")
-      .custom((value, { req }) => {
+      .custom((value) => {
         const formattedDate = moment(value).format("YYYY-MM-DD");
         console.log("Formatted Date:", formattedDate);
         if (!moment(formattedDate).isValid()) {
@@ -102,12 +101,12 @@ router.put(
       }),
   ],
   Validate,
-  UpdatePatientProfileController
+  UpdatePatientProfileController,
 );
 router.patch(
   "/profile/",
   localProfilePicUploader.single("profilepic"),
-  UpdatePatientProfilePictureController
+  UpdatePatientProfilePictureController,
 );
 
 module.exports = router;

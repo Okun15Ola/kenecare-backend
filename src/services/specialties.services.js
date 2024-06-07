@@ -1,9 +1,8 @@
-const dbObject = require("../db/db.specialities");
-const Response = require("../utils/response.utils");
-const { STATUS } = require("../utils/enum.utils");
 const fs = require("fs");
 const path = require("path");
 const he = require("he");
+const dbObject = require("../db/db.specialities");
+const Response = require("../utils/response.utils");
 const { deleteFile } = require("../utils/file-upload.utils");
 const { appBaseURL } = require("../config/default.config");
 
@@ -19,17 +18,15 @@ exports.getSpecialties = async () => {
       image_url: imageUrl,
       is_active: isActive,
       inputted_by: inputtedBy,
-    }) => {
-      return {
-        specialtyId,
-        specialtyName: he.decode(specialtyName),
-        description: he.decode(description),
-        tags,
-        imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
-        isActive,
-        inputtedBy,
-      };
-    }
+    }) => ({
+      specialtyId,
+      specialtyName: he.decode(specialtyName),
+      description: he.decode(description),
+      tags,
+      imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
+      isActive,
+      inputtedBy,
+    }),
   );
   return Response.SUCCESS({ data: specialties });
 };
@@ -100,7 +97,7 @@ exports.getSpecialtyById = async (id) => {
 
 exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
   try {
-    //save to database
+    // save to database
     await dbObject.createNewSpecialty({
       name,
       description,
@@ -118,22 +115,22 @@ exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
 exports.updateSpecialty = async ({ id, name, image, description }) => {
   try {
     const rawData = await dbObject.getSpecialtiyById(id);
-    if (rawData) {
-      const { image_url } = rawData;
+    if (!rawData) return null;
 
-      if (image_url) {
-        const file = path.join(__dirname, "../public/upload/media/", image_url);
-        await deleteFile(file);
-      }
-      await dbObject.updateSpecialtiyById({
-        id,
-        name,
-        image,
-        description,
-      });
+    const { image_url: imageUrl } = rawData;
 
-      return Response.SUCCESS({ message: "Specialty Updated Successfully" });
+    if (imageUrl) {
+      const file = path.join(__dirname, "../public/upload/media/", imageUrl);
+      await deleteFile(file);
     }
+    await dbObject.updateSpecialtiyById({
+      id,
+      name,
+      image,
+      description,
+    });
+
+    return Response.SUCCESS({ message: "Specialty Updated Successfully" });
   } catch (error) {
     console.error(error);
     throw error;
@@ -161,9 +158,9 @@ exports.updateSpecialtyStatus = async ({ id, status }) => {
 
 exports.deleteSpecialty = async (id) => {
   try {
-    const { image_url } = await dbObject.getSpecialtiyById(id);
-    if (image_url) {
-      const file = path.join(__dirname, "../public/upload/media/", image_url);
+    const { image_url: imageUrl } = await dbObject.getSpecialtiyById(id);
+    if (imageUrl) {
+      const file = path.join(__dirname, "../public/upload/media/", imageUrl);
       fs.unlinkSync(file);
     }
 

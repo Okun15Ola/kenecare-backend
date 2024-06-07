@@ -1,17 +1,13 @@
 const router = require("express").Router();
+const { param } = require("express-validator");
 const {
   GetAppointmentPrescriptionController,
   GetAppointmentPrescriptionsController,
 } = require("../../../controllers/patients/prescriptions.controller");
 
-const { param, body, check } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
+
 const {
-  getDoctorAppointmentById,
-} = require("../../../db/db.appointments.doctors");
-const { getDoctorByUserId } = require("../../../db/db.doctors");
-const {
-  getAppointmentPrescriptions,
   getAppointmentPrescriptionById,
 } = require("../../../db/db.prescriptions");
 const { getPatientByUserId } = require("../../../db/db.patients");
@@ -47,7 +43,7 @@ router.get(
       }),
   ],
   Validate,
-  GetAppointmentPrescriptionsController
+  GetAppointmentPrescriptionsController,
 );
 router.get(
   "/:id",
@@ -81,7 +77,7 @@ router.get(
       }),
   ],
   Validate,
-  GetAppointmentPrescriptionController
+  GetAppointmentPrescriptionController,
 );
 
 module.exports = router;

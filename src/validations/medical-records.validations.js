@@ -1,8 +1,7 @@
 const { body } = require("express-validator");
 const { getDoctorById } = require("../db/db.doctors");
 const { getPatientMedicalDocumentById } = require("../db/db.patient-docs");
-const { getUserById } = require("../db/db.users");
-const bcrypt = require("bcryptjs");
+
 exports.CreateNewMedicalRecordValidation = [
   body("documentTitle")
     .notEmpty()
@@ -12,7 +11,7 @@ exports.CreateNewMedicalRecordValidation = [
   // body("password")
   //   .trim()
   //   .escape()
-  //   .custom(async (value, { req }) => {
+  //   .custom(async (value, ) => {
   //     if (value === "") {
   //       throw new Error("Password is required");
   //     }
@@ -34,9 +33,8 @@ exports.ShareMedicalDocumentValidation = [
     .withMessage("Document Title is required")
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const data = await getPatientMedicalDocumentById(value);
-      console.log(data);
 
       if (!data) {
         throw new Error("Specified Medical Document Not Found");
@@ -50,7 +48,7 @@ exports.ShareMedicalDocumentValidation = [
     .withMessage("Doctor Id is required")
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const data = await getDoctorById(value);
 
       if (!data) {

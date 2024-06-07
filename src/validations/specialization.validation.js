@@ -1,4 +1,4 @@
-const { body, param } = require("express-validator");
+const { body } = require("express-validator");
 const {
   getSpecializationByName,
 } = require("../services/specializations.services");
@@ -10,7 +10,7 @@ exports.CreateSpecializationValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (name, { req }) => {
+    .custom(async (name) => {
       // Get specializaiton by name
       const nameExist = await getSpecializationByName(name);
       if (nameExist) {

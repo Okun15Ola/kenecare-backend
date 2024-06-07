@@ -49,7 +49,7 @@ exports.createNewCity = (city) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -66,7 +66,7 @@ exports.updateCityById = (city) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

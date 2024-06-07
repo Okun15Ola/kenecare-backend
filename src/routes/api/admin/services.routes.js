@@ -15,4 +15,4 @@ router.put("/:id", UpdateServiceByIdController);
 router.patch("/:id/:status", UpdateServiceStatusController);
 router.delete("/:id", DeleteServiceByIdController);
 
-module.exports = router
+module.exports = router;

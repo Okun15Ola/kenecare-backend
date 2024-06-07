@@ -44,26 +44,24 @@ exports.getUserByMobileNumber = (mobileNumber) => {
     });
   });
 };
-exports.getUserByEmail = (email) => {
-  return new Promise((resolve, reject) => {
-    const sql = `SELECT * from users WHERE email = ? LIMIT 1;`;
+exports.getUserByEmail = (email) =>
+  new Promise((resolve, reject) => {
+    const sql = "SELECT * from users WHERE email = ? LIMIT 1;";
     connectionPool.query(sql, [email], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result[0]);
     });
   });
-};
-exports.getUserByVerificationToken = (token) => {
-  return new Promise((resolve, reject) => {
-    const sql = `SELECT * from users WHERE verification_token = ? LIMIT 1;`;
+exports.getUserByVerificationToken = (token) =>
+  new Promise((resolve, reject) => {
+    const sql = "SELECT * from users WHERE verification_token = ? LIMIT 1;";
     connectionPool.query(sql, [token], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result[0]);
     });
   });
-};
 
 exports.createNewUser = (user) => {
   const email = user.email || null;
@@ -77,13 +75,13 @@ exports.createNewUser = (user) => {
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
 
 exports.updateUserEmailById = ({ userId, email }) => {
-  const sql = `UPDATE users SET  email = ? WHERE user_id = ?;`;
+  const sql = "UPDATE users SET  email = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [email, userId], (err, result) => {
       if (err) return reject(err);
@@ -93,7 +91,7 @@ exports.updateUserEmailById = ({ userId, email }) => {
   });
 };
 exports.updateUserVerificationTokenById = ({ userId, token }) => {
-  const sql = `UPDATE users SET  verification_token = ? WHERE user_id = ?;`;
+  const sql = "UPDATE users SET  verification_token = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [token, userId], (err, result) => {
       if (err) return reject(err);
@@ -104,7 +102,7 @@ exports.updateUserVerificationTokenById = ({ userId, token }) => {
 };
 
 exports.updateUserMobileNumberById = ({ userId, mobileNumber }) => {
-  const sql = `UPDATE users SET  mobile_number = ? WHERE user_id = ?;`;
+  const sql = "UPDATE users SET  mobile_number = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [mobileNumber, userId], (err, result) => {
       if (err) return reject(err);
@@ -115,7 +113,7 @@ exports.updateUserMobileNumberById = ({ userId, mobileNumber }) => {
 };
 
 exports.updateUserAccountStatusById = ({ userId, status }) => {
-  const sql = `UPDATE users SET  is_account_active = ? WHERE user_id = ?;`;
+  const sql = "UPDATE users SET  is_account_active = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [status, userId], (err, result) => {
       if (err) return reject(err);
@@ -129,7 +127,8 @@ exports.updateUserVerificationStatusByToken = ({
   verificationStatus,
 }) => {
   const timestamp = new Date();
-  const sql = `UPDATE users SET  is_verified = ?, verification_token = NULL, is_online = 1, verified_at = ? WHERE verification_token = ?;`;
+  const sql =
+    "UPDATE users SET  is_verified = ?, verification_token = NULL, is_online = 1, verified_at = ? WHERE verification_token = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
@@ -138,12 +137,12 @@ exports.updateUserVerificationStatusByToken = ({
         if (err) return reject(err);
 
         return resolve(result);
-      }
+      },
     );
   });
 };
 exports.updateUserPasswordById = ({ userId, password }) => {
-  const sql = `UPDATE users SET  password = ? WHERE user_id = ?;`;
+  const sql = "UPDATE users SET  password = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [password, userId], (err, result) => {
       if (err) return reject(err);
@@ -153,7 +152,7 @@ exports.updateUserPasswordById = ({ userId, password }) => {
   });
 };
 exports.updateUserOnlineStatus = ({ userId, status }) => {
-  const sql = `UPDATE users SET  is_online = ? WHERE user_id = ?;`;
+  const sql = "UPDATE users SET  is_online = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [status, userId], (err, result) => {
       if (err) return reject(err);

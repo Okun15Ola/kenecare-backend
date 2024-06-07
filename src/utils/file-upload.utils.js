@@ -7,8 +7,27 @@ const mediaUploadDirectory = path.join(__dirname, "../public/upload/media/");
 
 const profileUploadDirectory = path.join(
   __dirname,
-  "../public/upload/profile_pics/"
+  "../public/upload/profile_pics/",
 );
+
+const generateUniqueFileName = (file, cb) => {
+  crypto.randomBytes(16, (err, raw) => {
+    if (err) return cb(err);
+
+    const randomName = raw.toString("hex");
+    const fileExtension = path.extname(file.originalname);
+
+    const uniqueFileName = randomName + fileExtension;
+
+    return cb(null, uniqueFileName);
+  });
+};
+const generateFileName = (file) => {
+  const buffer = crypto.randomBytes(16);
+  const randomString = buffer.toString("hex");
+  const fileExtension = path.extname(file.originalname);
+  return randomString + fileExtension;
+};
 
 const directories = [mediaUploadDirectory, profileUploadDirectory];
 
@@ -21,22 +40,21 @@ directories.forEach((dir) => {
 const fileFilter = (req, file, cb) => {
   const filetypes = /jpeg|jpg|png|pdf/;
   const allowedExtension = filetypes.test(
-    path.extname(file.originalname).toLowerCase()
+    path.extname(file.originalname).toLowerCase(),
   );
   const allowedMimetypes = filetypes.test(file.mimetype);
   if (allowedExtension && allowedMimetypes) {
     return cb(null, true);
-  } else {
-    const error = new Error("Invalid File Type");
-    error.code = "INVALID_FILE_TYPE";
-    error.message =
-      "INVALID FILE TYPE. Expected File Type: *.jpeg | *.jpg | *.png | *.pdf.";
-    cb(error, false);
   }
+  const error = new Error("Invalid File Type");
+  error.code = "INVALID_FILE_TYPE";
+  error.message =
+    "INVALID FILE TYPE. Expected File Type: *.jpeg | *.jpg | *.png | *.pdf.";
+  return cb(error, false);
 };
 
 const AWSUploader = multer({
-  fileFilter: fileFilter,
+  fileFilter,
   storage: multer.memoryStorage(),
 });
 
@@ -66,34 +84,15 @@ const localMediaUploader = multer({
   limits: {
     fileSize: 1024 * 1024 * 5,
   },
-  fileFilter: fileFilter,
+  fileFilter,
 });
 const localProfilePicUploader = multer({
   storage: localProfilePictureStore,
   limits: {
     fileSize: 1024 * 1024 * 5,
   },
-  fileFilter: fileFilter,
+  fileFilter,
 });
-
-const generateUniqueFileName = (file, cb) => {
-  crypto.randomBytes(16, (err, raw) => {
-    if (err) return cb(err);
-
-    const randomName = raw.toString("hex");
-    const fileExtension = path.extname(file.originalname);
-
-    const uniqueFileName = randomName + fileExtension;
-
-    cb(null, uniqueFileName);
-  });
-};
-const generateFileName = (file) => {
-  const buffer = crypto.randomBytes(16);
-  const randomString = buffer.toString("hex");
-  const fileExtension = path.extname(file.originalname);
-  return randomString + fileExtension;
-};
 
 const deleteFile = async (filePath) => {
   try {

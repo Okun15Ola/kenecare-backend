@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const moment = require("moment");
 const { param, body } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
@@ -17,13 +16,13 @@ const { getDoctorByUserId } = require("../../../db/db.doctors");
 const {
   validateAppointmentPostponedDate,
   validateAppointmentTime,
-  validateNewAppointmentDate,
 } = require("../../../utils/time.utils");
+
 let data = null;
 router.get("/", GetDoctorAppointmentsController);
 router.get("/:id", GetDoctorAppointmentsByIDController);
 
-//TODO add data validation rules
+// TODO add data validation rules
 router.patch("/:id/approve", ApproveDoctorAppointmentController);
 router.patch("/:id/cancel", CancelDoctorAppointmentController);
 router.patch(
@@ -48,7 +47,7 @@ router.patch(
     body("postponedDate")
       .notEmpty()
       .withMessage("New Appointment Date is required")
-      .custom(async (value, { req }) => {
+      .custom(async (value) => {
         if (!data) {
           throw new Error("Specified Appontment Not Found");
         }
@@ -61,13 +60,13 @@ router.patch(
     body("postponedTime")
       .notEmpty()
       .withMessage("Specify new appointment time")
-      .custom(async (value, { req }) => {
+      .custom(async (value) => {
         validateAppointmentTime(value);
         return true;
       }),
   ],
   Validate,
-  PostponeDoctorAppointmentController
+  PostponeDoctorAppointmentController,
 );
 router.patch("/:id/start", StartDoctorAppointmentController);
 

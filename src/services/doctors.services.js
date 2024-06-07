@@ -1,24 +1,21 @@
+const path = require("path");
+const fs = require("fs");
 const dbObject = require("../db/db.doctors");
 const Response = require("../utils/response.utils");
 const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
 const { getUserById } = require("../db/db.users");
-const {
-  doctorCouncilRegistrationEmail,
-  adminDoctorCouncilRegistrationEmail,
-  adminDoctorProfileRegistrationEmail,
-} = require("../utils/email.utils");
+const { adminDoctorProfileRegistrationEmail } = require("../utils/email.utils");
 const { appBaseURL } = require("../config/default.config");
 const { doctorProfileApprovalSms } = require("../utils/sms.utils");
-const path = require("path");
-const fs = require("fs");
 const { createDoctorWallet } = require("../db/db.doctor-wallet");
 const { hashUsersPassword } = require("../utils/auth.utils");
 
 exports.getAllDoctors = async () => {
   try {
     const rawData = await dbObject.getAllDoctors();
+    let doctors = [];
     if (rawData) {
-      const doctors = rawData.map(
+      doctors = rawData.map(
         ({
           doctor_id: doctorId,
           title,
@@ -41,37 +38,34 @@ exports.getAllDoctors = async () => {
           email,
           user_type: userType,
           is_account_active: isAccountActive,
-        }) => {
-          return {
-            doctorId,
-            title,
-            firstName,
-            middleName,
-            lastName,
-            gender,
-            professionalSummary,
-            profilePic: profilePic
-              ? `${appBaseURL}/user-profile/${profilePic}`
-              : null,
-            specialtyId,
-            specialization,
-            qualifications,
-            consultationFee,
-            location,
-            latitude,
-            longitude,
-            yearOfExperience,
-            isProfileApproved,
-            mobileNumber,
-            email,
-            userType,
-            isAccountActive,
-          };
-        }
+        }) => ({
+          doctorId,
+          title,
+          firstName,
+          middleName,
+          lastName,
+          gender,
+          professionalSummary,
+          profilePic: profilePic
+            ? `${appBaseURL}/user-profile/${profilePic}`
+            : null,
+          specialtyId,
+          specialization,
+          qualifications,
+          consultationFee,
+          location,
+          latitude,
+          longitude,
+          yearOfExperience,
+          isProfileApproved,
+          mobileNumber,
+          email,
+          userType,
+          isAccountActive,
+        }),
       );
-
-      return Response.SUCCESS({ data: doctors });
     }
+    return Response.SUCCESS({ data: doctors });
   } catch (error) {
     console.error(error);
     throw error;
@@ -80,8 +74,9 @@ exports.getAllDoctors = async () => {
 exports.getDoctorByQuery = async ({ locationId, query }) => {
   try {
     const rawData = await dbObject.getDoctorByQuery({ locationId, query });
+    let doctors = [];
     if (rawData) {
-      const doctors = rawData.map(
+      doctors = rawData.map(
         ({
           doctor_id: doctorId,
           title,
@@ -104,37 +99,34 @@ exports.getDoctorByQuery = async ({ locationId, query }) => {
           email,
           user_type: userType,
           is_account_active: isAccountActive,
-        }) => {
-          return {
-            doctorId,
-            title,
-            firstName,
-            middleName,
-            lastName,
-            gender,
-            professionalSummary,
-            profilePic: profilePic
-              ? `${appBaseURL}/user-profile/${profilePic}`
-              : null,
-            specialtyId,
-            specialization,
-            qualifications,
-            consultationFee,
-            location,
-            latitude,
-            longitude,
-            yearOfExperience,
-            isProfileApproved,
-            mobileNumber,
-            email,
-            userType,
-            isAccountActive,
-          };
-        }
+        }) => ({
+          doctorId,
+          title,
+          firstName,
+          middleName,
+          lastName,
+          gender,
+          professionalSummary,
+          profilePic: profilePic
+            ? `${appBaseURL}/user-profile/${profilePic}`
+            : null,
+          specialtyId,
+          specialization,
+          qualifications,
+          consultationFee,
+          location,
+          latitude,
+          longitude,
+          yearOfExperience,
+          isProfileApproved,
+          mobileNumber,
+          email,
+          userType,
+          isAccountActive,
+        }),
       );
-
-      return Response.SUCCESS({ data: doctors });
     }
+    return Response.SUCCESS({ data: doctors });
   } catch (error) {
     console.error(error);
     throw error;
@@ -143,8 +135,9 @@ exports.getDoctorByQuery = async ({ locationId, query }) => {
 exports.getDoctorBySpecialtyId = async (specialityId) => {
   try {
     const rawData = await dbObject.getDoctorsBySpecializationId(specialityId);
+    let doctors = [];
     if (rawData) {
-      const doctors = rawData.map(
+      doctors = rawData.map(
         ({
           doctor_id: doctorId,
           title,
@@ -167,37 +160,34 @@ exports.getDoctorBySpecialtyId = async (specialityId) => {
           email,
           user_type: userType,
           is_account_active: isAccountActive,
-        }) => {
-          return {
-            doctorId,
-            title,
-            firstName,
-            middleName,
-            lastName,
-            gender,
-            professionalSummary,
-            profilePic: profilePic
-              ? `${appBaseURL}/user-profile/${profilePic}`
-              : null,
-            specialityId,
-            specialization,
-            qualifications,
-            consultationFee: `SLE ${parseInt(consultationFee)}`,
-            location,
-            latitude,
-            longitude,
-            yearOfExperience,
-            isProfileApproved,
-            mobileNumber,
-            email,
-            userType,
-            isAccountActive,
-          };
-        }
+        }) => ({
+          doctorId,
+          title,
+          firstName,
+          middleName,
+          lastName,
+          gender,
+          professionalSummary,
+          profilePic: profilePic
+            ? `${appBaseURL}/user-profile/${profilePic}`
+            : null,
+          specialtyId,
+          specialization,
+          qualifications,
+          consultationFee: `SLE ${parseInt(consultationFee, 10)}`,
+          location,
+          latitude,
+          longitude,
+          yearOfExperience,
+          isProfileApproved,
+          mobileNumber,
+          email,
+          userType,
+          isAccountActive,
+        }),
       );
-
-      return Response.SUCCESS({ data: doctors });
     }
+    return Response.SUCCESS({ data: doctors });
   } catch (error) {
     console.error(error);
     throw error;
@@ -206,14 +196,14 @@ exports.getDoctorBySpecialtyId = async (specialityId) => {
 
 exports.getDoctorByUser = async (id) => {
   try {
-    //Get profile from database
+    // Get profile from database
     const rawData = await dbObject.getDoctorByUserId(id);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
-    //destruct properties from database object
+    // destruct properties from database object
     const {
       doctor_id: doctorId,
       title,
@@ -234,10 +224,9 @@ exports.getDoctorByUser = async (id) => {
       mobile_number: mobileNumber,
       email,
       user_type: userType,
-      is_account_active: isAccountActive,
     } = rawData;
 
-    //TODO Check if the profile requested belongs to the requesting user
+    // TODO Check if the profile requested belongs to the requesting user
     if (id !== userId || userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
     }
@@ -274,13 +263,13 @@ exports.getDoctorByUser = async (id) => {
 
 exports.getDoctorById = async (id) => {
   try {
-    //Get profile from database
+    // Get profile from database
     const data = await dbObject.getDoctorById(id);
 
     if (!data) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
-    //destruct properties from database object
+    // destruct properties from database object
     const {
       doctor_id: doctorId,
       title,
@@ -300,8 +289,6 @@ exports.getDoctorById = async (id) => {
       user_id: userId,
       mobile_number: mobileNumber,
       email,
-      user_type: userType,
-      is_account_active: isAccountActive,
     } = data;
 
     const doctor = {
@@ -428,7 +415,7 @@ exports.updateDoctorProfile = async ({
       is_profile_approved: isProfileApproved,
     } = doctor;
 
-    //check if the logged in user is of type 'doctor'
+    // check if the logged in user is of type 'doctor'
     if (userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({
         message:
@@ -443,7 +430,7 @@ exports.updateDoctorProfile = async ({
       });
     }
 
-    //TODO Check if the profile has been verified
+    // TODO Check if the profile has been verified
     if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
       return Response.UNAUTHORIZED({
         message:
@@ -480,14 +467,14 @@ exports.updateDoctorProfilePicture = async ({ userId, imageUrl }) => {
     if (!doctor) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
-    const { doctor_id: doctorId, profile_pic_url } = doctor;
+    const { doctor_id: doctorId, profile_pic_url: profilePicUrl } = doctor;
 
-    if (profile_pic_url) {
+    if (profilePicUrl) {
       // delete old profile pic from file system
       const file = path.join(
         __dirname,
         "../public/upload/profile_pics/",
-        profile_pic_url
+        profilePicUrl,
       );
       if (fs.existsSync(file)) {
         await fs.promises.unlink(file);

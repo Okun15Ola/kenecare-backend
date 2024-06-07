@@ -10,32 +10,33 @@ const {
   getPatientSharedMedicalDocument,
   deletePatientSharedMedicalDocument,
 } = require("../../services/patients.documents.services");
+
 exports.GetAllMedicalRecordsController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const response = await getPatientMedicalDocuments(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetMedicalRecordByIDController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
-    const docId = parseInt(req.params.id);
+    const userId = parseInt(req.user.id, 10);
+    const docId = parseInt(req.params.id, 10);
     const response = await getPatientMedicalDocument({ docId, userId });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.CreateMedicalReocrdController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const { file } = req.file ? req : null;
     const { documentTitle } = req.body || null;
 
@@ -48,14 +49,14 @@ exports.CreateMedicalReocrdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.UpdateMedicalReocrdByIdController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
-    const docId = parseInt(req.params.id);
+    const userId = parseInt(req.user.id, 10);
+    const docId = parseInt(req.params.id, 10);
 
     const { file } = req.file ? req : null;
     const { documentTitle } = req.body || null;
@@ -70,14 +71,14 @@ exports.UpdateMedicalReocrdByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.DeletemedicaRecordByIdController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
-    const docId = parseInt(req.params.id);
+    const userId = parseInt(req.user.id, 10);
+    const docId = parseInt(req.params.id, 10);
     const response = await deletePatientMedicalDocument({
       documentId: docId,
       userId,
@@ -86,14 +87,14 @@ exports.DeletemedicaRecordByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
-//medical document sharing
+// medical document sharing
 exports.ShareMedicalDocumentController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
 
     const { documentId, doctorId, note } = req.body || null;
 
@@ -107,27 +108,27 @@ exports.ShareMedicalDocumentController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.GetAllSharedMedicalDocumentsController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
 
     const response = await getPatientSharedMedicalDocuments(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetSharedMedicalDocumentByIDController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
 
-    const documentId = parseInt(req.params.id);
+    const documentId = parseInt(req.params.id, 10);
 
     const response = await getPatientSharedMedicalDocument({
       userId,
@@ -138,13 +139,13 @@ exports.GetSharedMedicalDocumentByIDController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.UpdateSharedMedicalDocumentByIdController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
 
     const { documentId, doctorId, note } = req.body || null;
 
@@ -158,15 +159,15 @@ exports.UpdateSharedMedicalDocumentByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.DeleteSharedMedicalDocumentByIdController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
 
-    const documentId = parseInt(req.params.id);
+    const documentId = parseInt(req.params.id, 10);
 
     const response = await deletePatientSharedMedicalDocument({
       userId,
@@ -177,6 +178,6 @@ exports.DeleteSharedMedicalDocumentByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

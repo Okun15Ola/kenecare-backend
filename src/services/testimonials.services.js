@@ -1,36 +1,37 @@
 const dbObject = require("../db/db.testimonials");
 const Response = require("../utils/response.utils");
 const { appBaseURL } = require("../config/default.config");
+
 exports.getTestimonials = async () => {
   try {
     const rawData = await dbObject.getAllTestimonials();
+    if (!rawData) return null;
 
-    if (rawData) {
-      const testimonials = rawData.map(
-        ({
-          testimonial_id: testimonialId,
-          first_name: firstName,
-          last_name: lastName,
-          profile_pic_url: patientPic,
-          testimonial_content: content,
-          is_active: isActive,
-          is_approved: isApproved,
-          approved_by: approvedBy,
-        }) => {
-          return {
-            testimonialId,
-            patientName: `${firstName} ${lastName}`,
-            patientPic: `${appBaseURL}/user-profile/${patientPic}`,
-            content,
-            isActive,
-            isApproved,
-            approvedBy,
-          };
-        }
-      );
-      return Response.SUCCESS({ data: testimonials });
-    }
-  } catch (error) {}
+    const testimonials = rawData.map(
+      ({
+        testimonial_id: testimonialId,
+        first_name: firstName,
+        last_name: lastName,
+        profile_pic_url: patientPic,
+        testimonial_content: content,
+        is_active: isActive,
+        is_approved: isApproved,
+        approved_by: approvedBy,
+      }) => ({
+        testimonialId,
+        patientName: `${firstName} ${lastName}`,
+        patientPic: `${appBaseURL}/user-profile/${patientPic}`,
+        content,
+        isActive,
+        isApproved,
+        approvedBy,
+      }),
+    );
+    return Response.SUCCESS({ data: testimonials });
+  } catch (error) {
+    console.error(error);
+    return error;
+  }
 };
 
 exports.getTestimonialById = async (id) => {
@@ -69,7 +70,7 @@ exports.getTestimonialById = async (id) => {
 
 exports.createTestimonial = async ({ userId, patientId, content }) => {
   try {
-    //save to database
+    // save to database
     await dbObject.createNewTestimonial({
       patientId,
       content,

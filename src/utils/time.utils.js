@@ -1,11 +1,11 @@
 const moment = require("moment");
 
-const validateNewAppointmentDate = ({ date, time = null }) => {
+const validateNewAppointmentDate = ({ date }) => {
   try {
     const submittedDate = moment(moment(date).format("YYYY-MM-DD"));
     const currentMoment = moment(moment().format("YYYY-MM-DD"));
 
-    //check if the date is a valid date
+    // check if the date is a valid date
     if (!submittedDate.isValid()) {
       throw new Error("Invalid Date format");
     }
@@ -32,14 +32,14 @@ const validateAppointmentPostponedDate = (date) => {
       throw new Error("Invalid Date format. Expected date format (YYYY-MM-DD)");
     }
 
-    //check if the value is not an old date
+    // check if the value is not an old date
     if (currentMoment.isAfter(submittedValue)) {
       throw new Error("Postpone Date must be a future date");
     }
 
     if (submittedValue.isAfter(threeDaysLater)) {
       throw new Error(
-        "Postpone date must not be more than 3 days from today's date"
+        "Postpone date must not be more than 3 days from today's date",
       );
     }
 

@@ -1,7 +1,7 @@
+// const he = require("he");
 const bcryptjs = require("bcryptjs");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const he = require("he");
 const {
   patientJwtSecret,
   adminJwtSecret,

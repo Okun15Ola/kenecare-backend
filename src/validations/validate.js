@@ -1,6 +1,5 @@
 const { validationResult } = require("express-validator");
 const { BAD_REQUEST } = require("../utils/response.utils");
-const fs = require("fs");
 const { deleteFile } = require("../utils/file-upload.utils");
 
 const Validate = (req, res, next) => {
@@ -10,17 +9,14 @@ const Validate = (req, res, next) => {
     if (req.file) {
       deleteFile(req.file?.path);
     }
-    errors = errors.map((error) => {
-      return {
-        msg: error.msg,
-      };
-    });
-
+    errors = errors.map((error) => ({
+      msg: error.msg,
+    }));
     return res
       .status(400)
       .json(BAD_REQUEST({ message: "Validation Error", error: errors }));
   }
-  next();
+  return next();
 };
 
 module.exports = {

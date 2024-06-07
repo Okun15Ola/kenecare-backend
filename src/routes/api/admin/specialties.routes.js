@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const { check } = require("express-validator");
 const {
   CreateSpecialtyValidation,
   UpdateSpecialtyValidation,
@@ -23,32 +22,27 @@ router.post(
   localMediaUploader.single("image"),
   CreateSpecialtyValidation,
   Validate,
-  CreateSpecialtyController
+  CreateSpecialtyController,
 );
 router.put(
   "/:id",
   localMediaUploader.single("image"),
   UpdateSpecialtyValidation,
   Validate,
-  UpdateSpecialtyByIdController
+  UpdateSpecialtyByIdController,
 );
 router.patch(
   "/:id/",
   SpecialtyIDValidation,
   Validate,
-  UpdateSpecialtyStatusController
+  UpdateSpecialtyStatusController,
 );
-// router.patch(
-//   "/:id/image",
-//   SpecialtyIDValidation,
-//   Validate,
-//   UpdateSpecialtyStatusController
-// );
+
 router.delete(
   "/:id",
   SpecialtyIDValidation,
   Validate,
-  DeleteSpecialtyByIdController
+  DeleteSpecialtyByIdController,
 );
 
 module.exports = router;

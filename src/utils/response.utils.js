@@ -1,4 +1,3 @@
-"use strict";
 const HttpStatus = require("http-status-codes");
 
 const Response = {};
@@ -7,9 +6,9 @@ Response.SUCCESS = ({ message, data }) => {
   return {
     status: "success",
     statusCode: HttpStatus.StatusCodes.OK,
-    timestamp: timestamp,
-    message: message,
-    data: data,
+    timestamp,
+    message,
+    data,
   };
 };
 Response.NOT_MODIFIED = () => {
@@ -17,7 +16,7 @@ Response.NOT_MODIFIED = () => {
   return {
     status: "no content",
     statusCode: HttpStatus.StatusCodes.NOT_MODIFIED,
-    timestamp: timestamp,
+    timestamp,
     message: null,
     data: null,
   };
@@ -27,9 +26,9 @@ Response.CREATED = ({ data, message }) => {
   return {
     status: "created",
     statusCode: HttpStatus.StatusCodes.CREATED,
-    timestamp: timestamp,
-    message: message,
-    data: data,
+    timestamp,
+    message,
+    data,
   };
 };
 
@@ -39,8 +38,8 @@ Response.BAD_REQUEST = ({ message, error, errorCode }) => {
     status: "error",
     errorCode,
     statusCode: HttpStatus.StatusCodes.BAD_REQUEST,
-    timestamp: timestamp,
-    message: message,
+    timestamp,
+    message,
     errors: error,
   };
 };
@@ -51,8 +50,8 @@ Response.UNAUTHORIZED = ({ message, error, errorCode }) => {
     status: "error",
     errorCode,
     statusCode: HttpStatus.StatusCodes.UNAUTHORIZED,
-    timestamp: timestamp,
-    message: message,
+    timestamp,
+    message,
     errors: error,
   };
 };
@@ -62,20 +61,20 @@ Response.NOT_FOUND = ({ message, error, errorCode }) => {
     status: "error",
     errorCode,
     statusCode: HttpStatus.StatusCodes.NOT_FOUND,
-    timestamp: timestamp,
-    message: message,
+    timestamp,
+    message,
     errors: error,
   };
 };
 
-Response.INTERNAL_SERVER_ERROR = ({ message, error, errorCode }) => {
+Response.INTERNAL_SERVER_ERROR = ({ message, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",
     errorCode,
     statusCode: HttpStatus.StatusCodes.INTERNAL_SERVER_ERROR,
-    timestamp: timestamp,
-    message: message,
+    timestamp,
+    message,
     errors: null,
   };
 };

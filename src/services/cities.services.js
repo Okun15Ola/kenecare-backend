@@ -1,5 +1,6 @@
 const dbObject = require("../db/db.cities");
 const Response = require("../utils/response.utils");
+
 exports.getCities = async () => {
   try {
     const rawData = await dbObject.getAllCities();
@@ -11,16 +12,14 @@ exports.getCities = async () => {
         longitude,
         is_active: isActive,
         inputted_by: inputtedBy,
-      }) => {
-        return {
-          cityId,
-          cityName,
-          latitude,
-          longitude,
-          isActive,
-          inputtedBy,
-        };
-      }
+      }) => ({
+        cityId,
+        cityName,
+        latitude,
+        longitude,
+        isActive,
+        inputtedBy,
+      }),
     );
 
     return Response.SUCCESS({ data: cities });
@@ -32,7 +31,7 @@ exports.getCities = async () => {
 
 exports.getCity = async (id) => {
   try {
-    const rawData = await isCityExist(id);
+    const rawData = await dbObject.getCityById(id);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
@@ -111,7 +110,12 @@ exports.updateCity = async ({ id, name, latitude, longitude }) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
-    await dbObject.updateCityById({ id, name, latitude, longitude });
+    await dbObject.updateCityById({
+      id,
+      name,
+      latitude,
+      longitude,
+    });
     return Response.SUCCESS({ message: "City Updated Succcessfully" });
   } catch (error) {
     console.error(error);
@@ -143,12 +147,4 @@ exports.deleteCity = async (id) => {
     console.error(error);
     throw error;
   }
-};
-
-const isCityExist = async (id) => {
-  const rawData = await dbObject.getCityById(id);
-  if (!rawData) {
-    return null;
-  }
-  return rawData;
 };

@@ -8,37 +8,37 @@ const {
 
 const GetPrescriptionsController = async (req, res, next) => {
   try {
-    const id = parseInt(req.user.id);
+    const id = parseInt(req.user.id, 10);
     const response = await getAppointmentPrescriptions(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 const GetAppointmentPrescriptionController = async (req, res, next) => {
   try {
-    const prescriptionId = parseInt(req.params.id);
+    const prescriptionId = parseInt(req.params.id, 10);
 
     const response = await getAppointmentPrescriptionById(prescriptionId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const GetAppointmentPrescriptionsController = async (req, res, next) => {
   try {
-    const appointmentId = parseInt(req.params.id);
+    const appointmentId = parseInt(req.params.id, 10);
     const response = await getAppointmentPrescriptions(appointmentId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -59,12 +59,12 @@ const CreatePrescriptionController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const UpdatePrescriptionController = async (req, res, next) => {
   try {
-    const prescriptionId = parseInt(req.params.id);
+    const prescriptionId = parseInt(req.params.id, 10);
 
     const { appointmentId, diagnosis, medicines, comment } = req.body;
 
@@ -79,7 +79,7 @@ const UpdatePrescriptionController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 

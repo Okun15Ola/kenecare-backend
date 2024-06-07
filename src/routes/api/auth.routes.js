@@ -1,6 +1,6 @@
 const router = require("express").Router();
+const { body } = require("express-validator");
 const logger = require("../../middlewares/logger.middleware");
-const rateLimit = require("../../utils/rate-limit.utils");
 const { Validate } = require("../../validations/validate");
 const {
   LoginController,
@@ -22,17 +22,14 @@ const {
   UpdatePasswordValidations,
 } = require("../../validations/auth.validations");
 const { requireUserAuth } = require("../../middlewares/auth.middleware");
-const { body } = require("express-validator");
 const {
   getUserByMobileNumber,
   getUserByVerificationToken,
 } = require("../../db/db.users");
 
-//regex constants
-const passwordRegex = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/;
-const phoneNumberRegex = /^\+(232)?(\d{8})$/;
-
-// rateLimit(router);
+// regex constants
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/;
+const PHONE_NUMBER_REGEX = /^\+(232)?(\d{8})$/;
 
 router.get("/authenticate", requireUserAuth, (req, res, next) => {
   try {
@@ -40,7 +37,7 @@ router.get("/authenticate", requireUserAuth, (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 });
 
@@ -50,14 +47,14 @@ router.post(
   "/login/otp",
   OTPLoginValidation,
   Validate,
-  RequestLoginOTPController
+  RequestLoginOTPController,
 );
 
 router.post(
   "/login/:token",
   VerifyTokenValidations,
   Validate,
-  VerifyLoginOTPController
+  VerifyLoginOTPController,
 );
 
 router.post("/register", RegisterValidations, Validate, RegisterController);
@@ -66,7 +63,7 @@ router.put(
   "/verify/:token",
   VerifyTokenValidations,
   Validate,
-  VerifyRegisterOTPController
+  VerifyRegisterOTPController,
 );
 
 router.post(
@@ -76,40 +73,42 @@ router.post(
       .trim()
       .escape()
       .custom(async (value, { req }) => {
-        if (value) {
-          if (!phoneNumberRegex.test(value)) {
-            throw new Error("Invalid number format.");
-          }
-          const data = await getUserByMobileNumber(value);
-
-          if (!data) {
-            throw new Error("Error verifiying phone number");
-          }
-
-          req.user = data;
-          return true;
+        if (!value) {
+          throw new Error("Phone Number is required");
         }
+        if (!PHONE_NUMBER_REGEX.test(value)) {
+          throw new Error("Invalid number format.");
+        }
+        const data = await getUserByMobileNumber(value);
+
+        if (!data) {
+          throw new Error("Error verifiying phone number");
+        }
+
+        req.user = data;
+        return true;
       }),
     body("token")
       .trim()
       .escape()
       .custom(async (value, { req }) => {
-        if (value) {
-          const data = await getUserByVerificationToken(value);
-
-          if (!data) {
-            throw new Error(
-              "Error verifying token, please try again with a valid token."
-            );
-          }
-
-          req.user = data;
-          return true;
+        if (!value) {
+          throw new Error("Token is required");
         }
+        const data = await getUserByVerificationToken(value);
+
+        if (!data) {
+          throw new Error(
+            "Error verifying token, please try again with a valid token.",
+          );
+        }
+
+        req.user = data;
+        return true;
       }),
   ],
   Validate,
-  ForgotPasswordController
+  ForgotPasswordController,
 );
 
 router.post(
@@ -125,7 +124,7 @@ router.post(
 
         if (!data) {
           throw new Error(
-            "BAD_REQUEST. Error Resending OTP. Please check mobile number"
+            "BAD_REQUEST. Error Resending OTP. Please check mobile number",
           );
         }
 
@@ -134,14 +133,14 @@ router.post(
       }),
   ],
   Validate,
-  ResendVerificationOTPController
+  ResendVerificationOTPController,
 );
 router.put(
   "/update-password",
   requireUserAuth,
   UpdatePasswordValidations,
   Validate,
-  UpdatePasswordController
+  UpdatePasswordController,
 );
 router.put(
   "/reset-password",
@@ -150,25 +149,26 @@ router.put(
       .trim()
       .escape()
       .custom(async (value, { req }) => {
-        if (value) {
-          const data = await getUserByVerificationToken(value);
-          if (!data) {
-            throw new Error("Error Resetting password, please try again");
-          }
-
-          req.user = data;
-          return true;
+        if (!value) {
+          throw new Error("Token is required");
         }
+        const data = await getUserByVerificationToken(value);
+        if (!data) {
+          throw new Error("Error Resetting password, please try again");
+        }
+
+        req.user = data;
+        return true;
       }),
     body("newPassword")
       .trim()
-      .custom(async (value, { req }) => {
+      .custom(async (value) => {
         if (value === "") {
           throw new Error("Password is required");
         }
-        if (!passwordRegex.test(value)) {
+        if (!PASSWORD_REGEX.test(value)) {
           throw new Error(
-            "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character"
+            "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
           );
         }
       }),
@@ -184,7 +184,7 @@ router.put(
       }),
   ],
   Validate,
-  UpdatePasswordController
+  UpdatePasswordController,
 );
 router.post("/otp-request", requireUserAuth, SendVerificationOTPController);
 router.post("/otp-request", requireUserAuth, VerifyRequestedOTPController);

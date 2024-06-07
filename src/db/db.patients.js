@@ -61,7 +61,7 @@ exports.createPatient = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -101,7 +101,7 @@ exports.createPatientMedicalInfo = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -134,7 +134,7 @@ exports.updatePatientById = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -194,7 +194,7 @@ exports.updatePatientMedicalHistory = ({
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };

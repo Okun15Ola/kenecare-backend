@@ -1,10 +1,10 @@
-const { body, param, check } = require("express-validator");
+const { body, param } = require("express-validator");
+const moment = require("moment");
 const {
   getSpecialtyByName,
   getSpecialtiyById,
 } = require("../db/db.specialities");
 const { getDoctorById } = require("../db/db.doctors");
-const moment = require("moment");
 
 exports.CreateAppointmentValidation = [
   body("patientName")
@@ -13,7 +13,7 @@ exports.CreateAppointmentValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (name, { req }) => {
+    .custom(async (name) => {
       const data = await getSpecialtyByName(name);
       if (data) {
         throw new Error("Specified Specialty Name Already Exists");
@@ -32,7 +32,7 @@ exports.CreateAppointmentValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (doctorId, { req }) => {
+    .custom(async (doctorId) => {
       const data = await getDoctorById(doctorId);
       if (!data) {
         throw new Error("Doctor Not Found");
@@ -45,7 +45,7 @@ exports.CreateAppointmentValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getSpecialtiyById(id);
       if (!data) {
         throw new Error("Specialty Not Found");
@@ -69,7 +69,7 @@ exports.CreateAppointmentValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (date, { req }) => {
+    .custom(async (date) => {
       const today = moment().format("YYYY-MM-DD");
       const userDate = moment(date, "YYYY-MM-DD", true);
       const isValidDate = moment(userDate).isValid();
@@ -78,7 +78,7 @@ exports.CreateAppointmentValidation = [
       }
       if (userDate.isBefore(today)) {
         throw new Error(
-          "Appointment must either be today or later. Please choose another date"
+          "Appointment must either be today or later. Please choose another date",
         );
       }
     }),
@@ -103,7 +103,7 @@ exports.SpecialtyIDValidation = [
     .withMessage("Specialty ID is required")
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getSpecialtiyById(id);
       if (!data) {
         throw new Error("Specialty Not Found");

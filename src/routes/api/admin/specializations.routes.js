@@ -33,7 +33,7 @@ router.post(
       .escape(),
   ],
   Validate,
-  CreateSpecializationController
+  CreateSpecializationController,
 );
 router.put("/:id", UpdateSpecializationByIdController);
 router.patch(
@@ -57,7 +57,7 @@ router.patch(
       .escape(),
   ],
   Validate,
-  UpdateSpecializationStatusController
+  UpdateSpecializationStatusController,
 );
 router.delete("/:id", DeleteSpecializationByIdController);
 

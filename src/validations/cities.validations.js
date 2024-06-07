@@ -8,7 +8,7 @@ exports.CreateCityValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const nameExist = await getCityByName(value);
       if (nameExist) {
         throw new Error("City with specified name already exists");
@@ -22,7 +22,7 @@ exports.UpdateCityValidation = [
     .withMessage("City ID is required")
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getCityById(id);
       if (!data) {
         throw new Error("City with specified ID does not exist");
@@ -35,7 +35,7 @@ exports.UpdateCityValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const nameExist = await getCityByName(value);
       if (nameExist) {
         throw new Error("City with specified name already exists");
@@ -49,7 +49,7 @@ exports.CityIDValidation = [
     .withMessage("City ID is required")
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getCityById(id);
       if (!data) {
         throw new Error("City with specified ID does not exist");
@@ -63,7 +63,7 @@ exports.PathCityValidation = [
     .withMessage("City ID is required")
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getCityById(id);
       if (!data) {
         throw new Error("City with specified ID does not exist");

@@ -1,43 +1,35 @@
 const router = require("express").Router();
+const { param } = require("express-validator");
 const {
   GetAllMedicalRecordsController,
   GetMedicalRecordByIDController,
   CreateMedicalReocrdController,
   UpdateMedicalReocrdByIdController,
   DeletemedicaRecordByIdController,
-  ShareMedicalDocumentController,
 } = require("../../../controllers/patients/medical-record.controller");
 const { AWSUploader } = require("../../../utils/file-upload.utils");
 const {
   CreateNewMedicalRecordValidation,
-  ShareMedicalDocumentValidation,
 } = require("../../../validations/medical-records.validations");
-const { param } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 
 router.get("/", GetAllMedicalRecordsController);
-router.get("/:id",  GetMedicalRecordByIDController);
+router.get("/:id", GetMedicalRecordByIDController);
 
 router.post(
   "/",
   AWSUploader.single("medicalDocument"),
   CreateNewMedicalRecordValidation,
   Validate,
-  CreateMedicalReocrdController
+  CreateMedicalReocrdController,
 );
-// router.post(
-//   "/share",
-//   ShareMedicalDocumentValidation,
-//   Validate,
-//   ShareMedicalDocumentController
-// );
 
 router.put(
   "/:id",
   AWSUploader.single("medicalDocument"),
   CreateNewMedicalRecordValidation,
   Validate,
-  UpdateMedicalReocrdByIdController
+  UpdateMedicalReocrdByIdController,
 );
 router.delete(
   "/:id",
@@ -45,13 +37,13 @@ router.delete(
     param("id")
       .notEmpty()
       .withMessage("Please Specify document ID to be deleted")
-      .custom((id, { req }) => {
+      .custom((id) => {
         console.log(id);
         return true;
       }),
   ],
   Validate,
-  DeletemedicaRecordByIdController
+  DeletemedicaRecordByIdController,
 );
 
 module.exports = router;

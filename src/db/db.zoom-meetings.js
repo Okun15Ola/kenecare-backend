@@ -26,7 +26,7 @@ exports.createNewZoomMeeting = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -56,7 +56,7 @@ exports.getZoomMeetings = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

@@ -1,10 +1,9 @@
 const {
   getSharedMedicalDocumentsByDoctorId,
-  getSharedMedicalDocumentByIdAndDoctorId,
   getSharedMedicalDocumentById,
 } = require("../db/db.patient-docs");
 const Response = require("../utils/response.utils");
-const { getFileFromS3Bucket } = require("../utils/aws-s3.utils");
+// const { getFileFromS3Bucket } = require("../utils/aws-s3.utils");
 const { getDoctorById } = require("../db/db.doctors");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {
@@ -30,18 +29,16 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
         doctor_first_name: doctorFirstName,
         doctor_last_name: doctorLastName,
         note,
-      }) => {
-        return {
-          sharingId,
-          documentId,
-          documentUUID,
-          documentTitle,
-          patientId,
-          patientName: `${patientFirstName} ${patientLastName}`,
-          doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-          note,
-        };
-      }
+      }) => ({
+        sharingId,
+        documentId,
+        documentUUID,
+        documentTitle,
+        patientId,
+        patientName: `${patientFirstName} ${patientLastName}`,
+        doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+        note,
+      }),
     );
 
     return Response.SUCCESS({ data });
@@ -57,7 +54,7 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
     if (!doctor) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
-    const { doctor_id: doctorId } = doctor;
+    // const { doctor_id: doctorId } = doctor;
 
     const document = await getSharedMedicalDocumentById(sharedDocId);
     if (!document) {
@@ -66,7 +63,7 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
       });
     }
 
-    const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
+    // const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
 
     const {
       sharing_id: sharingId,

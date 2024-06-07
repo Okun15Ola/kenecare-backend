@@ -1,5 +1,5 @@
-const logger = require("../../middlewares/logger.middleware");
 const path = require("path");
+const logger = require("../../middlewares/logger.middleware");
 const {
   getDoctorCouncilRegistration,
   createDoctorCouncilRegistration,
@@ -13,19 +13,19 @@ const Response = require("../../utils/response.utils");
 
 const GetDoctorCouncilRegistrationController = async (req, res, next) => {
   try {
-    const id = parseInt(req.user.id);
+    const id = parseInt(req.user.id, 10);
     const response = await getDoctorCouncilRegistration(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const GetDoctorCouncilRegistrationDocumentController = async (
   req,
   res,
-  next
+  next,
 ) => {
   try {
     const { id: loggedInUserId } = req.user;
@@ -35,16 +35,16 @@ const GetDoctorCouncilRegistrationDocumentController = async (
       return res.status(404).json(
         Response.NOT_FOUND({
           message: "Doctor Profile Not Found for Logged In Account",
-        })
+        }),
       );
     }
     const { doctor_id: doctorId, user_id: userId } = doctor;
 
     if (userId !== loggedInUserId) {
-      return UNAUTHORIZED({ message: "Access Forbidden" });
+      return Response.UNAUTHORIZED({ message: "Access Forbidden" });
     }
 
-    //TODO Get document by doctorId AND Filename
+    //  Get document by doctorId AND Filename
 
     const registration = await getCouncilRegistrationByDoctorId(doctorId);
     if (!registration) {
@@ -53,14 +53,14 @@ const GetDoctorCouncilRegistrationDocumentController = async (
         .json(Response.NOT_FOUND({ message: "Document Not Found" }));
     }
 
-    //TODO Check if the registration belongs to the requesting doctor
+    //  Check if the registration belongs to the requesting doctor
     return res.sendFile(
-      path.join(__dirname, `../../public/upload/media/${req.params.filename}`)
+      path.join(__dirname, `../../public/upload/media/${req.params.filename}`),
     );
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const CreateDoctorCouncilRegistration = async (req, res, next) => {
@@ -83,7 +83,7 @@ const CreateDoctorCouncilRegistration = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const UpdateCouncilRegistrationController = async (req, res, next) => {
@@ -107,7 +107,7 @@ const UpdateCouncilRegistrationController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 

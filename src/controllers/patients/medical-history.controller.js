@@ -7,19 +7,19 @@ const {
 
 exports.GetPatientMedicalHistoryController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const response = await getPatientMedicalHistory(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.CreatePatientMedicalInfoController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const {
       height,
       weight,
@@ -59,12 +59,12 @@ exports.CreatePatientMedicalInfoController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.UpdatePatientMedicalHistoryController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const {
       height,
       weight,
@@ -104,6 +104,6 @@ exports.UpdatePatientMedicalHistoryController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

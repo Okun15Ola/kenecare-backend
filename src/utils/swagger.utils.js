@@ -1,7 +1,6 @@
 const swaggerJSDocs = require("swagger-jsdoc");
-const swaggerUi = require("swagger-ui-express");
+
 const { version } = require("../../package.json");
-const { OpenApiValidator } = require("express-openapi-validator");
 
 const swaggerDocs = swaggerJSDocs({
   failOnErrors: true,

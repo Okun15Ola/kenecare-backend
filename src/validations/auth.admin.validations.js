@@ -16,7 +16,7 @@ exports.AdminLoginValidations = [
     .trim()
     .escape()
     .custom(async (email, { req }) => {
-      if (!email.endsWith(`@kenecare.com`)) {
+      if (!email.endsWith("@kenecare.com")) {
         throw new Error("Unauthorized email address provider");
       }
 
@@ -38,7 +38,7 @@ exports.AdminLoginValidations = [
         const { accountActive, password: hashedPassword } = req.user;
         const isMatch = await comparePassword({
           plainPassword: password,
-          hashedPassword: hashedPassword,
+          hashedPassword,
         });
         if (!isMatch) {
           req.user = null;
@@ -57,8 +57,8 @@ exports.AdminRegisterValidations = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (email, { req }) => {
-      if (!email.endsWith(`@kenecare.com`)) {
+    .custom(async (email) => {
+      if (!email.endsWith("@kenecare.com")) {
         throw new Error("Unauthorized email address provider");
       }
       const user = await getAdminByEmail(email);
@@ -76,7 +76,7 @@ exports.AdminRegisterValidations = [
     .isLength({ min: 9, max: 20 })
     .trim()
     .escape()
-    .custom(async (mobileNumber, { req }) => {
+    .custom(async (mobileNumber) => {
       const user = await getAdminByMobileNumber(mobileNumber);
       if (user) {
         throw new Error("Mobile Number Already Exist");
@@ -89,15 +89,13 @@ exports.AdminRegisterValidations = [
     .withMessage("Password is required")
     .matches(/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/)
     .withMessage(
-      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character"
+      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
     )
     .trim(),
   body("confirmPassword")
     .notEmpty()
     .withMessage("Confirm Password is required")
-    .custom((value, { req }) => {
-      return value === req.body.password;
-    })
+    .custom((value, { req }) => value === req.body.password)
     .withMessage("Passwords do not match"),
 ];
 

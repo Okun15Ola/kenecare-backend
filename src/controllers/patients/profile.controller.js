@@ -14,7 +14,7 @@ exports.GetPatientProfileController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -34,7 +34,7 @@ exports.CreatePatientProfileController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -54,24 +54,22 @@ exports.UpdatePatientProfileController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.UpdatePatientProfilePictureController = async (req, res, next) => {
   try {
-    if (req.file) {
-      const { id } = req.user;
-      const imageUrl = req.file.filename;
+    const { id } = req.user;
+    const imageUrl = req.file.filename || null;
 
-      const response = await updatePatientProfilePicture({
-        userId: id,
-        imageUrl,
-      });
-      return res.status(response.statusCode).json(response);
-    }
+    const response = await updatePatientProfilePicture({
+      userId: id,
+      imageUrl,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

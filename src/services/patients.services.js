@@ -1,10 +1,9 @@
-const dbObject = require("../db/db.patients");
-const Response = require("../utils/response.utils");
-const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
-const { getUserById } = require("../db/db.users");
 const moment = require("moment");
 const path = require("path");
-const fs = require("fs");
+const dbObject = require("../db/db.patients");
+const Response = require("../utils/response.utils");
+const { USERTYPE } = require("../utils/enum.utils");
+const { getUserById } = require("../db/db.users");
 const { appBaseURL } = require("../config/default.config");
 const { deleteFile } = require("../utils/file-upload.utils");
 
@@ -27,25 +26,23 @@ exports.getAllPatients = async () => {
         user_type: userType,
         is_account_active: isAccountActive,
         is_online: isOnline,
-      }) => {
-        return {
-          patientId,
-          title,
-          firstName,
-          middleName,
-          lastName,
-          gender,
-          profilePic: profilePic
-            ? `${appBaseURL}/user-profile/${profilePic}`
-            : null,
-          dob: moment(dob).format("MMM-DD"),
-          mobileNumber,
-          email,
-          userType,
-          isAccountActive,
-          isOnline,
-        };
-      }
+      }) => ({
+        patientId,
+        title,
+        firstName,
+        middleName,
+        lastName,
+        gender,
+        profilePic: profilePic
+          ? `${appBaseURL}/user-profile/${profilePic}`
+          : null,
+        dob: moment(dob).format("MMM-DD"),
+        mobileNumber,
+        email,
+        userType,
+        isAccountActive,
+        isOnline,
+      }),
     );
     return Response.SUCCESS({ data: patients });
   } catch (error) {
@@ -75,10 +72,9 @@ exports.getPatientById = async (id) => {
       is_online: isOnline,
     } = rawData;
 
-    //TODO Get medical Record details
-    const medicalRecord = await dbObject.getPatientMedicalInfoByPatientId(
-      patientId
-    );
+    // TODO Get medical Record details
+    const medicalRecord =
+      await dbObject.getPatientMedicalInfoByPatientId(patientId);
 
     let medicalInfo = null;
     if (medicalRecord) {
@@ -141,8 +137,7 @@ exports.getPatientsTestimonial = async (userId) => {
     const patient = await dbObject.getPatientByUserId(userId);
     if (!patient) {
       return Response.NOT_FOUND({
-        message:
-          "Patient Not Found.",
+        message: "Patient Not Found.",
       });
     }
     const rawData = await dbObject.getAllPatients();
@@ -155,7 +150,7 @@ exports.getPatientsTestimonial = async (userId) => {
 
 exports.getPatientByUser = async (id) => {
   try {
-    //Get profile from database
+    // Get profile from database
     const rawData = await dbObject.getPatientByUserId(id);
     if (!rawData) {
       return Response.NOT_FOUND({
@@ -164,7 +159,7 @@ exports.getPatientByUser = async (id) => {
       });
     }
 
-    //destruct properties from database object
+    // destruct properties from database object
     const {
       patient_id: patientId,
       title,
@@ -182,15 +177,14 @@ exports.getPatientByUser = async (id) => {
       is_online: isOnline,
     } = rawData;
 
-    //TODO Check if the profile requested belongs to the requesting user
+    // TODO Check if the profile requested belongs to the requesting user
     if (id !== userId || userType !== USERTYPE.PATIENT) {
       return Response.UNAUTHORIZED({ message: "Unauthorized account access." });
     }
 
-    //TODO Get medical Record details
-    const medicalRecord = await dbObject.getPatientMedicalInfoByPatientId(
-      patientId
-    );
+    // TODO Get medical Record details
+    const medicalRecord =
+      await dbObject.getPatientMedicalInfoByPatientId(patientId);
 
     let medicalInfo = null;
     if (medicalRecord) {
@@ -282,7 +276,7 @@ exports.createPatientProfile = async ({
       dateOfBirth: formattedDate,
     });
 
-    //TODO send an email with further instructions
+    // TODO send an email with further instructions
     return Response.CREATED({
       message: "Patient profile created successfully.",
     });
@@ -313,9 +307,8 @@ exports.createPatientMedicalInfo = async ({
       });
     }
 
-    const medicalInfoExist = await dbObject.getPatientMedicalInfoByPatientId(
-      patientId
-    );
+    const medicalInfoExist =
+      await dbObject.getPatientMedicalInfoByPatientId(patientId);
     if (medicalInfoExist) {
       return Response.BAD_REQUEST({
         message:
@@ -386,14 +379,15 @@ exports.updatePatientProfile = async ({
 };
 exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
   try {
-    const { profile_pic_url } = await dbObject.getPatientByUserId(userId);
+    const { profile_pic_url: profilePicUrl } =
+      await dbObject.getPatientByUserId(userId);
 
-    if (profile_pic_url) {
+    if (profilePicUrl) {
       // delete old profile pic from file system
       const file = path.join(
         __dirname,
         "../public/upload/profile_pics/",
-        profile_pic_url
+        profilePicUrl,
       );
       await deleteFile(file);
     }

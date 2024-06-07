@@ -3,23 +3,19 @@ const {
   getAppointmentPrescriptions,
   createAppointmentPrescriptions,
   updateAppointmentPrescriptions,
-  getSimilarPrescription,
+
   getAppointmentPrescriptionById,
 } = require("../db/db.prescriptions");
 const Response = require("../utils/response.utils");
-const { getUserById } = require("../db/db.users");
+
 const {
   generateVerificationToken,
   hashUsersPassword,
   encryptText,
   decryptText,
-  comparePassword,
 } = require("../utils/auth.utils");
 const { sendPrescriptionToken } = require("../utils/sms.utils");
-const {
-  getPatientAppointmentById,
-  getAppointmentByID,
-} = require("../db/db.appointments.patients");
+const { getAppointmentByID } = require("../db/db.appointments.patients");
 const { getPatientById } = require("../db/db.patients");
 
 exports.getAppointmentPrescriptions = async (id) => {
@@ -30,16 +26,14 @@ exports.getAppointmentPrescriptions = async (id) => {
       ({
         prescription_id: prescrtiptionId,
         appointment_id: appointmentId,
-        created_at,
-        updated_at,
-      }) => {
-        return {
-          prescrtiptionId,
-          appointmentId,
-          createdAt: moment(created_at).format("YYYY-MM-DD"),
-          updatedAt: moment(updated_at).format("YYYY-MM-DD"),
-        };
-      }
+        created_at: dateCreated,
+        updated_at: dateUpdated,
+      }) => ({
+        prescrtiptionId,
+        appointmentId,
+        createdAt: moment(dateCreated).format("YYYY-MM-DD"),
+        updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
+      }),
     );
 
     return Response.SUCCESS({ data: prescriptions });
@@ -71,9 +65,9 @@ exports.getAppointmentPrescriptionById = async (id) => {
       appointment_id: appointmentId,
       diagnosis,
       medicines,
-      doctors_comment,
-      created_at,
-      updated_at,
+      doctors_comment: doctorComment,
+      created_at: dateCreated,
+      updated_at: dateUpdated,
     } = prescription;
 
     const decryptedDiagnosis = decryptText({
@@ -85,7 +79,7 @@ exports.getAppointmentPrescriptionById = async (id) => {
       key: hashedToken,
     });
     const decryptedComment = decryptText({
-      encryptedText: doctors_comment,
+      encryptedText: doctorComment,
       key: hashedToken,
     });
 
@@ -95,8 +89,8 @@ exports.getAppointmentPrescriptionById = async (id) => {
       diagnosis: decryptedDiagnosis,
       medicines: JSON.parse(decryptedMedicines),
       comment: decryptedComment,
-      createdAt: moment(created_at).format("YYYY-MM-DD"),
-      updatedAt: moment(updated_at).format("YYYY-MM-DD"),
+      createdAt: moment(dateCreated).format("YYYY-MM-DD"),
+      updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
     };
 
     return Response.SUCCESS({ data });
@@ -107,28 +101,13 @@ exports.getAppointmentPrescriptionById = async (id) => {
 };
 
 exports.createPrescription = async ({
-  userId,
   appointmentId,
   diagnosis,
   medicines,
   comment,
 }) => {
   try {
-    medicines = JSON.stringify(medicines);
-
-    // const similarPrescription = await getSimilarPrescription({
-    //   appointmentId,
-    //   diagnosis,
-    //   medicines,
-    //   comment,
-    // });
-
-    // if (similarPrescription) {
-    //   return Response.BAD_REQUEST({
-    //     message:
-    //       "Similar prescription already exists for the selected appointment, please update or create a different prescription for the appointment",
-    //   });
-    // }
+    const stringifiedMedicines = JSON.stringify(medicines);
 
     const appointment = await getAppointmentByID(appointmentId);
 
@@ -150,10 +129,10 @@ exports.createPrescription = async ({
 
     // Use Hashed Token to encyrpt presctiption
     const encDiagnosis = encryptText(diagnosis, hashedToken);
-    const encMedicines = encryptText(medicines, hashedToken);
+    const encMedicines = encryptText(stringifiedMedicines, hashedToken);
     const encComment = encryptText(comment, hashedToken);
 
-    //Save encrypted prescription with access token in database
+    // Save encrypted prescription with access token in database
     await createAppointmentPrescriptions({
       appointmentId,
       diagnosis: encDiagnosis,
@@ -186,13 +165,13 @@ exports.updatePrescriptions = async ({
   comment,
 }) => {
   try {
-    medicines = JSON.stringify(medicines);
+    const stringifiedMedicines = JSON.stringify(medicines);
 
     await updateAppointmentPrescriptions({
       appointmentId,
       prescriptionId,
       diagnosis,
-      medicines,
+      medicines: stringifiedMedicines,
       comment,
     });
     return Response.CREATED({
