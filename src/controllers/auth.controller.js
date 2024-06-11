@@ -26,10 +26,10 @@ exports.AuthenticateController = async (req, res, next) => {
 exports.LoginController = async (req, res, next) => {
   try {
     const response = await loginUser(req.user);
+    logger.info("hello");
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
-    logger.error(error);
+    logger.error("Error Logging In: ", error);
     return next(error);
   }
 };

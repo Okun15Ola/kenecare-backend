@@ -377,14 +377,12 @@ exports.createPatientAppointment = async ({
       });
     }
     // Get and send payment url to process payment
-    const {
-      payment_url: paymentUrl,
-      notif_token: notificationToken,
-      pay_token: paymentToken,
-    } = await getPaymentURL({
-      orderId: genUUID,
-      amount: consultationFee,
-    }).catch((error) => {
+    const { paymentUrl, notificationToken, paymentToken } = await getPaymentURL(
+      {
+        orderId: genUUID,
+        amount: consultationFee,
+      },
+    ).catch((error) => {
       throw error;
     });
 

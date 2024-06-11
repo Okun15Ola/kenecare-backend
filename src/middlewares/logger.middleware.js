@@ -8,10 +8,25 @@ const logDirectory = path.join(__dirname, "../logs");
 if (!fs.existsSync(logDirectory)) {
   // Directory doesn't exist, create it
   fs.mkdirSync(logDirectory, { recursive: true });
-} else {
-  console.log(`Directory '${logDirectory}' already exists.`);
 }
 
+const customFormat = winston.format((info) => {
+  if (info.level === "error") {
+    return {
+      ...info,
+      message: `${info.message}`,
+      stack: info.stack,
+    };
+  }
+  if (info.level === "info") {
+    return {
+      ...info,
+      message: `${info.message}`,
+      stack: info.stack,
+    };
+  }
+  return info;
+});
 const accessLogTransport = new DailyRotateFile({
   filename: "access-%DATE%.log",
   datePattern: "YYYY-MM-DD",
@@ -30,6 +45,11 @@ const errorLogTransport = new DailyRotateFile({
 });
 
 const logger = winston.createLogger({
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    customFormat(),
+    winston.format.json(),
+  ),
   transports: [accessLogTransport, errorLogTransport],
 });
 module.exports = logger;

@@ -20,7 +20,7 @@ const {
 
 let baseUrl = apiBaseURL;
 if (nodeEnv === "development") {
-  baseUrl = "https://aa0b-197-215-23-4.ngrok-free.app";
+  baseUrl = "https://d5c1-197-215-23-159.ngrok-free.app";
 }
 
 const getAccessToken = async () => {
@@ -81,10 +81,10 @@ const getPaymentURL = async ({ orderId, amount }) => {
 
     const {
       payment_url: paymentUrl,
-      notif_token: notifToken,
-      pay_token: payToken,
+      notif_token: notificationToken,
+      pay_token: paymentToken,
     } = data;
-    return { paymentUrl, notifToken, payToken };
+    return { paymentUrl, notificationToken, paymentToken };
   } catch (error) {
     console.error(error);
     throw error;

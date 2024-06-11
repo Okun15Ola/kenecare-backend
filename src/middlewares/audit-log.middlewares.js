@@ -1,3 +1,5 @@
+const logger = require("./logger.middleware");
+
 const logUserInteraction = async (req, res, next) => {
   try {
     const { ip, method, originalUrl, headers } = req;
@@ -12,7 +14,7 @@ const logUserInteraction = async (req, res, next) => {
       os_platform: platform || null,
     };
 
-    console.log(logData);
+    logger.info("AUDIT LOG: ", logData);
     next();
   } catch (error) {
     console.error(error);
