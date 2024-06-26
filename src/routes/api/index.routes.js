@@ -8,6 +8,8 @@ router.get("/cities", IndexController.GetCitiesController);
 router.get("/specialties", IndexController.GetSpecialtiesController);
 router.get("/medical-councils", IndexController.GetMedicalCouncilsController);
 router.get("/doctors", IndexController.GetDoctorsController);
+router.get("/doctors/:id", IndexController.GetDoctorByIDController);
+router.get("/:location/:doctors", IndexController.GetDoctorsController);
 router.get("/faqs", IndexController.GetFaqsController);
 router.get("/testimonials", IndexController.GetTestimonialsController);
 router.get("/common-symptoms", IndexController.GetCommonSymptomsController);

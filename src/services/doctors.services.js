@@ -278,7 +278,7 @@ exports.getDoctorById = async (id) => {
     const data = await dbObject.getDoctorById(id);
 
     if (!data) {
-      return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
+      return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
     //destruct properties from database object
     const {
