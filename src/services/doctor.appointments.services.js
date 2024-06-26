@@ -604,13 +604,13 @@ exports.postponeDoctorAppointment = async ({
     }
 
     // check if the date and time has already been booked
-    const timeBooked = await dbObject.getDoctorAppointByDateAndTime({
+    const timeSlotBooked = await dbObject.getDoctorAppointByDateAndTime({
       doctorId,
       date: postponedDate,
       time: postponedTime,
     });
 
-    if (timeBooked) {
+    if (timeSlotBooked) {
       return Response.BAD_REQUEST({
         message:
           "An appointment has already been booked for the specified time on that date. Please choose another time.",
@@ -621,6 +621,7 @@ exports.postponeDoctorAppointment = async ({
     await dbObject.postponeDoctorAppointmentById({
       postponedReason,
       postponedDate,
+      postponedTime,
       appointmentId,
       doctorId,
     });

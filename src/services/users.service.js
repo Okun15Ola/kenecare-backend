@@ -237,6 +237,7 @@ exports.loginUser = async (user) => {
       return Response.UNAUTHORIZED({
         message:
           "Account has not been verified. Please Verify account and try again",
+        errorCode: "ACCOUNT_UNVERIFIED",
       });
     }
 
@@ -245,6 +246,7 @@ exports.loginUser = async (user) => {
       return Response.UNAUTHORIZED({
         message:
           "Account has been been disabled by system administrator. Please Contact for further instructions",
+        errorCode: "ACCOUNT_INACTIVE",
       });
     }
 

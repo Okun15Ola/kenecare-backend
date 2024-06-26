@@ -288,7 +288,7 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res) => {
-  logger.error(err);
+  logger.error("An unexpected error occured: ", err);
 
   let statusCode = 500;
   let errorMessage = "Internal Server Error";

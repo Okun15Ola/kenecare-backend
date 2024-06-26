@@ -31,9 +31,10 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
+    const response = await axios.request(config).catch((error) => {
       throw error;
     });
+    console.log(response.data);
   } catch (error) {
     console.error(error);
     throw error;

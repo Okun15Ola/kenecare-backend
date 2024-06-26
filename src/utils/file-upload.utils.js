@@ -2,6 +2,7 @@ const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs");
+const logger = require("../middlewares/logger.middleware");
 
 const mediaUploadDirectory = path.join(__dirname, "../public/upload/media/");
 
@@ -103,9 +104,19 @@ const deleteFile = async (filePath) => {
       console.log("File Not Found");
     }
   } catch (error) {
-    console.log("FILE_DELETE_ERROR", error);
+    logger.error("FILE_DELETE_ERROR", error);
     throw error;
   }
+};
+
+const encryptFile = ({ buffer, password }) => {
+  const cipher = crypto.createCipher("aes-256-ctr", password);
+  return Buffer.concat([cipher.update(buffer), cipher.final()]);
+};
+
+const decryptFile = ({ buffer, password }) => {
+  const decipher = crypto.createDecipher("aes-256-ctr", password);
+  return Buffer.concat([decipher.update(buffer), decipher.final()]);
 };
 
 module.exports = {
@@ -115,4 +126,6 @@ module.exports = {
   generateFileName,
   tempUpload,
   deleteFile,
+  encryptFile,
+  decryptFile,
 };

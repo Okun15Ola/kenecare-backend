@@ -22,22 +22,20 @@ const validateNewAppointmentDate = ({ date }) => {
 };
 const validateAppointmentPostponedDate = (date) => {
   try {
-    const submittedValue = moment(date, "YYYY-MM-DD", true);
-
-    const currentMoment = moment("YYYY-MM-DD", true);
-
+    const submittedDate = moment(moment(date).format("YYYY-MM-DD"));
+    const currentMoment = moment(moment().format("YYYY-MM-DD"));
     const threeDaysLater = currentMoment.clone().add(3, "days");
 
-    if (!submittedValue.isValid()) {
-      throw new Error("Invalid Date format. Expected date format (YYYY-MM-DD)");
+    // check if the date is a valid date
+    if (!submittedDate.isValid()) {
+      throw new Error("Invalid Date format");
     }
 
-    // check if the value is not an old date
-    if (currentMoment.isAfter(submittedValue)) {
-      throw new Error("Postpone Date must be a future date");
+    if (currentMoment.isAfter(submittedDate)) {
+      throw new Error("Postpone date must be a future date.");
     }
 
-    if (submittedValue.isAfter(threeDaysLater)) {
+    if (submittedDate.isAfter(threeDaysLater)) {
       throw new Error(
         "Postpone date must not be more than 3 days from today's date",
       );

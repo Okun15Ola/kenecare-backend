@@ -52,7 +52,8 @@ router.patch(
           throw new Error("Specified Appontment Not Found");
         }
 
-        validateAppointmentPostponedDate(value);
+        const error = validateAppointmentPostponedDate(value);
+        console.log(error);
 
         return true;
       }),

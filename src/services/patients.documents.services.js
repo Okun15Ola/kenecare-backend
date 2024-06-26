@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
+
 const {
   getPatientMedicalDocumentByDocumentId,
   getMedicalDocumentsByPatientId,
@@ -20,6 +21,8 @@ const {
 } = require("../utils/aws-s3.utils");
 const { documentSharedWithDoctorSMS } = require("../utils/sms.utils");
 const { getDoctorById } = require("../db/db.doctors");
+const { encryptFile } = require("../utils/file-upload.utils");
+const { getUserById } = require("../db/db.users");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {
@@ -64,6 +67,7 @@ exports.getPatientMedicalDocuments = async (userId) => {
 
 exports.getPatientMedicalDocument = async ({ userId, docId }) => {
   try {
+    // const { password } = await getUserById(userId);
     const patient = await getPatientByUserId(userId);
     if (!patient) {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
@@ -85,6 +89,10 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
       last_name: lastName,
       document_title: documentTitle,
     } = rawData;
+
+    // const object = await getObjectFromS3Bucket(documentUUID);
+
+    // const decryptedFile = decryptFile({ buffer: object.Body, password });
 
     const url = await getFileFromS3Bucket(documentUUID);
 
@@ -109,6 +117,8 @@ exports.createPatientMedicalDocument = async ({
   documentTitle,
 }) => {
   try {
+    const user = await getUserById(userId);
+    const { password } = user;
     const patient = await getPatientByUserId(userId);
     if (!patient) {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
@@ -123,10 +133,14 @@ exports.createPatientMedicalDocument = async ({
 
     const documentUuid = uuidv4();
 
+    const encryptedFileBuffer = encryptFile({ buffer: file.buffer, password });
+
+    console.log(file.mimetype);
+
     const uploaded = await uploadFileToS3Bucket({
       fileName: documentUuid,
-      buffer: file.buffer,
-      mimetype: file.mimetype,
+      buffer: encryptedFileBuffer,
+      mimetype: "enc",
     });
 
     if (uploaded.$metadata.httpStatusCode !== 200) {

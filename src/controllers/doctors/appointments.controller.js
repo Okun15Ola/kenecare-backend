@@ -84,12 +84,13 @@ exports.PostponeDoctorAppointmentController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
     const appointmentId = parseInt(req.params.id, 10);
-    const { reason: postponedReason, postponedDate: postponeDate } = req.body;
+    const { reason: postponedReason, postponedDate, postponedTime } = req.body;
 
     const response = await postponeDoctorAppointment({
       userId,
       appointmentId,
-      postponeDate,
+      postponedDate,
+      postponedTime,
       postponedReason,
     });
     return res.status(response.statusCode).json(response);
