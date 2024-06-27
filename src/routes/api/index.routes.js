@@ -12,7 +12,7 @@ router.get("/specialties", IndexController.GetSpecialtiesController);
 router.get("/medical-councils", IndexController.GetMedicalCouncilsController);
 router.get("/doctors", IndexController.GetDoctorsController);
 router.get(
-  "/doctors/:id",
+  "/doctor/:id",
   [
     param("id")
       .notEmpty()
