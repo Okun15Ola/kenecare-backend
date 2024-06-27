@@ -37,7 +37,6 @@ router.get(
   Validate,
   IndexController.GetDoctorByIDController
 );
-router.get("/:location/:doctors", IndexController.GetDoctorsController);
 router.get("/faqs", IndexController.GetFaqsController);
 router.get("/testimonials", IndexController.GetTestimonialsController);
 router.get("/common-symptoms", IndexController.GetCommonSymptomsController);

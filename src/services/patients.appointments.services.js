@@ -22,6 +22,7 @@ const { getPaymentURL } = require("../utils/payment.utils");
 exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
     const patient = await getPatientByUserId(userId);
+    console.log(patient);
 
     if (!patient) {
       return Response.NOT_FOUND({

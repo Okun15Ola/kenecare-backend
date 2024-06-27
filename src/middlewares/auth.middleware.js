@@ -46,6 +46,7 @@ const requireUserAuth = async (req, res, next) => {
     });
 
     const user = await getUserById(decoded.sub);
+
     if (user) {
       const {
         user_id: userId,
@@ -96,7 +97,7 @@ const requireUserAuth = async (req, res, next) => {
       }
 
       if (userType === USERTYPE.PATIENT) {
-        const patientProfile = await getPatientByUserId(user_id);
+        const patientProfile = await getPatientByUserId(userId);
         if (!patientProfile) {
           return Response.SUCCESS({
             message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
@@ -116,6 +117,7 @@ const requireUserAuth = async (req, res, next) => {
       next();
     }
   } catch (error) {
+    console.log(error);
     if (error.message === "jwt expired") {
       return res.status(401).json(
         Response.UNAUTHORIZED({

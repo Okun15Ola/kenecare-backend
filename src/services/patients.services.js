@@ -76,9 +76,8 @@ exports.getPatientById = async (id) => {
     } = rawData;
 
     //TODO Get medical Record details
-    const medicalRecord = await dbObject.getPatientMedicalInfoByPatientId(
-      patientId
-    );
+    const medicalRecord =
+      await dbObject.getPatientMedicalInfoByPatientId(patientId);
 
     let medicalInfo = null;
     if (medicalRecord) {
@@ -141,8 +140,7 @@ exports.getPatientsTestimonial = async (userId) => {
     const patient = await dbObject.getPatientByUserId(userId);
     if (!patient) {
       return Response.NOT_FOUND({
-        message:
-          "Patient Not Found.",
+        message: "Patient Not Found.",
       });
     }
     const rawData = await dbObject.getAllPatients();
@@ -188,9 +186,8 @@ exports.getPatientByUser = async (id) => {
     }
 
     //TODO Get medical Record details
-    const medicalRecord = await dbObject.getPatientMedicalInfoByPatientId(
-      patientId
-    );
+    const medicalRecord =
+      await dbObject.getPatientMedicalInfoByPatientId(patientId);
 
     let medicalInfo = null;
     if (medicalRecord) {
@@ -313,9 +310,8 @@ exports.createPatientMedicalInfo = async ({
       });
     }
 
-    const medicalInfoExist = await dbObject.getPatientMedicalInfoByPatientId(
-      patientId
-    );
+    const medicalInfoExist =
+      await dbObject.getPatientMedicalInfoByPatientId(patientId);
     if (medicalInfoExist) {
       return Response.BAD_REQUEST({
         message:

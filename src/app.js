@@ -107,18 +107,6 @@ app.use(
   })
 );
 
-// app.use(function (req, res, next) {
-//   if (!req.path.includes("/api/")) {
-//     global.session_user_id = "";
-//     global.session_user_full_name = "";
-//     if (typeof req.session.userID !== "undefined") {
-//       global.session_user_id = req.session.userID;
-//       global.session_user_full_name = req.session.userFullName;
-//     }
-//   }
-//   next();
-// });
-
 app.use("/api/v1/health-check", (req, res, next) => {
   return res
     .status(200)
@@ -191,7 +179,7 @@ app.post("/webhooks", async (req, res, next) => {
   }
 });
 
-// app.use(logUserInteraction);
+app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
 
 //API DOCS ROUTE
