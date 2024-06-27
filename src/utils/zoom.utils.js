@@ -5,8 +5,6 @@ const {
   zoomAccountId,
   zoomClientId,
   zoomClientSecret,
-  zoomSecretToken,
-  zoomVerificationToken,
   zoomAccessTokenUrl,
   zoomApiUrl,
 } = require("../config/default.config");
@@ -24,11 +22,11 @@ const getZoomAccessToken = async () => {
           username: zoomClientId,
           password: zoomClientSecret,
         },
-      }
+      },
     );
 
-    const { access_token } = response.data;
-    return access_token;
+    const { access_token: accessToken } = response.data;
+    return accessToken;
   } catch (error) {
     console.log(error);
     throw error;
@@ -52,7 +50,7 @@ const createZoomMeeting = async ({
         duration: 60,
         timezone: "UTC",
         password: crypto.randomBytes(3).toString("hex"),
-        agenda: `Kenecare Medical Appointment`,
+        agenda: "Kenecare Medical Appointment",
         settings: {
           waiting_room: false,
           join_before_host: true,
@@ -65,7 +63,7 @@ const createZoomMeeting = async ({
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     const {
       uuid: zoomMeetingUUID,
@@ -95,8 +93,6 @@ const createZoomMeeting = async ({
     throw error;
   }
 };
-
-
 
 module.exports = {
   createZoomMeeting,

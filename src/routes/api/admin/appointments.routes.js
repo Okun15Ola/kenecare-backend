@@ -11,7 +11,7 @@ const {
 router.get(
   "/",
   calculatePaginationInfo("medical_appointments"),
-  GetAdminAppointmentsController
+  GetAdminAppointmentsController,
 );
 
 router.get("/:id", GetAdminAppointmentByIdController);

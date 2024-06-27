@@ -1,19 +1,13 @@
+const axios = require("axios");
+
 const {
-  twilioAccountSID,
-  twilioAuthToken,
-  twilioPhoneNumber,
   smsHiveClientId,
   smsHiveClientSecret,
   smsHiveAuthToken,
   smsHiveUrl,
 } = require("../config/default.config");
 
-const axios = require("axios");
-const qs = require("qs");
-
-const client = require("twilio")(twilioAccountSID, twilioAuthToken);
-
-let config = {
+const config = {
   method: "post",
   maxBodyLength: Infinity,
   url: `${smsHiveUrl}/messages`,
@@ -40,6 +34,7 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     const response = await axios.request(config).catch((error) => {
       throw error;
     });
+    console.log(response.data);
   } catch (error) {
     console.error(error);
     throw error;
@@ -55,7 +50,7 @@ const sendPasswordResetSMS = async (mobileNumber) => {
     });
 
     config.data = data;
-    const response = await axios.request(config).catch((error) => {
+    await axios.request(config).catch((error) => {
       throw error;
     });
   } catch (error) {
@@ -73,7 +68,7 @@ const sendPrescriptionToken = async ({ token, doctorName, mobileNumber }) => {
     });
 
     config.data = data;
-    const response = await axios.request(config).catch((error) => {
+    await axios.request(config).catch((error) => {
       throw error;
     });
   } catch (error) {
@@ -99,7 +94,7 @@ const appointmentApprovalSms = async ({
     });
 
     config.data = data;
-    const response = await axios.request(config).catch((error) => {
+    await axios.request(config).catch((error) => {
       throw error;
     });
   } catch (error) {
@@ -125,7 +120,7 @@ const appointmentPostponedSms = async ({
     });
 
     config.data = data;
-    const response = await axios.request(config).catch((error) => {
+    await axios.request(config).catch((error) => {
       throw error;
     });
   } catch (error) {
@@ -151,7 +146,7 @@ const appointmentBookedSms = async ({
     });
 
     config.data = data;
-    const response = await axios.request(config).catch((error) => {
+    await axios.request(config).catch((error) => {
       throw error;
     });
   } catch (error) {
@@ -170,7 +165,7 @@ const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
     });
 
     config.data = data;
-    const response = await axios.request(config).catch((error) => {
+    await axios.request(config).catch((error) => {
       throw error;
     });
   } catch (error) {
@@ -193,7 +188,7 @@ const documentSharedWithDoctorSMS = async ({
     });
 
     config.data = data;
-    const response = await axios.request(config).catch((error) => {
+    await axios.request(config).catch((error) => {
       throw error;
     });
   } catch (error) {

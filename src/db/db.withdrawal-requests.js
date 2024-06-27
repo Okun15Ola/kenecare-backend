@@ -34,7 +34,7 @@ exports.approveWithdrawalRequest = ({ adminId, withdrawalId, comment }) => {
         if (err) return reject(err);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -49,7 +49,7 @@ exports.denyWithdrawalRequest = ({ adminId, withdrawalId, comment }) => {
         if (err) return reject(err);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

@@ -10,24 +10,24 @@ const {
 
 const GetDoctorProfileController = async (req, res, next) => {
   try {
-    const id = parseInt(req.user.id);
+    const id = parseInt(req.user.id, 10);
     const response = await getDoctorByUser(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const GetDoctorCouncilRegistrationController = async (req, res, next) => {
   try {
-    const id = parseInt(req.user.id);
+    const id = parseInt(req.user.id, 10);
     const response = await getDoctorCouncilRegistration(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -59,13 +59,13 @@ const CreateDoctorProfileController = async (req, res, next) => {
       qualifications,
       consultationFee: consultationfee,
       cityId: city,
-      yearOfExperience: yearOfExperience,
+      yearOfExperience,
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -89,21 +89,21 @@ const CreateDoctorCouncilRegistration = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const UpdateCouncilRegistrationController = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const registrationId = parseInt(req.params.id);
-    console.log(registrationId);
-    return;
+    const registrationId = parseInt(req.params.id, 10);
+
     const { file } = req;
     const { councilId, regNumber, regYear, certIssuedDate, certExpiryDate } =
       req.body;
 
     const response = await createDoctorCouncilRegistration({
       userId,
+      registrationId,
       councilId,
       regNumber,
       regYear,
@@ -115,13 +115,13 @@ const UpdateCouncilRegistrationController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 const UpdateDoctorProfileByIdController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
 
     const {
       title,
@@ -149,31 +149,29 @@ const UpdateDoctorProfileByIdController = async (req, res, next) => {
       qualifications,
       consultationFee: consultationfee,
       cityId: city,
-      yearOfExperience: yearOfExperience,
+      yearOfExperience,
     });
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const UpdateDoctorProfilePictureController = async (req, res, next) => {
   try {
-    if (req.file) {
-      const { id } = req.user;
-      const imageUrl = req.file.filename;
-      const response = await updateDoctorProfilePicture({
-        userId: id,
-        imageUrl,
-      });
-      return res.status(response.statusCode).json(response);
-    }
+    const { id } = req.user;
+    const imageUrl = req.file.filename || null;
+    const response = await updateDoctorProfilePicture({
+      userId: id,
+      imageUrl,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 module.exports = {

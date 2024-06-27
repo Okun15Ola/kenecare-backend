@@ -1,4 +1,3 @@
-"use strict";
 require("dotenv").config({
   path: "../../.env",
 });
@@ -18,12 +17,13 @@ const {
   apiBaseURL,
   nodeEnv,
 } = require("../config/default.config");
+
 let baseUrl = apiBaseURL;
 if (nodeEnv === "development") {
-  baseUrl = "https://aa0b-197-215-23-4.ngrok-free.app";
+  baseUrl = "https://d5c1-197-215-23-159.ngrok-free.app";
 }
 
-const getAccessToken = async (next) => {
+const getAccessToken = async () => {
   try {
     const { data } = await axios
       .post(
@@ -36,15 +36,16 @@ const getAccessToken = async (next) => {
             Authorization: omBasicAuthToken,
             "Content-Type": "application/x-www-form-urlencoded",
           },
-        }
+        },
       )
       .catch((err) => {
         throw err;
       });
-    const { token_type, access_token } = data;
+    const { token_type: tokenType, access_token: accessToken } = data;
 
-    return `${token_type} ${access_token}`;
+    return `${tokenType} ${accessToken}`;
   } catch (error) {
+    console.error("GET PAYMENT ACCESS TOKEN ERROR: ", error);
     throw error;
   }
 };
@@ -72,17 +73,20 @@ const getPaymentURL = async ({ orderId, amount }) => {
             Authorization: token,
             "Content-Type": "application/json",
           },
-        }
+        },
       )
       .catch((error) => {
-        console.log(error);
         throw error;
       });
 
-    const { payment_url, notif_token, pay_token } = data;
-    return { payment_url, notif_token, pay_token };
+    const {
+      payment_url: paymentUrl,
+      notif_token: notificationToken,
+      pay_token: paymentToken,
+    } = data;
+    return { paymentUrl, notificationToken, paymentToken };
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw error;
   }
 };
@@ -102,7 +106,7 @@ const checkTransactionStatus = async ({ orderId, amount, payToken }) => {
           Authorization: token,
           "Content-Type": "application/json",
         },
-      }
+      },
     )
     .catch((err) => {
       throw err;

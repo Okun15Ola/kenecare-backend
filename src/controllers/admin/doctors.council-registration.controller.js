@@ -1,4 +1,4 @@
-const logger = require("../../middlewares/logger.middleware.js");
+const logger = require("../../middlewares/logger.middleware");
 const {
   getAllCouncilRegistrations,
   getCouncilRegistration,
@@ -13,7 +13,7 @@ exports.GetCouncilRegistrationController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -25,13 +25,13 @@ exports.GetCouncilRegistrationByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.ApproveCouncilRegistrationController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
-    const regId = parseInt(req.params.id);
+    const userId = parseInt(req.user.id, 10);
+    const regId = parseInt(req.params.id, 10);
     const response = await approveCouncilRegistration({
       regId,
       userId,
@@ -40,14 +40,14 @@ exports.ApproveCouncilRegistrationController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.RejectCouncilRegistrationController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
-    const regId = parseInt(req.params.id);
+    const userId = parseInt(req.user.id, 10);
+    const regId = parseInt(req.params.id, 10);
     const { rejectionReason } = req.body;
 
     const response = await rejectCouncilRegistration({
@@ -59,6 +59,6 @@ exports.RejectCouncilRegistrationController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

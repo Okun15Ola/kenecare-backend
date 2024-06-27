@@ -22,22 +22,16 @@ exports.LoginValidations = [
 
       if (!user) {
         throw new Error(
-          "Mobile Number or Password is incorrect. Please try again"
+          "Mobile Number or Password is incorrect. Please try again",
         );
       }
-      const {
-        is2faEnabled,
-        userId,
-        email,
-        userType,
-        accountVerified,
-        accountActive,
-      } = user;
 
-      //TODO Check if the account is verified
+      const { userId, userType, accountVerified, accountActive } = user;
+
+      //   Check if the account is verified
       if (accountVerified !== STATUS.ACTIVE) {
         throw new Error(
-          "Unverified Account. Please Verify Account Before Attempting to Login"
+          "Unverified Account. Please Verify Account Before Attempting to Login",
         );
       }
 
@@ -49,11 +43,11 @@ exports.LoginValidations = [
       }
 
       if (userType === USERTYPE.DOCTOR) {
-        //get doctor profile
+        //  get doctor profile
         const doctor = await getDoctorByUserId(userId);
         if (!doctor) {
           throw new Error(
-            "Doctor profile not found. Please complete profile setup before logging in"
+            "Doctor profile not found. Please complete profile setup before logging in",
           );
         }
 
@@ -61,12 +55,13 @@ exports.LoginValidations = [
 
         if (!isProfileApproved) {
           throw new Error(
-            "Doctor Profile has not been approved. Please contact support"
+            "Doctor Profile has not been approved. Please contact support",
           );
         }
       }
 
       req.user = user;
+      return true;
     }),
   body("password")
     .notEmpty()
@@ -90,12 +85,12 @@ exports.LoginValidations = [
 
           if (accountVerified !== VERIFICATIONSTATUS.VERIFIED) {
             throw new Error(
-              "Account Not Verified. Please verify account before proceeding"
+              "Account Not Verified. Please verify account before proceeding",
             );
           }
           if (accountActive !== STATUS.ACTIVE) {
             throw new Error(
-              "Account Has Been Disabled. Please Contact Kenecare Support for further instructions."
+              "Account Has Been Disabled. Please Contact Kenecare Support for further instructions.",
             );
           }
         }
@@ -125,7 +120,7 @@ exports.OTPLoginValidation = [
         }
         if (accountActive !== STATUS.ACTIVE) {
           throw new Error(
-            "Account Has Been Disabled. Please Contact Kenecare Support for further instrcutions."
+            "Account Has Been Disabled. Please Contact Kenecare Support for further instrcutions.",
           );
         }
         req.user = user;
@@ -142,11 +137,11 @@ exports.RegisterValidations = [
     .withMessage("Mobile Number must be a registered SL (+232) number.")
     .trim()
     .escape()
-    .custom(async (mobileNumber, { req }) => {
+    .custom(async (mobileNumber) => {
       const user = await getUserByMobileNumber(mobileNumber);
       if (user) {
         throw new Error(
-          "Mobile Number Already Exist. Please try using a different number"
+          "Mobile Number Already Exist. Please try using a different number",
         );
       }
       return true;
@@ -155,11 +150,11 @@ exports.RegisterValidations = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (email, { req }) => {
+    .custom(async (email) => {
       const user = await getUserByEmail(email);
       if (user) {
         throw new Error(
-          "Email already exist. Please try using a different email"
+          "Email already exist. Please try using a different email",
         );
       }
       return true;
@@ -169,17 +164,15 @@ exports.RegisterValidations = [
     .withMessage("Password is required")
     .matches(/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/)
     .withMessage(
-      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character"
+      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
     )
     .trim(),
   body("confirmPassword")
     .notEmpty()
     .withMessage("Confirm Password is required")
-    .custom((value, { req }) => {
-      return !(value !== req.body.password);
-    })
+    .custom((value, { req }) => value === req.body.password)
     .withMessage(
-      "Passwords do not match. Ensure password and confirm password are the same."
+      "Passwords do not match. Ensure password and confirm password are the same.",
     ),
 ];
 exports.VerifyTokenValidations = [
@@ -218,6 +211,7 @@ exports.UpdatePasswordValidations = [
         req.user = user;
         return true;
       }
+      return false;
     }),
   body("newPassword")
     .notEmpty()
@@ -225,7 +219,7 @@ exports.UpdatePasswordValidations = [
     .trim()
     .matches(/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/)
     .withMessage(
-      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character"
+      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
     ),
   body("confirmNewPassword")
     .trim()

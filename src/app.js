@@ -6,12 +6,12 @@ const helmet = require("helmet");
 const expressSession = require("express-session");
 const path = require("path");
 const bodyParser = require("body-parser");
-const swaggerUi = require("swagger-ui-express");
 const moment = require("moment");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocs = require("./utils/swagger.utils");
 const { sessionSecret } = require("./config/default.config");
-const logUserInteraction = require("./middlewares/audit-log.middlewares.js");
+const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
-const swaggerDocs = require("./utils/swagger.utils.js");
 const {
   requireUserAuth,
   requireAdminAuth,
@@ -21,37 +21,36 @@ const {
   INTERNAL_SERVER_ERROR,
   SUCCESS,
   BAD_REQUEST,
-  UNAUTHORIZED,
-} = require("./utils/response.utils.js");
-const { zoomSecretToken } = require("./config/default.config.js");
+} = require("./utils/response.utils");
+const { zoomSecretToken } = require("./config/default.config");
 
-//INDEX ROUTES
+// INDEX ROUTES
 const indexRouter = require("./routes/api/index.routes");
 
-//AUTHENTICATION ROUTER
+// AUTHENTICATION ROUTER
 const authRouter = require("./routes/api/auth.routes");
 
-//DOCTORS ROUTER
+// DOCTORS ROUTER
 const doctorsProfileRouter = require("./routes/api/doctors/profile.routes");
 const doctorsSharedMedicalDocsRouter = require("./routes/api/doctors/medical-records.routes");
 const doctorsAppointmentRouter = require("./routes/api/doctors/appointments.routes");
 const doctorsCounculRegistrationRouter = require("./routes/api/doctors/council-registration.routes");
-const doctorsWalletRouter = require("./routes/api/doctors/wallet.routes.js");
-const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.routes.js");
-const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.routes.js");
+const doctorsWalletRouter = require("./routes/api/doctors/wallet.routes");
+const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.routes");
+const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.routes");
 
-//PATIENTS ROUTES
+// PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
 const patientAppointmentRouter = require("./routes/api/patients/appointments.routes");
 const patientMedicalRecordRouter = require("./routes/api/patients/medical-records.routes");
-const patientSharedMedicalDocumentRouter = require("./routes/api/patients/shared-docs.routes.js");
+const patientSharedMedicalDocumentRouter = require("./routes/api/patients/shared-docs.routes");
 const patientMedicalHistoryRouter = require("./routes/api/patients/medical-history.routes");
 const appointmentPaymentRoutes = require("./routes/api/patients/appointment.payments.routes");
-const patientPrescriptionRoutes = require("./routes/api/patients/prescriptions.routes.js");
+const patientPrescriptionRoutes = require("./routes/api/patients/prescriptions.routes");
 
-//ADMIN ROUTES
+// ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
-const adminWithdrawalsRoute = require("./routes/api/admin/withdrawal-requests.routes.js");
+const adminWithdrawalsRoute = require("./routes/api/admin/withdrawal-requests.routes");
 const adminCouncilRegistrationRouter = require("./routes/api/admin/doctors.council-registration.routes");
 const adminSpecializationsRoute = require("./routes/api/admin/specializations.routes");
 const adminAuthRouter = require("./routes/api/admin/auth.admin.routes");
@@ -67,10 +66,8 @@ const adminFaqRouter = require("./routes/api/admin/faq.routes");
 const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
 const adminPatientsRouter = require("./routes/api/admin/patients.routes");
 const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes");
-const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings.js");
-const {
-  getAppointmentByMeetingId,
-} = require("./db/db.appointments.doctors.js");
+const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings");
+const { getAppointmentByMeetingId } = require("./db/db.appointments.doctors");
 
 const app = express();
 
@@ -80,7 +77,7 @@ app.use(
   helmet({
     hidePoweredBy: true,
     crossOriginResourcePolicy: false,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -88,7 +85,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   "/user-profile",
-  express.static(path.join(__dirname, "public/upload/profile_pics"))
+  express.static(path.join(__dirname, "public/upload/profile_pics")),
 );
 
 app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
@@ -96,7 +93,7 @@ app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
 app.use(
   "/docs/admin",
   requireAdminAuth,
-  express.static(path.join(__dirname, "public/upload/media"))
+  express.static(path.join(__dirname, "public/upload/media")),
 );
 
 app.use(
@@ -104,21 +101,20 @@ app.use(
     secret: sessionSecret,
     resave: false,
     saveUninitialized: true,
-  })
+  }),
 );
 
-app.use("/api/v1/health-check", (req, res, next) => {
-  return res
+app.use("/api/v1/health-check", (req, res) =>
+  res
     .status(200)
-    .json(SUCCESS({ message: "Health Check Passed. API Working!!!" }));
-});
+    .json(SUCCESS({ message: "Health Check Passed. API Working!!!" })),
+);
 
-//TODO MOVE TO A SEPERATE ROUTE FILE
-app.post("/webhooks", async (req, res, next) => {
+//  MOVE TO A SEPERATE ROUTE FILE
+app.post("/webhooks", async (req, res) => {
   try {
     const { body } = req;
 
-    console.log(body);
     const message = `v0:${
       req.headers["x-zm-request-timestamp"]
     }:${JSON.stringify(req.body)}`;
@@ -131,9 +127,7 @@ app.post("/webhooks", async (req, res, next) => {
     const signature = `v0=${hashForVerify}`;
 
     if (req.headers["x-zm-signature"] === signature) {
-      console.log("Valid Zoom Signature");
-
-      //check for url validation event
+      // check for url validation event
       if (body.event === "endpoint.url_validation") {
         const { plainToken } = body.payload;
         const hashForValidate = crypto
@@ -148,119 +142,116 @@ app.post("/webhooks", async (req, res, next) => {
       }
 
       if (body.event === "meeting.started") {
-        //meeting was started
-        //TODO SEND NOTIFICATION TO PATIENT THAT THE MEETING HAS STARTED
-        const { start_time, id } = body.payload.object;
+        // meeting was started
+        // TODO SEND NOTIFICATION TO PATIENT THAT THE MEETING HAS STARTED
+        const { start_time: startTime, id } = body.payload.object;
 
         const data = await getZoomMeetingByZoomId(id);
         if (data) {
-          const { meeting_id } = data;
-          console.log("MEETING_ID", meeting_id);
-          const appointment = await getAppointmentByMeetingId(meeting_id);
-          console.log(appointment);
+          const { meeting_id: meetingId } = data;
+          const appointment = await getAppointmentByMeetingId(meetingId);
           if (appointment) {
-            //update appointment start time
-            const startTime = moment(start_time).format("HH:mm");
-            console.log("Start Time", startTime);
+            // update appointment start time
+            moment(startTime).format("HH:mm");
           }
         }
       }
       if (body.event === "meeting.ended") {
-        //meeting was ended
-        console.log("meeting ended");
-        //TODO UPDATE MEETING STATUS TO COMPLETED and remove join and start url
+        // meeting was ended
+        // TODO UPDATE MEETING STATUS TO COMPLETED and remove join and start url
       }
 
       return res.sendStatus(200);
     }
+    return null;
   } catch (error) {
     console.log(error);
-    next(error);
+    return error;
   }
 });
 
 app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
 
-//API DOCS ROUTE
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// API DOCS ROUTE
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-//AUTH ROUTES
+// AUTH ROUTES
 app.use("/api/v1/auth", authRouter);
 
-//DOCTORS ROUTES
+// DOCTORS ROUTES
 app.use("/api/v1/doctors", requireUserAuth, doctorsProfileRouter);
 app.use(
   "/api/v1/doctors/prescriptions",
   requireUserAuth,
-  doctorsPrescriptionsRouter
+  doctorsPrescriptionsRouter,
 );
 app.use(
   "/api/v1/doctors/shared-medical-docs",
   requireUserAuth,
-  doctorsSharedMedicalDocsRouter
+  doctorsSharedMedicalDocsRouter,
 );
 app.use("/api/v1/doctors/wallets", requireUserAuth, doctorsWalletRouter);
 app.use(
   "/api/v1/doctors/available-days",
   requireUserAuth,
-  doctorsAvailableDaysRouter
+  doctorsAvailableDaysRouter,
 );
 app.use(
   "/api/v1/doctors/council-registration",
   requireUserAuth,
-  doctorsCounculRegistrationRouter
+  doctorsCounculRegistrationRouter,
 );
 app.use(
   "/api/v1/doctors/appointments",
   requireUserAuth,
-  doctorsAppointmentRouter
+  doctorsAppointmentRouter,
 );
 
-//PATIENT'S ROUTES
+// PATIENT'S ROUTES
 app.use("/api/v1/patients", requireUserAuth, patientsProfileRouter);
 app.use(
   "/api/v1/patients/appointments",
   requireUserAuth,
-  patientAppointmentRouter
+  patientAppointmentRouter,
 );
 app.use(
   "/api/v1/patients/medical-records",
   requireUserAuth,
-  patientMedicalRecordRouter
+  patientMedicalRecordRouter,
 );
 app.use(
   "/api/v1/patients/shared-docs",
   requireUserAuth,
-  patientSharedMedicalDocumentRouter
+  patientSharedMedicalDocumentRouter,
 );
 app.use(
   "/api/v1/patients/medical-info",
   requireUserAuth,
-  patientMedicalHistoryRouter
+  patientMedicalHistoryRouter,
 );
 app.use(
   "/api/v1/patients/prescriptions",
   requireUserAuth,
-  patientPrescriptionRoutes
+  patientPrescriptionRoutes,
 );
 
-//PAYMENT ROUTES
+// PAYMENT ROUTES
 app.use("/api/v1/payments", appointmentPaymentRoutes);
 
-//ADMIN ROUTES
-//TODO Add a middle ware to authenticate ADMIN JWT
+// ADMIN ROUTES
+// TODO Add a middle ware to authenticate ADMIN JWT
 app.use("/api/v1/admin/auth", adminAuthRouter);
 app.use("/api/v1/admin/accounts", requireAdminAuth, adminAccountsRouter);
 app.use(
   "/api/v1/admin/appointments",
   requireAdminAuth,
-  adminAppointmentsRouter
+  adminAppointmentsRouter,
 );
 app.use(
   "/api/v1/admin/blog-categories",
   requireAdminAuth,
-  adminBlogCategoriesRouter
+  adminBlogCategoriesRouter,
 );
 app.use("/api/v1/admin/blogs", requireAdminAuth, adminBlogsRouter);
 app.use("/api/v1/admin/cities", requireAdminAuth, adminCitiesRouter);
@@ -270,13 +261,13 @@ app.use("/api/v1/admin/faqs", requireAdminAuth, adminFaqRouter);
 app.use(
   "/api/v1/admin/medical-councils",
   requireAdminAuth,
-  adminMedicalCouncilRouter
+  adminMedicalCouncilRouter,
 );
 app.use("/api/v1/admin/services", requireAdminAuth, adminServicesRouter);
 app.use(
   "/api/v1/admin/specializations",
   requireAdminAuth,
-  adminSpecializationsRoute
+  adminSpecializationsRoute,
 );
 app.use("/api/v1/admin/testimonials", requireAdminAuth, adminTestimonialsRoute);
 app.use("/api/v1/admin/specialties", requireAdminAuth, adminSpecialtiesRouter);
@@ -285,7 +276,7 @@ app.use("/api/v1/admin/patients", requireAdminAuth, adminPatientsRouter);
 app.use(
   "/api/v1/admin/council-regsitrations",
   requireAdminAuth,
-  adminCouncilRegistrationRouter
+  adminCouncilRegistrationRouter,
 );
 app.use("/api/v1/admin/withdrawals", requireAdminAuth, adminWithdrawalsRoute);
 
@@ -296,8 +287,8 @@ app.use((req, res, next) => {
   next(err);
 });
 
-app.use((err, req, res, next) => {
-  logger.error(err);
+app.use((err, req, res) => {
+  logger.error("An unexpected error occured: ", err);
 
   let statusCode = 500;
   let errorMessage = "Internal Server Error";

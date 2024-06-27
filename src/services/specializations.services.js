@@ -1,6 +1,5 @@
 const dbObject = require("../db/db.specializations");
 const Response = require("../utils/response.utils");
-const { STATUS } = require("../utils/enum.utils");
 
 /**
  * Retrieve a list of specializations from the database and transform the data.
@@ -25,16 +24,14 @@ exports.getSpecializations = async () => {
       image_url: imageUrl,
       is_active: isActive,
       inputted_by: inputtedBy,
-    }) => {
-      return {
-        specializationId,
-        specializationName,
-        description,
-        imageUrl,
-        isActive,
-        inputtedBy,
-      };
-    }
+    }) => ({
+      specializationId,
+      specializationName,
+      description,
+      imageUrl,
+      isActive,
+      inputtedBy,
+    }),
   );
   return Response.SUCCESS({ data: specializations });
 };
@@ -160,7 +157,7 @@ exports.createSpecialization = async ({ name, description, imageUrl }) => {
         message: "Specialization Name already exists",
       });
     }
-    //create new object
+    // create new object
     const specialization = {
       name,
       description,
@@ -168,7 +165,7 @@ exports.createSpecialization = async ({ name, description, imageUrl }) => {
       inputtedBy: 1,
     };
 
-    //save to database
+    // save to database
     await dbObject.createNewSpecialization(specialization);
 
     return Response.CREATED({ message: "Specialization Created Successfully" });

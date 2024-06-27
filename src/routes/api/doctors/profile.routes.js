@@ -1,23 +1,16 @@
 const router = require("express").Router();
-const { body, param } = require("express-validator");
+const { body } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   GetDoctorProfileController,
   CreateDoctorProfileController,
   UpdateDoctorProfileByIdController,
   UpdateDoctorProfilePictureController,
-  GetDoctorCouncilRegistrationController,
-  CreateDoctorCouncilRegistration,
 } = require("../../../controllers/doctors/profile.controller");
 const { getCityById } = require("../../../db/db.cities");
 const { getSpecializationById } = require("../../../db/db.specializations");
-const { getDoctorById } = require("../../../db/db.doctors");
-const { USERTYPE } = require("../../../utils/enum.utils");
-const {
-  localProfilePicUploader,
-  localMediaUploader,
-} = require("../../../utils/file-upload.utils");
-const { getMedicalCouncilById } = require("../../../db/db.medical-councils");
+
+const { localProfilePicUploader } = require("../../../utils/file-upload.utils");
 const { getSpecialtiyById } = require("../../../db/db.specialities");
 
 router.get("/profile", GetDoctorProfileController);
@@ -54,7 +47,7 @@ router.post(
       .withMessage("Invalid Specialization")
       .trim()
       .escape()
-      .custom(async (id, { req }) => {
+      .custom(async (id) => {
         const data = await getSpecialtiyById(id);
         if (!data) {
           throw new Error("Specified Specialization Does not exist");
@@ -73,7 +66,7 @@ router.post(
       .withMessage("Invalid City")
       .trim()
       .escape()
-      .custom(async (id, { req }) => {
+      .custom(async (id) => {
         const data = await getCityById(id);
         if (!data) {
           throw new Error("Specified City Does not exist");
@@ -89,7 +82,7 @@ router.post(
       .escape(),
   ],
   Validate,
-  CreateDoctorProfileController
+  CreateDoctorProfileController,
 );
 router.put(
   "/profile/",
@@ -146,7 +139,7 @@ router.put(
       .withMessage("City must be a positive integer")
       .trim()
       .escape()
-      .custom(async (id, { req }) => {
+      .custom(async (id) => {
         const data = await getSpecializationById(id);
         if (!data) {
           throw new Error("Specified Specialization Does not exist");
@@ -166,7 +159,7 @@ router.put(
       .withMessage("City must be a positive integer")
       .trim()
       .escape()
-      .custom(async (id, { req }) => {
+      .custom(async (id) => {
         const data = await getCityById(id);
         if (!data) {
           throw new Error("Specified City Does not exist");
@@ -183,12 +176,12 @@ router.put(
       .escape(),
   ],
   Validate,
-  UpdateDoctorProfileByIdController
+  UpdateDoctorProfileByIdController,
 );
 router.patch(
   "/profile/",
   localProfilePicUploader.single("profilepic"),
-  UpdateDoctorProfilePictureController
+  UpdateDoctorProfilePictureController,
 );
 
 module.exports = router;

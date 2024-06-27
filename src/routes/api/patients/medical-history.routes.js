@@ -7,6 +7,6 @@ const {
 
 router.post("/", CreatePatientMedicalInfoController);
 router.get("/", GetPatientMedicalHistoryController);
-router.put("/",UpdatePatientMedicalHistoryController)
+router.put("/", UpdatePatientMedicalHistoryController);
 
 module.exports = router;

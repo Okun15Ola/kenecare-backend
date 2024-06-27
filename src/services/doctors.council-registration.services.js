@@ -1,9 +1,7 @@
-const fs = require("fs");
-const path = require("path");
 const moment = require("moment");
 const dbObject = require("../db/db.doctors");
 const Response = require("../utils/response.utils");
-const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
+const { USERTYPE } = require("../utils/enum.utils");
 const { getUserById } = require("../db/db.users");
 const {
   doctorCouncilRegistrationEmail,
@@ -18,26 +16,25 @@ const {
 } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 
-//DOCTORS
+// DOCTORS
 exports.getDoctorCouncilRegistration = async (id) => {
   try {
-    //Get profile from database
+    // Get profile from database
     const doctor = await dbObject.getDoctorByUserId(id);
 
     if (!doctor) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
-    //destruct properties from database object
+    // destruct properties from database object
     const {
       doctor_id: doctorId,
       user_type: userType,
       user_id: userId,
-      is_account_active: isAccountActive,
     } = doctor;
 
-    //Check if the profile requested belongs to the requesting user
-    //Check if the user type is a doctor
+    // Check if the profile requested belongs to the requesting user
+    // Check if the user type is a doctor
     if (id !== userId || userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
     }
@@ -133,12 +130,11 @@ exports.createDoctorCouncilRegistration = async ({
 
     if (councilRegistrationExist) {
       const {
-        council_registration_id: councilRegistrationId,
         registration_status: registrationStatus,
         reject_reason: rejectReason,
       } = councilRegistrationExist;
 
-      //TODO check if it has been approved
+      // TODO check if it has been approved
       if (registrationStatus === "pending") {
         return Response.BAD_REQUEST({
           message:
@@ -159,15 +155,15 @@ exports.createDoctorCouncilRegistration = async ({
     const { buffer, mimetype } = file;
     const fileName = `council_cert_${generateFileName(file)}`;
 
-    //upload file to AWS
-    //Save record to database
-    //send an email with further instructions
+    // upload file to AWS
+    // Save record to database
+    // send an email with further instructions
 
     await Promise.all([
       uploadFileToS3Bucket({
         fileName,
-        buffer: buffer,
-        mimetype: mimetype,
+        buffer,
+        mimetype,
       }),
       dbObject.createDoctorMedicalCouncilRegistration({
         doctorId,
@@ -232,17 +228,14 @@ exports.updateDoctorCouncilRegistration = async ({
       });
     }
 
-    const registration = await dbObject.getCouncilRegistrationByDoctorId(
-      doctorId
-    );
+    const registration =
+      await dbObject.getCouncilRegistrationByDoctorId(doctorId);
     if (!registration) {
       return Response.NOT_FOUND({ message: "Council registration not found" });
     }
 
     const {
       council_registration_id: registrationId,
-      registration_status: registrationStatus,
-      reject_reason: rejectReason,
       registration_document_url: fileName,
     } = registration;
 
@@ -266,18 +259,18 @@ exports.updateDoctorCouncilRegistration = async ({
       }),
     ]);
 
-    //TODO Deactivate doctors profile until registration has been reverified
-    //send an email with further instructions
+    // TODO Deactivate doctors profile until registration has been reverified
+    // send an email with further instructions
 
-    // await Promise.all([
-    //   adminDoctorCouncilRegistrationEmail({
-    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
-    //   }),
-    //   doctorCouncilRegistrationEmail({
-    //     doctorEmail,
-    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
-    //   }),
-    // ]);
+    await Promise.all([
+      adminDoctorCouncilRegistrationEmail({
+        doctorName: `${doctorFirstName} ${doctorLastName}`,
+      }),
+      doctorCouncilRegistrationEmail({
+        doctorEmail,
+        doctorName: `${doctorFirstName} ${doctorLastName}`,
+      }),
+    ]);
 
     return Response.SUCCESS({
       message:
@@ -289,7 +282,7 @@ exports.updateDoctorCouncilRegistration = async ({
   }
 };
 
-//ADMIN
+// ADMIN
 exports.getAllCouncilRegistrations = async () => {
   try {
     const rawData = await dbObject.getAllMedicalCouncilRegistration();
@@ -317,6 +310,7 @@ exports.getAllCouncilRegistrations = async () => {
         const url = await getFileFromS3Bucket(regDocumentUrl);
         return {
           registrationId,
+          doctorId,
           doctor: `${firstName} ${lastName}`,
           specialty,
           doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
@@ -332,7 +326,7 @@ exports.getAllCouncilRegistrations = async () => {
           rejectionReason,
           verifiedBy,
         };
-      }
+      },
     );
     const registrations = await Promise.all(promises);
     return Response.SUCCESS({ data: registrations });
@@ -372,6 +366,7 @@ exports.getCouncilRegistration = async (id) => {
 
     const registration = {
       registrationId,
+      doctorId,
       doctor: `${firstName} ${lastName}`,
       specialty,
       doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
@@ -404,17 +399,17 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
     }
 
     const {
-      registration_status,
+      registration_status: registrationStats,
       doctor_id: doctorId,
       first_name: firstName,
       last_name: lastName,
     } = rawData;
 
-    if (registration_status === "approved") {
+    if (registrationStats === "approved") {
       return Response.NOT_MODIFIED();
     }
 
-    const [doctor, done] = await Promise.allSettled([
+    const [doctor] = await Promise.allSettled([
       dbObject.getDoctorById(doctorId),
       dbObject.approveDoctorMedicalCouncilRegistrationById({
         registrationId: regId,
@@ -427,7 +422,7 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
 
     const { email: doctorEmail } = doctor.value;
 
-    //TODO send email notification to doctor upon approval
+    //  send email notification to doctor upon approval
     await doctorCouncilRegistrationApprovedEmail({
       doctorEmail,
       doctorName: `${firstName} ${lastName}`,
@@ -454,17 +449,17 @@ exports.rejectCouncilRegistration = async ({
     }
 
     const {
-      registration_status,
+      registration_status: registrationStatus,
       doctor_id: doctorId,
       first_name: firstName,
       last_name: lastName,
     } = rawData;
 
-    if (registration_status === "rejected") {
+    if (registrationStatus === "rejected") {
       return Response.NOT_MODIFIED();
     }
 
-    const [doctor, done] = await Promise.allSettled([
+    const [doctor] = await Promise.allSettled([
       dbObject.getDoctorById(doctorId),
       dbObject.rejectDoctorMedicalCouncilRegistrationById({
         registrationId: regId,
@@ -478,7 +473,7 @@ exports.rejectCouncilRegistration = async ({
 
     const { email: doctorEmail } = doctor.value;
 
-    //TODO send email notification to doctor upon approval
+    //  send email notification to doctor upon approval
     await doctorCouncilRegistrationRejectedEmail({
       doctorEmail,
       doctorName: `${firstName} ${lastName}`,

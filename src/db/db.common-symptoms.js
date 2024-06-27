@@ -54,7 +54,7 @@ exports.createNewCommonSymptom = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -79,11 +79,10 @@ exports.updateCommonSymptomById = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
-
 
 exports.deleteCommonSymptomById = (id) => {
   const sql = "DELETE FROM common_symptoms WHERE symptom_id = ?";

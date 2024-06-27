@@ -1,20 +1,18 @@
 const router = require("express").Router();
+const { param, body, check } = require("express-validator");
 const {
-  GetPrescriptionsController,
   GetAppointmentPrescriptionController,
   GetAppointmentPrescriptionsController,
   CreatePrescriptionController,
   UpdatePrescriptionController,
 } = require("../../../controllers/doctors/prescriptions.controller");
 
-const { param, body, check } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   getDoctorAppointmentById,
 } = require("../../../db/db.appointments.doctors");
 const { getDoctorByUserId } = require("../../../db/db.doctors");
 const {
-  getAppointmentPrescriptions,
   getAppointmentPrescriptionById,
 } = require("../../../db/db.prescriptions");
 
@@ -29,22 +27,22 @@ router.get(
       .escape()
       .custom(async (value, { req }) => {
         const doctor = await getDoctorByUserId(req.user.id);
-
-        if (doctor) {
-          const { doctor_id: doctorId } = doctor;
-          const appointment = await getDoctorAppointmentById({
-            doctorId,
-            appointmentId: value,
-          });
-          if (!appointment) {
-            throw new Error("Appintment Not Found");
-          }
-          return true;
+        if (!doctor) {
+          throw new Error("Doctor Not Found!");
         }
+        const { doctor_id: doctorId } = doctor;
+        const appointment = await getDoctorAppointmentById({
+          doctorId,
+          appointmentId: value,
+        });
+        if (!appointment) {
+          throw new Error("Appintment Not Found");
+        }
+        return true;
       }),
   ],
   Validate,
-  GetAppointmentPrescriptionsController
+  GetAppointmentPrescriptionsController,
 );
 router.get(
   "/:id",
@@ -55,7 +53,7 @@ router.get(
       .isInt("Invalid Appoitment ID")
       .trim()
       .escape()
-      .custom(async (value, { req }) => {
+      .custom(async (value) => {
         const prescription = await getAppointmentPrescriptionById(value);
         if (!prescription) {
           throw new Error("Prescription not found");
@@ -64,7 +62,7 @@ router.get(
       }),
   ],
   Validate,
-  GetAppointmentPrescriptionController
+  GetAppointmentPrescriptionController,
 );
 router.post(
   "/",
@@ -86,9 +84,8 @@ router.post(
             throw new Error("Appintment Not Found");
           }
           return true;
-        } else {
-          throw new Error("Unauthorized Action");
         }
+        throw new Error("Unauthorized Action");
       }),
     body("diagnosis")
       .notEmpty()
@@ -122,7 +119,7 @@ router.post(
     body("comment").trim().escape(),
   ],
   Validate,
-  CreatePrescriptionController
+  CreatePrescriptionController,
 );
 
 router.put(
@@ -133,8 +130,8 @@ router.put(
       .withMessage("Prescription ID is required")
       .trim()
       .escape()
-      .custom(async (value, { req }) => {
-        const id = parseInt(value);
+      .custom(async (value) => {
+        const id = parseInt(value, 10);
         const data = await getAppointmentPrescriptionById(id);
         if (!data) {
           throw new Error("Prescription Not Found");
@@ -158,9 +155,8 @@ router.put(
             throw new Error("Appintment Not Found");
           }
           return true;
-        } else {
-          throw new Error("Unauthorized Action");
         }
+        throw new Error("Unauthorized Action");
       }),
     body("diagnosis")
       .notEmpty()
@@ -194,7 +190,7 @@ router.put(
     body("comment").trim().escape(),
   ],
   Validate,
-  UpdatePrescriptionController
+  UpdatePrescriptionController,
 );
 
 module.exports = router;

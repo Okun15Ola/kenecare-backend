@@ -10,14 +10,12 @@ exports.getBlogCategories = async () => {
         category_name: categoryName,
         is_active: status,
         inputted_by: inputtedBy,
-      }) => {
-        return {
-          categoryId,
-          categoryName,
-          status,
-          inputtedBy,
-        };
-      }
+      }) => ({
+        categoryId,
+        categoryName,
+        status,
+        inputtedBy,
+      }),
     );
 
     return Response.SUCCESS({ data: categories });

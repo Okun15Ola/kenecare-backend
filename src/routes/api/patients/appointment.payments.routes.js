@@ -20,13 +20,14 @@ router.get("/om/return", async (req, res, next) => {
 
     if (statusCode === 304) {
       return res.redirect(clientAppUrl);
-    } else if (statusCode === 400) {
+    }
+    if (statusCode === 400) {
       return res.redirect(`${clientAppUrl}/paymentFailure`);
     }
 
     return res.redirect(`${clientAppUrl}/paymentSuccess`);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 router.get("/om/cancel", async (req, res, next) => {
@@ -45,7 +46,7 @@ router.get("/om/cancel", async (req, res, next) => {
 
     return res.redirect(`${clientAppUrl}/paymentFailure`);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -63,13 +64,14 @@ router.post("/om/notification", async (req, res, next) => {
 
     if (statusCode === 304) {
       return res.redirect(clientAppUrl);
-    } else if (statusCode === 400) {
+    }
+    if (statusCode === 400) {
       return res.redirect(`${clientAppUrl}/paymentFailure`);
     }
 
     return res.redirect(`${clientAppUrl}/paymentSuccess`);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 

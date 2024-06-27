@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const { body, check, checkSchema } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   GetCommonSymptomsController,
@@ -25,7 +24,7 @@ router.post(
   AWSUploader.single("image"),
   CreateSymptomValidation,
   Validate,
-  CreateCommonSymptomController
+  CreateCommonSymptomController,
 );
 
 router.put(
@@ -33,7 +32,7 @@ router.put(
   AWSUploader.single("image"),
   UpdateSymptomValidation,
   Validate,
-  UpdateCommonSymptomByIdController
+  UpdateCommonSymptomByIdController,
 );
 
 router.patch("/:id/", UpdateCommonSymptomStatusController);

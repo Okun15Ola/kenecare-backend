@@ -1,11 +1,11 @@
-"use strict";
 const sendGrid = require("@sendgrid/mail");
+
 const {
   sendGridApiKey,
   sendGridSenderEmail,
 } = require("../config/default.config");
 const { kenecareAdminEmail } = require("../config/default.config");
-const c = require("config");
+
 sendGrid.setApiKey(sendGridApiKey);
 
 const mailer = {
@@ -24,7 +24,7 @@ const newPatientAppointmentEmail = async ({
   patientNameOnPrescription,
 }) => {
   try {
-    let message = {
+    const message = {
       to: patientEmail,
       from: mailer.from,
       subject: "Confirmation of Your Upcoming Appointment",
@@ -151,7 +151,7 @@ const adminWithdrawalRequestEmail = async ({
     <ul>
     <li>Requested Amount:  <strong>NLE ${amount}</strong></li>
      ${
-       paymentMethod == "orange_money"
+       paymentMethod === "orange_money"
          ? `
         <li>Payment Method: ORANGE MONEY</li>
          <li>Mobile Money Number:  <strong> ${mobileMoneyNumber}</strong></li>`
@@ -326,7 +326,7 @@ const paymentCanceledPatientAppointmentEmail = async ({
   patientName,
 }) => {
   try {
-    let message = {
+    const message = {
       to: patientEmail,
       from: mailer.from,
       subject: "Appointment Booking Failed",

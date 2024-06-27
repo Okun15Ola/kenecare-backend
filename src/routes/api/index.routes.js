@@ -1,8 +1,8 @@
+const { param } = require("express-validator");
 const router = require("express").Router();
 const IndexController = require("../../controllers/index/index.controller");
 const { getDoctorById } = require("../../db/db.doctors");
 const { Validate } = require("../../validations/validate");
-const { body, param, check } = require("express-validator");
 
 router.get("/blogs", IndexController.GetBlogsController);
 router.get("/blogs/:id", IndexController.GetBlogByIDController);
@@ -35,7 +35,7 @@ router.get(
       }),
   ],
   Validate,
-  IndexController.GetDoctorByIDController
+  IndexController.GetDoctorByIDController,
 );
 router.get("/faqs", IndexController.GetFaqsController);
 router.get("/testimonials", IndexController.GetTestimonialsController);

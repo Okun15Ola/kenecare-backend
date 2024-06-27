@@ -4,14 +4,7 @@ const {
   getCommonSymptom,
   createCommonSymptom,
   updateCommonSymptom,
-  updateCommonSymptomStatus,
-  deleteCommonSymptom,
 } = require("../../services/common-symptoms.services");
-const {
-  localMediaUploader: mediaUploaded,
-} = require("../../utils/file-upload.utils");
-const Response = require("../../utils/response.utils");
-const upload = mediaUploaded.single("image");
 
 exports.GetCommonSymptomsController = async (req, res, next) => {
   try {
@@ -20,24 +13,24 @@ exports.GetCommonSymptomsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetCommonSymptomByIDController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const response = await getCommonSymptom(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.CreateCommonSymptomController = async (req, res, next) => {
   try {
     const { file } = req || null;
-    const inputtedBy = parseInt(req.user.id);
+    const inputtedBy = parseInt(req.user.id, 10);
     const { name, description, specialtyId, tags, consultationFee } = req.body;
     const response = await createCommonSymptom({
       name,
@@ -52,15 +45,15 @@ exports.CreateCommonSymptomController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.UpdateCommonSymptomByIdController = async (req, res, next) => {
   try {
     const { file } = req || null;
-    const inputtedBy = parseInt(req.user.id);
-    const id = parseInt(req.params.id);
+    const inputtedBy = parseInt(req.user.id, 10);
+    const id = parseInt(req.params.id, 10);
     const { name, description, specialtyId, tags, consultationFee } = req.body;
     const response = await updateCommonSymptom({
       id,
@@ -76,23 +69,53 @@ exports.UpdateCommonSymptomByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.UpdateCommonSymptomStatusController = async (req, res, next) => {
   try {
+    const { file } = req || null;
+    const inputtedBy = parseInt(req.user.id, 10);
+    const id = parseInt(req.params.id, 10);
+    const { name, description, specialtyId, tags, consultationFee } = req.body;
+    const response = await updateCommonSymptom({
+      id,
+      name,
+      description,
+      specialtyId,
+      file,
+      consultationFee,
+      tags,
+      inputtedBy,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.DeleteCommonSymptomByIdController = async (req, res, next) => {
   try {
+    const { file } = req || null;
+    const inputtedBy = parseInt(req.user.id, 10);
+    const id = parseInt(req.params.id, 10);
+    const { name, description, specialtyId, tags, consultationFee } = req.body;
+    const response = await updateCommonSymptom({
+      id,
+      name,
+      description,
+      specialtyId,
+      file,
+      consultationFee,
+      tags,
+      inputtedBy,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

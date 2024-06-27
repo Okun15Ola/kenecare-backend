@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { body } = require("express-validator");
 const {
   GetBlogCategoriesController,
   GetBlogCategoryByIDController,
@@ -7,7 +8,6 @@ const {
   UpdateBlogCategoryStatusController,
   DeleteBlogCategoryByIdController,
 } = require("../../../controllers/admin/blog-categories.controller");
-const { body } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 
 router.get("/", GetBlogCategoriesController);
@@ -25,7 +25,7 @@ router.post(
       .escape(),
   ],
   Validate,
-  CreateBlogCategoryController
+  CreateBlogCategoryController,
 );
 router.put(
   "/:id",
@@ -40,7 +40,7 @@ router.put(
       .escape(),
   ],
   Validate,
-  UpdateBlogCategoryByIdController
+  UpdateBlogCategoryByIdController,
 );
 router.patch("/:id/", UpdateBlogCategoryStatusController);
 router.delete("/:id", DeleteBlogCategoryByIdController);

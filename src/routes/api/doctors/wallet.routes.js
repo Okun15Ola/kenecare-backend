@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { body } = require("express-validator");
 const {
   GetDoctorWalletController,
   UpdateWalletPinController,
@@ -6,12 +7,11 @@ const {
 } = require("../../../controllers/doctors/wallet.controller");
 const { Validate } = require("../../../validations/validate");
 const { limiter: rateLimit } = require("../../../utils/rate-limit.utils");
-const { body } = require("express-validator");
 const { getDoctorByUserId } = require("../../../db/db.doctors");
 const { getWalletByDoctorId } = require("../../../db/db.doctor-wallet");
 const { comparePassword } = require("../../../utils/auth.utils");
 
-// rateLimit(router);
+rateLimit(router);
 router.get("/", GetDoctorWalletController);
 router.post(
   "/withdrawal",
@@ -24,34 +24,28 @@ router.post(
       .escape()
       .custom(async (value, { req }) => {
         const doctor = await getDoctorByUserId(req.user.id);
-        if (doctor) {
-          const { doctor_id: doctorId } = doctor || null;
-          const wallet = await getWalletByDoctorId(doctorId);
-          const { wallet_pin } = wallet || null;
-          if (wallet_pin) {
-            //check if the pin is the default pin
-            // const isDefaultPin = await comparePassword({
-            //   plainPassword: value,
-            //   hashedPassword: wallet_pin,
-            // });
-            // console.log(isDefaultPin);
-
-            if (value === 1234) {
-              throw new Error(
-                "Cannot Request Withdrawal with default wallet pin. Please update wallet PIN before proceeding."
-              );
-            }
-
-            const isMatch = await comparePassword({
-              plainPassword: value,
-              hashedPassword: wallet_pin,
-            });
-            if (!isMatch) {
-              throw new Error("Incorrect Wallet PIN");
-            }
-            return true;
-          }
+        if (!doctor) {
+          throw new Error("Doctor Not Found");
         }
+        const { doctor_id: doctorId } = doctor || null;
+        const wallet = await getWalletByDoctorId(doctorId);
+        if (!wallet) {
+          throw new Error("Doctor's Wallet Not Found");
+        }
+        if (value === 1234) {
+          throw new Error(
+            "Cannot Request Withdrawal with default wallet pin. Please update wallet PIN before proceeding.",
+          );
+        }
+        const { wallet_pin: walletPin } = wallet || null;
+        const isMatch = await comparePassword({
+          plainPassword: value,
+          hashedPassword: walletPin,
+        });
+        if (!isMatch) {
+          throw new Error("Incorrect Wallet PIN. Please Try again");
+        }
+        return true;
       }),
     body("amount")
       .notEmpty()
@@ -61,19 +55,20 @@ router.post(
       .withMessage("Withdrawal Amount Must be between NLE 100 - NLE 50,000")
       .custom(async (value, { req }) => {
         const doctor = await getDoctorByUserId(req.user.id);
-        if (doctor) {
-          const { doctor_id: doctorId } = doctor || null;
-          const wallet = await getWalletByDoctorId(doctorId);
-          const { balance } = wallet || null;
-
-          const requestedAmount = parseFloat(value);
-          const currentBalance = parseFloat(balance);
-          if (requestedAmount > currentBalance) {
-            throw new Error("Insufficient Balance to request withdrawal");
-          }
-
-          return true;
+        if (!doctor) {
+          throw new Error("Doctor Not Found");
         }
+        const { doctor_id: doctorId } = doctor || null;
+        const wallet = await getWalletByDoctorId(doctorId);
+        const { balance } = wallet || null;
+
+        const requestedAmount = parseFloat(value);
+        const currentBalance = parseFloat(balance);
+        if (requestedAmount > currentBalance) {
+          throw new Error("Insufficient Balance to request withdrawal");
+        }
+
+        return true;
       }),
     body("paymentMethod")
       .notEmpty({ ignore_whitespace: false })
@@ -82,13 +77,12 @@ router.post(
       .toLowerCase()
       .escape()
       .custom(async (value, { req }) => {
-        if (value === "orange_money" || value === "bank_transfer") {
-        } else {
+        if (value !== "orange_money" || value !== "bank_transfer") {
           throw new Error("Invalid payment method");
         }
         if (value === "orange_money" && req.body.mobileMoneyNumber === "") {
           throw new Error(
-            "Please specify Mobile Money Number for Orange Money Payment"
+            "Please specify Mobile Money Number for Orange Money Payment",
           );
         }
         if (
@@ -106,7 +100,7 @@ router.post(
     body("accountNumber").escape().trim(),
   ],
   Validate,
-  RequestWithdrawalController
+  RequestWithdrawalController,
 );
 router.patch(
   "/",
@@ -119,24 +113,23 @@ router.patch(
       .custom(async (value, { req }) => {
         const { id } = req.user;
         const doctor = await getDoctorByUserId(id);
-        if (doctor) {
-          const pin = value;
-
-          const { doctor_id: doctorId } = doctor;
-          const wallet = await getWalletByDoctorId(doctorId);
-          const { wallet_pin } = wallet || null;
-
-          if (wallet_pin) {
-            const isMatch = await comparePassword({
-              plainPassword: pin,
-              hashedPassword: wallet_pin,
-            });
-            if (!isMatch) {
-              throw new Error("Incorrect Current PIN");
-            }
-            return true;
-          }
+        if (!doctor) {
+          throw new Error("Doctor Not Found");
         }
+        const pin = value;
+
+        const { doctor_id: doctorId } = doctor;
+        const wallet = await getWalletByDoctorId(doctorId);
+        const { wallet_pin: walletPin } = wallet || null;
+
+        const isMatch = await comparePassword({
+          plainPassword: pin,
+          hashedPassword: walletPin,
+        });
+        if (!isMatch) {
+          throw new Error("Incorrect Current PIN");
+        }
+        return true;
       }),
     body("newPin")
       .notEmpty()
@@ -156,7 +149,7 @@ router.patch(
       }),
   ],
   Validate,
-  UpdateWalletPinController
+  UpdateWalletPinController,
 );
 
 module.exports = router;

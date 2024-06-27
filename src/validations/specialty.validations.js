@@ -1,4 +1,4 @@
-const { body, param, check } = require("express-validator");
+const { body, param } = require("express-validator");
 const {
   getSpecialtyByName,
   getSpecialtiyById,
@@ -11,7 +11,7 @@ exports.CreateSpecialtyValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (name, { req }) => {
+    .custom(async (name) => {
       const data = await getSpecialtyByName(name);
       if (data) {
         throw new Error("Specified Specialty Name Already Exists");
@@ -31,10 +31,9 @@ exports.UpdateSpecialtyValidation = [
     .withMessage("Specialty ID is required")
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const data = await getSpecialtiyById(value);
       if (!data) {
-        console.log(data);
         throw new Error("Specialty Not Found");
       }
       return true;
@@ -61,7 +60,7 @@ exports.SpecialtyIDValidation = [
     .withMessage("Specialty ID is required")
     .trim()
     .escape()
-    .custom(async (id, { req }) => {
+    .custom(async (id) => {
       const data = await getSpecialtiyById(id);
       if (!data) {
         throw new Error("Specialty Not Found");

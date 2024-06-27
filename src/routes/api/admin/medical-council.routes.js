@@ -21,25 +21,25 @@ router.post(
   "/",
   CreateMedicalCouncilValidation,
   Validate,
-  CreateMedicalCouncilController
+  CreateMedicalCouncilController,
 );
 router.put(
   "/:id",
   UpdateMedicalCouncilValidation,
   Validate,
-  UpdateMedicalCouncilByIdController
+  UpdateMedicalCouncilByIdController,
 );
 router.patch(
   "/:id/",
   MedicalCouncilIDValidation,
   Validate,
-  UpdateMedicalCouncilStatusController
+  UpdateMedicalCouncilStatusController,
 );
 router.delete(
   "/:id",
   MedicalCouncilIDValidation,
   Validate,
-  DeleteMedicalCouncilByIdController
+  DeleteMedicalCouncilByIdController,
 );
 
 module.exports = router;

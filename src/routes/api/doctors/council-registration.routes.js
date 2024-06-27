@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const moment = require("moment");
-const { body, param } = require("express-validator");
+const { body } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   GetDoctorCouncilRegistrationController,
@@ -9,17 +9,9 @@ const {
   UpdateCouncilRegistrationController,
 } = require("../../../controllers/doctors/council-registration.controller");
 
-const {
-  localMediaUploader,
-  AWSUploader,
-} = require("../../../utils/file-upload.utils");
+const { AWSUploader } = require("../../../utils/file-upload.utils");
 const { getMedicalCouncilById } = require("../../../db/db.medical-councils");
-const {
-  getCouncilRegistrationById,
-  getCouncilRegistrationByRegNumber,
-  getCouncilRegistrationByDoctorId,
-  getDoctorByUserId,
-} = require("../../../db/db.doctors");
+const { getCouncilRegistrationByRegNumber } = require("../../../db/db.doctors");
 
 router.post(
   "/",
@@ -30,7 +22,7 @@ router.post(
       .withMessage("Medical Council Is Required")
       .trim()
       .escape()
-      .custom(async (id, { req }) => {
+      .custom(async (id) => {
         const data = await getMedicalCouncilById(id);
         if (!data) {
           throw new Error("Medical Council Not Found.");
@@ -43,7 +35,7 @@ router.post(
       .trim()
       .escape()
       .toUpperCase()
-      .custom((value, { req }) => {
+      .custom((value) => {
         if (!moment(value).year()) {
           throw new Error("Please specify a valid registration year");
         }
@@ -59,11 +51,11 @@ router.post(
       .trim()
       .escape()
       .toUpperCase()
-      .custom(async (regNumber, { req }) => {
+      .custom(async (regNumber) => {
         const data = await getCouncilRegistrationByRegNumber(regNumber);
         if (data) {
           throw new Error(
-            `Medical Council Registration Number ${regNumber} already exists. Please try a different registration number`
+            `Medical Council Registration Number ${regNumber} already exists. Please try a different registration number`,
           );
         }
         return true;
@@ -76,13 +68,13 @@ router.post(
       .custom((value, { req }) => {
         if (moment(value).isAfter(moment())) {
           throw new Error(
-            "Certificate Issued Date cannot be earlier than today's date"
+            "Certificate Issued Date cannot be earlier than today's date",
           );
         }
 
         if (moment(value).isSameOrAfter(moment(req.body.certExpiryDate))) {
           throw new Error(
-            "Certificate Issued Date cannot be earlier/same as expiry date "
+            "Certificate Issued Date cannot be earlier/same as expiry date ",
           );
         }
 
@@ -93,12 +85,12 @@ router.post(
       .withMessage("Please specify certificate expiry date")
       .trim()
       .escape()
-      .custom((value, { req }) => {
+      .custom((value) => {
         if (
           moment(value, "YYYY-MM-DD").isBefore(moment().format("YYYY-MM-DD"))
         ) {
           throw new Error(
-            "Certificate Expiry Date cannot be before today's date"
+            "Certificate Expiry Date cannot be before today's date",
           );
         }
 
@@ -106,13 +98,13 @@ router.post(
       }),
   ],
   Validate,
-  CreateDoctorCouncilRegistration
+  CreateDoctorCouncilRegistration,
 );
 router.get("/", GetDoctorCouncilRegistrationController);
 router.get("/doc/:filename", GetDoctorCouncilRegistrationDocumentController);
 router.put(
   "/",
   AWSUploader.single("regCertificate"),
-  UpdateCouncilRegistrationController
+  UpdateCouncilRegistrationController,
 );
 module.exports = router;

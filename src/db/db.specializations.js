@@ -50,7 +50,7 @@ exports.createNewSpecialization = (specialization) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -67,7 +67,7 @@ exports.updateSpecializationById = ({ id, specialization }) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

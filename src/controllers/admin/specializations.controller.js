@@ -1,4 +1,3 @@
-const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   getSpecializations,
@@ -16,7 +15,7 @@ exports.GetSpecializationsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetSpecializationByIDController = async (req, res, next) => {
@@ -29,7 +28,7 @@ exports.GetSpecializationByIDController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.CreateSpecializationController = async (req, res, next) => {
@@ -48,7 +47,7 @@ exports.CreateSpecializationController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -56,7 +55,7 @@ exports.UpdateSpecializationByIdController = async (req, res, next) => {
   try {
     const { name, description } = req.body;
     const { id } = req.params;
-    const transformedId = parseInt(id);
+    const transformedId = parseInt(id, 10);
 
     const imageUrl = "https://example.com/cardiology.jpg";
     if (req.file) {
@@ -75,7 +74,7 @@ exports.UpdateSpecializationByIdController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.UpdateSpecializationStatusController = async (req, res, next) => {
@@ -83,8 +82,8 @@ exports.UpdateSpecializationStatusController = async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.query;
 
-    const transformedId = parseInt(id);
-    const transformedStatus = parseInt(status);
+    const transformedId = parseInt(id, 10);
+    const transformedStatus = parseInt(status, 10);
 
     const response = await updateSpecializationStatus({
       specializationId: transformedId,
@@ -94,7 +93,7 @@ exports.UpdateSpecializationStatusController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -102,13 +101,13 @@ exports.DeleteSpecializationByIdController = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const transformedId = parseInt(id);
+    const transformedId = parseInt(id, 10);
 
     const response = await deleteSpecialization(transformedId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

@@ -2,31 +2,34 @@ const { body } = require("express-validator");
 const { getDoctorById } = require("../db/db.doctors");
 const { getPatientMedicalDocumentById } = require("../db/db.patient-docs");
 const { getUserById } = require("../db/db.users");
-const bcrypt = require("bcryptjs");
+const { comparePassword } = require("../utils/auth.utils");
+
 exports.CreateNewMedicalRecordValidation = [
   body("documentTitle")
     .notEmpty()
     .withMessage("Document Title is required")
     .trim()
     .escape(),
-  // body("password")
-  //   .trim()
-  //   .escape()
-  //   .custom(async (value, { req }) => {
-  //     if (value === "") {
-  //       throw new Error("Password is required");
-  //     }
-  //     const user = await getUserById(req.user.id);
-  //     if (user) {
-  //       const { password } = user;
-
-  //       const isMatch = await bcrypt.compare(value, password);
-  //       if (!isMatch) {
-  //         throw new Error("Incorrect Password");
-  //       }
-  //       return true;
-  //     }
-  //   }),
+  body("password")
+    .trim()
+    .escape()
+    .custom(async (value, { req }) => {
+      if (typeof value !== "string" || value.trim() === "") {
+        throw new Error("Password is required");
+      }
+      const user = await getUserById(req.user.id);
+      if (!user) {
+        throw new Error("Error uploading medical document, please try again!");
+      }
+      const { password } = user;
+      const isMatch = await comparePassword({
+        plainPassword: value,
+        hashedPassword: password,
+      });
+      if (!isMatch) {
+        throw new Error("Error Sharing Medical Document. Incorrect Password");
+      }
+    }),
 ];
 exports.ShareMedicalDocumentValidation = [
   body("documentId")
@@ -34,9 +37,8 @@ exports.ShareMedicalDocumentValidation = [
     .withMessage("Document Title is required")
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const data = await getPatientMedicalDocumentById(value);
-      console.log(data);
 
       if (!data) {
         throw new Error("Specified Medical Document Not Found");
@@ -47,10 +49,10 @@ exports.ShareMedicalDocumentValidation = [
 
   body("doctorId")
     .notEmpty()
-    .withMessage("Doctor Id is required")
+    .withMessage("Please select a doctor you wish to share document with")
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
+    .custom(async (value) => {
       const data = await getDoctorById(value);
 
       if (!data) {
@@ -59,4 +61,24 @@ exports.ShareMedicalDocumentValidation = [
       return true;
     }),
   body("note").trim().escape(),
+  body("password")
+    .trim()
+    .escape()
+    .custom(async (value, { req }) => {
+      if (typeof value !== "string" || value.trim() === "") {
+        throw new Error("Password is required");
+      }
+      const user = await getUserById(req.user.id);
+      if (!user) {
+        throw new Error("Error uploading medical document, please try again!");
+      }
+      const { password } = user;
+      const isMatch = await comparePassword({
+        plainPassword: value,
+        hashedPassword: password,
+      });
+      if (!isMatch) {
+        throw new Error("Error Sharing Medical Document. Incorrect Password");
+      }
+    }),
 ];

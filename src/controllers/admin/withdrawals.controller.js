@@ -13,44 +13,44 @@ exports.GetAllWithdrawalRequestsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetWithdrawalRequestByIdController = async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const response = await getRequestById(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.ApproveWithdrawalRequestController = async (req, res, next) => {
   try {
-    const requestId = parseInt(req.params.id);
+    const requestId = parseInt(req.params.id, 10);
+    const userId = parseInt(req.user.id, 10);
     const { comment } = req.body;
-    const userId = parseInt(req.user.id);
     const response = await approveRequest({ requestId, userId, comment });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.DenyWithdrawalRequestController = async (req, res, next) => {
   try {
-    const requestId = parseInt(req.params.id);
+    const requestId = parseInt(req.params.id, 10);
+    const userId = parseInt(req.user.id, 10);
     const { comment } = req.body;
-    const userId = parseInt(req.user.id);
     const response = await denyRequest({ userId, requestId, comment });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

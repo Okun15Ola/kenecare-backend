@@ -12,9 +12,9 @@ exports.getAllAppointmentPayments = () => {
 };
 
 exports.getAppointmentPaymentById = (paymentId) => {
-  const sql = "SELECT * FROM users WHERE user_type = ?";
+  const sql = "SELECT * FROM appointment_payments WHERE payment_id = ?";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [typeId], (err, result) => {
+    connectionPool.query(sql, [paymentId], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result);
@@ -47,7 +47,7 @@ exports.createAppointmentPayment = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -80,7 +80,7 @@ exports.createFirstAppointmentPayment = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -90,7 +90,8 @@ exports.updateAppointmentPaymentStatus = ({
   paymentStatus,
   transactionId,
 }) => {
-  const sql = `UPDATE appointment_payments SET  payment_status = ?, transaction_id = ? WHERE payment_id = ?;`;
+  const sql =
+    "UPDATE appointment_payments SET  payment_status = ?, transaction_id = ? WHERE payment_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
@@ -99,16 +100,16 @@ exports.updateAppointmentPaymentStatus = ({
         if (err) return reject(err);
 
         return resolve(result);
-      }
+      },
     );
   });
 };
 
-exports.updateAppointmentPaymentByAppointmentId = ({ appointmentId }) => {
+exports.updateAppointmentPaymentByAppointmentId = (appointmentId) => {
   const sql = "SELECT * FROM blogs WHERE blog_id = ? LIMIT 1";
 
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [id], (error, results) => {
+    connectionPool.query(sql, [appointmentId], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results[0]);
@@ -138,34 +139,34 @@ exports.getAppointmentPaymentByPaymentToken = (paymentToken) => {
     });
   });
 };
-exports.getAppointmentPaymentByAppointmentId = (appointmentId) => {
-  return new Promise((resolve, reject) => {
-    const sql = `SELECT * FROM appointment_payments WHERE appointment_id = ? LIMIT 1;`;
+exports.getAppointmentPaymentByAppointmentId = (appointmentId) =>
+  new Promise((resolve, reject) => {
+    const sql =
+      "SELECT * FROM appointment_payments WHERE appointment_id = ? LIMIT 1;";
     connectionPool.query(sql, [appointmentId], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result[0]);
     });
   });
-};
 
-exports.getAppointmentPaymentsByStatus = (paymentStatus) => {
-  return new Promise((resolve, reject) => {
-    const sql = `SELECT * from appointment_payments WHERE payment_status = ? LIMIT 1;`;
+exports.getAppointmentPaymentsByStatus = (paymentStatus) =>
+  new Promise((resolve, reject) => {
+    const sql =
+      "SELECT * from appointment_payments WHERE payment_status = ? LIMIT 1;";
     connectionPool.query(sql, [paymentStatus], (err, results) => {
       if (err) return reject(err);
 
       return resolve(results);
     });
   });
-};
-exports.deleteAppointmentPaymentByAppointmentId = ({ appointmentId }) => {
-  return new Promise((resolve, reject) => {
-    const sql = `DELETE FROM appointment_payments WHERE appointment_id = ? LIMIT 1;`;
+exports.deleteAppointmentPaymentByAppointmentId = ({ appointmentId }) =>
+  new Promise((resolve, reject) => {
+    const sql =
+      "DELETE FROM appointment_payments WHERE appointment_id = ? LIMIT 1;";
     connectionPool.query(sql, [appointmentId], (err, results) => {
       if (err) return reject(err);
 
       return resolve(results);
     });
   });
-};

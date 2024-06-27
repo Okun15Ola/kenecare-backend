@@ -1,8 +1,5 @@
 const dbObject = require("../db/db.patients");
 const Response = require("../utils/response.utils");
-const { USERTYPE, STATUS, VERIFICATIONSTATUS } = require("../utils/enum.utils");
-const { getUserById } = require("../db/db.users");
-const moment = require("moment");
 
 exports.getPatientMedicalHistory = async (userId) => {
   try {
@@ -81,9 +78,8 @@ exports.createPatientMedicalHistory = async ({
       });
     }
 
-    const medicalInfoExist = await dbObject.getPatientMedicalInfoByPatientId(
-      patientId
-    );
+    const medicalInfoExist =
+      await dbObject.getPatientMedicalInfoByPatientId(patientId);
     if (medicalInfoExist) {
       return Response.BAD_REQUEST({
         message:

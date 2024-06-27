@@ -38,7 +38,7 @@ exports.getSimilarPrescription = ({
         if (err) return reject(err);
 
         return resolve(result[0]);
-      }
+      },
     );
   });
 };
@@ -60,7 +60,7 @@ exports.createAppointmentPrescriptions = ({
         if (err) return reject(err);
 
         return resolve(result);
-      }
+      },
     );
   });
 };
@@ -82,7 +82,7 @@ exports.updateAppointmentPrescriptions = ({
         if (err) return reject(err);
 
         return resolve(result);
-      }
+      },
     );
   });
 };

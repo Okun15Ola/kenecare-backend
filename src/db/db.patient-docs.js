@@ -66,7 +66,7 @@ exports.createPatientMedicalDocument = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -87,7 +87,7 @@ exports.updatePatientMedicalDocumentById = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -104,7 +104,7 @@ exports.deletePatientDocById = ({ documentId, patientId }) => {
   });
 };
 
-//MEDICAL DOCUMENT SHARING
+// MEDICAL DOCUMENT SHARING
 exports.createPatientDocumentSharing = ({
   documentId,
   patientId,
@@ -123,7 +123,7 @@ exports.createPatientDocumentSharing = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -210,7 +210,7 @@ exports.updatePatientSharedMedicalDocument = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

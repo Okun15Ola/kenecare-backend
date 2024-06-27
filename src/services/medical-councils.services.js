@@ -1,6 +1,5 @@
 const dbObject = require("../db/db.medical-councils");
 const Response = require("../utils/response.utils");
-const { STATUS } = require("../utils/enum.utils");
 
 exports.getMedicalCouncils = async () => {
   const rawData = await dbObject.getAllMedicalCouncils();
@@ -14,24 +13,22 @@ exports.getMedicalCouncils = async () => {
       mobile_number: mobileNumber,
       is_active: isActive,
       inputted_by: inputtedBy,
-    }) => {
-      return {
-        councilId,
-        councilName,
-        email,
-        address,
-        mobileNumber,
-        isActive,
-        inputtedBy,
-      };
-    }
+    }) => ({
+      councilId,
+      councilName,
+      email,
+      address,
+      mobileNumber,
+      isActive,
+      inputtedBy,
+    }),
   );
   return Response.SUCCESS({ data: councils });
 };
 
-exports.getMedicalCouncilByEmail = async (email) => {
+exports.getMedicalCouncilByEmail = async (councilEmail) => {
   try {
-    const rawData = await dbObject.getMedicalCouncilById(email);
+    const rawData = await dbObject.getMedicalCouncilById(councilEmail);
 
     if (!rawData) {
       return Response.NOT_FOUND({

@@ -8,8 +8,7 @@ const {
 const {
   getDoctorAppointByDateAndTime,
 } = require("../db/db.appointments.doctors");
-const { getUserById } = require("../db/db.users");
-const { USER_TYPE } = require("../utils/enum.utils");
+
 const Response = require("../utils/response.utils");
 const { getDoctorById } = require("../db/db.doctors");
 const {
@@ -73,42 +72,40 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
         payment_method: paymentMethod,
         payment_status: paymentStatus,
         transactionId: paymentTransactionId,
-      }) => {
-        return {
-          appointmentId,
-          appointmentUUID,
-          patient,
-          username: `${firstName} ${lastName}`,
-          gender,
-          doctorId: doctorId,
-          doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-          appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
-          appointmentTime,
-          appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
-          patientNameOnPrescription,
-          patientMobileNumber,
-          patientSymptoms,
-          consultationFees: `SLE ${parseInt(consultationFees)}`,
-          specialtyId,
-          specialty,
-          timeSlot,
-          meetingId,
-          meetingJoinUrl,
-          appointmentStartTime,
-          appointmentEndTime,
-          appointmentStatus,
-          paymentMethod,
-          paymentStatus,
-          paymentTransactionId,
-          cancelledReason,
-          cancelledAt,
-          cancelledBy,
-          postponedReason,
-          postponeDate,
-          postponedBy,
-          createdAt: moment(createdAt).format("YYYY-MM-DD"),
-        };
-      }
+      }) => ({
+        appointmentId,
+        appointmentUUID,
+        patient,
+        username: `${firstName} ${lastName}`,
+        gender,
+        doctorId,
+        doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+        appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+        appointmentTime,
+        appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
+        patientNameOnPrescription,
+        patientMobileNumber,
+        patientSymptoms,
+        consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
+        specialtyId,
+        specialty,
+        timeSlot,
+        meetingId,
+        meetingJoinUrl,
+        appointmentStartTime,
+        appointmentEndTime,
+        appointmentStatus,
+        paymentMethod,
+        paymentStatus,
+        paymentTransactionId,
+        cancelledReason,
+        cancelledAt,
+        cancelledBy,
+        postponedReason,
+        postponeDate,
+        postponedBy,
+        createdAt: moment(createdAt).format("YYYY-MM-DD"),
+      }),
     );
 
     return Response.SUCCESS({ data: appointments });
@@ -127,7 +124,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       appointmentId: id,
     });
 
-    //TODO Check if the requesting user is the owner of the appointment
+    // TODO Check if the requesting user is the owner of the appointment
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
@@ -171,14 +168,14 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       appointmentUUID,
       patient,
       username: `${firstName} ${lastName}`,
-      doctorId: doctorId,
+      doctorId,
       doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
       appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
       appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
       patientNameOnPrescription,
       patientMobileNumber,
       patientSymptoms,
-      consultationFees: `SLE ${parseInt(consultationFees)}`,
+      consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
       specialtyId,
       specialty,
       timeSlot,
@@ -259,14 +256,14 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
       appointmentUUID,
       patient,
       username: `${firstName} ${lastName}`,
-      doctorId: doctorId,
+      doctorId,
       doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
       appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
       appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
       patientNameOnPrescription,
       patientMobileNumber,
       patientSymptoms,
-      consultationFees: `SLE ${parseInt(consultationFees)}`,
+      consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
       specialtyId,
       specialty,
       timeSlot,
@@ -304,10 +301,9 @@ exports.createPatientAppointment = async ({
   appointmentTime,
   symptoms,
   specialtyId,
-  timeSlotId,
 }) => {
   try {
-    //DONE Get patient Id from logged in user
+    // DONE Get patient Id from logged in user
     const [patient, doctor] = await Promise.all([
       getPatientByUserId(userId),
       getDoctorById(doctorId),
@@ -320,7 +316,7 @@ exports.createPatientAppointment = async ({
 
     const { consultation_fee: consultationFee } = doctor;
 
-    //DONE check if patient profile exist for the user booking appointment
+    // DONE check if patient profile exist for the user booking appointment
     if (!patientId) {
       return Response.BAD_REQUEST({
         message:
@@ -341,7 +337,7 @@ exports.createPatientAppointment = async ({
           "An appointment has already been booked for the specified time, please select a new appointment time",
       });
     }
-    //Generate a unique ID for each appointment
+    // Generate a unique ID for each appointment
     const genUUID = uuidv4();
 
     const { insertId: appointmentId } =
@@ -381,15 +377,13 @@ exports.createPatientAppointment = async ({
         },
       });
     }
-    //Get and send payment url to process payment
-    const {
-      payment_url: paymentUrl,
-      notif_token: notificationToken,
-      pay_token: paymentToken,
-    } = await getPaymentURL({
-      orderId: genUUID,
-      amount: consultationFee,
-    }).catch((error) => {
+    // Get and send payment url to process payment
+    const { paymentUrl, notificationToken, paymentToken } = await getPaymentURL(
+      {
+        orderId: genUUID,
+        amount: consultationFee,
+      },
+    ).catch((error) => {
       throw error;
     });
 
@@ -410,6 +404,7 @@ exports.createPatientAppointment = async ({
       },
     });
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };

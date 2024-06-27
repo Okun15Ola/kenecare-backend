@@ -1,12 +1,7 @@
 const dbObject = require("../db/db.admins");
-const {
-  generateVerificationToken,
-  generateUsersJwtAccessToken,
-  generateAdminJwtAccessToken,
-} = require("../utils/auth.utils");
-const { USERTYPE, VERIFICATIONSTATUS, STATUS } = require("../utils/enum.utils");
+const { generateAdminJwtAccessToken } = require("../utils/auth.utils");
+const { STATUS } = require("../utils/enum.utils");
 const { hashUsersPassword } = require("../utils/auth.utils");
-const { sendTokenSMS } = require("../utils/sms.utils");
 
 exports.getAdmins = async () => {
   try {
@@ -18,79 +13,81 @@ exports.getAdmins = async () => {
   }
 };
 
-exports.getAdminById = async (adminId) => {
+exports.getAdminById = async (id) => {
   try {
-    const rawData = await dbObject.getAdminById(adminId);
-    if (rawData) {
-      const {
-        admin_id: adminId,
-        mobile_number: mobileNumber,
-        fullname: fullName,
-        email,
-        is_account_active: accountActive,
-        password,
-      } = rawData;
-      return {
-        adminId,
-        mobileNumber,
-        fullName,
-        email,
-        accountActive,
-        password,
-      };
+    const rawData = await dbObject.getAdminById(id);
+    if (!rawData) {
+      return null;
     }
+    const {
+      admin_id: adminId,
+      mobile_number: mobileNumber,
+      fullname: fullName,
+      email,
+      is_account_active: accountActive,
+      password,
+    } = rawData;
+    return {
+      adminId,
+      mobileNumber,
+      fullName,
+      email,
+      accountActive,
+      password,
+    };
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-exports.getAdminByMobileNumber = async (mobileNumber) => {
+exports.getAdminByMobileNumber = async (adminMobileNumber) => {
   try {
-    const rawData = await dbObject.getAdminByMobileNumber(mobileNumber);
-    if (rawData) {
-      const {
-        admin_id: adminId,
-        mobile_number: mobileNumber,
-        fullname: fullName,
-        email,
-        is_account_active: accountActive,
-        password,
-      } = rawData;
-      return {
-        adminId,
-        mobileNumber,
-        fullName,
-        email,
-        accountActive,
-        password,
-      };
+    const rawData = await dbObject.getAdminByMobileNumber(adminMobileNumber);
+    if (!rawData) {
+      return null;
     }
+    const {
+      admin_id: adminId,
+      mobile_number: mobileNumber,
+      fullname: fullName,
+      email,
+      is_account_active: accountActive,
+      password,
+    } = rawData;
+    return {
+      adminId,
+      mobileNumber,
+      fullName,
+      email,
+      accountActive,
+      password,
+    };
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-exports.getAdminByEmail = async (email) => {
+exports.getAdminByEmail = async (adminEmail) => {
   try {
-    const rawData = await dbObject.getAdminByEmail(email);
-    if (rawData) {
-      const {
-        admin_id: adminId,
-        mobile_number: mobileNumber,
-        fullname: fullName,
-        email,
-        is_account_active: accountActive,
-        password,
-      } = rawData;
-      return {
-        adminId,
-        mobileNumber,
-        fullName,
-        email,
-        accountActive,
-        password,
-      };
-    }
+    const rawData = await dbObject.getAdminByEmail(adminEmail);
+    if (!rawData) return null;
+
+    const {
+      admin_id: adminId,
+      mobile_number: mobileNumber,
+      fullname: fullName,
+      email,
+      is_account_active: accountActive,
+      password,
+    } = rawData;
+    return {
+      adminId,
+      mobileNumber,
+      fullName,
+      email,
+      accountActive,
+      password,
+    };
   } catch (error) {
     console.error(error);
     throw error;
@@ -122,7 +119,7 @@ exports.createAdmin = async ({ fullname, email, mobileNumber, password }) => {
 
 exports.loginAdmin = async (admin) => {
   try {
-    const { adminId, fullname, email, mobileNumber, accountActive } = admin;
+    const { adminId, accountActive } = admin;
 
     dbObject.updateAdminAccountStatusById({
       id: adminId,

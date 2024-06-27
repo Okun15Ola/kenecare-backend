@@ -16,35 +16,35 @@ router.post(
   "/",
   CreateAppointmentValidation,
   Validate,
-  CreateAppointmentController
+  CreateAppointmentController,
 );
-router.put("/:id", (req, res, next) => {
-  try {
-    console.log("Update patient's appointment");
-  } catch (error) {
-    console.error(error);
-  }
-});
-router.patch("/:id/date", (req, res, next) => {
-  try {
-    console.log("Update patient's appointment date");
-  } catch (error) {
-    console.error(error);
-  }
-});
-router.patch("/:id/status", (req, res, next) => {
-  try {
-    console.log("Update patient's appointment status");
-  } catch (error) {
-    console.error(error);
-  }
-});
-router.delete("/:id", (req, res, next) => {
-  try {
-    console.log("Delete patient's appointment");
-  } catch (error) {
-    console.error(error);
-  }
-});
+// router.put("/:id", (req, res, next) => {
+//   try {
+//     console.log("Update patient's appointment");
+//   } catch (error) {
+//     console.error(error);
+//   }
+// });
+// router.patch("/:id/date", (req, res, next) => {
+//   try {
+//     return res.sendStatus(200);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// });
+// router.patch("/:id/status", (req, res, next) => {
+//   try {
+//     console.log("Update patient's appointment status");
+//   } catch (error) {
+//     console.error(error);
+//   }
+// });
+// router.delete("/:id", (req, res, next) => {
+//   try {
+//     console.log("Delete patient's appointment");
+//   } catch (error) {
+//     console.error(error);
+//   }
+// });
 
 module.exports = router;

@@ -10,30 +10,34 @@ const {
 router.get("/", (req, res, next) => {
   try {
     return res.sendStatus(200);
-  } catch (error) {}
+  } catch (error) {
+    return next();
+  }
 });
 router.get("/:id/", (req, res, next) => {
   try {
     return res.sendStatus(200);
-  } catch (error) {}
+  } catch (error) {
+    return next();
+  }
 });
 router.put(
   "/:id",
   AdminUpdateStatusValidations,
   Validate,
-  AdminUpdateAccountStatusController
+  AdminUpdateAccountStatusController,
 );
 router.patch(
   "/:id/",
   AdminUpdateStatusValidations,
   Validate,
-  AdminUpdateAccountStatusController
+  AdminUpdateAccountStatusController,
 );
 router.delete(
   "/:id",
   AdminUpdateStatusValidations,
   Validate,
-  AdminUpdateAccountStatusController
+  AdminUpdateAccountStatusController,
 );
 
 module.exports = router;

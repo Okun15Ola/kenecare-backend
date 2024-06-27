@@ -8,7 +8,7 @@ exports.AuthenticateController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.AdminLoginController = async (req, res, next) => {
@@ -19,7 +19,7 @@ exports.AdminLoginController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
@@ -38,14 +38,15 @@ exports.AdminRegisterController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.AdminUpdatePasswordController = (req, res, next) => {
   try {
-    //Update Password Controller
-    const { otp } = req.params;
+    // Update Password Controller
+    // const { otp } = req.params;
+    // console.log()
   } catch (error) {
     console.error(error);
     logger.error(error);
@@ -54,7 +55,7 @@ exports.AdminUpdatePasswordController = (req, res, next) => {
 };
 exports.AdminUpdateAccountStatusController = (req, res, next) => {
   try {
-    //Update Password Controller
+    // Update Password Controller
     console.log("update account status");
     console.log(req.params);
     console.log(req.query);

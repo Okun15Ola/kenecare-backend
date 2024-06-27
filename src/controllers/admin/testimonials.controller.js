@@ -1,4 +1,3 @@
-const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   getTestimonials,
@@ -7,6 +6,7 @@ const {
   approveTestimonialById,
   denyTestimonialById,
 } = require("../../services/testimonials.services");
+
 exports.GetTestimonialsController = async (req, res, next) => {
   try {
     const response = await getTestimonials();
@@ -14,25 +14,25 @@ exports.GetTestimonialsController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.GetTestimonialByIDController = async (req, res, next) => {
   try {
-    const testimonialId = parseInt(req.params.id);
+    const testimonialId = parseInt(req.params.id, 10);
     const response = await getTestimonialById(testimonialId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.ApproveTestimonialController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
-    const testimonialId = parseInt(req.params.id);
+    const userId = parseInt(req.user.id, 10);
+    const testimonialId = parseInt(req.params.id, 10);
     const response = await approveTestimonialById({
       testimonialId,
       approvedBy: userId,
@@ -41,13 +41,13 @@ exports.ApproveTestimonialController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.DenyTestimonialController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
-    const testimonialId = parseInt(req.params.id);
+    const userId = parseInt(req.user.id, 10);
+    const testimonialId = parseInt(req.params.id, 10);
     const response = await denyTestimonialById({
       testimonialId,
       approvedBy: userId,
@@ -56,12 +56,12 @@ exports.DenyTestimonialController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 exports.CreateTestimonialController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const { patientId, content } = req.body;
     const response = await createTestimonial({
       userId,
@@ -72,24 +72,26 @@ exports.CreateTestimonialController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.UpdateTestimonialByIdController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 exports.DeleteTestimonialByIdController = async (req, res, next) => {
   try {
+    return res.sendStatus(200);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };

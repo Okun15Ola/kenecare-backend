@@ -1,12 +1,11 @@
+const moment = require("moment");
 const dbObject = require("../db/db.appointments.doctors");
 const { getDoctorByUserId } = require("../db/db.doctors");
 const { getUserById } = require("../db/db.users");
 const { USERTYPE, VERIFICATIONSTATUS } = require("../utils/enum.utils");
 const Response = require("../utils/response.utils");
-const { patientAppointmentApprovalEmail } = require("../utils/email.utils");
 const { getPatientById } = require("../db/db.patients");
 const { createZoomMeeting } = require("../utils/zoom.utils");
-const moment = require("moment");
 const {
   appointmentApprovalSms,
   appointmentPostponedSms,
@@ -25,7 +24,7 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
 
     const { doctor_id: doctorId } = doctor;
 
-    //Get doctor's appointments
+    // Get doctor's appointments
     const rawData = await dbObject.getAppointmentsByDoctorId({
       doctorId,
       page,
@@ -67,41 +66,39 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
         payment_method: paymentMethod,
         payment_status: paymentStatus,
         transactionId: paymentTransactionId,
-      }) => {
-        return {
-          appointmentId,
-          appointmentUUID,
-          patient,
-          username: `${firstName} ${lastName}`,
-          doctorId,
-          doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-          appointmentDate,
-          appointmentTime,
-          appointmentType,
-          patientNameOnPrescription,
-          patientMobileNumber,
-          patientSymptoms,
-          consultationFees: `SLE ${parseInt(consultationFees)}`,
-          specialty,
-          timeSlot,
-          meetingId,
-          meetingJoinUrl,
-          meetingStartUrl,
-          appointmentStartTime,
-          appointmentEndTime,
-          appointmentStatus,
-          paymentMethod,
-          paymentStatus,
-          paymentTransactionId,
-          cancelledReason,
-          cancelledAt,
-          cancelledBy,
-          postponedReason,
-          postponeDate,
-          postponedBy,
-          createdAt: moment(createdAt).format("YYYY-MM-DD"),
-        };
-      }
+      }) => ({
+        appointmentId,
+        appointmentUUID,
+        patient,
+        username: `${firstName} ${lastName}`,
+        doctorId,
+        doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+        appointmentDate,
+        appointmentTime,
+        appointmentType,
+        patientNameOnPrescription,
+        patientMobileNumber,
+        patientSymptoms,
+        consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
+        specialty,
+        timeSlot,
+        meetingId,
+        meetingJoinUrl,
+        meetingStartUrl,
+        appointmentStartTime,
+        appointmentEndTime,
+        appointmentStatus,
+        paymentMethod,
+        paymentStatus,
+        paymentTransactionId,
+        cancelledReason,
+        cancelledAt,
+        cancelledBy,
+        postponedReason,
+        postponeDate,
+        postponedBy,
+        createdAt: moment(createdAt).format("YYYY-MM-DD"),
+      }),
     );
 
     return Response.SUCCESS({ data: appointments });
@@ -121,9 +118,9 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       });
     }
 
-    const { user_type } = doctor;
+    const { user_type: userType } = doctor;
 
-    if (user_type !== USERTYPE.DOCTOR) {
+    if (userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
@@ -185,7 +182,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       patientNameOnPrescription,
       patientMobileNumber,
       patientSymptoms,
-      consultationFees: `SLE ${parseInt(consultationFees)}`,
+      consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
       specialty,
       timeSlot,
       meetingId,
@@ -273,41 +270,39 @@ exports.getDoctorAppointmentByDateRange = async ({
         payment_method: paymentMethod,
         payment_status: paymentStatus,
         transactionId: paymentTransactionId,
-      }) => {
-        return {
-          appointmentId,
-          appointmentUUID,
-          patient,
-          username: `${firstName} ${lastName}`,
-          doctorId,
-          doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-          appointmentDate,
-          appointmentTime,
-          appointmentType,
-          patientNameOnPrescription,
-          patientMobileNumber,
-          patientSymptoms,
-          consultationFees: `SLE ${parseInt(consultationFees)}`,
-          specialty,
-          timeSlot,
-          meetingId,
-          meetingJoinUrl,
-          meetingStartUrl,
-          appointmentStartTime,
-          appointmentEndTime,
-          appointmentStatus,
-          paymentMethod,
-          paymentStatus,
-          paymentTransactionId,
-          cancelledReason,
-          cancelledAt,
-          cancelledBy,
-          postponedReason,
-          postponeDate,
-          postponedBy,
-          createdAt: moment(createdAt).format("YYYY-MM-DD"),
-        };
-      }
+      }) => ({
+        appointmentId,
+        appointmentUUID,
+        patient,
+        username: `${firstName} ${lastName}`,
+        doctorId,
+        doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+        appointmentDate,
+        appointmentTime,
+        appointmentType,
+        patientNameOnPrescription,
+        patientMobileNumber,
+        patientSymptoms,
+        consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
+        specialty,
+        timeSlot,
+        meetingId,
+        meetingJoinUrl,
+        meetingStartUrl,
+        appointmentStartTime,
+        appointmentEndTime,
+        appointmentStatus,
+        paymentMethod,
+        paymentStatus,
+        paymentTransactionId,
+        cancelledReason,
+        cancelledAt,
+        cancelledBy,
+        postponedReason,
+        postponeDate,
+        postponedBy,
+        createdAt: moment(createdAt).format("YYYY-MM-DD"),
+      }),
     );
 
     return Response.SUCCESS({ data: appointments });
@@ -333,7 +328,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       last_name: doctorLastName,
     } = doctor;
 
-    //TODO Check if the appointment exist
+    // TODO Check if the appointment exist
     const rawData = await dbObject.getDoctorAppointmentById({
       doctorId,
       appointmentId,
@@ -343,25 +338,24 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
-    //Extract patient id from appointment to get patient email
+    // Extract patient id from appointment to get patient email
     const {
       patient_id: patientId,
-      patient_mobile_number,
+
       first_name: firstName,
       last_name: lastName,
       patient_name_on_prescription: patientNameOnPrescription,
       appointment_date: appointmentDate,
       appointment_time: appointmentTime,
-      patient_symptoms: symptoms,
-      appointment_status,
+      appointment_status: appointmentStatus,
     } = rawData;
 
     // SEND A RESPONSE IF THE APPOINTMENT HAS PREVIOUSLY BEEN APPROVED
-    if (appointment_status === "approved") {
+    if (appointmentStatus === "approved") {
       return Response.NOT_MODIFIED();
     }
 
-    //TODO GENERATE ZOOM MEETING LINK
+    // TODO GENERATE ZOOM MEETING LINK
     const {
       zoomMeetingID,
       zoomMeetingUUID,
@@ -369,7 +363,6 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       zoomMeetingJoinURL,
       zoomMeetingStartURL,
       zoomMeetingEncPassword,
-      zoomMeetingPassword,
     } = await createZoomMeeting({
       patientName: patientNameOnPrescription,
       appointmentDate,
@@ -377,7 +370,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       doctorName: `${doctorFirstName} ${doctorLastName}`,
     });
 
-    //TODO INSERT ZOOM MEETING INFO TO DATABASE
+    //  INSERT ZOOM MEETING INFO TO DATABASE
     const { insertId: meetingId } = await dbObject.createNewZoomMeeting({
       meetingId: zoomMeetingID.toString(),
       meetingUUID: zoomMeetingUUID,
@@ -387,7 +380,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       encryptedPassword: zoomMeetingEncPassword,
     });
 
-    const [done, patient] = await Promise.allSettled([
+    const [, patient] = await Promise.allSettled([
       dbObject.approveDoctorAppointmentById({
         appointmentId,
         doctorId,
@@ -411,6 +404,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       message: "Medical Appointment Approved Successfully",
     });
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };
@@ -423,9 +417,9 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       return Response.NOT_FOUND({ message: "User Not Found" });
     }
 
-    const { user_type } = user;
+    const { user_type: userType } = user;
 
-    if (user_type !== USERTYPE.DOCTOR) {
+    if (userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({
         message:
           "Unauthorized access. You must register as a doctor to perform this action",
@@ -440,14 +434,15 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
       });
     }
-    const { is_profile_approved, doctor_id: doctorId } = doctor;
+    const { is_profile_approved: isProfileApproved, doctor_id: doctorId } =
+      doctor;
 
-    // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
-    //   return Response.UNAUTHORIZED({
-    //     message:
-    //       "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
-    //   });
-    // }
+    if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
+      return Response.UNAUTHORIZED({
+        message:
+          "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
+      });
+    }
 
     // Get doctor's appointment by ID
     const rawData = await dbObject.getDoctorAppointmentById({
@@ -455,32 +450,31 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentId,
     });
 
-    //Check if the appointment exists
+    // Check if the appointment exists
     if (!rawData) {
       return Response.NOT_FOUND({
         message: "Specified Appointment Not Found! Please Try Again!",
       });
     }
 
-    //Extract patient id from appointment to get patient email
-    const {
-      patient_id: patientId,
-      patient_mobile_number,
-      appointment_status,
-    } = rawData;
+    // Extract patient id from appointment to get patient email
+    const { patient_id: patientId, appointment_status: appointmentStatus } =
+      rawData;
 
-    if (appointment_status !== "approved") {
-      //UPDATE appointment status to 'approved'
+    console.log(patientId);
+    if (appointmentStatus !== "approved") {
+      // UPDATE appointment status to 'approved'
       await dbObject.approveDoctorAppointmentById({
         appointmentId,
         doctorId,
       });
     }
 
-    //TODO Send a notification(email,sms) to the user
+    // TODO Send a notification(email,sms) to the user
 
     return Response.SUCCESS({ message: "Appointment Approved Successfully" });
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };
@@ -497,9 +491,9 @@ exports.cancelDoctorAppointment = async ({
       return Response.NOT_FOUND({ message: "User Not Found" });
     }
 
-    const { user_type } = user;
+    const { user_type: userType } = user;
 
-    if (user_type !== USERTYPE.DOCTOR) {
+    if (userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
@@ -511,16 +505,17 @@ exports.cancelDoctorAppointment = async ({
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
       });
     }
-    const { is_profile_approved, doctor_id: doctorId } = doctor;
+    const { is_profile_approved: isProfileApproved, doctor_id: doctorId } =
+      doctor;
 
-    // if (is_profile_approved !== VERIFICATIONSTATUS.VERIFIED) {
-    //   return Response.UNAUTHORIZED({
-    //     message:
-    //       "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
-    //   });
-    // }
+    if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
+      return Response.UNAUTHORIZED({
+        message:
+          "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
+      });
+    }
 
-    //TODO Check if the appointment exist
+    // TODO Check if the appointment exist
     const rawData = await dbObject.getDoctorAppointmentById({
       doctorId,
       appointmentId,
@@ -529,34 +524,33 @@ exports.cancelDoctorAppointment = async ({
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
-    //Extract patient id from appointment to get patient email
-    const {
-      patient_id: patientId,
-      patient_mobile_number,
-      appointment_status,
-    } = rawData;
+    // Extract patient id from appointment to get patient email
+    const { patient_id: patientId, appointment_status: appointmentStatus } =
+      rawData;
 
-    if (appointment_status === "canceled") {
+    console.log(patientId);
+    if (appointmentStatus === "canceled") {
       return Response.NOT_MODIFIED();
     }
 
-    //TODO Check the appointment date and time
-    //TODO Appointment's can only be cancelled 24 hours before the appointment date
+    // TODO Check the appointment date and time
+    // TODO Appointment's can only be cancelled 24 hours before the appointment date
 
-    //UPDATE appointment status to 'approved'
+    // UPDATE appointment status to 'approved'
     await dbObject.cancelDoctorAppointmentById({
       appointmentId,
       doctorId,
       cancelReason,
     });
 
-    //TODO Send a notification(email,sms) to the user
+    // TODO Send a notification(email,sms) to the user
 
     return Response.SUCCESS({
       message:
         "Appointment Canceled Successfully. An email has been sent to the patient",
     });
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };
@@ -574,9 +568,9 @@ exports.postponeDoctorAppointment = async ({
       return Response.NOT_FOUND({ message: "User Not Found" });
     }
 
-    const { user_type } = user;
+    const { user_type: userType } = user;
 
-    if (user_type !== USERTYPE.DOCTOR) {
+    if (userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
@@ -590,54 +584,56 @@ exports.postponeDoctorAppointment = async ({
     }
     const { doctor_id: doctorId } = doctor;
 
-    //TODO Check if the appointment exist
+    //  Check if the appointment exist
     const rawData = await dbObject.getDoctorAppointmentById({
       doctorId,
       appointmentId,
     });
     const {
-      patient_id,
-      appointment_status,
-      patient_name_on_prescription,
-      first_name,
-      last_name,
-      doctor_first_name,
-      doctor_last_name,
+      patient_id: patientId,
+      appointment_status: appointmentStatus,
+      patient_name_on_prescription: patientNameOnPrescription,
+      first_name: patientFirstName,
+      last_name: patientLastName,
+      doctor_first_name: doctorFirstName,
+      doctor_last_name: doctorLastName,
     } = rawData;
 
-    if (appointment_status === "postponed") {
+    if (appointmentStatus === "postponed") {
       return Response.NOT_MODIFIED();
     }
 
-    //check if the date and time has already been booked
-    const timeBooked = await dbObject.getDoctorAppointByDateAndTime({
+    // check if the date and time has already been booked
+    const timeSlotBooked = await dbObject.getDoctorAppointByDateAndTime({
       doctorId,
       date: postponedDate,
       time: postponedTime,
     });
 
-    if (timeBooked) {
+    if (timeSlotBooked) {
       return Response.BAD_REQUEST({
         message:
           "An appointment has already been booked for the specified time on that date. Please choose another time.",
       });
     }
-    //UPDATE appointment status to 'approved'
+    const { mobile_number: mobileNumber } = await getPatientById(patientId);
+    // UPDATE appointment status to 'approved'
     await dbObject.postponeDoctorAppointmentById({
       postponedReason,
-      postponedDate: postponeDate,
+      postponedDate,
+      postponedTime,
       appointmentId,
       doctorId,
     });
 
     // Send a notification(email,sms) to the user
     await appointmentPostponedSms({
-      patientName: `${first_name} ${last_name}`,
-      patientNameOnPrescription: patient_name_on_prescription,
+      patientName: `${patientFirstName} ${patientLastName}`,
+      patientNameOnPrescription,
       mobileNumber,
-      doctorName,
-      appointmentDate: postponeDate,
-      appointmentTime,
+      doctorName: `${doctorFirstName} ${doctorLastName}`,
+      appointmentDate: postponedDate,
+      appointmentTime: postponedTime,
     });
 
     return Response.SUCCESS({
@@ -645,6 +641,7 @@ exports.postponeDoctorAppointment = async ({
         "Appointment has been postponed successfully and user has been notified. Please ensure to complete appointment on the rescheduled date.",
     });
   } catch (error) {
+    console.log(error);
     throw error;
   }
 };

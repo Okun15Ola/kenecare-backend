@@ -1,12 +1,12 @@
 function Enum(baseEnum) {
   return new Proxy(baseEnum, {
     get(target, name) {
-      if (!baseEnum.hasOwnProperty(name)) {
+      if (!Object.hasOwn(baseEnum, name)) {
         throw new Error(`"${name}" value does not exist in this enum`);
       }
       return baseEnum[name];
     },
-    set(target, name, value) {
+    set() {
       throw new Error("Cannot add a new value to this enum");
     },
   });

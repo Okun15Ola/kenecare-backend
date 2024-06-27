@@ -1,3 +1,4 @@
+const moment = require("moment");
 const dbObject = require("../db/db.blogs");
 const {
   uploadFileToS3Bucket,
@@ -5,7 +6,7 @@ const {
 } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 const Response = require("../utils/response.utils");
-const moment = require("moment");
+
 exports.getBlogs = async () => {
   try {
     const rawData = await dbObject.getAllBlogs();
@@ -36,7 +37,7 @@ exports.getBlogs = async () => {
           isActive,
           createdAt: moment(createdAt).format("YYYY-MM-DD"),
         };
-      }
+      },
     );
 
     const blogs = await Promise.all(blogsPromises);
@@ -67,7 +68,7 @@ exports.getBlog = async (id) => {
       created_at: createdAt,
     } = rawData;
 
-    let url = image ? await getFileFromS3Bucket(image) : null;
+    const url = image ? await getFileFromS3Bucket(image) : null;
 
     const blog = {
       blogId,
@@ -98,28 +99,33 @@ exports.createBlog = async ({
   inputtedBy,
 }) => {
   try {
-    if (file) {
-      const fileName = generateFileName(file);
-
-      const { $metadata } = await uploadFileToS3Bucket({
-        fileName,
-        buffer: file.buffer,
-        mimetype: file.mimetype,
-      });
-
-      if ($metadata.httpStatusCode === 200) {
-        await dbObject.createNewBlog({
-          category,
-          title,
-          content,
-          image: fileName,
-          tags,
-          featured,
-          inputtedBy,
-        });
-        return Response.CREATED({ message: "Blog Created Successfully" });
-      }
+    if (!file) {
+      return Response.BAD_REQUEST({ message: "Please upload a blog image" });
     }
+
+    const fileName = generateFileName(file);
+
+    const { $metadata } = await uploadFileToS3Bucket({
+      fileName,
+      buffer: file.buffer,
+      mimetype: file.mimetype,
+    });
+    if ($metadata.httpStatusCode !== 200) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Creating New Blog. Please try again",
+      });
+    }
+
+    await dbObject.createNewBlog({
+      category,
+      title,
+      content,
+      image: fileName,
+      tags,
+      featured,
+      inputtedBy,
+    });
+    return Response.CREATED({ message: "Blog Created Successfully" });
   } catch (error) {
     console.error(error);
     throw error;
@@ -140,7 +146,7 @@ exports.updateBlog = async ({
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
 
-    let { image } = blog;
+    const { image } = blog;
     let fileName = "";
     if (file) {
       fileName = image || generateFileName(file);
@@ -170,8 +176,8 @@ exports.updateBlog = async ({
 };
 exports.updateBlogStatus = async ({ id, status }) => {
   try {
-    const result = await isBlogExist(id);
-    if (!result) {
+    const rawData = await dbObject.getBlogById(id);
+    if (!rawData) {
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     await dbObject.updateBlogStatusById({ id, status });
@@ -183,8 +189,8 @@ exports.updateBlogStatus = async ({ id, status }) => {
 };
 exports.updateBlogFeaturedStatus = async ({ id, status }) => {
   try {
-    const result = await isBlogExist(id);
-    if (!result) {
+    const rawData = await dbObject.getBlogById(id);
+    if (!rawData) {
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     await dbObject.updateBlogFeaturedById({ id, status });
@@ -198,8 +204,8 @@ exports.updateBlogFeaturedStatus = async ({ id, status }) => {
 };
 exports.deleteBlog = async (id) => {
   try {
-    const result = await isBlogExist(id);
-    if (!result) {
+    const rawData = await dbObject.getBlogById(id);
+    if (!rawData) {
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     await dbObject.deleteBlogById(id);
@@ -208,9 +214,4 @@ exports.deleteBlog = async (id) => {
     console.error(error);
     throw error;
   }
-};
-
-const isBlogExist = async (id) => {
-  const rawData = await dbObject.getBlogById(id);
-  return !!rawData;
 };

@@ -32,16 +32,15 @@ exports.getAdminByMobileNumber = (mobileNumber) => {
     });
   });
 };
-exports.getAdminByEmail = (email) => {
-  return new Promise((resolve, reject) => {
-    const sql = `SELECT * from admins WHERE email = ? LIMIT 1;`;
+exports.getAdminByEmail = (email) =>
+  new Promise((resolve, reject) => {
+    const sql = "SELECT * from admins WHERE email = ? LIMIT 1;";
     connectionPool.query(sql, [email], (err, result) => {
       if (err) return reject(err);
 
       return resolve(result[0]);
     });
   });
-};
 
 exports.createNewAdmin = (admin) => {
   const { fullname, email, mobileNumber, password } = admin;
@@ -53,13 +52,13 @@ exports.createNewAdmin = (admin) => {
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
-      }
+      },
     );
   });
 };
 
 exports.updateAdminEmailById = ({ adminId, email }) => {
-  const sql = `UPDATE admins SET  email = ? WHERE admin_id = ?;`;
+  const sql = "UPDATE admins SET  email = ? WHERE admin_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [email, adminId], (err, result) => {
       if (err) return reject(err);
@@ -70,7 +69,7 @@ exports.updateAdminEmailById = ({ adminId, email }) => {
 };
 
 exports.updateAdminMobileNumberById = ({ adminId, mobileNumber }) => {
-  const sql = `UPDATE admins SET  mobile_number = ? WHERE admin_id = ?;`;
+  const sql = "UPDATE admins SET  mobile_number = ? WHERE admin_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [mobileNumber, adminId], (err, result) => {
       if (err) return reject(err);
@@ -81,7 +80,7 @@ exports.updateAdminMobileNumberById = ({ adminId, mobileNumber }) => {
 };
 
 exports.updateAdminAccountStatusById = ({ id, status }) => {
-  const sql = `UPDATE admins SET  is_account_active = ? WHERE admin_id = ?;`;
+  const sql = "UPDATE admins SET  is_account_active = ? WHERE admin_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [status, id], (err, result) => {
       if (err) return reject(err);
@@ -91,7 +90,7 @@ exports.updateAdminAccountStatusById = ({ id, status }) => {
   });
 };
 exports.updateUserVerificationStatusById = ({ userId, verificationStatus }) => {
-  const sql = `UPDATE admins SET  is_verified = ? WHERE user_id = ?;`;
+  const sql = "UPDATE admins SET  is_verified = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [verificationStatus, userId], (err, result) => {
       if (err) return reject(err);
@@ -101,7 +100,7 @@ exports.updateUserVerificationStatusById = ({ userId, verificationStatus }) => {
   });
 };
 exports.updateUserPasswordById = ({ userId, password }) => {
-  const sql = `UPDATE admins SET  password = ? WHERE user_id = ?;`;
+  const sql = "UPDATE admins SET  password = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [password, userId], (err, result) => {
       if (err) return reject(err);

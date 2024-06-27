@@ -7,31 +7,31 @@ const {
 
 const GetDoctorWalletController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const response = await getDoctorsWallet(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const UpdateWalletPinController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const { oldPin, newPin } = req.body;
     const response = await updateDoctorWalletPin({ userId, oldPin, newPin });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 
 const RequestWithdrawalController = async (req, res, next) => {
   try {
-    const userId = parseInt(req.user.id);
+    const userId = parseInt(req.user.id, 10);
     const {
       amount,
       paymentMethod,
@@ -54,7 +54,7 @@ const RequestWithdrawalController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 

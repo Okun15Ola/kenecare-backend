@@ -6,7 +6,7 @@ connectionPool.getConnection((err, connection) => {
   if (err) {
     console.error(
       "Error connecting to the database, exiting application:",
-      err
+      err,
     );
     process.exit(1);
   } else {

@@ -7,18 +7,18 @@ const {
 
 const GetAppointmentPrescriptionsController = async (req, res, next) => {
   try {
-    const appointmentId = parseInt(req.params.id);
+    const appointmentId = parseInt(req.params.id, 10);
     const response = await getAppointmentPrescriptions(appointmentId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 const GetAppointmentPrescriptionController = async (req, res, next) => {
   try {
-    const presId = parseInt(req.params.id);
+    const presId = parseInt(req.params.id, 10);
     const { token: accessToken } = req.body;
 
     const response = await getAppointmentPrescriptionById({
@@ -29,7 +29,7 @@ const GetAppointmentPrescriptionController = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     logger.error(error);
-    next(error);
+    return next(error);
   }
 };
 

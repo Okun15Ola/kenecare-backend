@@ -38,7 +38,7 @@ exports.createNewBlog = (blog) => {
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };
@@ -63,7 +63,7 @@ exports.updateBlogById = ({
         if (error) return reject(error);
 
         return resolve(results);
-      }
+      },
     );
   });
 };

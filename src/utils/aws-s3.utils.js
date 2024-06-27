@@ -1,6 +1,6 @@
-const fs = require("fs");
-const crypto = require("crypto");
-const AWS = require("aws-sdk");
+// const fs = require("fs");
+// const crypto = require("crypto");
+// const AWS = require("aws-sdk");
 const {
   S3Client,
   PutObjectCommand,
@@ -37,6 +37,7 @@ const uploadFileToS3Bucket = async ({ fileName, buffer, mimetype }) => {
       const command = new PutObjectCommand(params);
       return await s3Client.send(command);
     }
+    return null;
   } catch (error) {
     console.log(error);
     throw error;
@@ -58,7 +59,20 @@ const getFileFromS3Bucket = async (fileName) => {
     throw error;
   }
 };
-
+const getObjectFromS3Bucket = async (fileName) => {
+  try {
+    const params = {
+      Bucket: awsBucketName,
+      Key: fileName,
+    };
+    const command = new GetObjectCommand(params);
+    const response = await s3Client.send(command);
+    return response.Body;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
 const deleteFileFromS3Bucket = async (fileName) => {
   try {
     const params = {
@@ -67,11 +81,14 @@ const deleteFileFromS3Bucket = async (fileName) => {
     };
     const command = new DeleteObjectCommand(params);
     return await s3Client.send(command);
-  } catch (error) {}
+  } catch (error) {
+    return error;
+  }
 };
 
 module.exports = {
   uploadFileToS3Bucket,
   getFileFromS3Bucket,
+  getObjectFromS3Bucket,
   deleteFileFromS3Bucket,
 };

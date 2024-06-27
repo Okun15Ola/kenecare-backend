@@ -4,23 +4,17 @@ const {
   deleteAppointmentById,
   getAppointmentByUUID,
 } = require("../db/db.appointments.patients");
-const {
-  paymentCanceledPatientAppointmentEmail,
-} = require("../utils/email.utils");
+
 const Response = require("../utils/response.utils");
 
-const {
-  newPatientAppointmentEmail,
-  newDoctorAppointmentEmail,
-} = require("../utils/email.utils");
+const { newDoctorAppointmentEmail } = require("../utils/email.utils");
 const {
   updateAppointmentPaymentStatus,
   getAppointmentPaymentByAppointmentId,
   deleteAppointmentPaymentByAppointmentId,
 } = require("../db/db.payments");
 const { checkTransactionStatus } = require("../utils/payment.utils");
-const { getUserById } = require("../db/db.users");
-const { getPatientByUserId, getPatientById } = require("../db/db.patients");
+const { getPatientById } = require("../db/db.patients");
 const { getDoctorById } = require("../db/db.doctors");
 const { appointmentBookedSms } = require("../utils/sms.utils");
 const {
@@ -49,14 +43,12 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       patient_name_on_prescription: patientNameOnPrescription,
       patient_mobile_number: patientMobileNumber,
       patient_symptoms: symptoms,
-      speciality_name: specialty,
       appointment_date: appointmentDate,
       appointment_time: appointmentTime,
     } = appointment;
 
-    const appointmentPaymentRecord = await getAppointmentPaymentByAppointmentId(
-      appointmentId
-    );
+    const appointmentPaymentRecord =
+      await getAppointmentPaymentByAppointmentId(appointmentId);
 
     if (!appointmentPaymentRecord) {
       return Response.BAD_REQUEST({
@@ -88,7 +80,7 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       });
     }
 
-    //calculate kenecare fee
+    // calculate kenecare fee
     const kenecarePercentage = 0.15;
     const kenecareFee = parseFloat(amountPaid) * kenecarePercentage;
     const finalDoctorFee = parseFloat(amountPaid) - parseFloat(kenecareFee);
@@ -98,22 +90,24 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
     const newAccountBalance =
       parseFloat(currentBalance) + parseFloat(finalDoctorFee);
 
-    const [paymentUpdated, balanceUpdated, doctor, patient] =
-      await Promise.allSettled([
-        updateAppointmentPaymentStatus({
-          paymentId,
-          paymentStatus: status.toLowerCase(),
-          transactionId,
-        }),
-        updateDoctorWalletBalance({
-          doctorId,
-          amount: parseFloat(newAccountBalance),
-        }),
-        getDoctorById(doctorId),
-        getPatientById(patientId),
-      ]);
+    await Promise.allSettled([
+      updateAppointmentPaymentStatus({
+        paymentId,
+        paymentStatus: status.toLowerCase(),
+        transactionId,
+      }),
+      updateDoctorWalletBalance({
+        doctorId,
+        amount: parseFloat(newAccountBalance),
+      }),
+    ]);
 
-    const { email: patientEmail, mobile_number: mobileNumber } = patient.value;
+    const [doctor, patient] = await Promise.allSettled([
+      getDoctorById(doctorId),
+      getPatientById(patientId),
+    ]);
+
+    const { mobile_number: mobileNumber } = patient.value;
     const {
       first_name: doctorFirstName,
       last_name: doctorLastName,
@@ -121,7 +115,7 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
     } = doctor.value;
 
     await Promise.allSettled([
-      //SEND  EMAIL TO DOCTOR
+      // SEND  EMAIL TO DOCTOR
       await newDoctorAppointmentEmail({
         doctorEmail,
         doctorName: `${doctorFirstName} ${doctorLastName}`,
@@ -157,11 +151,11 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
       return Response.BAD_REQUEST({ message: "Error Processing Request" });
     }
 
-    //TODO Check if the user canelling the payment is the authorized user that booked the appointment
+    //  Check if the user canelling the payment is the authorized user that booked the appointment
 
-    //Get appointment by UUID
+    // Get appointment by UUID
     const rawData = await getPatientAppointmentByUUID(consultationId);
-    //Check if the appointment exists
+    // Check if the appointment exists
     if (!rawData) {
       return Response.BAD_REQUEST({
         message: "Medical Appointment Not Found.",
@@ -172,9 +166,9 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
 
     const {
       payment_id: paymentId,
-      order_id: orderId,
-      amount_paid: amountPaid,
-      payment_token: paymentToken,
+      // order_id: orderId,
+      // amount_paid: amountPaid,
+      // payment_token: paymentToken,
       transaction_id: transactionID,
       payment_status: paymentStatus,
     } = await getAppointmentPaymentByAppointmentId(appointmentId);
@@ -189,16 +183,12 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
       return Response.NOT_MODIFIED();
     }
 
-    //Delete the apppointment and appointment paymetn from the database
+    // Delete the apppointment and appointment paymetn from the database
     await Promise.all([
       deleteAppointmentPaymentByAppointmentId({ appointmentId }),
       deleteAppointmentById({ appointmentId }),
     ]);
 
-    //TODO Send an email to the user that the appointment was not booked
-    // await paymentCanceledPatientAppointmentEmail({
-
-    // })
     return Response.SUCCESS({
       message: "Medical Appointment Cancelled Successfully.",
     });
