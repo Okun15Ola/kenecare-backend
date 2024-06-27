@@ -84,7 +84,6 @@ const requireUserAuth = async (req, res, next) => {
     if (userType === USERTYPE.DOCTOR) {
       const doctorProfile = await getDoctorByUserId(userId);
       if (!doctorProfile) {
-        // Return access token
         return Response.SUCCESS({
           message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
           data: {
@@ -117,6 +116,7 @@ const requireUserAuth = async (req, res, next) => {
 
     return next();
   } catch (error) {
+    console.log(error);
     if (error.message === "jwt expired") {
       return res.status(401).json(
         Response.UNAUTHORIZED({
