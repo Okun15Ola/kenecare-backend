@@ -106,7 +106,6 @@ exports.updateUserNotificationToken = ({ userId, notifToken }) => {
     connectionPool.query(sql, [notifToken, userId], (err, result) => {
       if (err) return reject(err);
 
-      console.log(result);
       return resolve(result);
     });
   });
