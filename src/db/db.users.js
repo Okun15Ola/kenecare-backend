@@ -100,7 +100,17 @@ exports.updateUserVerificationTokenById = ({ userId, token }) => {
     });
   });
 };
+exports.updateUserNotificationToken = ({ userId, notifToken }) => {
+  const sql = "UPDATE users SET notification_token = ? WHERE user_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [notifToken, userId], (err, result) => {
+      if (err) return reject(err);
 
+      console.log(result);
+      return resolve(result);
+    });
+  });
+};
 exports.updateUserMobileNumberById = ({ userId, mobileNumber }) => {
   const sql = "UPDATE users SET  mobile_number = ? WHERE user_id = ?;";
   return new Promise((resolve, reject) => {

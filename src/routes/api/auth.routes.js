@@ -13,6 +13,7 @@ const {
   SendVerificationOTPController,
   VerifyRequestedOTPController,
   UpdatePasswordController,
+  UpdatePushNotificationTokenController,
 } = require("../../controllers/auth.controller");
 const {
   LoginValidations,
@@ -26,6 +27,7 @@ const {
   getUserByMobileNumber,
   getUserByVerificationToken,
 } = require("../../db/db.users");
+const { validateExpoToken } = require("../../utils/auth.utils");
 
 // regex constants
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/;
@@ -188,5 +190,27 @@ router.put(
 );
 router.post("/otp-request", requireUserAuth, SendVerificationOTPController);
 router.post("/otp-request", requireUserAuth, VerifyRequestedOTPController);
+
+router.put(
+  "/notif-token",
+  requireUserAuth,
+  [
+    body("notification_token")
+      .notEmpty()
+      .withMessage("Push notification token is required")
+      .custom(async (value) => {
+        const isValidToken = validateExpoToken(value);
+
+        if (!isValidToken) {
+          throw new Error(
+            "Invalid Expo Notification Token. Please try again with a valid token.",
+          );
+        }
+        return true;
+      }),
+  ],
+  Validate,
+  UpdatePushNotificationTokenController,
+);
 
 module.exports = router;

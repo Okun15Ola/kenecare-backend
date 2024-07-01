@@ -2,6 +2,7 @@
 const bcryptjs = require("bcryptjs");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const { Expo } = require("expo-server-sdk");
 const {
   patientJwtSecret,
   adminJwtSecret,
@@ -84,6 +85,10 @@ const generateVerificationToken = () => {
   return formattedSixDigitNumber;
 };
 
+const validateExpoToken = (token) => {
+  return Expo.isExpoPushToken(token);
+};
+
 module.exports = {
   hashUsersPassword,
   comparePassword,
@@ -92,4 +97,5 @@ module.exports = {
   generateAdminJwtAccessToken,
   encryptText,
   decryptText,
+  validateExpoToken,
 };

@@ -9,6 +9,7 @@ const {
   sendAuthTokenSMS,
   sendPasswordResetSMS,
 } = require("../utils/sms.utils");
+// const { sendPushNotifications } = require("../utils/notification.utils");
 const Response = require("../utils/response.utils");
 
 exports.getUsers = async () => {
@@ -509,6 +510,24 @@ exports.updateUserPassword = async ({ newPassword, user }) => {
     });
   } catch (error) {
     console.error(error);
+    throw error;
+  }
+};
+
+exports.updatePushNotificationToken = async ({ token, user }) => {
+  try {
+    if (!user) {
+      return Response.BAD_REQUEST({
+        message: "User Not Found. Error Updating token",
+      });
+    }
+
+    const { id: userId } = user;
+    await dbObject.updateUserNotificationToken({ userId, notifToken: token });
+
+    return Response.SUCCESS({ message: "Token Updated Successfully" });
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 };

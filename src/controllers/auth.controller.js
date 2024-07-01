@@ -8,6 +8,7 @@ const {
   sendVerificationOTP,
   updateUserPassword,
   verifyRequestedOTP,
+  updatePushNotificationToken,
 } = require("../services/users.service");
 
 const Response = require("../utils/response.utils");
@@ -166,6 +167,19 @@ exports.VerifyRequestedOTPController = async (req, res, next) => {
     const { user } = req;
 
     const response = await resendVerificationOTP({ phoneNumber, user });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.UpdatePushNotificationTokenController = async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { notification_token: token } = req.body;
+    const response = await updatePushNotificationToken({ user, token });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
