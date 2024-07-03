@@ -2,6 +2,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { Expo } = require("expo-server-sdk");
 const axios = require("axios");
+const logger = require("../middlewares/logger.middleware");
 
 const expo = new Expo({ useFcmV1: false });
 const axiosConfig = {
@@ -78,47 +79,42 @@ const sendPushNotifications = async ({ tokens, data }) => {
   }
 };
 
-// const sendPushNotification = async (token) => {
-//   try {
-//     const message = {
-//       to: token,
-//       sound: "default",
-//       title: "Hello World!",
-//       body: "And this is the awesome body",
-//       data: { test: "Test Data" },
-//     };
+const sendPushNotification = async (notification) => {
+  try {
+    const { token, title, body, payload } = notification;
+    if (!Expo.isExpoPushToken(token)) return null;
+    const message = {
+      to: token,
+      sound: "default",
+      title,
+      body,
+      data: payload,
+    };
 
-//     axiosConfig.data = message;
-//     const { data } = await axios.request(axiosConfig).catch((error) => {
-//       console.error(error);
-//       throw error;
-//     });
-
-//     console.log(data);
-
-//     //  await axios.post("https://exp.host/--/api/v2/push/send", {
-//     //    headers: {
-//     //      Accept: "application/json",
-//     //      "Accept-encoding": "gzip, deflate",
-//     //      "Content-Type": "application/json",
-//     //    },
-//     //    body: JSON.stringify(message),
-//     //  });
-//   } catch (error) {
-//     console.log("Error Sending Push Notification: ", error);
-//   }
-// };
-// const tokens = ["ExponentPushToken[WKJu10OpuUwIMEU1f7JTma]"];
-// const token = "ExponentPushToken[WKJu10OpuUwIMEU1f7JTma]";
-
-// const data = {
-//   body: "Testing from Kenecare Server",
-// };
+    return await expo.sendPushNotificationsAsync([message]);
+  } catch (error) {
+    console.log("Error Sending Push Notification: ", error);
+    logger.error(error);
+    throw error;
+  }
+};
 
 // (async () => {
-//   await sendPushNotification(token);
+//   const token = "ExponentPushToken[WKJu10OpuUwIMEU1f7JTma]";
+//   const notification = {
+//     token,
+//     title: "New Patient Appointment",
+//     body: "Chinedum booked an appointment.",
+//     payload: {
+//       appointmentId: 1,
+//       appointmentDate: "2024-15-06",
+//     },
+//   };
+//   // const response = await sendPushNotification(notification);
+//   // console.log(response);
 // })();
 
 module.exports = {
   sendPushNotifications,
+  sendPushNotification,
 };

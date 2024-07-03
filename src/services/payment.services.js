@@ -7,7 +7,7 @@ const {
 
 const Response = require("../utils/response.utils");
 
-const { newDoctorAppointmentEmail } = require("../utils/email.utils");
+// const { newDoctorAppointmentEmail } = require("../utils/email.utils");
 const {
   updateAppointmentPaymentStatus,
   getAppointmentPaymentByAppointmentId,
@@ -16,11 +16,15 @@ const {
 const { checkTransactionStatus } = require("../utils/payment.utils");
 const { getPatientById } = require("../db/db.patients");
 const { getDoctorById } = require("../db/db.doctors");
-const { appointmentBookedSms } = require("../utils/sms.utils");
+const {
+  appointmentBookedSms,
+  doctorAppointmentBookedSms,
+} = require("../utils/sms.utils");
 const {
   updateDoctorWalletBalance,
   getCurrentWalletBalance,
 } = require("../db/db.doctor-wallet");
+const { sendPushNotification } = require("../utils/notification.utils");
 
 exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
   try {
@@ -41,8 +45,8 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       last_name: userLastName,
       doctor_id: doctorId,
       patient_name_on_prescription: patientNameOnPrescription,
-      patient_mobile_number: patientMobileNumber,
-      patient_symptoms: symptoms,
+      // patient_mobile_number: patientMobileNumber,
+      // patient_symptoms: symptoms,
       appointment_date: appointmentDate,
       appointment_time: appointmentTime,
     } = appointment;
@@ -107,25 +111,61 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       getPatientById(patientId),
     ]);
 
-    const { mobile_number: mobileNumber } = patient.value;
     const {
+      mobile_number: mobileNumber,
+      notification_token: patientNotificationToken,
+    } = patient.value;
+    const {
+      // email: doctorEmail,
       first_name: doctorFirstName,
       last_name: doctorLastName,
-      email: doctorEmail,
+      mobile_number: doctorMobileNumber,
+      notification_token: doctorNotificationToken,
     } = doctor.value;
+
+    // TODO SEND PUSH NOTIFICATION TO PATIENT AND DOCTOR
+    const patientNotification = {
+      token: patientNotificationToken,
+      title: "New Medical Appointment",
+      body: `New Medical Appointment With Dr. ${doctorFirstName}`,
+      payload: {
+        appointmentId,
+      },
+    };
+    const doctorNotification = {
+      token: doctorNotificationToken,
+      title: "New Medical Appointment",
+      body: `New Medical Apponintment With ${userFirstName}`,
+      payload: {
+        appointmentId,
+      },
+    };
+
+    console.log(patientNotification);
 
     await Promise.allSettled([
       // SEND  EMAIL TO DOCTOR
-      await newDoctorAppointmentEmail({
-        doctorEmail,
-        doctorName: `${doctorFirstName} ${doctorLastName}`,
-        appointmentDate,
-        appointmentTime,
+      // await newDoctorAppointmentEmail({
+      //   doctorEmail,
+      //   doctorName: `${doctorFirstName} ${doctorLastName}`,
+      //   appointmentDate,
+      //   appointmentTime,
+      //   patientNameOnPrescription,
+      //   patientMobileNumber,
+      //   symptoms,
+      // }),
+
+      //  SEND SMS AND PUSH NOTIFICATION TO DOCTOR
+      doctorAppointmentBookedSms({
+        mobileNumber: doctorMobileNumber,
+        doctorName: `${doctorLastName}`,
         patientNameOnPrescription,
-        patientMobileNumber,
-        symptoms,
+        appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+        appointmentTime,
       }),
-      // SEND SMS TO PATIENT
+      await sendPushNotification(doctorNotification),
+
+      // SEND SMS and PUSH NOTIFICATIN TO PATIENT
       await appointmentBookedSms({
         mobileNumber,
         patientName: `${userFirstName} ${userLastName}`,
@@ -134,11 +174,12 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
         appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
         appointmentTime,
       }),
+      await sendPushNotification(patientNotification),
     ]);
 
     return Response.CREATED({
       message:
-        "Appointment Created Successfully. A confirmation has been sent.",
+        "Appointment Created Successfully. A confirmation SMS has been sent.",
     });
   } catch (error) {
     console.error(error);
