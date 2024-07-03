@@ -19,12 +19,8 @@ const GetAppointmentPrescriptionsController = async (req, res, next) => {
 const GetAppointmentPrescriptionController = async (req, res, next) => {
   try {
     const presId = parseInt(req.params.id, 10);
-    const { token: accessToken } = req.body;
 
-    const response = await getAppointmentPrescriptionById({
-      presId,
-      accessToken,
-    });
+    const response = await getAppointmentPrescriptionById(presId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

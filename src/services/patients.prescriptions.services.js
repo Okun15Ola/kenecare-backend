@@ -4,7 +4,7 @@ const {
   getAppointmentPrescriptionById,
 } = require("../db/db.prescriptions");
 const Response = require("../utils/response.utils");
-const { decryptText, comparePassword } = require("../utils/auth.utils");
+const { decryptText } = require("../utils/auth.utils");
 // const {
 //   getPatientAppointmentById,
 //   getAppointmentByID,
@@ -36,7 +36,7 @@ exports.getAppointmentPrescriptions = async (id) => {
   }
 };
 
-exports.getAppointmentPrescriptionById = async ({ presId, accessToken }) => {
+exports.getAppointmentPrescriptionById = async (presId) => {
   try {
     const prescription = await getAppointmentPrescriptionById(presId);
 
@@ -46,18 +46,6 @@ exports.getAppointmentPrescriptionById = async ({ presId, accessToken }) => {
       });
     }
     const { access_jwt: hashedToken } = prescription;
-
-    // Check accesstoken
-    const isTokenMatch = await comparePassword({
-      plainPassword: accessToken,
-      hashedPassword: hashedToken,
-    });
-
-    if (!isTokenMatch) {
-      return Response.BAD_REQUEST({
-        message: "Invalid prescription access token",
-      });
-    }
 
     const {
       prescription_id: prescriptionId,
