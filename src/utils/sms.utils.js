@@ -64,7 +64,7 @@ const sendPrescriptionToken = async ({ token, doctorName, mobileNumber }) => {
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Your KENECARE Medical Prescription from Dr. ${doctorName} is ready.\n\nUse this token: ${token} to access your medical prescription.\n\nDo not share this token with anyone, not even the KENECARE TEAM. `,
+      content: `Your KENECARE Medical Prescription from Dr. ${doctorName} is ready.\n\nUse this token: ${token} to access your medical prescription.\n\nDo not share this token with anyone, not even the KENECARE. `,
     });
 
     config.data = data;
@@ -90,7 +90,7 @@ const appointmentApprovalSms = async ({
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Dear ${patientName}, your appointment with Dr. ${doctorName} has been approved.\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nAn Email notification will be sent 30 minutes before the scheduled appointment with link to join the virtual meeting.\n\nKENECARE TEAM`,
+      content: `Dear ${patientName}, your medical appointment with Dr. ${doctorName} has been approved.\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nKENECARE`,
     });
 
     config.data = data;
@@ -116,7 +116,7 @@ const appointmentPostponedSms = async ({
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Dear ${patientName}, your appointment with Dr. ${doctorName} has been postponed to a new date.\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nAn Email notification will be sent 30 minutes before the scheduled appointment with link to join the virtual meeting.\n\nKENECARE TEAM`,
+      content: `Dear ${patientName}, your appointment with Dr. ${doctorName} has been postponed to a new date.\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nKENECARE`,
     });
 
     config.data = data;
@@ -142,7 +142,7 @@ const appointmentBookedSms = async ({
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Dear ${patientName}, you have successfully booked a medical appointment with Dr. ${doctorName}\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nAn Email notification will be sent 30 minutes before the scheduled appointment with link to join the virtual meeting.\n\nKENECARE TEAM`,
+      content: `Dear ${patientName}, you have successfully booked a medical appointment with Dr. ${doctorName}\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nKENECARE `,
     });
 
     config.data = data;
@@ -155,19 +155,48 @@ const appointmentBookedSms = async ({
   }
 };
 
+const doctorAppointmentBookedSms = async ({
+  mobileNumber,
+  doctorName,
+  patientNameOnPrescription,
+  appointmentDate,
+  appointmentTime,
+}) => {
+  try {
+    if (mobileNumber) {
+      const data = JSON.stringify({
+        from: "KENECARE",
+        reference: "KENECARE",
+        to: mobileNumber,
+        content: `Dear Dr. ${doctorName}, you have a new medical appointment with ${patientNameOnPrescription.toUpperCase()}.\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}.\n\nKENECARE `,
+      });
+
+      config.data = data;
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
   try {
-    const data = JSON.stringify({
-      from: "KENECARE",
-      reference: "KENECARE",
-      to: mobileNumber,
-      content: `Good news Dr. ${doctorName}. Your KENECARE doctor profile has been approved.\n\nYou can now start receiving medical appointments from patients. Welcome aboard\n\nKENECARE TEAM`,
-    });
+    if (mobileNumber) {
+      const data = JSON.stringify({
+        from: "KENECARE",
+        reference: "KENECARE",
+        to: mobileNumber,
+        content: `Good news Dr. ${doctorName}. Your KENECARE doctor profile has been approved.\n\nYou can now start receiving medical appointments from patients. Welcome aboard\n\nKENECARE TEAM`,
+      });
 
-    config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+      config.data = data;
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     console.error(error);
     throw error;
@@ -180,17 +209,19 @@ const documentSharedWithDoctorSMS = async ({
   patientName,
 }) => {
   try {
-    const data = JSON.stringify({
-      from: "KENECARE",
-      reference: "KENECARE",
-      to: mobileNumber,
-      content: `Hi! Dr. ${doctorName}.\n\n${patientName} just shared a medical document with you. Login to your dashboard to access medical document`,
-    });
+    if (mobileNumber) {
+      const data = JSON.stringify({
+        from: "KENECARE",
+        reference: "KENECARE",
+        to: mobileNumber,
+        content: `Hi! Dr. ${doctorName}.\n\n${patientName} just shared a medical document with you. Login to your dashboard to access medical document`,
+      });
 
-    config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+      config.data = data;
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     console.error(error);
     throw error;
@@ -239,6 +270,7 @@ module.exports = {
   appointmentApprovalSms,
   appointmentPostponedSms,
   appointmentBookedSms,
+  doctorAppointmentBookedSms,
   doctorProfileApprovalSms,
   documentSharedWithDoctorSMS,
   withdrawalApprovedSMS,
