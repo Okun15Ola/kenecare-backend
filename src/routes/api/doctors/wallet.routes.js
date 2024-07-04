@@ -6,12 +6,12 @@ const {
   RequestWithdrawalController,
 } = require("../../../controllers/doctors/wallet.controller");
 const { Validate } = require("../../../validations/validate");
-const { limiter: rateLimit } = require("../../../utils/rate-limit.utils");
+// const { limiter: rateLimit } = require("../../../utils/rate-limit.utils");
 const { getDoctorByUserId } = require("../../../db/db.doctors");
 const { getWalletByDoctorId } = require("../../../db/db.doctor-wallet");
 const { comparePassword } = require("../../../utils/auth.utils");
 
-rateLimit(router);
+// rateLimit(router);
 router.get("/", GetDoctorWalletController);
 router.post(
   "/withdrawal",
