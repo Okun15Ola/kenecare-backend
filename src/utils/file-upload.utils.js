@@ -43,14 +43,23 @@ const fileFilter = (req, file, cb) => {
   const allowedExtension = filetypes.test(
     path.extname(file.originalname).toLowerCase(),
   );
+  const fileSize = req.headers["content-length"];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
   const allowedMimetypes = filetypes.test(file.mimetype);
   if (allowedExtension && allowedMimetypes) {
-    return cb(null, true);
+    //  Check the file size
+    if (fileSize <= MAX_FILE_SIZE) return cb(null, true);
+
+    const error = new Error("Uploaded file exceeds the 10MB limit");
+    error.code = "FILE_TOO_LARGE";
+    return cb(error, false);
   }
-  const error = new Error("Invalid File Type");
+  const error = new Error(
+    "Invalid file type. Expected types: .jpeg, .jpg, .png, .pdf.",
+  );
+
   error.code = "INVALID_FILE_TYPE";
-  error.message =
-    "INVALID FILE TYPE. Expected File Type: *.jpeg | *.jpg | *.png | *.pdf.";
   return cb(error, false);
 };
 
@@ -75,7 +84,7 @@ const localProfilePictureStore = multer.diskStorage({
 const tempUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fieldSize: 1024 * 1024 * 5,
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter,
 });
@@ -83,14 +92,14 @@ const tempUpload = multer({
 const localMediaUploader = multer({
   storage: localMediaStore,
   limits: {
-    fileSize: 1024 * 1024 * 5,
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter,
 });
 const localProfilePicUploader = multer({
   storage: localProfilePictureStore,
   limits: {
-    fileSize: 1024 * 1024 * 5,
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter,
 });
