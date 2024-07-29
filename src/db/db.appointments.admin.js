@@ -11,6 +11,19 @@ exports.getAllAppointments = ({ page = 1, limit = 10 }) => {
     connectionPool.query(sql, (error, results) => {
       if (error) return reject(error);
 
+      console.log(results.length);
+      return resolve(results);
+    });
+  });
+};
+exports.getAppointments = () => {
+  const sql =
+    "SELECT appointment_id,appointment_uuid, patients.patient_id,patients.first_name, patients.last_name, doctors.doctor_id, doctors.first_name as 'doc_first_name', doctors.last_name as 'doc_last_name', medical_appointments.consultation_fee, appointment_type, appointment_date, appointment_time, time_slot_id, patient_name_on_prescription, patient_mobile_number, patient_symptoms,  speciality_name,meeting_id, start_time, end_time, appointment_status,cancelled_reason,cancelled_at,canceled_by,postponed_by,postponed_date,postponed_reason,medical_appointments.created_at, medical_appointments.updated_at FROM medical_appointments INNER JOIN patients on medical_appointments.patient_id = patients.patient_id INNER JOIN doctors on medical_appointments.doctor_id = doctors.doctor_id INNER JOIN medical_specialities on medical_appointments.speciality_id = medical_specialities.speciality_id ORDER BY appointment_id ASC;";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, (error, results) => {
+      if (error) return reject(error);
+
       return resolve(results);
     });
   });

@@ -1,5 +1,6 @@
 const moment = require("moment");
 const { v4: uuidv4 } = require("uuid");
+const logger = require("../middlewares/logger.middleware");
 const dbObject = require("../db/db.appointments.patients");
 const {
   getPatientByUserId,
@@ -21,7 +22,6 @@ const { getPaymentURL } = require("../utils/payment.utils");
 exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
     const patient = await getPatientByUserId(userId);
-    console.log(patient);
 
     if (!patient) {
       return Response.NOT_FOUND({
@@ -110,7 +110,7 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
 
     return Response.SUCCESS({ data: appointments });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -198,6 +198,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
 
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
+    logger.error(error);
     console.error(error);
     throw error;
   }
@@ -287,6 +288,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
     console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -405,6 +407,7 @@ exports.createPatientAppointment = async ({
     });
   } catch (error) {
     console.log(error);
+    logger.error(error);
     throw error;
   }
 };

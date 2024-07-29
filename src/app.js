@@ -3,15 +3,16 @@ const express = require("express");
 const crypto = require("crypto");
 const cors = require("cors");
 const helmet = require("helmet");
-const expressSession = require("express-session");
+// const expressSession = require("express-session");
 const path = require("path");
 const bodyParser = require("body-parser");
 const moment = require("moment");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
-const { sessionSecret } = require("./config/default.config");
+// const { sessionSecret } = require("./config/default.config");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
+const { runCron } = require("./utils/cron.utils");
 const {
   requireUserAuth,
   requireAdminAuth,
@@ -70,7 +71,7 @@ const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings");
 const { getAppointmentByMeetingId } = require("./db/db.appointments.doctors");
 
 const app = express();
-
+runCron();
 app.disable("x-powered-by");
 app.use(cors());
 app.use(
@@ -96,13 +97,13 @@ app.use(
   express.static(path.join(__dirname, "public/upload/media")),
 );
 
-app.use(
-  expressSession({
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: true,
-  }),
-);
+// app.use(
+//   expressSession({
+//     secret: sessionSecret,
+//     resave: false,
+//     saveUninitialized: true,
+//   }),
+// );
 
 app.use("/api/v1/health-check", (req, res) =>
   res
@@ -287,15 +288,15 @@ app.use((req, res, next) => {
   next(err);
 });
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   logger.error("An unexpected error occured: ", err);
 
   let statusCode = 500;
   let errorMessage = "Internal Server Error";
 
-  if (err.code === "LIMIT_FILE_SIZE") {
+  if (err.code === "FILE_TOO_LARGE") {
     statusCode = 400;
-    errorMessage = "Select File Size too large. Max File Size: 5MB";
+    errorMessage = "Select File Size too large. Max File Size: 10MB";
 
     return res.status(statusCode).json(BAD_REQUEST({ message: errorMessage }));
   }
@@ -314,10 +315,13 @@ app.use((err, req, res) => {
 
     return res.status(statusCode).json(NOT_FOUND({ message: errorMessage }));
   }
+  if (err.statusCode === 500) {
+    return res
+      .status(statusCode)
+      .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
+  }
 
-  return res
-    .status(statusCode)
-    .json(INTERNAL_SERVER_ERROR({ message: errorMessage }));
+  return next();
 });
 
 module.exports = app;
