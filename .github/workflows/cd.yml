@@ -18,6 +18,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Login to docker hub
+        run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD 
+
       - name: Remove old running containers
         run: docker rm -f kenecare-api-staging  || true
 
