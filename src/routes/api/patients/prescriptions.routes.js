@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { param, body } = require("express-validator");
+const { param, query } = require("express-validator");
 const {
   GetAppointmentPrescriptionController,
   GetAppointmentPrescriptionsController,
@@ -16,8 +16,7 @@ const {
 } = require("../../../db/db.appointments.patients");
 const { comparePassword } = require("../../../utils/auth.utils");
 const Response = require("../../../utils/response.utils");
-
-let prescription = null;
+const logger = require("../../../middlewares/logger.middleware");
 
 router.get(
   "/appointment/:id",
@@ -25,7 +24,9 @@ router.get(
     param("id")
       .notEmpty()
       .withMessage("Appointment ID is required")
+      .bail()
       .isInt("Invalid Appoitment ID")
+      .bail()
       .trim()
       .escape()
       .custom(async (value, { req }) => {
@@ -55,17 +56,18 @@ router.get(
     param("id")
       .notEmpty()
       .withMessage("Prescription ID is required")
+      .bail()
       .trim()
       .escape()
       .custom(async (value, { req }) => {
-        prescription = await getAppointmentPrescriptionById(value);
+        const prescription = await getAppointmentPrescriptionById(value);
         if (!prescription) {
           throw new Error("Prescription not found");
         }
 
         const patient = await getPatientByUserId(req.user.id);
         if (!patient) {
-          throw new Error("Unauthorized Resource Access.");
+          return new Error("Unauthorized Resource Access.");
         }
         const { patient_id: patientId } = patient;
         const { appointment_id: appointmentId } = prescription;
@@ -74,31 +76,46 @@ router.get(
           appointmentId,
         });
         if (!appointment) {
-          throw new Error("Unauthorized Resource Access.");
+          return new Error("Unauthorized Resource Access.");
         }
 
         return true;
-      }),
-    body("token")
+      })
+      .bail(),
+    query("token")
       .notEmpty()
       .withMessage("Prescription Access Token is required")
-      .custom(async (value) => {
-        const { access_jwt: hashedToken } = prescription;
+      .bail()
+      .custom(async (value, { req }) => {
+        const prescription = await getAppointmentPrescriptionById(
+          req.params.id,
+        );
+        if (prescription) {
+          const { access_jwt: hashedToken } = prescription;
 
-        // Check accesstoken
-        const isTokenMatch = await comparePassword({
-          plainPassword: value,
-          hashedPassword: hashedToken,
-        }).catch((error) => {
-          if (error) throw error;
-        });
+          // Check accesstoken
+          if (!hashedToken) {
+            throw new Error("Unauthorized Resource Access.");
+          }
 
-        if (!isTokenMatch) {
-          return Response.BAD_REQUEST({
-            message: "Invalid prescription access token",
+          const isTokenMatch = await comparePassword({
+            plainPassword: value,
+            hashedPassword: hashedToken,
+          }).catch((error) => {
+            if (error) {
+              logger.error(error);
+              throw new Error("Invalid Prescription Access Token");
+            }
           });
+
+          if (!isTokenMatch) {
+            return Response.BAD_REQUEST({
+              message: "Invalid prescription Access Token",
+            });
+          }
+          return true;
         }
-        return true;
+        return false;
       }),
   ],
   Validate,
