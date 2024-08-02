@@ -67,7 +67,8 @@ const getObjectFromS3Bucket = async (fileName) => {
     };
     const command = new GetObjectCommand(params);
     const response = await s3Client.send(command);
-    return response.Body;
+
+    return await response.Body.transformToByteArray();
   } catch (error) {
     console.log(error);
     throw error;

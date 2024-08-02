@@ -102,6 +102,51 @@ const appointmentApprovalSms = async ({
     throw error;
   }
 };
+const appointmentStartedSms = async ({
+  patientName,
+  mobileNumber,
+  doctorName,
+  meetingJoinUrl,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear ${patientName}, your medical appointment with Dr. ${doctorName} has started.\n\nUse the link below to join the conversation\n\n${meetingJoinUrl}\n\nKENECARE`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+const appointmentEndedSms = async ({
+  patientName,
+  mobileNumber,
+  doctorName,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear ${patientName}, your medical appointment with Dr. ${doctorName} has completed.\n\nThank you for choosing kenecare. Please don't forget to leave a review and rating for the appointment and doctor.\n\nKENECARE`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 const appointmentPostponedSms = async ({
   patientName,
@@ -268,6 +313,8 @@ module.exports = {
   sendAuthTokenSMS,
   sendPrescriptionToken,
   appointmentApprovalSms,
+  appointmentStartedSms,
+  appointmentEndedSms,
   appointmentPostponedSms,
   appointmentBookedSms,
   doctorAppointmentBookedSms,
