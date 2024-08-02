@@ -62,18 +62,12 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
   try {
     const { password } = await getUserById(userId);
     const patient = await getPatientByUserId(userId);
-    if (!patient) {
-      return Response.NOT_FOUND({ message: "Patient Record Not Found" });
-    }
+
     const { patient_id: patientId } = patient;
     const rawData = await getPatientMedicalDocumentByDocumentId({
       documentId: docId,
       patientId,
     });
-
-    if (!rawData) {
-      return Response.NOT_FOUND({ message: "Medical Record Not Found" });
-    }
 
     const {
       medical_document_id: documentId,
