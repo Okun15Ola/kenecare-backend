@@ -7,6 +7,7 @@ const {
   cancelDoctorAppointment,
   startDoctorAppointment,
   getDoctorAppointmentByDateRange,
+  endDoctorAppointment,
 } = require("../../services/doctor.appointments.services");
 
 exports.GetDoctorAppointmentsController = async (req, res, next) => {
@@ -106,6 +107,22 @@ exports.StartDoctorAppointmentController = async (req, res, next) => {
     const appointmentId = parseInt(req.params.id, 10);
 
     const response = await startDoctorAppointment({
+      userId,
+      appointmentId,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    return next(error);
+  }
+};
+exports.EndDoctorAppointmentController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const appointmentId = parseInt(req.params.id, 10);
+
+    const response = await endDoctorAppointment({
       userId,
       appointmentId,
     });

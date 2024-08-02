@@ -394,7 +394,7 @@ exports.createPatientAppointment = async ({
       appointmentId,
       amountPaid: consultationFee,
       orderId: genUUID,
-      paymentMethod: "ORNAGE MONEY",
+      paymentMethod: "ORANGE MONEY",
       paymentToken,
       notificationToken,
     });
@@ -407,7 +407,7 @@ exports.createPatientAppointment = async ({
     });
   } catch (error) {
     console.log(error);
-    logger.error(error);
+    logger.error("Create Appointment Error", error);
     throw error;
   }
 };

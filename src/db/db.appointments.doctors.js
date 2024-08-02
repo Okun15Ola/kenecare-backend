@@ -43,13 +43,25 @@ exports.getAppointmentByMeetingId = (meetingId) => {
   });
 };
 
-exports.approveDoctorAppointmentById = ({
+exports.approveDoctorAppointmentById = ({ doctorId, appointmentId }) => {
+  const sql =
+    "UPDATE medical_appointments SET appointment_status = 'approved', cancelled_reason = NULL, cancelled_at = NULL, canceled_by = NULL, postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL WHERE appointment_id = ? AND doctor_id = ?;";
+
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [appointmentId, doctorId], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results);
+    });
+  });
+};
+exports.updateDoctorAppointmentMeetingId = ({
   doctorId,
   appointmentId,
   meetingId,
 }) => {
   const sql =
-    "UPDATE medical_appointments SET appointment_status = 'approved', meeting_id = ?, cancelled_reason = NULL, cancelled_at = NULL, canceled_by = NULL, postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL WHERE appointment_id = ? AND doctor_id = ?;";
+    "UPDATE medical_appointments SET meeting_id = ? WHERE appointment_id = ? AND doctor_id = ?;";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(
@@ -63,9 +75,9 @@ exports.approveDoctorAppointmentById = ({
     );
   });
 };
-exports.updateAppointmentStartTime = ({ appointmentId, startTime }) => {
+exports.updateDoctorAppointmentStartTime = ({ appointmentId, startTime }) => {
   const sql =
-    "UPDATE medical_appointments SET start_time = ? WHERE appointment_id = ?;";
+    "UPDATE medical_appointments SET start_time = ?, appointment_status = 'started' WHERE appointment_id = ?;";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [startTime, appointmentId], (error, results) => {

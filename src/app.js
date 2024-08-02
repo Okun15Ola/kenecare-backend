@@ -16,6 +16,7 @@ const { runCron } = require("./utils/cron.utils");
 const {
   requireUserAuth,
   requireAdminAuth,
+  requireDoctorAuth,
 } = require("./middlewares/auth.middleware");
 const {
   NOT_FOUND,
@@ -206,6 +207,7 @@ app.use(
 app.use(
   "/api/v1/doctors/appointments",
   requireUserAuth,
+  requireDoctorAuth,
   doctorsAppointmentRouter,
 );
 

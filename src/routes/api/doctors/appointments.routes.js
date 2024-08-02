@@ -8,6 +8,7 @@ const {
   ApproveDoctorAppointmentController,
   PostponeDoctorAppointmentController,
   StartDoctorAppointmentController,
+  EndDoctorAppointmentController,
 } = require("../../../controllers/doctors/appointments.controller");
 const {
   getDoctorAppointmentById,
@@ -70,5 +71,6 @@ router.patch(
   PostponeDoctorAppointmentController,
 );
 router.patch("/:id/start", StartDoctorAppointmentController);
+router.patch("/:id/end", EndDoctorAppointmentController);
 
 module.exports = router;

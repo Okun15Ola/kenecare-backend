@@ -9,7 +9,10 @@ const { createZoomMeeting } = require("../utils/zoom.utils");
 const {
   appointmentApprovalSms,
   appointmentPostponedSms,
+  appointmentStartedSms,
+  appointmentEndedSms,
 } = require("../utils/sms.utils");
+const logger = require("../middlewares/logger.middleware");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
@@ -355,36 +358,35 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       return Response.NOT_MODIFIED();
     }
 
-    // TODO GENERATE ZOOM MEETING LINK
-    const {
-      zoomMeetingID,
-      zoomMeetingUUID,
-      zoomMeetingTopic,
-      zoomMeetingJoinURL,
-      zoomMeetingStartURL,
-      zoomMeetingEncPassword,
-    } = await createZoomMeeting({
-      patientName: patientNameOnPrescription,
-      appointmentDate,
-      appointmentStartTime: appointmentTime,
-      doctorName: `${doctorFirstName} ${doctorLastName}`,
-    });
+    // const {
+    //   zoomMeetingID,
+    //   zoomMeetingUUID,
+    //   zoomMeetingTopic,
+    //   zoomMeetingJoinURL,
+    //   zoomMeetingStartURL,
+    //   zoomMeetingEncPassword,
+    // } = await createZoomMeeting({
+    //   patientName: patientNameOnPrescription,
+    //   appointmentDate,
+    //   appointmentStartTime: appointmentTime,
+    //   doctorName: `${doctorFirstName} ${doctorLastName}`,
+    // });
 
     //  INSERT ZOOM MEETING INFO TO DATABASE
-    const { insertId: meetingId } = await dbObject.createNewZoomMeeting({
-      meetingId: zoomMeetingID.toString(),
-      meetingUUID: zoomMeetingUUID,
-      meetingTopic: zoomMeetingTopic,
-      joinUrl: zoomMeetingJoinURL,
-      startUrl: zoomMeetingStartURL,
-      encryptedPassword: zoomMeetingEncPassword,
-    });
+    // const { insertId: meetingId } =
+    // await dbObject.createNewZoomMeeting({
+    //   meetingId: zoomMeetingID.toString(),
+    //   meetingUUID: zoomMeetingUUID,
+    //   meetingTopic: zoomMeetingTopic,
+    //   joinUrl: zoomMeetingJoinURL,
+    //   startUrl: zoomMeetingStartURL,
+    //   encryptedPassword: zoomMeetingEncPassword,
+    // });
 
     const [, patient] = await Promise.allSettled([
       dbObject.approveDoctorAppointmentById({
         appointmentId,
         doctorId,
-        meetingId,
       }),
       getPatientById(patientId),
     ]);
@@ -411,70 +413,185 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
 
 exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
   try {
-    const user = await getUserById(userId);
-
-    if (!user) {
-      return Response.NOT_FOUND({ message: "User Not Found" });
-    }
-
-    const { user_type: userType } = user;
-
-    if (userType !== USERTYPE.DOCTOR) {
-      return Response.UNAUTHORIZED({
-        message:
-          "Unauthorized access. You must register as a doctor to perform this action",
-      });
-    }
-
     const doctor = await getDoctorByUserId(userId);
-
     if (!doctor) {
-      return Response.NOT_FOUND({
-        message:
-          "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
-      });
-    }
-    const { is_profile_approved: isProfileApproved, doctor_id: doctorId } =
-      doctor;
-
-    if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
       return Response.UNAUTHORIZED({
-        message:
-          "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
+        message: "Action can only be performed by a doctor",
       });
     }
-
+    const {
+      doctor_id: doctorId,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
+    } = doctor;
     // Get doctor's appointment by ID
-    const rawData = await dbObject.getDoctorAppointmentById({
+    const appointment = await dbObject.getDoctorAppointmentById({
       doctorId,
       appointmentId,
     });
 
     // Check if the appointment exists
-    if (!rawData) {
+    if (!appointment) {
       return Response.NOT_FOUND({
-        message: "Specified Appointment Not Found! Please Try Again!",
+        message: "Appointment Not Found! Please Try Again!",
       });
     }
 
     // Extract patient id from appointment to get patient email
-    const { patient_id: patientId, appointment_status: appointmentStatus } =
-      rawData;
+    const {
+      patient_id: patientId,
+      first_name: firstName,
+      last_name: lastName,
+      patient_name_on_prescription: patientNameOnPrescription,
+      appointment_date: appointmentDate,
+      appointment_time: appointmentTime,
+      appointment_status: appointmentStatus,
+    } = appointment;
 
-    console.log(patientId);
+    if (appointmentStatus === "started") {
+      return Response.NOT_MODIFIED();
+    }
+    if (appointmentStatus === "completed") {
+      return Response.BAD_REQUEST({
+        message: "Cannot start an appointment that has already been completed",
+      });
+    }
     if (appointmentStatus !== "approved") {
-      // UPDATE appointment status to 'approved'
-      await dbObject.approveDoctorAppointmentById({
-        appointmentId,
-        doctorId,
+      return Response.BAD_REQUEST({
+        message: "Appointment must be approved before starting consultation.",
       });
     }
 
-    // TODO Send a notification(email,sms) to the user
+    // Check if the date is not an old date
+    const today = moment().format("YYYY-MM-DD");
+    const appointmentMoment = moment(appointmentDate, "YYYY-MM-DD", true);
 
-    return Response.SUCCESS({ message: "Appointment Approved Successfully" });
+    if (appointmentMoment.isBefore(today)) {
+      return Response.BAD_REQUEST({
+        message:
+          "Appointment is overdue, please postpone the appointment to an earlier date and start consultation.",
+      });
+    }
+
+    if (appointmentMoment.isAfter(today)) {
+      return Response.BAD_REQUEST({
+        message: "Cannot Start an appointment before the scheduled date",
+      });
+    }
+
+    const {
+      zoomMeetingID,
+      zoomMeetingUUID,
+      zoomMeetingTopic,
+      zoomMeetingJoinURL,
+      zoomMeetingStartURL,
+      zoomMeetingEncPassword,
+    } = await createZoomMeeting({
+      patientName: patientNameOnPrescription,
+      appointmentDate,
+      appointmentStartTime: appointmentTime,
+      doctorName: `${doctorFirstName} ${doctorLastName}`,
+    });
+
+    const [, patient] = await Promise.allSettled([
+      dbObject.createNewZoomMeeting({
+        meetingId: zoomMeetingID.toString(),
+        meetingUUID: zoomMeetingUUID,
+        meetingTopic: zoomMeetingTopic,
+        joinUrl: zoomMeetingJoinURL,
+        startUrl: zoomMeetingStartURL,
+        encryptedPassword: zoomMeetingEncPassword,
+      }),
+      getPatientById(patientId),
+      dbObject.updateDoctorAppointmentStartTime({
+        appointmentId,
+        startTime: moment().format("HH:mm:ss"),
+      }),
+    ]);
+
+    //  Send a notification(sms) to the user
+    const { mobile_number: mobileNumber } = patient.value;
+    await appointmentStartedSms({
+      doctorName: `${doctorFirstName} ${doctorLastName}`,
+      patientName: `${firstName} ${lastName}`,
+      mobileNumber,
+      meetingJoinUrl: zoomMeetingJoinURL,
+    });
+
+    return Response.SUCCESS({
+      message: "Appointment Started Successfully",
+      data: {
+        meetingStartUrl: zoomMeetingStartURL,
+        meetingJoinUrl: zoomMeetingJoinURL,
+      },
+    });
   } catch (error) {
     console.log(error);
+    throw error;
+  }
+};
+
+exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
+  try {
+    const doctor = await getDoctorByUserId(userId);
+    if (!doctor) {
+      return Response.UNAUTHORIZED({
+        message: "Action can only be performed by a doctor",
+      });
+    }
+    const {
+      doctor_id: doctorId,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
+    } = doctor;
+    // Get doctor's appointment by ID
+    const appointment = await dbObject.getDoctorAppointmentById({
+      doctorId,
+      appointmentId,
+    });
+
+    // Check if the appointment exists
+    if (!appointment) {
+      return Response.NOT_FOUND({
+        message: "Appointment Not Found! Please Try Again!",
+      });
+    }
+
+    // Extract patient id from appointment to get patient email
+    const {
+      patient_id: patientId,
+      first_name: firstName,
+      last_name: lastName,
+      appointment_status: appointmentStatus,
+    } = appointment;
+
+    if (appointmentStatus === "completed") {
+      return Response.NOT_MODIFIED();
+    }
+
+    const [patient] = await Promise.allSettled([
+      getPatientById(patientId),
+      dbObject.updateAppointmentEndTime({
+        appointmentId,
+        endTime: moment().format("HH:mm:ss"),
+      }),
+    ]);
+
+    //  Send a notification(sms) to the user
+    const { mobile_number: mobileNumber } = patient.value;
+
+    await appointmentEndedSms({
+      doctorName: `${doctorFirstName} ${doctorLastName}`,
+      patientName: `${firstName} ${lastName}`,
+      mobileNumber,
+    });
+
+    return Response.SUCCESS({
+      message: "Appointment Ended Successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    logger.error("APPOINTMENT END ERROR:", error);
     throw error;
   }
 };

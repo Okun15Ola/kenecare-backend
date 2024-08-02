@@ -17,6 +17,7 @@ const { getUserById, updateUserAccountStatusById } = require("../db/db.users");
 const { getDoctorByUserId } = require("../db/db.doctors");
 const { getPatientByUserId } = require("../db/db.patients");
 const { generateUsersJwtAccessToken } = require("../utils/auth.utils");
+const logger = require("./logger.middleware");
 
 const getAuthToken = (req) => {
   const authorizationHeader = req.headers.authorization;
@@ -55,18 +56,21 @@ const requireUserAuth = async (req, res, next) => {
       is_account_active: isAccountActive,
       user_type: userType,
     } = user;
+
     if (isVerified !== VERIFICATIONSTATUS.VERIFIED) {
       return res.status(401).json(
         Response.UNAUTHORIZED({
-          message: "Account Not Verified. Please Verify Account",
+          errorCode: "USER_ACCOUNT_UNVERIFIED",
+          message: "User Account Not Verified. Please Verify Account",
         }),
       );
     }
     if (isAccountActive !== STATUS.ACTIVE) {
       return res.status(401).json(
         Response.UNAUTHORIZED({
+          errorCode: "USER_ACCOUNT_INACTIVE",
           message:
-            "Account InActive. Please Contact KENECARE SUPPORT for further instruction.",
+            "User Account InActive. Please Contact KENECARE SUPPORT for further instruction.",
         }),
       );
     }
@@ -84,30 +88,34 @@ const requireUserAuth = async (req, res, next) => {
     if (userType === USERTYPE.DOCTOR) {
       const doctorProfile = await getDoctorByUserId(userId);
       if (!doctorProfile) {
-        return Response.SUCCESS({
-          message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
-          data: {
-            token: accessJwt,
-            type: userType,
-            isVerified,
-            isActive: isAccountActive,
-          },
-        });
+        return res.status(404).json(
+          Response.SUCCESS({
+            message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
+            data: {
+              token: accessJwt,
+              type: userType,
+              isVerified,
+              isActive: isAccountActive,
+            },
+          }),
+        );
       }
     }
 
     if (userType === USERTYPE.PATIENT) {
       const patientProfile = await getPatientByUserId(userId);
       if (!patientProfile) {
-        return Response.SUCCESS({
-          message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
-          data: {
-            token: accessJwt,
-            type: userType,
-            isVerified,
-            isActive: isAccountActive,
-          },
-        });
+        return res.status(404).json(
+          Response.SUCCESS({
+            message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
+            data: {
+              token: accessJwt,
+              type: userType,
+              isVerified,
+              isActive: isAccountActive,
+            },
+          }),
+        );
       }
     }
     req.user = {
@@ -116,7 +124,7 @@ const requireUserAuth = async (req, res, next) => {
 
     return next();
   } catch (error) {
-    console.log(error);
+    logger.error("User Authentication Error", error);
     if (error.message === "jwt expired") {
       return res.status(401).json(
         Response.UNAUTHORIZED({
@@ -134,92 +142,25 @@ const requireUserAuth = async (req, res, next) => {
 
 const requireDoctorAuth = async (req, res, next) => {
   try {
-    const token = getAuthToken(req);
-
-    if (!token) {
-      return res.status(400).json(
-        Response.BAD_REQUEST({
-          message: "Invalid/Missing Authentication Token",
+    const doctorProfile = await getDoctorByUserId(req.user.id);
+    if (!doctorProfile) {
+      return res.status(404).json(
+        Response.NOT_FOUND({
+          message: "Doctor Profile Not FounD",
         }),
       );
     }
-    const decoded = jwt.verify(token, patientJwtSecret, {
-      audience: jwtAudience,
-      issuer: jwtIssuer,
-    });
-
-    const user = await getUserById(decoded.sub);
-    if (!user) {
-      return Response.BAD_REQUEST({ message: "An Unexpected Error Occured" });
-    }
-    const {
-      user_id: userId,
-      is_verified: isVerified,
-      is_account_active: isAccountActive,
-      user_type: userType,
-    } = user;
-    if (isVerified !== VERIFICATIONSTATUS.VERIFIED) {
-      return res.status(401).json(
-        Response.UNAUTHORIZED({
-          message: "Account Not Verified. Please Verify Account",
-        }),
-      );
-    }
-    if (isAccountActive !== STATUS.ACTIVE) {
+    const { is_profile_approved: isProfileApproved } = doctorProfile;
+    if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message:
-            "Account InActive. Please Contact KENECARE SUPPORT for further instruction.",
+            "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
         }),
       );
     }
-
-    // Generate access token for logged in users
-    const accessJwt = generateUsersJwtAccessToken({
-      sub: userId,
-    });
-
-    updateUserAccountStatusById({
-      userId,
-      status: STATUS.ACTIVE,
-    });
-
-    if (userType === USERTYPE.DOCTOR) {
-      const doctorProfile = await getDoctorByUserId(userId);
-      if (!doctorProfile) {
-        return Response.SUCCESS({
-          message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
-          data: {
-            token: accessJwt,
-            type: userType,
-            isVerified,
-            isActive: isAccountActive,
-          },
-        });
-      }
-    }
-
-    if (userType === USERTYPE.PATIENT) {
-      const patientProfile = await getPatientByUserId(userId);
-      if (!patientProfile) {
-        return Response.SUCCESS({
-          message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
-          data: {
-            token: accessJwt,
-            type: userType,
-            isVerified,
-            isActive: isAccountActive,
-          },
-        });
-      }
-    }
-    req.user = {
-      id: decoded.sub,
-    };
-
     return next();
   } catch (error) {
-    console.log(error);
     console.log(error);
     if (error.message === "jwt expired") {
       return res.status(401).json(
