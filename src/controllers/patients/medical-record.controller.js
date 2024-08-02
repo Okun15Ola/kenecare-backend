@@ -27,6 +27,15 @@ exports.GetMedicalRecordByIDController = async (req, res, next) => {
     const userId = parseInt(req.user.id, 10);
     const docId = parseInt(req.params.id, 10);
     const response = await getPatientMedicalDocument({ docId, userId });
+
+    const { documentTitle, mimeType, documentBuffer } = response.data;
+    if (documentBuffer) {
+      res.set({
+        "Content-Type": `${mimeType}`,
+        "Content-Disposition": `attachment; filename=${documentTitle}`,
+      });
+      return res.status(response.statusCode).send(documentBuffer);
+    }
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
