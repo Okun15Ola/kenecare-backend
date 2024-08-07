@@ -88,7 +88,7 @@ exports.VerifyRegisterOTPController = async (req, res, next) => {
   }
 };
 
-exports.ForgotPasswordController = async (req, res, next) => {
+exports.RequestForgotPasswordOTPController = async (req, res, next) => {
   try {
     // Forgot Password Controller
     const { phoneNumber, token } = req.body;
@@ -100,6 +100,18 @@ exports.ForgotPasswordController = async (req, res, next) => {
       response = await verifyRequestedOTP(req.user);
     }
 
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    return next(error);
+  }
+};
+exports.VerifyForgotPasswordOTPController = async (req, res, next) => {
+  try {
+    // Forgot Password Controller
+    // const { token } = req.body;
+    const response = await verifyRequestedOTP(req.user);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

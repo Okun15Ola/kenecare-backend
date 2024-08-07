@@ -8,12 +8,13 @@ const {
   VerifyRegisterOTPController,
   RequestLoginOTPController,
   VerifyLoginOTPController,
-  ForgotPasswordController,
+  RequestForgotPasswordOTPController,
   ResendVerificationOTPController,
   SendVerificationOTPController,
   VerifyRequestedOTPController,
   UpdatePasswordController,
   UpdatePushNotificationTokenController,
+  VerifyForgotPasswordOTPController,
 } = require("../../controllers/auth.controller");
 const {
   LoginValidations,
@@ -81,15 +82,23 @@ router.post(
         if (!PHONE_NUMBER_REGEX.test(value)) {
           throw new Error("Invalid number format.");
         }
-        const data = await getUserByMobileNumber(value);
+        const user = await getUserByMobileNumber(value);
 
-        if (!data) {
+        if (!user) {
           throw new Error("Error verifiying phone number");
         }
 
-        req.user = data;
+        req.user = user;
         return true;
       }),
+  ],
+  Validate,
+  RequestForgotPasswordOTPController,
+);
+
+router.post(
+  "/verify-forgot-password-otp",
+  [
     body("token")
       .trim()
       .escape()
@@ -97,20 +106,20 @@ router.post(
         if (!value) {
           throw new Error("Token is required");
         }
-        const data = await getUserByVerificationToken(value);
+        const user = await getUserByVerificationToken(value);
 
-        if (!data) {
+        if (!user) {
           throw new Error(
             "Error verifying token, please try again with a valid token.",
           );
         }
 
-        req.user = data;
+        req.user = user;
         return true;
       }),
   ],
   Validate,
-  ForgotPasswordController,
+  VerifyForgotPasswordOTPController,
 );
 
 router.post(
