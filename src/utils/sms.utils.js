@@ -39,6 +39,24 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     throw error;
   }
 };
+const sendForgotPasswordRequestTokenSMS = async ({ token, mobileNumber }) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `You requested to reset your KENECARE account password.\n\nYour reset password token is: ${token}.\n\n Do not share with anyone.\n\nIf this action was not perfomed by you please contact KENECARE support on https://kenecare.com/support`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 const sendPasswordResetSMS = async (mobileNumber) => {
   try {
     const data = JSON.stringify({
@@ -322,4 +340,5 @@ module.exports = {
   withdrawalApprovedSMS,
   withdrawalDeniedSMS,
   sendPasswordResetSMS,
+  sendForgotPasswordRequestTokenSMS,
 };

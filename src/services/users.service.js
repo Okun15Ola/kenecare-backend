@@ -8,6 +8,7 @@ const { hashUsersPassword } = require("../utils/auth.utils");
 const {
   sendAuthTokenSMS,
   sendPasswordResetSMS,
+  sendForgotPasswordRequestTokenSMS,
 } = require("../utils/sms.utils");
 // const { sendPushNotifications } = require("../utils/notification.utils");
 const Response = require("../utils/response.utils");
@@ -439,7 +440,7 @@ exports.sendVerificationOTP = async (user) => {
       token,
     });
     // Send TOKEN VIA SMS
-    await sendAuthTokenSMS({ token, mobileNumber });
+    await sendForgotPasswordRequestTokenSMS({ token, mobileNumber });
     // return success response to user
     return Response.SUCCESS({
       message: "Verification OTP sent succesfully",
