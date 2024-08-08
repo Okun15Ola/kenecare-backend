@@ -29,11 +29,12 @@ const {
   getUserByVerificationToken,
 } = require("../../db/db.users");
 const { validateExpoToken } = require("../../utils/auth.utils");
-
+const { limiter } = require("../../utils/rate-limit.utils");
 // regex constants
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/;
 const PHONE_NUMBER_REGEX = /^\+(232)?(\d{8})$/;
 
+limiter(router);
 router.get("/authenticate", requireUserAuth, (req, res, next) => {
   try {
     return res.sendStatus(200);
