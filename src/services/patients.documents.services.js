@@ -40,7 +40,6 @@ exports.getPatientMedicalDocuments = async (userId) => {
       ({
         medical_document_id: documentId,
         document_uuid: documentUUID,
-
         document_title: documentTitle,
       }) => {
         return {
