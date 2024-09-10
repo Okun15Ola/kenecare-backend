@@ -142,10 +142,10 @@ exports.ResetPasswordController = async (req, res, next) => {
 // resend signup OTP
 exports.ResendVerificationOTPController = async (req, res, next) => {
   try {
-    const { phoneNumber } = req.body;
+    // const { phoneNumber } = req.body;
     const { user } = req;
 
-    const response = await resendVerificationOTP({ phoneNumber, user });
+    const response = await resendVerificationOTP(user);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

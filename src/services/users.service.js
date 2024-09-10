@@ -395,6 +395,7 @@ exports.resendVerificationOTP = async (user) => {
     } = user;
 
     if (token && isVerified !== STATUS.ACTIVE) {
+      console.log("in");
       // Send TOKEN VIA SMS
       await sendAuthTokenSMS({ token, mobileNumber });
       return Response.SUCCESS({

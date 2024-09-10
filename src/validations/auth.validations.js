@@ -26,14 +26,7 @@ exports.LoginValidations = [
         );
       }
 
-      const { userId, userType, accountVerified, accountActive } = user;
-
-      //   Check if the account is verified
-      if (accountVerified !== STATUS.ACTIVE) {
-        throw new Error(
-          "Unverified Account. Please Verify Account Before Attempting to Login",
-        );
-      }
+      const { userId, userType, accountActive } = user;
 
       if (accountActive !== STATUS.ACTIVE) {
         return Response.UNAUTHORIZED({
@@ -81,13 +74,8 @@ exports.LoginValidations = [
           req.user = null;
           throw new Error("Mobile Number or Password is incorrect");
         } else {
-          const { accountVerified, accountActive } = user;
+          const { accountActive } = user;
 
-          if (accountVerified !== VERIFICATIONSTATUS.VERIFIED) {
-            throw new Error(
-              "Account Not Verified. Please verify account before proceeding",
-            );
-          }
           if (accountActive !== STATUS.ACTIVE) {
             throw new Error(
               "Account Has Been Disabled. Please Contact Kenecare Support for further instructions.",

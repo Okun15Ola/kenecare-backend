@@ -139,6 +139,7 @@ router.post(
             "BAD_REQUEST. Error Resending OTP. Please check mobile number",
           );
         }
+        console.log(data);
 
         req.user = data;
         return true;
