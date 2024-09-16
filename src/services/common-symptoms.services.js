@@ -3,6 +3,7 @@ const Response = require("../utils/response.utils");
 const {
   getFileFromS3Bucket,
   uploadFileToS3Bucket,
+  getFileUrlFromS3Bucket,
 } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 
@@ -21,7 +22,7 @@ exports.getCommonSymptoms = async () => {
         is_active: isActive,
         inputted_by: inputtedBy,
       }) => {
-        const url = await getFileFromS3Bucket(imageUrl);
+        const url = await getFileUrlFromS3Bucket(imageUrl);
         return {
           symptomId,
           name: name.toUpperCase(),
