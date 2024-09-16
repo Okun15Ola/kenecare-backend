@@ -276,7 +276,6 @@ exports.createPatientProfile = async ({
       dateOfBirth: formattedDate,
     });
 
-    // TODO send an email with further instructions
     return Response.CREATED({
       message: "Patient profile created successfully.",
     });

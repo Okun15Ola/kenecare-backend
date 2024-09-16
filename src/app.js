@@ -69,7 +69,10 @@ const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.ro
 const adminPatientsRouter = require("./routes/api/admin/patients.routes");
 const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes");
 const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings");
-const { getAppointmentByMeetingId } = require("./db/db.appointments.doctors");
+const {
+  getAppointmentByMeetingId,
+  updateDoctorAppointmentStartTime,
+} = require("./db/db.appointments.doctors");
 
 const app = express();
 runCron();
@@ -113,9 +116,10 @@ app.use("/api/v1/health-check", (req, res) =>
 );
 
 //  MOVE TO A SEPERATE ROUTE FILE
-app.post("/webhooks", async (req, res) => {
+app.post("/zoom-hook", async (req, res) => {
   try {
     const { body } = req;
+    const { event } = body;
 
     const message = `v0:${
       req.headers["x-zm-request-timestamp"]
@@ -130,7 +134,7 @@ app.post("/webhooks", async (req, res) => {
 
     if (req.headers["x-zm-signature"] === signature) {
       // check for url validation event
-      if (body.event === "endpoint.url_validation") {
+      if (event === "endpoint.url_validation") {
         const { plainToken } = body.payload;
         const hashForValidate = crypto
           .createHmac("sha256", zoomSecretToken)
@@ -143,7 +147,7 @@ app.post("/webhooks", async (req, res) => {
         });
       }
 
-      if (body.event === "meeting.started") {
+      if (event === "meeting.started") {
         // meeting was started
         // TODO SEND NOTIFICATION TO PATIENT THAT THE MEETING HAS STARTED
         const { start_time: startTime, id } = body.payload.object;
@@ -153,14 +157,20 @@ app.post("/webhooks", async (req, res) => {
           const { meeting_id: meetingId } = data;
           const appointment = await getAppointmentByMeetingId(meetingId);
           if (appointment) {
+            const { appointment_id: appointmentId } = appointment;
+            console.log("Appointment Exists");
             // update appointment start time
-            moment(startTime).format("HH:mm");
+            const done = await updateDoctorAppointmentStartTime({
+              appointmentId,
+              startTime: moment(startTime).format("HH:mm"),
+            });
+
+            console.log(done);
           }
         }
       }
       if (body.event === "meeting.ended") {
-        // meeting was ended
-        // TODO UPDATE MEETING STATUS TO COMPLETED and remove join and start url
+        console.log("Meeting Ended");
       }
 
       return res.sendStatus(200);

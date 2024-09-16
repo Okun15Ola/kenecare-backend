@@ -4,7 +4,8 @@ const { Expo } = require("expo-server-sdk");
 const axios = require("axios");
 const logger = require("../middlewares/logger.middleware");
 
-const expo = new Expo({ useFcmV1: false });
+const expo = new Expo({ useFcmV1: true });
+
 const axiosConfig = {
   method: "POST",
   url: "https://exp.host/--/api/v2/push/send",

@@ -10,13 +10,13 @@ const {
 const {
   STATUS,
   VERIFICATIONSTATUS,
-  USERTYPE,
-  ERROR_CODES,
+  // USERTYPE,
+  // ERROR_CODES,
 } = require("../utils/enum.utils");
 const { getUserById, updateUserAccountStatusById } = require("../db/db.users");
 const { getDoctorByUserId } = require("../db/db.doctors");
-const { getPatientByUserId } = require("../db/db.patients");
-const { generateUsersJwtAccessToken } = require("../utils/auth.utils");
+// const { getPatientByUserId } = require("../db/db.patients");
+// const { generateUsersJwtAccessToken } = require("../utils/auth.utils");
 const logger = require("./logger.middleware");
 
 const getAuthToken = (req) => {
@@ -50,11 +50,12 @@ const requireUserAuth = async (req, res, next) => {
     if (!user) {
       return Response.BAD_REQUEST({ message: "An Unexpected Error Occured" });
     }
+
     const {
       user_id: userId,
       is_verified: isVerified,
       is_account_active: isAccountActive,
-      user_type: userType,
+      // user_type: userType,
     } = user;
 
     if (isVerified !== VERIFICATIONSTATUS.VERIFIED) {
@@ -76,48 +77,49 @@ const requireUserAuth = async (req, res, next) => {
     }
 
     // Generate access token for logged in users
-    const accessJwt = generateUsersJwtAccessToken({
-      sub: userId,
-    });
+    // const accessJwt = generateUsersJwtAccessToken({
+    //   sub: userId,
+    // });
 
     updateUserAccountStatusById({
       userId,
       status: STATUS.ACTIVE,
     });
 
-    if (userType === USERTYPE.DOCTOR) {
-      const doctorProfile = await getDoctorByUserId(userId);
-      if (!doctorProfile) {
-        return res.status(404).json(
-          Response.SUCCESS({
-            message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
-            data: {
-              token: accessJwt,
-              type: userType,
-              isVerified,
-              isActive: isAccountActive,
-            },
-          }),
-        );
-      }
-    }
+    // TODO move to seperate middleware function
+    // if (userType === USERTYPE.DOCTOR) {
+    //   const doctorProfile = await getDoctorByUserId(userId);
+    //   if (!doctorProfile) {
+    //     return res.status(404).json(
+    //       Response.SUCCESS({
+    //         message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
+    //         data: {
+    //           token: accessJwt,
+    //           type: userType,
+    //           isVerified,
+    //           isActive: isAccountActive,
+    //         },
+    //       }),
+    //     );
+    //   }
+    // }
 
-    if (userType === USERTYPE.PATIENT) {
-      const patientProfile = await getPatientByUserId(userId);
-      if (!patientProfile) {
-        return res.status(404).json(
-          Response.SUCCESS({
-            message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
-            data: {
-              token: accessJwt,
-              type: userType,
-              isVerified,
-              isActive: isAccountActive,
-            },
-          }),
-        );
-      }
-    }
+    // if (userType === USERTYPE.PATIENT) {
+    //   const patientProfile = await getPatientByUserId(userId);
+    //   if (!patientProfile) {
+    //     return res.status(404).json(
+    //       Response.SUCCESS({
+    //         message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
+    //         data: {
+    //           token: accessJwt,
+    //           type: userType,
+    //           isVerified,
+    //           isActive: isAccountActive,
+    //         },
+    //       }),
+    //     );
+    //   }
+    // }
     req.user = {
       id: decoded.sub,
     };

@@ -56,6 +56,7 @@ const createZoomMeeting = async ({
           join_before_host: true,
           host_video: true,
           participant_video: true,
+          participant_focused_meeting: true,
         },
       },
       {

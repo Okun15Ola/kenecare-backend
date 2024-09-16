@@ -18,12 +18,13 @@ const {
   uploadFileToS3Bucket,
   getFileFromS3Bucket,
   deleteFileFromS3Bucket,
-  getObjectFromS3Bucket,
+  // getObjectFromS3Bucket,
+  getFileUrlFromS3Bucket,
 } = require("../utils/aws-s3.utils");
 const { documentSharedWithDoctorSMS } = require("../utils/sms.utils");
 const { getDoctorById } = require("../db/db.doctors");
-const { encryptFile, decryptFile } = require("../utils/file-upload.utils");
-const { getUserById } = require("../db/db.users");
+// const { encryptFile, decryptFile } = require("../utils/file-upload.utils");
+// const { getUserById } = require("../db/db.users");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {
@@ -59,7 +60,7 @@ exports.getPatientMedicalDocuments = async (userId) => {
 
 exports.getPatientMedicalDocument = async ({ userId, docId }) => {
   try {
-    const { password } = await getUserById(userId);
+    // const { password } = await getUserById(userId);
     const patient = await getPatientByUserId(userId);
 
     const { patient_id: patientId } = patient;
@@ -75,16 +76,18 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
       mimetype: mimeType,
     } = rawData;
 
-    const buffer = await getObjectFromS3Bucket(documentUUID);
+    // const buffer = await getObjectFromS3Bucket(documentUUID);
 
-    const decryptedBuffer = decryptFile({ buffer, password });
+    // const decryptedBuffer = decryptFile({ buffer, password });
+
+    const fileUrl = await getFileUrlFromS3Bucket(documentUUID);
 
     const document = {
       documentId,
       documentUUID,
       documentTitle,
       mimeType,
-      documentBuffer: decryptedBuffer,
+      fileUrl,
     };
 
     return Response.SUCCESS({ data: document });
@@ -100,8 +103,8 @@ exports.createPatientMedicalDocument = async ({
   documentTitle,
 }) => {
   try {
-    const user = await getUserById(userId);
-    const { password } = user;
+    // const user = await getUserById(userId);
+    // const { password } = user;
     const patient = await getPatientByUserId(userId);
     if (!patient) {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
@@ -116,12 +119,12 @@ exports.createPatientMedicalDocument = async ({
 
     const documentUuid = uuidv4();
 
-    const encryptedFileBuffer = encryptFile({ buffer: file.buffer, password });
+    // const encryptedFileBuffer = encryptFile({ buffer: file.buffer, password });
 
     const uploaded = await uploadFileToS3Bucket({
       fileName: documentUuid,
-      buffer: encryptedFileBuffer,
-      mimetype: "enc",
+      buffer: file.buffer,
+      mimetype: file.mimetype,
     });
 
     if (uploaded.$metadata.httpStatusCode !== 200) {

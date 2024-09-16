@@ -162,6 +162,9 @@ exports.RegisterValidations = [
     .withMessage(
       "Passwords do not match. Ensure password and confirm password are the same.",
     ),
+  // body("referralCode").custom((value) => {
+  //   console.log("Referral Code: ", value);
+  // }),
 ];
 exports.VerifyTokenValidations = [
   param("token")

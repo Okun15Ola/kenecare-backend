@@ -319,69 +319,31 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
 
-    if (!doctor) {
-      return Response.UNAUTHORIZED({
-        message: "Unauthorized Action",
-      });
-    }
-
     const {
       doctor_id: doctorId,
       first_name: doctorFirstName,
       last_name: doctorLastName,
     } = doctor;
 
-    // TODO Check if the appointment exist
-    const rawData = await dbObject.getDoctorAppointmentById({
+    const appointment = await dbObject.getDoctorAppointmentById({
       doctorId,
       appointmentId,
     });
 
-    if (!rawData) {
-      return Response.NOT_FOUND({ message: "Appointment Not Found" });
-    }
-
     // Extract patient id from appointment to get patient email
     const {
       patient_id: patientId,
-
       first_name: firstName,
       last_name: lastName,
       patient_name_on_prescription: patientNameOnPrescription,
       appointment_date: appointmentDate,
       appointment_time: appointmentTime,
       appointment_status: appointmentStatus,
-    } = rawData;
+    } = appointment;
 
-    // SEND A RESPONSE IF THE APPOINTMENT HAS PREVIOUSLY BEEN APPROVED
     if (appointmentStatus === "approved") {
       return Response.NOT_MODIFIED();
     }
-
-    // const {
-    //   zoomMeetingID,
-    //   zoomMeetingUUID,
-    //   zoomMeetingTopic,
-    //   zoomMeetingJoinURL,
-    //   zoomMeetingStartURL,
-    //   zoomMeetingEncPassword,
-    // } = await createZoomMeeting({
-    //   patientName: patientNameOnPrescription,
-    //   appointmentDate,
-    //   appointmentStartTime: appointmentTime,
-    //   doctorName: `${doctorFirstName} ${doctorLastName}`,
-    // });
-
-    //  INSERT ZOOM MEETING INFO TO DATABASE
-    // const { insertId: meetingId } =
-    // await dbObject.createNewZoomMeeting({
-    //   meetingId: zoomMeetingID.toString(),
-    //   meetingUUID: zoomMeetingUUID,
-    //   meetingTopic: zoomMeetingTopic,
-    //   joinUrl: zoomMeetingJoinURL,
-    //   startUrl: zoomMeetingStartURL,
-    //   encryptedPassword: zoomMeetingEncPassword,
-    // });
 
     const [, patient] = await Promise.allSettled([
       dbObject.approveDoctorAppointmentById({
@@ -414,11 +376,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
 exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
-    if (!doctor) {
-      return Response.UNAUTHORIZED({
-        message: "Action can only be performed by a doctor",
-      });
-    }
+
     const {
       doctor_id: doctorId,
       first_name: doctorFirstName,
@@ -429,13 +387,6 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       doctorId,
       appointmentId,
     });
-
-    // Check if the appointment exists
-    if (!appointment) {
-      return Response.NOT_FOUND({
-        message: "Appointment Not Found! Please Try Again!",
-      });
-    }
 
     // Extract patient id from appointment to get patient email
     const {
@@ -450,33 +401,6 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
 
     if (appointmentStatus === "started") {
       return Response.NOT_MODIFIED();
-    }
-    if (appointmentStatus === "completed") {
-      return Response.BAD_REQUEST({
-        message: "Cannot start an appointment that has already been completed",
-      });
-    }
-    if (appointmentStatus !== "approved") {
-      return Response.BAD_REQUEST({
-        message: "Appointment must be approved before starting consultation.",
-      });
-    }
-
-    // Check if the date is not an old date
-    const today = moment().format("YYYY-MM-DD");
-    const appointmentMoment = moment(appointmentDate, "YYYY-MM-DD", true);
-
-    if (appointmentMoment.isBefore(today)) {
-      return Response.BAD_REQUEST({
-        message:
-          "Appointment is overdue, please postpone the appointment to an earlier date and start consultation.",
-      });
-    }
-
-    if (appointmentMoment.isAfter(today)) {
-      return Response.BAD_REQUEST({
-        message: "Cannot Start an appointment before the scheduled date",
-      });
     }
 
     const {

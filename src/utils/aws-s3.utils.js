@@ -44,7 +44,7 @@ const uploadFileToS3Bucket = async ({ fileName, buffer, mimetype }) => {
   }
 };
 
-const getFileFromS3Bucket = async (fileName) => {
+const getFileUrlFromS3Bucket = async (fileName) => {
   try {
     const params = {
       Bucket: awsBucketName,
@@ -89,7 +89,7 @@ const deleteFileFromS3Bucket = async (fileName) => {
 
 module.exports = {
   uploadFileToS3Bucket,
-  getFileFromS3Bucket,
+  getFileUrlFromS3Bucket,
   getObjectFromS3Bucket,
   deleteFileFromS3Bucket,
 };

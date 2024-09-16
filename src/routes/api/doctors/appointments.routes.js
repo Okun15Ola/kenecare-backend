@@ -18,13 +18,22 @@ const {
   validateAppointmentPostponedDate,
   validateAppointmentTime,
 } = require("../../../utils/time.utils");
+const {
+  StartAppointmentValidation,
+  ApproveAppointmentValidation,
+} = require("../../../validations/appointments.validations");
 
 let data = null;
 router.get("/", GetDoctorAppointmentsController);
 router.get("/:id", GetDoctorAppointmentsByIDController);
 
 // TODO add data validation rules
-router.patch("/:id/approve", ApproveDoctorAppointmentController);
+router.patch(
+  "/:id/approve",
+  ApproveAppointmentValidation,
+  Validate,
+  ApproveDoctorAppointmentController,
+);
 router.patch("/:id/cancel", CancelDoctorAppointmentController);
 router.patch(
   "/:id/postpone",
@@ -70,7 +79,12 @@ router.patch(
   Validate,
   PostponeDoctorAppointmentController,
 );
-router.patch("/:id/start", StartDoctorAppointmentController);
+router.patch(
+  "/:id/start",
+  StartAppointmentValidation,
+  Validate,
+  StartDoctorAppointmentController,
+);
 router.patch("/:id/end", EndDoctorAppointmentController);
 
 module.exports = router;

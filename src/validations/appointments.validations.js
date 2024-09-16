@@ -4,7 +4,9 @@ const {
   getSpecialtyByName,
   getSpecialtiyById,
 } = require("../db/db.specialities");
-const { getDoctorById } = require("../db/db.doctors");
+const { getDoctorById, getDoctorByUserId } = require("../db/db.doctors");
+const { getDoctorAppointmentById } = require("../db/db.appointments.doctors");
+const Response = require("../utils/response.utils");
 
 exports.CreateAppointmentValidation = [
   body("patientName")
@@ -95,6 +97,117 @@ exports.CreateAppointmentValidation = [
   //   .toLowerCase()
   //   .trim()
   //   .escape(),
+];
+
+exports.StartAppointmentValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Appointment ID is required")
+    .escape()
+    .trim()
+    .custom(async (value, { req }) => {
+      const userId = parseInt(req.user.id, 10);
+      const doctor = await getDoctorByUserId(userId);
+      if (!doctor) {
+        throw new Error(
+          "UnAuthorized Action. Action can only be performed by a doctor",
+        );
+      }
+      const { doctor_id: doctorId } = doctor;
+      const appointment = await getDoctorAppointmentById({
+        doctorId,
+        appointmentId: value,
+      });
+      if (!appointment) {
+        throw new Error("Appointment Not Found. Please Try Again");
+      }
+      // Extract patient id from appointment to get patient email
+      const {
+        appointment_date: appointmentDate,
+        // appointment_time: appointmentTime,
+        appointment_status: appointmentStatus,
+      } = appointment;
+
+      if (appointmentStatus === "pending") {
+        throw new Error(
+          "Appointment must be approved before starting consultation.",
+        );
+      }
+
+      if (appointmentStatus === "completed") {
+        throw new Error(
+          "Cannot start an appointment that has already been completed",
+        );
+      }
+
+      // Check if the date is not an old date
+      const today = moment().format("YYYY-MM-DD");
+      const appointmentMoment = moment(appointmentDate, "YYYY-MM-DD", true);
+
+      if (appointmentMoment.isBefore(today)) {
+        throw new Error(
+          "Appointment Date is overdue. Please postpone to an earlier date before starting",
+        );
+      }
+
+      // if (appointmentMoment.isAfter(today)) {
+      //   throw new Error(
+      //     "Cannot Start an appointment before the scheduled date",
+      //   );
+      // }
+
+      return true;
+    }),
+];
+exports.ApproveAppointmentValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Appointment ID is required")
+    .escape()
+    .trim()
+    .custom(async (value, { req }) => {
+      const userId = parseInt(req.user.id, 10);
+      const doctor = await getDoctorByUserId(userId);
+      if (!doctor) {
+        throw new Error(
+          "UnAuthorized Action. Action can only be performed by a doctor",
+        );
+      }
+      const { doctor_id: doctorId } = doctor;
+      const appointment = await getDoctorAppointmentById({
+        doctorId,
+        appointmentId: value,
+      });
+      if (!appointment) {
+        throw new Error("Appointment Not Found. Please Try Again");
+      }
+      // Extract patient id from appointment to get patient email
+      const {
+        appointment_date: appointmentDate,
+        appointment_status: appointmentStatus,
+      } = appointment;
+
+      if (appointmentStatus === "started") {
+        throw Response.NOT_MODIFIED();
+      }
+      if (appointmentStatus === "completed") {
+        throw new Error(
+          "Cannot start an appointment that has already been completed",
+        );
+      }
+
+      // Check if the date is not an old date
+      const today = moment().format("YYYY-MM-DD");
+      const appointmentMoment = moment(appointmentDate, "YYYY-MM-DD", true);
+
+      if (appointmentMoment.isBefore(today)) {
+        throw new Error(
+          "Appointment Date is overdue. Please postpone to an earlier date before starting",
+        );
+      }
+
+      return true;
+    }),
 ];
 
 exports.SpecialtyIDValidation = [
