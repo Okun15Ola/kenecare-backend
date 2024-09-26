@@ -13,6 +13,7 @@ const { appBaseURL } = require("../config/default.config");
 const {
   uploadFileToS3Bucket,
   getFileFromS3Bucket,
+  getFileUrlFromS3Bucket,
 } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 
@@ -64,7 +65,7 @@ exports.getDoctorCouncilRegistration = async (id) => {
       verified_by: verifiedBy,
     } = rawData;
 
-    const url = await getFileFromS3Bucket(regDocumentUrl);
+    const url = await getFileUrlFromS3Bucket(regDocumentUrl);
 
     const registration = {
       registrationId,
@@ -134,7 +135,7 @@ exports.createDoctorCouncilRegistration = async ({
         reject_reason: rejectReason,
       } = councilRegistrationExist;
 
-      // TODO check if it has been approved
+      //  check if it has been approved
       if (registrationStatus === "pending") {
         return Response.BAD_REQUEST({
           message:
@@ -259,7 +260,7 @@ exports.updateDoctorCouncilRegistration = async ({
       }),
     ]);
 
-    // TODO Deactivate doctors profile until registration has been reverified
+    //  Deactivate doctors profile until registration has been reverified
     // send an email with further instructions
 
     await Promise.all([

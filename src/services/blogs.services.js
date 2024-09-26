@@ -2,7 +2,7 @@ const moment = require("moment");
 const dbObject = require("../db/db.blogs");
 const {
   uploadFileToS3Bucket,
-  getFileFromS3Bucket,
+
   getFileUrlFromS3Bucket,
 } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
@@ -69,7 +69,7 @@ exports.getBlog = async (id) => {
       created_at: createdAt,
     } = rawData;
 
-    const url = image ? await getFileFromS3Bucket(image) : null;
+    const url = image ? await getFileUrlFromS3Bucket(image) : null;
 
     const blog = {
       blogId,
