@@ -13,6 +13,7 @@ const {
   appointmentEndedSms,
 } = require("../utils/sms.utils");
 const logger = require("../middlewares/logger.middleware");
+const { getAppointmentFollowUps } = require("../db/db.follow-up");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
@@ -172,6 +173,29 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       transactionId: paymentTransactionId,
     } = rawData;
 
+    const rawFollowUps = await getAppointmentFollowUps(appointmentId);
+    const followUps = rawFollowUps.map(
+      ({
+        followup_id: followUpId,
+        followup_date: followUpDate,
+        followup_time: followUpTime,
+        reason: followUpReason,
+        followup_status: followUpStatus,
+        followup_type: followUpType,
+        meeting_id: meetingId,
+      }) => {
+        return {
+          followUpId,
+          followUpDate,
+          followUpTime,
+          followUpReason,
+          followUpStatus,
+          followUpType,
+          meetingId,
+        };
+      },
+    );
+
     const appointment = {
       appointmentId,
       appointmentUUID,
@@ -204,6 +228,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       postponeDate,
       postponedBy,
       createdAt: moment(createdAt).format("YYYY-MM-DD"),
+      followUps,
     };
 
     return Response.SUCCESS({ data: appointment });

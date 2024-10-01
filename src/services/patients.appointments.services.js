@@ -18,6 +18,7 @@ const {
 } = require("../db/db.payments");
 
 const { getPaymentURL } = require("../utils/payment.utils");
+const { getAppointmentFollowUps } = require("../db/db.follow-up");
 
 exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
@@ -124,7 +125,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       appointmentId: id,
     });
 
-    // TODO Check if the requesting user is the owner of the appointment
+    //  Check if the requesting user is the owner of the appointment
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
@@ -163,6 +164,29 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       transactionId: paymentTransactionId,
     } = rawData;
 
+    const rawFollowUps = await getAppointmentFollowUps(appointmentId);
+    const followUps = rawFollowUps.map(
+      ({
+        followup_id: followUpId,
+        followup_date: followUpDate,
+        followup_time: followUpTime,
+        reason: followUpReason,
+        followup_status: followUpStatus,
+        followup_type: followUpType,
+        meeting_id: meetingId,
+      }) => {
+        return {
+          followUpId,
+          followUpDate,
+          followUpTime,
+          followUpReason,
+          followUpStatus,
+          followUpType,
+          meetingId,
+        };
+      },
+    );
+
     const appointment = {
       appointmentId,
       appointmentUUID,
@@ -194,6 +218,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       postponeDate,
       postponedBy,
       createdAt: moment(createdAt).format("YYYY-MM-DD"),
+      followUps,
     };
 
     return Response.SUCCESS({ data: appointment });
