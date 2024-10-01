@@ -1,0 +1,75 @@
+const { connectionPool } = require("./db.connection");
+
+exports.createNewFollowUp = async ({
+  appointmentId,
+  followUpDate,
+  followUpTime,
+  followUpReason,
+  followUpType,
+}) => {
+  const sql =
+    "INSERT INTO appointment_followup (appointment_id,followup_date, followup_time,reason,followup_type) VALUES (?,?,?,?,?);";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(
+      sql,
+      [appointmentId, followUpDate, followUpTime, followUpReason, followUpType],
+      (error, results) => {
+        if (error) return reject(error);
+
+        return resolve(results);
+      },
+    );
+  });
+};
+
+exports.getAppointmentFollowUps = async (appointmentId) => {
+  const sql = "SELECT * FROM appointment_followup WHERE appointment_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [appointmentId], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results);
+    });
+  });
+};
+
+exports.deleteAppointmentFollowUp = async ({ appointmentId, followUpId }) => {
+  const sql =
+    "DELETE FROM appointment_followup WHERE followup_id = ? AND appointment_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(sql, [followUpId, appointmentId], (error, results) => {
+      if (error) return reject(error);
+
+      return resolve(results);
+    });
+  });
+};
+exports.updateAppointmentFollowUp = async ({
+  appointmentId,
+  followUpId,
+  followUpDate,
+  followUpTime,
+  followUpReason,
+  followUpType,
+}) => {
+  const sql =
+    "UPDATE appointment_followup SET followup_date = ?, followup_time = ?, reason = ?, followup_type = ? WHERE followup_id = ? AND appointment_id = ?";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(
+      sql,
+      [
+        followUpDate,
+        followUpTime,
+        followUpReason,
+        followUpType,
+        followUpId,
+        appointmentId,
+      ],
+      (error, results) => {
+        if (error) return reject(error);
+
+        return resolve(results);
+      },
+    );
+  });
+};

@@ -3,13 +3,11 @@ const express = require("express");
 const crypto = require("crypto");
 const cors = require("cors");
 const helmet = require("helmet");
-// const expressSession = require("express-session");
 const path = require("path");
 const bodyParser = require("body-parser");
 const moment = require("moment");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
-// const { sessionSecret } = require("./config/default.config");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
 const { runCron } = require("./utils/cron.utils");
@@ -40,6 +38,7 @@ const doctorsCounculRegistrationRouter = require("./routes/api/doctors/council-r
 const doctorsWalletRouter = require("./routes/api/doctors/wallet.routes");
 const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.routes");
 const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.routes");
+const doctorsFollowUpRouter = require("./routes/api/doctors/followups.routes");
 
 // PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
@@ -101,21 +100,13 @@ app.use(
   express.static(path.join(__dirname, "public/upload/media")),
 );
 
-// app.use(
-//   expressSession({
-//     secret: sessionSecret,
-//     resave: false,
-//     saveUninitialized: true,
-//   }),
-// );
-
 app.use("/api/v1/health-check", (req, res) =>
   res
     .status(200)
     .json(SUCCESS({ message: "Health Check Passed. API Working!!!" })),
 );
 
-//  MOVE TO A SEPERATE ROUTE FILE
+//  TODO MOVE TO A SEPERATE ROUTE FILE
 app.post("/zoom-hook", async (req, res) => {
   try {
     const { body } = req;
@@ -219,6 +210,12 @@ app.use(
   requireUserAuth,
   requireDoctorAuth,
   doctorsAppointmentRouter,
+);
+app.use(
+  "/api/v1/doctors/follow-ups",
+  requireUserAuth,
+  requireDoctorAuth,
+  doctorsFollowUpRouter,
 );
 
 // PATIENT'S ROUTES

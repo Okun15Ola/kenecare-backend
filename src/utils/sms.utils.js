@@ -119,6 +119,31 @@ const appointmentApprovalSms = async ({
     throw error;
   }
 };
+
+const newFollowAppointmentSms = async ({
+  patientNameOnPrescription,
+  mobileNumber,
+  doctorName,
+  followUpDate,
+  followUpTime,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear ${patientNameOnPrescription.toUpperCase()}, a follow-up appointment was scheduled by ${doctorName}.\n\nFollow-up Date: ${followUpDate}\nFollow-up Time: ${followUpTime}.\n\nKENECARE`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 const appointmentStartedSms = async ({
   patientName,
   mobileNumber,
@@ -341,4 +366,5 @@ module.exports = {
   withdrawalDeniedSMS,
   sendPasswordResetSMS,
   sendForgotPasswordRequestTokenSMS,
+  newFollowAppointmentSms,
 };
