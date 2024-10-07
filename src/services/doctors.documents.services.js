@@ -4,11 +4,12 @@ const {
 } = require("../db/db.patient-docs");
 const Response = require("../utils/response.utils");
 // const { getFileFromS3Bucket } = require("../utils/aws-s3.utils");
-const { getDoctorById } = require("../db/db.doctors");
+const { getDoctorByUserId } = require("../db/db.doctors");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {
   try {
-    const doctor = await getDoctorById(userId);
+    const doctor = await getDoctorByUserId(userId);
+    // console.log(doctor);
 
     if (!doctor) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
@@ -16,6 +17,7 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
 
     const { doctor_id: doctorId } = doctor;
     const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
+    console.log(rawData);
 
     const data = rawData.map(
       ({
@@ -49,7 +51,7 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
 };
 exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
   try {
-    const doctor = await getDoctorById(userId);
+    const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
