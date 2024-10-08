@@ -6,7 +6,10 @@ const {
 } = require("../db/db.specialities");
 const { getDoctorById, getDoctorByUserId } = require("../db/db.doctors");
 const { getDoctorAppointmentById } = require("../db/db.appointments.doctors");
-const Response = require("../utils/response.utils");
+const {
+  validateAppointmentPostponedDate,
+  validateAppointmentTime,
+} = require("../utils/time.utils");
 
 exports.CreateAppointmentValidation = [
   body("patientName")
@@ -103,6 +106,7 @@ exports.StartAppointmentValidation = [
   param("id")
     .notEmpty()
     .withMessage("Appointment ID is required")
+    .bail()
     .escape()
     .trim()
     .custom(async (value, { req }) => {
@@ -187,9 +191,6 @@ exports.ApproveAppointmentValidation = [
         appointment_status: appointmentStatus,
       } = appointment;
 
-      if (appointmentStatus === "started") {
-        throw Response.NOT_MODIFIED();
-      }
       if (appointmentStatus === "completed") {
         throw new Error(
           "Cannot start an appointment that has already been completed",
@@ -210,16 +211,55 @@ exports.ApproveAppointmentValidation = [
     }),
 ];
 
-exports.SpecialtyIDValidation = [
+exports.PostponeAppointmentValidation = [
   param("id")
     .notEmpty()
-    .withMessage("Specialty ID is required")
-    .trim()
-    .escape()
-    .custom(async (id) => {
-      const data = await getSpecialtiyById(id);
+    .withMessage("Appointment ID is required")
+    .custom(async (value, { req }) => {
+      const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
+
+      const data = await getDoctorAppointmentById({
+        doctorId,
+        appointmentId: value,
+      });
       if (!data) {
-        throw new Error("Specialty Not Found");
+        throw new Error("Specified Appontment Not Found");
       }
+
+      return true;
+    }),
+  body("postponedDate")
+    .notEmpty()
+    .withMessage("New Appointment Date is required")
+    .custom(async (value, { req }) => {
+      const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
+
+      const data = await getDoctorAppointmentById({
+        doctorId,
+        appointmentId: value,
+      });
+      if (!data) {
+        throw new Error("Specified Appontment Not Found");
+      }
+
+      const error = validateAppointmentPostponedDate(value);
+      if (error) {
+        console.log(error);
+        throw new Error(error);
+      }
+
+      return true;
+    }),
+
+  body("postponedTime")
+    .notEmpty()
+    .withMessage("Specify new appointment time")
+    .custom(async (value) => {
+      const error = validateAppointmentTime(value);
+      if (error) {
+        console.log(error);
+        throw new Error(error);
+      }
+      return true;
     }),
 ];

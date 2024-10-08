@@ -143,7 +143,6 @@ exports.createPrescription = async ({
 
     // send access token to user for later use
     await sendPrescriptionToken({
-      token: accessToken,
       mobileNumber,
       doctorName,
     });

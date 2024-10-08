@@ -1,6 +1,9 @@
-const { body } = require("express-validator");
-const { getDoctorById } = require("../db/db.doctors");
-const { getPatientMedicalDocumentById } = require("../db/db.patient-docs");
+const { body, param } = require("express-validator");
+const { getDoctorById, getDoctorByUserId } = require("../db/db.doctors");
+const {
+  getPatientMedicalDocumentById,
+  getDoctorSharedMedicalDocumentById,
+} = require("../db/db.patient-docs");
 const { getUserById } = require("../db/db.users");
 const { comparePassword } = require("../utils/auth.utils");
 
@@ -80,5 +83,29 @@ exports.ShareMedicalDocumentValidation = [
       if (!isMatch) {
         throw new Error("Error Sharing Medical Document. Incorrect Password");
       }
+    }),
+];
+
+exports.GetDoctorSharedMedicalDocumentValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Document ID is Required")
+    .bail()
+    .custom(async (value, { req }) => {
+      const userId = parseInt(req.user.id, 10);
+      const sharedDocumentId = parseInt(value, 10);
+      const doctor = await getDoctorByUserId(userId);
+      if (!doctor) {
+        throw new Error("Unauthorized Action. Please Try again");
+      }
+      const { doctor_id: doctorId } = doctor;
+      const document = await getDoctorSharedMedicalDocumentById({
+        doctorId,
+        sharedDocumentId,
+      });
+      if (!document) {
+        throw new Error("Specified Document Not Found");
+      }
+      return true;
     }),
 ];

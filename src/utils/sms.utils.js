@@ -75,13 +75,13 @@ const sendPasswordResetSMS = async (mobileNumber) => {
     throw error;
   }
 };
-const sendPrescriptionToken = async ({ token, doctorName, mobileNumber }) => {
+const sendPrescriptionToken = async ({ doctorName, mobileNumber }) => {
   try {
     const data = JSON.stringify({
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Your KENECARE Medical Prescription from Dr. ${doctorName} is ready.\n\nUse this token: ${token} to access your medical prescription.\n\nDo not share this token with anyone, not even the KENECARE. `,
+      content: `Your KENECARE Medical Prescription from Dr. ${doctorName} is ready.\n\nLogin to your account to view your medical prescriptions.\n\nKENECARE`,
     });
 
     config.data = data;

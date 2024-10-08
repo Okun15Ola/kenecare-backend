@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const { param, body } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   GetDoctorAppointmentsController,
@@ -10,24 +9,16 @@ const {
   StartDoctorAppointmentController,
   EndDoctorAppointmentController,
 } = require("../../../controllers/doctors/appointments.controller");
-const {
-  getDoctorAppointmentById,
-} = require("../../../db/db.appointments.doctors");
-const { getDoctorByUserId } = require("../../../db/db.doctors");
-const {
-  validateAppointmentPostponedDate,
-  validateAppointmentTime,
-} = require("../../../utils/time.utils");
+
 const {
   StartAppointmentValidation,
   ApproveAppointmentValidation,
+  PostponeAppointmentValidation,
 } = require("../../../validations/appointments.validations");
 
-let data = null;
 router.get("/", GetDoctorAppointmentsController);
 router.get("/:id", GetDoctorAppointmentsByIDController);
 
-// TODO add data validation rules
 router.patch(
   "/:id/approve",
   ApproveAppointmentValidation,
@@ -37,45 +28,7 @@ router.patch(
 router.patch("/:id/cancel", CancelDoctorAppointmentController);
 router.patch(
   "/:id/postpone",
-  [
-    param("id")
-      .notEmpty()
-      .withMessage("Appointment ID is required")
-      .custom(async (value, { req }) => {
-        const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
-
-        data = await getDoctorAppointmentById({
-          doctorId,
-          appointmentId: value,
-        });
-        if (!data) {
-          throw new Error("Specified Appontment Not Found");
-        }
-
-        return true;
-      }),
-    body("postponedDate")
-      .notEmpty()
-      .withMessage("New Appointment Date is required")
-      .custom(async (value) => {
-        if (!data) {
-          throw new Error("Specified Appontment Not Found");
-        }
-
-        const error = validateAppointmentPostponedDate(value);
-        console.log(error);
-
-        return true;
-      }),
-
-    body("postponedTime")
-      .notEmpty()
-      .withMessage("Specify new appointment time")
-      .custom(async (value) => {
-        validateAppointmentTime(value);
-        return true;
-      }),
-  ],
+  PostponeAppointmentValidation,
   Validate,
   PostponeDoctorAppointmentController,
 );

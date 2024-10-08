@@ -26,7 +26,7 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
       });
     }
 
-    const { doctor_id: doctorId } = doctor;
+    const { doctor_id: doctorId, title } = doctor;
 
     // Get doctor's appointments
     const rawData = await dbObject.getAppointmentsByDoctorId({
@@ -42,6 +42,7 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
         patient_id: patient,
         first_name: firstName,
         last_name: lastName,
+
         doctor_id: doctorId,
         doctor_first_name: doctorFirstName,
         doctor_last_name: doctorLastName,
@@ -76,7 +77,7 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
         patient,
         username: `${firstName} ${lastName}`,
         doctorId,
-        doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+        doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
         appointmentDate,
         appointmentTime,
         appointmentType,
@@ -122,13 +123,11 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       });
     }
 
-    const { user_type: userType } = doctor;
+    const { user_type: userType, doctor_id: doctorId, title } = doctor;
 
     if (userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
-
-    const { doctor_id: doctorId } = doctor;
 
     const rawData = await dbObject.getDoctorAppointmentById({
       appointmentId: id,
@@ -202,7 +201,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       patient,
       username: `${firstName} ${lastName}`,
       doctorId,
-      doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+      doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
       appointmentDate,
       appointmentTime,
       appointmentType,
@@ -254,7 +253,7 @@ exports.getDoctorAppointmentByDateRange = async ({
       });
     }
 
-    const { doctor_id: doctorId } = doctor;
+    const { doctor_id: doctorId, title } = doctor;
 
     const rawData = await dbObject.getDoctorAppointByDate({
       doctorId,
@@ -304,7 +303,7 @@ exports.getDoctorAppointmentByDateRange = async ({
         patient,
         username: `${firstName} ${lastName}`,
         doctorId,
-        doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+        doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
         appointmentDate,
         appointmentTime,
         appointmentType,
@@ -366,7 +365,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       appointment_status: appointmentStatus,
     } = appointment;
 
-    if (appointmentStatus === "approved") {
+    if (appointmentStatus === "approved" || appointmentStatus === "started") {
       return Response.NOT_MODIFIED();
     }
 

@@ -16,7 +16,6 @@ const { getPatientByUserId } = require("../db/db.patients");
 const Response = require("../utils/response.utils");
 const {
   uploadFileToS3Bucket,
-  getFileFromS3Bucket,
   deleteFileFromS3Bucket,
   // getObjectFromS3Bucket,
   getFileUrlFromS3Bucket,
@@ -255,6 +254,9 @@ exports.createPatientSharedMedicalDocument = async ({
     if (!patient) {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
+    if (!doctor) {
+      return Response.NOT_FOUND({ message: "Selected Doctor Not Found" });
+    }
 
     const {
       patient_id: patientId,
@@ -375,13 +377,13 @@ exports.getPatientSharedMedicalDocument = async ({ userId, documentId }) => {
       note,
     } = rawData;
 
-    const url = await getFileFromS3Bucket(documentUUID);
+    const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
 
     const data = {
       sharingId,
       documentId,
       documentUUID,
-      documentUrl: url,
+      documentUrl,
       documentTitle,
       patientId,
       patientFirstName,
