@@ -71,6 +71,7 @@ const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings");
 const {
   getAppointmentByMeetingId,
   updateDoctorAppointmentStartTime,
+  updateDoctorAppointmentEndTime,
 } = require("./db/db.appointments.doctors");
 
 const app = express();
@@ -149,7 +150,6 @@ app.post("/zoom-hook", async (req, res) => {
           const appointment = await getAppointmentByMeetingId(meetingId);
           if (appointment) {
             const { appointment_id: appointmentId } = appointment;
-            console.log("Appointment Exists");
             // update appointment start time
             const done = await updateDoctorAppointmentStartTime({
               appointmentId,
@@ -161,7 +161,25 @@ app.post("/zoom-hook", async (req, res) => {
         }
       }
       if (body.event === "meeting.ended") {
-        console.log("Meeting Ended");
+        // meeting was ended
+        // TODO SEND NOTIFICATION TO PATIENT THAT THE MEETING HAS ENDED
+        const { end_time: endTime, id } = body.payload.object;
+
+        const data = await getZoomMeetingByZoomId(id);
+        if (data) {
+          const { meeting_id: meetingId } = data;
+          const appointment = await getAppointmentByMeetingId(meetingId);
+          if (appointment) {
+            const { appointment_id: appointmentId } = appointment;
+
+            // update appointment end time
+            const done = await updateDoctorAppointmentEndTime({
+              appointmentId,
+              endTime: moment(endTime).format("HH:mm"),
+            });
+            console.log(done);
+          }
+        }
       }
 
       return res.sendStatus(200);

@@ -87,7 +87,7 @@ exports.updateDoctorAppointmentStartTime = ({ appointmentId, startTime }) => {
     });
   });
 };
-exports.updateAppointmentEndTime = ({ appointmentId, endTime }) => {
+exports.updateDoctorAppointmentEndTime = ({ appointmentId, endTime }) => {
   const sql =
     "UPDATE medical_appointments SET end_time = ?, appointment_status = 'completed' WHERE appointment_id = ?;";
 

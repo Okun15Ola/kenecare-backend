@@ -440,17 +440,22 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentStartTime: appointmentTime,
       doctorName: `${doctorFirstName} ${doctorLastName}`,
     });
+    const { insertId } = await dbObject.createNewZoomMeeting({
+      meetingId: zoomMeetingID.toString(),
+      meetingUUID: zoomMeetingUUID,
+      meetingTopic: zoomMeetingTopic,
+      joinUrl: zoomMeetingJoinURL,
+      startUrl: zoomMeetingStartURL,
+      encryptedPassword: zoomMeetingEncPassword,
+    });
 
-    const [, patient] = await Promise.allSettled([
-      dbObject.createNewZoomMeeting({
-        meetingId: zoomMeetingID.toString(),
-        meetingUUID: zoomMeetingUUID,
-        meetingTopic: zoomMeetingTopic,
-        joinUrl: zoomMeetingJoinURL,
-        startUrl: zoomMeetingStartURL,
-        encryptedPassword: zoomMeetingEncPassword,
-      }),
+    const [patient] = await Promise.allSettled([
       getPatientById(patientId),
+      dbObject.updateDoctorAppointmentMeetingId({
+        doctorId,
+        appointmentId,
+        meetingId: insertId,
+      }),
       dbObject.updateDoctorAppointmentStartTime({
         appointmentId,
         startTime: moment().format("HH:mm:ss"),
@@ -519,7 +524,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
 
     const [patient] = await Promise.allSettled([
       getPatientById(patientId),
-      dbObject.updateAppointmentEndTime({
+      dbObject.updateDoctorAppointmentEndTime({
         appointmentId,
         endTime: moment().format("HH:mm:ss"),
       }),
