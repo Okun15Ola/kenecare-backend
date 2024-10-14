@@ -49,6 +49,7 @@ module.exports = {
   zoomVerificationToken: env.ZOOM_VERIFICATION_TOKEN,
   zoomAccessTokenUrl: env.ZOOM_ACCESS_TOKEN_URL,
   zoomApiUrl: env.ZOOM_API_URL,
+  zoomWebSocketSubscriptionId: env.ZOOM_WEB_SOCKET_SUBSCRIPTION_ID,
   kenecareAdminEmail: env.KENECARE_ADMIN_EMAIL,
   kenecareSupportEmail: env.KENECARE_SUPPORT_EMAIL,
   kenecareMeetingEmail: env.KENECARE_MEETING_EMAIL,

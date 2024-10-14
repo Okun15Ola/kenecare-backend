@@ -14,6 +14,7 @@ ZOOM_SDK_KEY=<your zoom sdk key>
 ZOOM_SDK_SECRET=<your zoom sdk secret>
 ZOOM_ACCESS_TOKEN=<your zoom access token>
 ZOOM_API_URL=https://api.zoom.us/v2
+ZOOM_WEB_SOCKET_SUBSCRIPTION_ID=
 
 ORANGEPAY_AUTH_TOKEN=<your orange money auth token>
 ORANGEPAY_AUTH_API_BASE_URL=https://api.orange.com/oauth/v3
