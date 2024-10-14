@@ -1,3 +1,4 @@
+const moment = require("moment");
 const {
   getSharedMedicalDocumentsByDoctorId,
   getDoctorSharedMedicalDocumentById,
@@ -20,8 +21,8 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
 
     const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
 
-    const data = rawData.map(
-      ({
+    const dataPromises = rawData.map(
+      async ({
         sharing_id: sharingId,
         document_id: documentId,
         document_uuid: documentUUID,
@@ -31,20 +32,25 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
         patient_last_name: patientLastName,
         doctor_first_name: doctorFirstName,
         doctor_last_name: doctorLastName,
-
         note,
-      }) => ({
-        sharingId,
-        documentId,
-        documentUUID,
-        documentTitle,
-        patientId,
-        patientName: `${patientFirstName} ${patientLastName}`,
-        doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
-        note,
-      }),
+        created_at: createdAt,
+      }) => {
+        const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
+        return {
+          sharingId,
+          documentId,
+          documentUUID,
+          documentTitle,
+          documentUrl,
+          patientId,
+          patientName: `${patientFirstName} ${patientLastName}`,
+          doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
+          note,
+          createdAt: moment(createdAt).format("YYYY-MM-DD"),
+        };
+      },
     );
-
+    const data = await Promise.all(dataPromises);
     return Response.SUCCESS({ data });
   } catch (error) {
     console.error(error);
@@ -83,6 +89,7 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
       doctor_first_name: doctorFirstName,
       doctor_last_name: doctorLastName,
       note,
+      created_at: createdAt,
     } = document;
 
     const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
@@ -97,6 +104,7 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
       patientName: `${patientFirstName} ${patientLastName}`,
       doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
       note,
+      createdAt: moment(createdAt).format("YYYY-MM-DD"),
     };
 
     return Response.SUCCESS({ data });
