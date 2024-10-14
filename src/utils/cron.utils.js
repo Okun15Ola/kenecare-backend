@@ -65,7 +65,6 @@ const getAllAppointments = async () => {
 };
 
 client.on("connect", (connection) => {
-  console.log("WebSocket Client Connected");
   connection.on("error", (error) => {
     logger.error("Socket Client Connection Error: ", error);
     console.log(`Connection Error: ${error.toString()}`);
@@ -75,7 +74,6 @@ client.on("connect", (connection) => {
   });
 
   if (connection.connected) {
-    console.log("Connected");
     connection.on("message", async (message) => {
       if (message.type !== "utf8") return;
       try {
