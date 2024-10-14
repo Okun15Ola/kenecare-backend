@@ -226,7 +226,7 @@ exports.getPatientByUser = async (id) => {
       profilePic: profilePic
         ? `${appBaseURL}/user-profile/${profilePic}`
         : null,
-      dob: moment(dob).format("MMM-DD"),
+      dob: moment(dob).format("YYYY-MM-DD"),
       mobileNumber,
       email,
       userType,
