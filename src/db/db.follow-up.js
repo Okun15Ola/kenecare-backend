@@ -32,6 +32,24 @@ exports.getAppointmentFollowUps = async (appointmentId) => {
     });
   });
 };
+exports.getAppointmentFollowByDateAndTime = async (
+  followUpDate,
+  followUpTime,
+) => {
+  const sql =
+    "SELECT * FROM appointment_followup WHERE followup_date = ? AND followup_time = ? LIMIT 1";
+  return new Promise((resolve, reject) => {
+    connectionPool.query(
+      sql,
+      [followUpDate, followUpTime],
+      (error, results) => {
+        if (error) return reject(error);
+
+        return resolve(results);
+      },
+    );
+  });
+};
 
 exports.deleteAppointmentFollowUp = async ({ appointmentId, followUpId }) => {
   const sql =

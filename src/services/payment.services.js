@@ -141,8 +141,6 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       },
     };
 
-    console.log(patientNotification);
-
     await Promise.allSettled([
       // SEND  EMAIL TO DOCTOR
       // await newDoctorAppointmentEmail({

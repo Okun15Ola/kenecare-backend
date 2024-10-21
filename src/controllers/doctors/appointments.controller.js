@@ -57,7 +57,7 @@ exports.ApproveDoctorAppointmentController = async (req, res, next) => {
     const response = await approveDoctorAppointment({ userId, appointmentId });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     logger.error(error);
     return next(error);
   }

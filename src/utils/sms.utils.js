@@ -10,7 +10,7 @@ const {
 const config = {
   method: "post",
   maxBodyLength: Infinity,
-  url: `${smsHiveUrl}/messages`,
+  url: `${smsHiveUrl}/messages/sms`,
   headers: {
     "X-Wallet": `Token ${smsHiveAuthToken}`,
     "Content-Type": "application/json",
@@ -115,7 +115,8 @@ const appointmentApprovalSms = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    console.log("error");
+    console.error(error.response);
     throw error;
   }
 };
