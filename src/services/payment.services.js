@@ -123,7 +123,7 @@ exports.processAppointmentPayment = async ({ consultationId, referrer }) => {
       notification_token: doctorNotificationToken,
     } = doctor.value;
 
-    // TODO SEND PUSH NOTIFICATION TO PATIENT AND DOCTOR
+    //  SEND PUSH NOTIFICATION TO PATIENT AND DOCTOR
     const patientNotification = {
       token: patientNotificationToken,
       title: "New Medical Appointment",
