@@ -76,50 +76,11 @@ const requireUserAuth = async (req, res, next) => {
       );
     }
 
-    // Generate access token for logged in users
-    // const accessJwt = generateUsersJwtAccessToken({
-    //   sub: userId,
-    // });
-
     updateUserAccountStatusById({
       userId,
       status: STATUS.ACTIVE,
     });
 
-    // TODO move to seperate middleware function
-    // if (userType === USERTYPE.DOCTOR) {
-    //   const doctorProfile = await getDoctorByUserId(userId);
-    //   if (!doctorProfile) {
-    //     return res.status(404).json(
-    //       Response.SUCCESS({
-    //         message: ERROR_CODES.DOCTOR_PROFILE_NOT_FOUND,
-    //         data: {
-    //           token: accessJwt,
-    //           type: userType,
-    //           isVerified,
-    //           isActive: isAccountActive,
-    //         },
-    //       }),
-    //     );
-    //   }
-    // }
-
-    // if (userType === USERTYPE.PATIENT) {
-    //   const patientProfile = await getPatientByUserId(userId);
-    //   if (!patientProfile) {
-    //     return res.status(404).json(
-    //       Response.SUCCESS({
-    //         message: ERROR_CODES.PATIENT_PROFILE_NOT_FOUND,
-    //         data: {
-    //           token: accessJwt,
-    //           type: userType,
-    //           isVerified,
-    //           isActive: isAccountActive,
-    //         },
-    //       }),
-    //     );
-    //   }
-    // }
     req.user = {
       id: decoded.sub,
     };

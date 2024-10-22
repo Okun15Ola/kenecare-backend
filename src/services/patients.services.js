@@ -54,7 +54,11 @@ exports.getPatientById = async (id) => {
   try {
     const rawData = await dbObject.getPatientById(id);
     if (!rawData) {
-      return Response.NOT_FOUND({ message: "Patient Not Found" });
+      return Response.NOT_FOUND({
+        errorCode: "PROFILE_NOT_FOUND",
+        message:
+          "Patient Profile Not Found. Please Create a profile to continue",
+      });
     }
     const {
       patient_id: patientId,
@@ -154,6 +158,7 @@ exports.getPatientByUser = async (id) => {
     const rawData = await dbObject.getPatientByUserId(id);
     if (!rawData) {
       return Response.NOT_FOUND({
+        errorCode: "PROFILE_NOT_FOUND",
         message:
           "Patient Profile Not Found. Please Create a profile to continue",
       });
