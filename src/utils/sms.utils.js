@@ -10,7 +10,7 @@ const {
 const config = {
   method: "post",
   maxBodyLength: Infinity,
-  url: `${smsHiveUrl}/messages/sms`,
+  url: `${smsHiveUrl}/messages/smss`,
   headers: {
     "X-Wallet": `Token ${smsHiveAuthToken}`,
     "Content-Type": "application/json",
@@ -226,6 +226,7 @@ const appointmentBookedSms = async ({
   appointmentTime,
 }) => {
   try {
+    console.log("In here");
     const data = JSON.stringify({
       from: "KENECARE",
       reference: "KENECARE",
@@ -233,10 +234,13 @@ const appointmentBookedSms = async ({
       content: `Dear ${patientName}, you have successfully booked a medical appointment with Dr. ${doctorName}\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nKENECARE `,
     });
 
+    console.log(data);
+
     config.data = data;
-    await axios.request(config).catch((error) => {
+    const response = await axios.request(config).catch((error) => {
       throw error;
     });
+    console.log(response);
   } catch (error) {
     console.error(error);
     throw error;

@@ -187,6 +187,7 @@ exports.getDoctorBySpecialtyId = async (specialityId) => {
         }),
       );
     }
+
     return Response.SUCCESS({ data: doctors });
   } catch (error) {
     console.error(error);
