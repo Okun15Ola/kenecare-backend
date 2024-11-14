@@ -10,7 +10,7 @@ const {
 const config = {
   method: "post",
   maxBodyLength: Infinity,
-  url: `${smsHiveUrl}/messages/smss`,
+  url: `${smsHiveUrl}/messages/sms`,
   headers: {
     "X-Wallet": `Token ${smsHiveAuthToken}`,
     "Content-Type": "application/json",
