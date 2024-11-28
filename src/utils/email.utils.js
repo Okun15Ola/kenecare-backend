@@ -3,6 +3,7 @@ const sendGrid = require("@sendgrid/mail");
 const {
   sendGridApiKey,
   sendGridSenderEmail,
+  apiBaseURL,
 } = require("../config/default.config");
 const { kenecareAdminEmail } = require("../config/default.config");
 
@@ -345,6 +346,32 @@ const paymentCanceledPatientAppointmentEmail = async ({
   }
 };
 
+const marketerEmailVerificationToken = async ({
+  firstName,
+  email,
+  emailToken,
+}) => {
+  try {
+    console.log(apiBaseURL);
+    const message = {
+      to: email,
+      from: mailer.from,
+      subject: "Kenecare  Email Verification",
+      text: "Kenecare Email Verification",
+      html: `<h3>Dear ${firstName}</h3>
+      <p>Click <a href='${apiBaseURL}/api/v1/marketers/verify-email?token=${emailToken}'>here</a> to verify your email</p>
+    
+    `,
+    };
+    await sendGrid.send(message).catch((error) => {
+      if (error) throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 module.exports = {
   newPatientAppointmentEmail,
   newDoctorAppointmentEmail,
@@ -356,4 +383,5 @@ module.exports = {
   patientAppointmentApprovalEmail,
   doctorCouncilRegistrationApprovedEmail,
   doctorCouncilRegistrationRejectedEmail,
+  marketerEmailVerificationToken,
 };

@@ -68,6 +68,31 @@ const generateAdminJwtAccessToken = (admin) => {
   }
 };
 
+const generateMarketerVerificaitonJwt = (marketer) => {
+  try {
+    return jwt.sign(marketer, adminJwtSecret, {
+      issuer: jwtIssuer,
+      audience: jwtAdminAudience,
+      expiresIn: "1h",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+const verifyMarketerEmailJwt = (token) => {
+  try {
+    return jwt.verify(token, adminJwtSecret, {
+      issuer: jwtIssuer,
+      audience: jwtAdminAudience,
+    });
+  } catch (error) {
+    console.error(error.message);
+    throw new Error(error.message);
+  }
+};
+
 const generateVerificationToken = () => {
   // Generate a random 3-byte (6-digit) hexadecimal number
   const randomBytes = crypto.randomBytes(3);
@@ -98,4 +123,6 @@ module.exports = {
   encryptText,
   decryptText,
   validateExpoToken,
+  generateMarketerVerificaitonJwt,
+  verifyMarketerEmailJwt,
 };

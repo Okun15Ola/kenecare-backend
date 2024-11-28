@@ -39,6 +39,50 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     throw error;
   }
 };
+const sendMarketerVerificationTokenSMS = async ({
+  firstName,
+  token,
+  mobileNumber,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear ${firstName}, your KENECARE Marketer profile was successfully created. Please provide this verification token: ${token} to your Kenecare admin for final verification.`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+const sendMarketerPhoneVerifiedSMS = async ({
+  firstName,
+  mobileNumber,
+  referralCode,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear ${firstName}, your phone number has successfully been verified.\nYour  Referral Code is: ${referralCode}. \n\nUse this code when signing up new user during marketing exercise.`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 const sendForgotPasswordRequestTokenSMS = async ({ token, mobileNumber }) => {
   try {
     const data = JSON.stringify({
@@ -372,4 +416,6 @@ module.exports = {
   sendPasswordResetSMS,
   sendForgotPasswordRequestTokenSMS,
   newFollowAppointmentSms,
+  sendMarketerVerificationTokenSMS,
+  sendMarketerPhoneVerifiedSMS,
 };

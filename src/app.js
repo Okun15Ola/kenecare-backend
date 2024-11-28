@@ -67,6 +67,8 @@ const adminFaqRouter = require("./routes/api/admin/faq.routes");
 const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.routes");
 const adminPatientsRouter = require("./routes/api/admin/patients.routes");
 const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes");
+const adminMarketersRouter = require("./routes/api/admin/marketers.routes");
+
 const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings");
 const {
   getAppointmentByMeetingId,
@@ -307,6 +309,8 @@ app.use(
   adminCouncilRegistrationRouter,
 );
 app.use("/api/v1/admin/withdrawals", requireAdminAuth, adminWithdrawalsRoute);
+app.use("/api/v1/admin/marketers", adminMarketersRouter);
+app.use("/api/v1/marketers", adminMarketersRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {

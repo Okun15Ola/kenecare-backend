@@ -24,4 +24,17 @@ const connectionPool = mysql.createPool(dbConfig);
 
 const sessionStore = new MySQLStore(dbConfig);
 
-module.exports = { dbConfig, sessionStore, connectionPool };
+const query = (sql, params) => {
+  try {
+    return new Promise((resolve, reject) => {
+      connectionPool.query(sql, params, (error, results) => {
+        if (error) reject(error);
+        resolve(results);
+      });
+    });
+  } catch (error) {
+    throw new Error(error.code);
+  }
+};
+
+module.exports = { dbConfig, sessionStore, connectionPool, query };
