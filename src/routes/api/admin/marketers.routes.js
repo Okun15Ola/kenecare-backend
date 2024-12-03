@@ -12,6 +12,7 @@ const {
 const { tempUpload } = require("../../../utils/file-upload.utils");
 const {
   CreateMarketerValidation,
+  UpdateMarketerValidation,
 } = require("../../../validations/admin/marketers.validations");
 const { Validate } = require("../../../validations/validate");
 const { getMarketerByVerficationToken } = require("../../../db/db.marketers");
@@ -78,7 +79,14 @@ router.post(
   Validate,
   CreateMarketerController,
 );
-router.put("/:id", requireAdminAuth, [], Validate, UpdateMarketerController);
+router.put(
+  "/:id",
+  requireAdminAuth,
+  tempUpload.single("idDocument"),
+  UpdateMarketerValidation,
+  Validate,
+  UpdateMarketerController,
+);
 router.delete(
   "/:id",
   requireAdminAuth,

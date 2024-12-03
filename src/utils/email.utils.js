@@ -352,7 +352,6 @@ const marketerEmailVerificationToken = async ({
   emailToken,
 }) => {
   try {
-    console.log(apiBaseURL);
     const message = {
       to: email,
       from: mailer.from,

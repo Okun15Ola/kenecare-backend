@@ -361,6 +361,11 @@ exports.updateMarketerByIdService = async ({
     if (!marketer) {
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
+
+    // delete old file if a new file is sent with the update request
+    if (idDocument) {
+      console.log("Id document was sent ");
+    }
     await updateMarketerById({
       marketerId,
       firstName,
