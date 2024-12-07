@@ -9,9 +9,11 @@ const {
   sendAuthTokenSMS,
   sendPasswordResetSMS,
   sendForgotPasswordRequestTokenSMS,
+  sendMarketerUserRegisteredSMS,
 } = require("../utils/sms.utils");
 // const { sendPushNotifications } = require("../utils/notification.utils");
 const Response = require("../utils/response.utils");
+const { getMarketerByReferralCode } = require("../db/db.marketers");
 
 exports.getUsers = async () => {
   const rawData = await dbObject.getAllUsers();
@@ -123,31 +125,30 @@ exports.registerNewUser = async ({
   email = "",
   password,
   userType,
+  referralCode,
 }) => {
   try {
     // DONE Check user type and match with expected values
     const type = userType === "patient" ? USERTYPE.PATIENT : USERTYPE.DOCTOR;
 
-    // has plain text password
-    const hash = await hashUsersPassword(password);
-
     // GENERATE VERIFICATION TOKEN
     const vToken = generateVerificationToken();
 
-    // CREATE USER OBJECT
-    const user = {
-      mobileNumber,
-      email,
-      password: hash,
-      userType: type,
-      vToken,
-    };
+    // has plain text password
+    const hashedPassword = await hashUsersPassword(password);
 
-    // SAVE TO DATABASE
-    await dbObject.createNewUser(user);
-
-    // Send TOKEN VIA SMS
-    await sendAuthTokenSMS({ token: vToken, mobileNumber });
+    // reate user and send OTP via SMS
+    await Promise.allSettled([
+      dbObject.createNewUser({
+        mobileNumber,
+        email,
+        password: hashedPassword,
+        userType: type,
+        vToken,
+        referralCode,
+      }),
+      sendAuthTokenSMS({ token: vToken, mobileNumber }),
+    ]);
 
     return Response.CREATED({
       message: "Account Created Successfully. Please Proceed to verification",
@@ -172,6 +173,7 @@ exports.getUserByToken = async (token) => {
       is_account_active: accountActive,
       is_online: isOnline,
       is_2fa_enabled: is2faEnabled,
+      referral_code: referralCode,
     } = rawData;
     return {
       userId,
@@ -182,6 +184,7 @@ exports.getUserByToken = async (token) => {
       accountActive,
       isOnline,
       is2faEnabled,
+      referralCode,
     };
   } catch (error) {
     console.error(error);
@@ -189,23 +192,37 @@ exports.getUserByToken = async (token) => {
   }
 };
 
-exports.verifyRegistrationOTP = async ({ token, user }) => {
+exports.verifyRegistrationOTP = async (token) => {
   try {
-    const { userId, userType, accountActive } = user;
-    await dbObject.updateUserVerificationStatusByToken({
-      token,
-      verificationStatus: VERIFICATIONSTATUS.VERIFIED,
-    });
+    const user = await dbObject.getUserByVerificationToken(token);
+
+    const {
+      user_id: userId,
+      user_type: userType,
+      account_active: accountActive,
+      referral_code: referralCode,
+      mobile_number: userMobileNumber,
+    } = user;
+
+    const marketer = await getMarketerByReferralCode(referralCode);
+    const { phone_number: phoneNumber, first_name: marketerFirstName } =
+      marketer;
+
+    await Promise.all([
+      dbObject.updateUserVerificationStatusByToken({
+        token,
+        verificationStatus: VERIFICATIONSTATUS.VERIFIED,
+      }),
+      sendMarketerUserRegisteredSMS({
+        marketerName: marketerFirstName,
+        mobileNumber: phoneNumber,
+        userPhoneNumber: userMobileNumber,
+      }),
+    ]);
 
     // Generate access token
     const accessToken = generateUsersJwtAccessToken({
       sub: userId,
-    });
-
-    // update user's active status in the database
-    dbObject.updateUserAccountStatusById({
-      userId,
-      status: STATUS.ACTIVE,
     });
 
     return Response.SUCCESS({
