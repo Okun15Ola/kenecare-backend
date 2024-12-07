@@ -2,12 +2,12 @@ const { body, param } = require("express-validator");
 const {
   getUserByMobileNumber,
   getUserByEmail,
-  getUserByToken,
 } = require("../services/users.service");
 const { comparePassword } = require("../utils/auth.utils");
 const { STATUS, VERIFICATIONSTATUS, USERTYPE } = require("../utils/enum.utils");
 const { getDoctorByUserId } = require("../db/db.doctors");
-const { getUserById } = require("../db/db.users");
+const { getUserById, getUserByVerificationToken } = require("../db/db.users");
+const { getMarketerByReferralCode } = require("../db/db.marketers");
 
 exports.LoginValidations = [
   body("mobileNumber")
@@ -162,9 +162,30 @@ exports.RegisterValidations = [
     .withMessage(
       "Passwords do not match. Ensure password and confirm password are the same.",
     ),
-  // body("referralCode").custom((value) => {
-  //   console.log("Referral Code: ", value);
-  // }),
+  body("referralCode")
+    .trim()
+    .escape()
+    .toUpperCase()
+    .matches(/^KC-[A-Z]+[0-9]+$/)
+    .withMessage("Invalid Referral Code. Try again with a valid referral code")
+    .custom(async (value) => {
+      const data = await getMarketerByReferralCode(value);
+      if (!data) {
+        throw new Error(
+          "Invalid Referral Code. Try again with a valid referral code",
+        );
+      }
+      const {
+        is_phone_verified: marketerPhoneVerified,
+        is_email_verified: marketerEmailVerified,
+      } = data;
+      if (!marketerPhoneVerified && !marketerEmailVerified) {
+        throw new Error(
+          "Invalid Referral Code. Try again with a valid referral code",
+        );
+      }
+      return true;
+    }),
 ];
 exports.VerifyTokenValidations = [
   param("token")
@@ -173,12 +194,13 @@ exports.VerifyTokenValidations = [
     .isLength({ max: 6, min: 6 })
     .trim()
     .escape()
-    .custom(async (token, { req }) => {
-      const user = await getUserByToken(token);
+    .custom(async (token) => {
+      const user = await getUserByVerificationToken(token);
+
       if (!user) {
         throw new Error("Invalid AUTH Token. Please enter a valid AUTH Token");
       }
-      req.user = user;
+
       return true;
     }),
 ];
