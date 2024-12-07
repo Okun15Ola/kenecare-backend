@@ -10,6 +10,7 @@ const {
   verifyMarketerEmailById,
   deleteMarketerById,
   updateMarketerById,
+  getMarketerByEmailVerficationToken,
 } = require("../../db/db.marketers");
 const Response = require("../../utils/response.utils");
 const {
@@ -304,13 +305,14 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
 };
 exports.verifyMarketerEmailService = async (token) => {
   try {
-    const marketer = await getMarketerByVerficationToken(token);
+    const marketer = await getMarketerByEmailVerficationToken(token);
+
     const { marketer_id: marketerId, email } = marketer;
     const { sub } = verifyMarketerEmailJwt(token);
 
     if (!sub) {
       return Response.BAD_REQUEST({
-        message: "Invalid Email Verification Token",
+        message: "Corrupted Email Verification Token",
       });
     }
 
@@ -321,7 +323,9 @@ exports.verifyMarketerEmailService = async (token) => {
       email,
     });
 
-    // TODO Send Email to marketer
+    //  TODO Send Email to marketer
+
+    // Send Success response
     return Response.SUCCESS({
       message: "Email Verified Successfully",
     });

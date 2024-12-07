@@ -14,6 +14,7 @@ const {
   DELETE_MARKETER_BY_ID,
   VERIFY_PHONE_NUMBER,
   VERIFY_EMAIL,
+  GET_MARKETER_BY_EMAIL_VERIFICATION_TOKEN,
 } = require("./queries/marketers.queries");
 
 exports.getAllMarketers = async () => {
@@ -42,6 +43,12 @@ exports.getMarketerByReferralCode = async (referralCode) => {
 };
 exports.getMarketerByVerficationToken = async (token) => {
   const rows = await query(GET_MARKETER_BY_VERIFICATION_TOKEN, [token, token]);
+  return rows[0];
+};
+exports.getMarketerByEmailVerficationToken = async (emailToken) => {
+  const rows = await query(GET_MARKETER_BY_EMAIL_VERIFICATION_TOKEN, [
+    emailToken,
+  ]);
   return rows[0];
 };
 exports.getMarketerByUuid = async (uuid) => {

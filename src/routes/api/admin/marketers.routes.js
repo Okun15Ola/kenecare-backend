@@ -15,7 +15,10 @@ const {
   UpdateMarketerValidation,
 } = require("../../../validations/admin/marketers.validations");
 const { Validate } = require("../../../validations/validate");
-const { getMarketerByVerficationToken } = require("../../../db/db.marketers");
+const {
+  getMarketerByVerficationToken,
+  getMarketerByEmailVerficationToken,
+} = require("../../../db/db.marketers");
 const { requireAdminAuth } = require("../../../middlewares/auth.middleware");
 
 router.get("/", requireAdminAuth, GetAllMarketersController);
@@ -32,7 +35,7 @@ router.get(
       .withMessage("Corrupted Email Verification Token")
       .bail()
       .custom(async (token) => {
-        const data = await getMarketerByVerficationToken(token);
+        const data = await getMarketerByEmailVerficationToken(token);
 
         if (!data) {
           throw new Error("Invalid Email Verification Token");
