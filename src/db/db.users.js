@@ -63,15 +63,22 @@ exports.getUserByVerificationToken = (token) =>
     });
   });
 
-exports.createNewUser = (user) => {
-  const email = user.email || null;
-  const { mobileNumber, userType, vToken, password } = user;
+exports.createNewUser = ({
+  mobileNumber,
+  userType,
+  vToken,
+  password,
+  referralCode,
+  email,
+}) => {
+  const userEmail = email || null;
+
   const sql =
-    "INSERT INTO users (mobile_number, email,user_type, password,verification_token) values (?,?,?,?,?)";
+    "INSERT INTO users (mobile_number, email,user_type, password,verification_token,referral_code) values (?,?,?,?,?,?)";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
-      [mobileNumber, email, userType, password, vToken],
+      [mobileNumber, userEmail, userType, password, vToken, referralCode],
       (err, result) => {
         if (err) return reject(err);
         return resolve(result);
