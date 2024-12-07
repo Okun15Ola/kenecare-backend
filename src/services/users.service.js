@@ -204,21 +204,20 @@ exports.verifyRegistrationOTP = async (token) => {
       mobile_number: userMobileNumber,
     } = user;
 
+    dbObject.updateUserVerificationStatusByToken({
+      token,
+      verificationStatus: VERIFICATIONSTATUS.VERIFIED,
+    });
     const marketer = await getMarketerByReferralCode(referralCode);
-    const { phone_number: phoneNumber, first_name: marketerFirstName } =
-      marketer;
-
-    await Promise.all([
-      dbObject.updateUserVerificationStatusByToken({
-        token,
-        verificationStatus: VERIFICATIONSTATUS.VERIFIED,
-      }),
+    if (marketer) {
+      const { phone_number: phoneNumber, first_name: marketerFirstName } =
+        marketer;
       sendMarketerUserRegisteredSMS({
         marketerName: marketerFirstName,
         mobileNumber: phoneNumber,
         userPhoneNumber: userMobileNumber,
-      }),
-    ]);
+      });
+    }
 
     // Generate access token
     const accessToken = generateUsersJwtAccessToken({
