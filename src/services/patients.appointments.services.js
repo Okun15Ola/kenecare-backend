@@ -401,6 +401,7 @@ exports.createPatientAppointment = async ({
           "First Free Medical Appointment Booked Successfully. Thank you for choosing Kenecare",
         data: {
           paymentUrl: null,
+          firstAppointment: true,
         },
       });
     }
