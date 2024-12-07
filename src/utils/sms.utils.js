@@ -181,7 +181,6 @@ const appointmentApprovalSms = async ({
       throw error;
     });
   } catch (error) {
-    console.log("error");
     console.error(error.response);
     throw error;
   }
@@ -292,7 +291,6 @@ const appointmentBookedSms = async ({
   appointmentTime,
 }) => {
   try {
-    console.log("In here");
     const data = JSON.stringify({
       from: "KENECARE",
       reference: "KENECARE",
@@ -300,13 +298,10 @@ const appointmentBookedSms = async ({
       content: `Dear ${patientName}, you have successfully booked a medical appointment with Dr. ${doctorName}\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nPatient: ${patientNameOnPrescription.toUpperCase()}.\n\nKENECARE `,
     });
 
-    console.log(data);
-
     config.data = data;
-    const response = await axios.request(config).catch((error) => {
+    await axios.request(config).catch((error) => {
       throw error;
     });
-    console.log(response);
   } catch (error) {
     console.error(error);
     throw error;
