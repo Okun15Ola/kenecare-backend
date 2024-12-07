@@ -86,7 +86,9 @@ router.post(
         const user = await getUserByMobileNumber(value);
 
         if (!user) {
-          throw new Error("Error verifiying phone number");
+          throw new Error(
+            "No Account associated with the phone number you provided",
+          );
         }
 
         req.user = user;
