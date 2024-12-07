@@ -3,22 +3,23 @@ const qs = require("qs");
 const crypto = require("crypto");
 // eslint-disable-next-line import/no-extraneous-dependencies
 const WebSocketClient = require("websocket").client;
+const logger = require("../middlewares/logger.middleware");
 
 const client = new WebSocketClient();
 
 client.on("connectionFailed", (error) => {
-  console.log("Connection Error: ", error);
+  logger.error(error);
 });
 
-client.on("connect", function (connection) {
+client.on("connect", (connection) => {
   console.log("WebSocket Client Connected");
-  connection.on("error", function (error) {
-    console.log(`Connection Error: ${error.toString()}`);
+  connection.on("error", (error) => {
+    logger.error(error);
   });
-  connection.on("close", function () {
+  connection.on("close", () => {
     console.log("echo-protocol Connection Closed");
   });
-  connection.on("message", function (message) {
+  connection.on("message", (message) => {
     if (message.type === "utf8") {
       console.log(`Received: '${message.utf8Data}'`);
     }
@@ -27,14 +28,6 @@ client.on("connect", function (connection) {
   if (connection.connected) {
     console.log("Connected");
   }
-  // function sendNumber() {
-  //   if (connection.connected) {
-  //     var number = Math.round(Math.random() * 0xffffff);
-  //     connection.sendUTF(number.toString());
-  //     setTimeout(sendNumber, 1000);
-  //   }
-  // }
-  // sendNumber();
 });
 
 const {
@@ -64,7 +57,7 @@ const getZoomAccessToken = async () => {
     const { access_token: accessToken } = response.data;
     return accessToken;
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     throw error;
   }
 };
