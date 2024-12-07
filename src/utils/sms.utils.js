@@ -83,6 +83,28 @@ const sendMarketerPhoneVerifiedSMS = async ({
     throw error;
   }
 };
+const sendMarketerUserRegisteredSMS = async ({
+  marketerName,
+  mobileNumber,
+  userPhoneNumber,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Congratulations! ${marketerName}, you have succesfully signed up ${userPhoneNumber} on Kenecare.\n\nKENECARE`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 const sendForgotPasswordRequestTokenSMS = async ({ token, mobileNumber }) => {
   try {
     const data = JSON.stringify({
@@ -418,4 +440,5 @@ module.exports = {
   newFollowAppointmentSms,
   sendMarketerVerificationTokenSMS,
   sendMarketerPhoneVerifiedSMS,
+  sendMarketerUserRegisteredSMS,
 };
