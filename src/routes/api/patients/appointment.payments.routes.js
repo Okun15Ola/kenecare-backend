@@ -17,7 +17,7 @@ router.get("/om/return", async (req, res, next) => {
     const { statusCode } = response;
 
     if (statusCode === 304) {
-      return res.redirect(clientAppUrl);
+      return res.redirect(`${clientAppUrl}/paymentSuccess`);
     }
     if (statusCode === 400) {
       return res.redirect(`${clientAppUrl}/paymentFailure`);
