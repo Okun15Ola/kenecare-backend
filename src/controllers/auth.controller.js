@@ -13,6 +13,7 @@ const {
 
 const Response = require("../utils/response.utils");
 const logger = require("../middlewares/logger.middleware");
+const { refineMobileNumber } = require("../utils/auth.utils");
 
 exports.AuthenticateController = async (req, res, next) => {
   try {
@@ -27,10 +28,10 @@ exports.AuthenticateController = async (req, res, next) => {
 exports.LoginController = async (req, res, next) => {
   try {
     const response = await loginUser(req.user);
-    logger.info("hello");
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error("Error Logging In: ", error);
+    logger.error("Controller Error: ", error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -39,8 +40,8 @@ exports.RequestLoginOTPController = async (req, res, next) => {
     const response = await requestUserLoginOtp(req.user);
     return res.status(response.statusCode).json(Response.SUCCESS(response));
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -49,8 +50,8 @@ exports.VerifyLoginOTPController = async (req, res, next) => {
     const response = await verifyUserLoginOtp(req.user);
     return res.status(response.statusCode).json(Response.SUCCESS(response));
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -61,7 +62,7 @@ exports.RegisterController = async (req, res, next) => {
     const { mobileNumber, userType, password, referralCode } = req.body;
 
     const response = await registerNewUser({
-      mobileNumber,
+      mobileNumber: refineMobileNumber(mobileNumber),
       password,
       email,
       userType,
@@ -70,8 +71,8 @@ exports.RegisterController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -83,8 +84,8 @@ exports.VerifyRegisterOTPController = async (req, res, next) => {
     const response = await verifyRegistrationOTP(token);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -98,8 +99,8 @@ exports.RequestForgotPasswordOTPController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -110,8 +111,8 @@ exports.VerifyForgotPasswordOTPController = async (req, res, next) => {
     const response = await verifyRequestedOTP(req.user);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -122,8 +123,8 @@ exports.UpdatePasswordController = async (req, res, next) => {
     const response = await updateUserPassword({ newPassword, user });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -134,8 +135,8 @@ exports.ResetPasswordController = async (req, res, next) => {
     const response = await updateUserPassword({ newPassword, user });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };
@@ -149,8 +150,8 @@ exports.ResendVerificationOTPController = async (req, res, next) => {
     const response = await resendVerificationOTP(user);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
+    console.error("Controller Error: ", error);
     return next(error);
   }
 };

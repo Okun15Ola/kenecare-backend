@@ -11,6 +11,8 @@ const {
   jwtAdminAudience,
 } = require("../config/default.config");
 
+const SL_COUNTRY_CODE = "+232";
+
 const hashUsersPassword = async (password) => {
   try {
     return await bcryptjs.hash(password, 10);
@@ -114,6 +116,12 @@ const validateExpoToken = (token) => {
   return Expo.isExpoPushToken(token);
 };
 
+const refineMobileNumber = (mobileNumber) => {
+  if (!mobileNumber) return null;
+  const slicedMobileNumber = mobileNumber.slice(-8);
+  return `${SL_COUNTRY_CODE}${slicedMobileNumber}`;
+};
+
 module.exports = {
   hashUsersPassword,
   comparePassword,
@@ -125,4 +133,5 @@ module.exports = {
   validateExpoToken,
   generateMarketerVerificaitonJwt,
   verifyMarketerEmailJwt,
+  refineMobileNumber,
 };

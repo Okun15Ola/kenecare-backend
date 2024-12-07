@@ -3,7 +3,7 @@ const {
   getUserByMobileNumber,
   getUserByEmail,
 } = require("../services/users.service");
-const { comparePassword } = require("../utils/auth.utils");
+const { comparePassword, refineMobileNumber } = require("../utils/auth.utils");
 const { STATUS, VERIFICATIONSTATUS, USERTYPE } = require("../utils/enum.utils");
 const { getDoctorByUserId } = require("../db/db.doctors");
 const { getUserById, getUserByVerificationToken } = require("../db/db.users");
@@ -11,14 +11,15 @@ const { getMarketerByReferralCode } = require("../db/db.marketers");
 
 exports.LoginValidations = [
   body("mobileNumber")
-    .notEmpty()
-    .withMessage("Mobile Number is required")
-    .matches(/^\+(232)?(\d{8})$/)
-    .withMessage("Mobile Number must be a registered SL (+232) number")
     .trim()
     .escape()
+    .notEmpty()
+    .withMessage("Mobile Number is required")
+    .bail()
     .custom(async (mobileNumber, { req }) => {
-      const user = await getUserByMobileNumber(mobileNumber);
+      const refinedMobileNumber = refineMobileNumber(mobileNumber);
+
+      const user = await getUserByMobileNumber(refinedMobileNumber);
 
       if (!user) {
         throw new Error(
@@ -59,6 +60,7 @@ exports.LoginValidations = [
   body("password")
     .notEmpty()
     .withMessage("Password is required")
+    .bail()
     .trim()
     .escape()
     .custom(async (password, { req }) => {
@@ -90,12 +92,14 @@ exports.OTPLoginValidation = [
   body("mobileNumber")
     .notEmpty()
     .withMessage("Mobile Number is required")
-    .matches(/^\+(232)?(\d{8})$/)
-    .withMessage("Mobile Number must be a regsitered SL (+232) number")
+    .bail()
+    // .matches(/^\+(232)?(\d{8})$/)
+    // .withMessage("Mobile Number must be a regsitered SL (+232) number")
     .trim()
     .escape()
     .custom(async (mobileNumber, { req }) => {
-      const user = await getUserByMobileNumber(mobileNumber);
+      const refinedMobileNumber = refineMobileNumber(mobileNumber);
+      const user = await getUserByMobileNumber(refinedMobileNumber);
 
       if (!user) {
         throw new Error("Not A registered Mobile Number");
@@ -120,18 +124,21 @@ exports.RegisterValidations = [
   body("mobileNumber")
     .notEmpty()
     .withMessage("Mobile Number is required")
-    .toLowerCase()
-    .matches(/^\+(232)?(\d{8})$/)
-    .withMessage("Mobile Number must be a registered SL (+232) number.")
+    .bail()
+    // .matches(/^\+(232)?(\d{8})$/)
+    // .withMessage("Mobile Number must be a registered SL (+232) number.")
     .trim()
     .escape()
     .custom(async (mobileNumber) => {
-      const user = await getUserByMobileNumber(mobileNumber);
+      const refinedMobileNumber = refineMobileNumber(mobileNumber);
+
+      const user = await getUserByMobileNumber(refinedMobileNumber);
       if (user) {
         throw new Error(
           "Mobile Number Already Exist. Please try using a different number",
         );
       }
+
       return true;
     }),
   body("email")
@@ -158,6 +165,7 @@ exports.RegisterValidations = [
   body("confirmPassword")
     .notEmpty()
     .withMessage("Confirm Password is required")
+    .bail()
     .custom((value, { req }) => value === req.body.password)
     .withMessage(
       "Passwords do not match. Ensure password and confirm password are the same.",
@@ -166,13 +174,15 @@ exports.RegisterValidations = [
     .trim()
     .escape()
     .toUpperCase()
-    .matches(/^KC-[A-Z]+[0-9]+$/)
-    .withMessage("Invalid Referral Code. Try again with a valid referral code")
+    .isLength({ max: 15, min: 0 })
+    .withMessage("Not a valid referral code")
     .custom(async (value) => {
+      if (!value) return true;
+
       const data = await getMarketerByReferralCode(value);
       if (!data) {
         throw new Error(
-          "Invalid Referral Code. Try again with a valid referral code",
+          "Invalid Referral Code. Try again with a valid referral codeee",
         );
       }
       const {
