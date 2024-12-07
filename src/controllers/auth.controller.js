@@ -58,13 +58,14 @@ exports.VerifyLoginOTPController = async (req, res, next) => {
 exports.RegisterController = async (req, res, next) => {
   try {
     const email = req.body.email || "";
-    const { mobileNumber, userType, password } = req.body;
+    const { mobileNumber, userType, password, referralCode } = req.body;
 
     const response = await registerNewUser({
       mobileNumber,
       password,
       email,
       userType,
+      referralCode: referralCode || null,
     });
 
     return res.status(response.statusCode).json(response);
@@ -78,8 +79,8 @@ exports.VerifyRegisterOTPController = async (req, res, next) => {
   try {
     // Extract token FROM REQUEST
     const { token } = req.params;
-    const { user } = req;
-    const response = await verifyRegistrationOTP({ token, user });
+
+    const response = await verifyRegistrationOTP(token);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
