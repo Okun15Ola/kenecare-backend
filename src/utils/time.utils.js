@@ -43,7 +43,7 @@ const validateAppointmentPostponedDate = (date) => {
 
     return null;
   } catch (error) {
-    console.log(error);
+    console.log(error.message);
     throw error;
   }
 };
@@ -61,7 +61,7 @@ const validateAppointmentTime = (time) => {
 
     return null;
   } catch (error) {
-    console.log(error);
+    console.log(error.message);
     throw error;
   }
 };

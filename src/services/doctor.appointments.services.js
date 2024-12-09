@@ -647,9 +647,9 @@ exports.postponeDoctorAppointment = async ({
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
-      return Response.NOT_FOUND({
+      return Response.UNAUTHORIZED({
         message:
-          "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
+          "Unauthorized Access. This action can only be performed by a doctor",
       });
     }
     const { doctor_id: doctorId } = doctor;
@@ -659,6 +659,11 @@ exports.postponeDoctorAppointment = async ({
       doctorId,
       appointmentId,
     });
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Appointment Not Found",
+      });
+    }
     const {
       patient_id: patientId,
       appointment_status: appointmentStatus,

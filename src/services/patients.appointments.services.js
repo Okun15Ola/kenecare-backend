@@ -387,7 +387,7 @@ exports.createPatientAppointment = async ({
         appointmentId,
         amountPaid: consultationFee,
         orderId: genUUID,
-        paymentMethod: "ORNAGE MONEY",
+        paymentMethod: "ORANGE MONEY",
         transactionId: "FIRST_FREE_APPOINTMENT",
         paymentToken: "FIRST_FREE_APPOINTMENT",
         notificationToken: "FIRST_FREE_APPOINTMENT",

@@ -222,8 +222,9 @@ exports.PostponeAppointmentValidation = [
         doctorId,
         appointmentId: value,
       });
+
       if (!data) {
-        throw new Error("Specified Appontment Not Found");
+        throw new Error("Appointment Not Found");
       }
 
       return true;
@@ -231,20 +232,10 @@ exports.PostponeAppointmentValidation = [
   body("postponedDate")
     .notEmpty()
     .withMessage("New Appointment Date is required")
-    .custom(async (value, { req }) => {
-      const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
-
-      const data = await getDoctorAppointmentById({
-        doctorId,
-        appointmentId: value,
-      });
-      if (!data) {
-        throw new Error("Specified Appontment Not Found");
-      }
-
+    .bail()
+    .custom(async (value) => {
       const error = validateAppointmentPostponedDate(value);
       if (error) {
-        console.log(error);
         throw new Error(error);
       }
 
@@ -254,10 +245,10 @@ exports.PostponeAppointmentValidation = [
   body("postponedTime")
     .notEmpty()
     .withMessage("Specify new appointment time")
+    .bail()
     .custom(async (value) => {
       const error = validateAppointmentTime(value);
       if (error) {
-        console.log(error);
         throw new Error(error);
       }
       return true;
