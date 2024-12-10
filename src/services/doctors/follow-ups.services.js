@@ -307,15 +307,14 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
     throw error;
   }
 };
-exports.deleteAppointmentFollowUpService = async ({
-  followUpId,
-  appointmentId,
-
-  userId,
-}) => {
+exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
   try {
+    const followUp = await dbObject.getFollowUpById(followUpId);
+    if (!followUp) {
+      return Response.NOT_FOUND({ message: "Follow-up not found" });
+    }
+    // TODO move to middleware function
     const doctor = await getDoctorByUserId(userId);
-
     if (!doctor) {
       return Response.UNAUTHORIZED({
         message:
@@ -323,6 +322,7 @@ exports.deleteAppointmentFollowUpService = async ({
       });
     }
 
+    const { appointment_id: appointmentId } = followUp;
     const { doctor_id: doctorId } = doctor;
 
     // check if the appointment belongs to the requesting doctor
@@ -331,6 +331,8 @@ exports.deleteAppointmentFollowUpService = async ({
       appointmentId,
     });
 
+    console.log(isDoctorsAppointment);
+
     if (!isDoctorsAppointment) {
       return Response.UNAUTHORIZED({
         message: "UnAuthorized Action.",
@@ -338,10 +340,7 @@ exports.deleteAppointmentFollowUpService = async ({
     }
 
     // Save follow-up to database
-    await dbObject.deleteAppointmentFollowUp({
-      followUpId,
-      appointmentId,
-    });
+    await dbObject.deleteAppointmentFollowUp(followUpId);
 
     return Response.SUCCESS({
       message: "Appointment Follow-up Deleted Successfully",
