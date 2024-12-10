@@ -11,6 +11,7 @@ const {
   GetAppointmentFollowUpsController,
   GetFollowUpByIdController,
   UpdateAppointmentFollowUpController,
+  DeleteAppointmentFollowUpController,
 } = require("../../../controllers/doctors/followups.controller");
 
 router.post(
@@ -52,4 +53,17 @@ router.get(
   GetAppointmentFollowUpsController,
 );
 
+router.delete(
+  "/:id",
+  [
+    param("id")
+      .notEmpty()
+      .withMessage("Followup ID is required")
+      .isInt({ allow_leading_zeroes: false, gt: 0 })
+      .withMessage("Provide a valid Followup ID")
+      .escape(),
+  ],
+  Validate,
+  DeleteAppointmentFollowUpController,
+);
 module.exports = router;

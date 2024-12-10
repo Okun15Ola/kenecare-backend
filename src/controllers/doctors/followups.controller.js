@@ -4,6 +4,7 @@ const {
   getAllAppointmentFollowupService,
   getFollowUpByIdService,
   updateAppointmentFollowUpService,
+  deleteAppointmentFollowUpService,
 } = require("../../services/doctors/follow-ups.services");
 
 exports.CreateAppointmentFollowUpController = async (req, res, next) => {
@@ -49,6 +50,22 @@ exports.UpdateAppointmentFollowUpController = async (req, res, next) => {
       followUpTime,
       followUpReason,
       followUpType,
+      userId,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    return next(error);
+  }
+};
+exports.DeleteAppointmentFollowUpController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const followUpId = Number(req.params.id);
+
+    const response = await deleteAppointmentFollowUpService({
+      followUpId,
       userId,
     });
     return res.status(response.statusCode).json(response);

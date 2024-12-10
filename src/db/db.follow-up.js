@@ -109,11 +109,10 @@ exports.getDoctorsFollowByDateAndTime = async ({
   });
 };
 
-exports.deleteAppointmentFollowUp = async ({ appointmentId, followUpId }) => {
-  const sql =
-    "DELETE FROM appointment_followup WHERE followup_id = ? AND appointment_id = ?";
+exports.deleteAppointmentFollowUp = async (followUpId) => {
+  const sql = "DELETE FROM appointment_followup WHERE followup_id = ? LIMIT 1";
   return new Promise((resolve, reject) => {
-    connectionPool.query(sql, [followUpId, appointmentId], (error, results) => {
+    connectionPool.query(sql, [followUpId], (error, results) => {
       if (error) return reject(error);
 
       return resolve(results);
