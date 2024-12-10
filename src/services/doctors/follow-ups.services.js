@@ -101,6 +101,98 @@ exports.createFollowUp = async ({
     throw error;
   }
 };
+exports.updateAppointmentFollowUpService = async ({
+  followUpId,
+  appointmentId,
+  followUpDate,
+  followUpTime,
+  followUpReason,
+  followUpType,
+  userId,
+}) => {
+  try {
+    const doctor = await getDoctorByUserId(userId);
+
+    if (!doctor) {
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please Login as a doctor before proceeding",
+      });
+    }
+
+    const { doctor_id: doctorId } = doctor;
+
+    // check if the appointment belongs to the requesting doctor
+    const isDoctorsAppointment = await getDoctorAppointmentById({
+      doctorId,
+      appointmentId,
+    });
+
+    if (!isDoctorsAppointment) {
+      return Response.UNAUTHORIZED({
+        message: "UnAuthorized Action.",
+      });
+    }
+
+    // Check if an appointment has not been booked on the selected followup date
+    const appointmentBookedOnFollowUpDateAndTime =
+      await getDoctorAppointByDateAndTime({
+        doctorId,
+        date: followUpDate,
+        time: followUpTime,
+      });
+
+    if (appointmentBookedOnFollowUpDateAndTime) {
+      return Response.BAD_REQUEST({
+        message:
+          "An Appointment Has Already Been Booked for the Specified Date/Time slot. Please Select Another Date or Time",
+      });
+    }
+
+    const followUpDateAndTimeSlotBooked =
+      await dbObject.getDoctorsFollowByDateAndTime({
+        doctorId,
+        followUpDate,
+        followUpTime,
+      });
+
+    if (followUpDateAndTimeSlotBooked) {
+      return Response.BAD_REQUEST({
+        message:
+          "You have a follow-up for the selected date and time, please choose another date or time.",
+      });
+    }
+
+    // const appointment = await getDoctorAppointmentById({
+    //   doctorId,
+    //   appointmentId,
+    // });
+
+    // const {
+    //   patient_id: patientId,
+    //   patient_name_on_prescription: patientNameOnPrescription,
+    // } = appointment;
+    // const { mobile_number: mobileNumber } = await getPatientById(patientId);
+
+    // Save follow-up to database
+    await dbObject.updateAppointmentFollowUp({
+      followUpId,
+      appointmentId,
+      followUpDate,
+      followUpTime,
+      followUpReason,
+      followUpType,
+      doctorId,
+    });
+
+    return Response.SUCCESS({
+      message: "Appointment Follow-up updated successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 exports.getAllAppointmentFollowupService = async ({
   userId,
   appointmentId,
@@ -209,6 +301,50 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
 
     return Response.SUCCESS({
       data: followUp,
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+exports.deleteAppointmentFollowUpService = async ({
+  followUpId,
+  appointmentId,
+
+  userId,
+}) => {
+  try {
+    const doctor = await getDoctorByUserId(userId);
+
+    if (!doctor) {
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please Login as a doctor before proceeding",
+      });
+    }
+
+    const { doctor_id: doctorId } = doctor;
+
+    // check if the appointment belongs to the requesting doctor
+    const isDoctorsAppointment = await getDoctorAppointmentById({
+      doctorId,
+      appointmentId,
+    });
+
+    if (!isDoctorsAppointment) {
+      return Response.UNAUTHORIZED({
+        message: "UnAuthorized Action.",
+      });
+    }
+
+    // Save follow-up to database
+    await dbObject.deleteAppointmentFollowUp({
+      followUpId,
+      appointmentId,
+    });
+
+    return Response.SUCCESS({
+      message: "Appointment Follow-up Deleted Successfully",
     });
   } catch (error) {
     console.error(error);

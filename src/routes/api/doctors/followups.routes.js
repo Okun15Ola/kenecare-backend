@@ -3,12 +3,14 @@ const { param } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   CreateFollowUpValidation,
+  UpdateFollowUpValidation,
 } = require("../../../validations/followups.validations");
 const {
   CreateAppointmentFollowUpController,
 
   GetAppointmentFollowUpsController,
   GetFollowUpByIdController,
+  UpdateAppointmentFollowUpController,
 } = require("../../../controllers/doctors/followups.controller");
 
 router.post(
@@ -16,6 +18,12 @@ router.post(
   CreateFollowUpValidation,
   Validate,
   CreateAppointmentFollowUpController,
+);
+router.put(
+  "/:id",
+  UpdateFollowUpValidation,
+  Validate,
+  UpdateAppointmentFollowUpController,
 );
 router.get(
   "/:id",

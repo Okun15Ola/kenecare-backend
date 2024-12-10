@@ -121,8 +121,8 @@ exports.deleteAppointmentFollowUp = async ({ appointmentId, followUpId }) => {
   });
 };
 exports.updateAppointmentFollowUp = async ({
-  appointmentId,
   followUpId,
+  appointmentId,
   followUpDate,
   followUpTime,
   followUpReason,

@@ -54,6 +54,10 @@ exports.CreateFollowUpValidation = [
   body("followUpType")
     .notEmpty()
     .withMessage("Follow Up Type is required")
+    .bail()
+    .isIn(["online_consultation", "patient_visit"])
+    .withMessage("Invalid follow-up type")
+    .bail()
     .toLowerCase()
     .trim(),
   body("followUpDate")
@@ -61,6 +65,95 @@ exports.CreateFollowUpValidation = [
     .withMessage("Follow Up Date is required")
     .bail()
     .toLowerCase()
+    .trim()
+    .escape()
+    .custom(async (date) => {
+      const userDate = moment(date, "YYYY-MM-DD", true);
+      const isValidDate = moment(userDate).isValid();
+
+      if (!isValidDate) {
+        throw new Error("Follow up date must be a valid date (yyyy-mm-dd)");
+      }
+      if (userDate.isSameOrBefore(today)) {
+        throw new Error(
+          "Follow up date must not be today's date or an older date,. Please choose an earlier date",
+        );
+      }
+    })
+    .bail(),
+
+  body("followUpTime")
+    .notEmpty()
+    .withMessage("Follow up Time is required")
+    .toLowerCase()
+    .trim()
+    .escape(),
+];
+exports.UpdateFollowUpValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Followup ID is required")
+    .isInt({ allow_leading_zeroes: false, gt: 0 })
+    .withMessage("Provide a valid Followup ID")
+    .escape(),
+  body("appointmentId")
+    .notEmpty()
+    .withMessage("Appointment Id is required")
+    .bail()
+    .trim()
+    .escape()
+    .isNumeric({ no_symbols: true, locale: "en-US" })
+    .withMessage("Appointment ID must be a valid ID")
+    .bail()
+    .custom(async (value, { req }) => {
+      const appointmentId = parseInt(value, 10);
+      const doctor = await getDoctorByUserId(parseInt(req.user.id, 10));
+      if (!doctor) {
+        throw new Error("Error Creating Follow up. ");
+      }
+      const { doctor_id: doctorId } = doctor;
+      const appointment = await getDoctorAppointmentById({
+        appointmentId,
+        doctorId,
+      });
+
+      if (!appointment) {
+        throw new Error(
+          "Appointment Not Found. Please select a valid appointment",
+        );
+      }
+
+      const { appointment_status: appointmentStatus } = appointment;
+      if (appointmentStatus === "pending") {
+        throw new Error(
+          "Appointment must be approved before setting up a follow-up",
+        );
+      }
+
+      return true;
+    }),
+
+  body("followUpReason")
+    .notEmpty()
+    .withMessage("Follow up reason is required")
+    .bail()
+    .trim()
+    .escape(),
+  body("followUpType")
+    .notEmpty()
+    .withMessage("Follow Up Type is required")
+    .bail()
+    .isIn(["online_consultation", "patient_visit"])
+    .withMessage("Invalid follow-up type")
+    .bail()
+    .toLowerCase()
+    .trim(),
+  body("followUpDate")
+    .notEmpty()
+    .withMessage("Follow Up Date is required")
+    .bail()
+    .isDate({ format: "YYYY-MM-DD" })
+    .withMessage("Please provide a valid follow-up date format (YYYY-MM-DD)")
     .trim()
     .escape()
     .custom(async (date) => {
