@@ -6,6 +6,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.490.0",
     "@aws-sdk/s3-request-presigner": "^3.502.0",
+    "@google-apps/meet": "^0.3.0",
+    "@google-cloud/local-auth": "^2.1.0",
     "@sendgrid/mail": "^8.1.0",
     "aws-sdk": "^2.1536.0",
     "axios": "^0.27.2",
