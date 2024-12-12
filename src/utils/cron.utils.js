@@ -66,11 +66,7 @@ const getAllAppointments = async () => {
 
 client.on("connect", (connection) => {
   connection.on("error", (error) => {
-    logger.error("Socket Client Connection Error: ", error);
-    console.log(`Connection Error: ${error.toString()}`);
-  });
-  connection.on("close", () => {
-    console.log("Socket Connection Closed");
+    logger.error("Socket Client Connection Error: ", error.message);
   });
 
   if (connection.connected) {
