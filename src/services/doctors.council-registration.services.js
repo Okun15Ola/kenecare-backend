@@ -12,7 +12,6 @@ const {
 const { appBaseURL } = require("../config/default.config");
 const {
   uploadFileToS3Bucket,
-  getFileFromS3Bucket,
   getFileUrlFromS3Bucket,
 } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
@@ -308,7 +307,7 @@ exports.getAllCouncilRegistrations = async () => {
         rejection_reason: rejectionReason,
         verified_by: verifiedBy,
       }) => {
-        const url = await getFileFromS3Bucket(regDocumentUrl);
+        const url = await getFileUrlFromS3Bucket(regDocumentUrl);
         return {
           registrationId,
           doctorId,
@@ -365,6 +364,8 @@ exports.getCouncilRegistration = async (id) => {
       verified_by: verifiedBy,
     } = rawData;
 
+    const documentUrl = await getFileUrlFromS3Bucket(regDocumentUrl);
+
     const registration = {
       registrationId,
       doctorId,
@@ -376,7 +377,7 @@ exports.getCouncilRegistration = async (id) => {
       isProfileApproved,
       regNumber,
       regYear,
-      regDocumentUrl: `${appBaseURL}/doctors/council-registration/doc/${regDocumentUrl}`,
+      regDocumentUrl: documentUrl,
       certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
       certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
       regStatus,
