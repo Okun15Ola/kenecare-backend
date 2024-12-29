@@ -3,6 +3,7 @@ require("dotenv").config({
 });
 
 const qs = require("qs");
+const { v4: uuidV4 } = require("uuid");
 const axios = require("axios").default;
 const {
   omReturnURL,
@@ -16,6 +17,9 @@ const {
   omCurrency,
   apiBaseURL,
   nodeEnv,
+  monimeeApiKey,
+  monimeeSpaceId,
+  monimeeApiUrl,
 } = require("../config/default.config");
 
 let baseUrl = apiBaseURL;
@@ -115,7 +119,46 @@ const checkTransactionStatus = async ({ orderId, amount, payToken }) => {
   return data;
 };
 
+const getPaymentUSSD = async ({ orderId, amount }) => {
+  try {
+    const finalAmount = amount * 100;
+    const options = {
+      headers: {
+        Authorization: `Bearer ${monimeeApiKey}`,
+        "Monime-Space-Id": monimeeSpaceId,
+        "Idempotency-Key": uuidV4(),
+        "Content-Type": "application/json",
+      },
+    };
+
+    const body = {
+      name: "Consultation Fee",
+      mode: "oneTime",
+      isActive: true,
+      amount: { currency: "SLE", value: finalAmount },
+      duration: "10m",
+      metadata: {
+        orderId,
+      },
+    };
+
+    const response = await axios.post(
+      `${monimeeApiUrl}/payment-codes`,
+      body,
+      options,
+    );
+    const { success, result } = response.data;
+    const { ussdCode } = result;
+    console.log(ussdCode);
+    return success ? ussdCode : null;
+  } catch (error) {
+    console.error("Error: ", error.response);
+    throw error;
+  }
+};
+
 module.exports = {
   getPaymentURL,
   checkTransactionStatus,
+  getPaymentUSSD,
 };
