@@ -2,7 +2,7 @@ const { connectionPool } = require("./db.connection");
 
 exports.getAllBlogs = () => {
   const sql =
-    "SELECT blog_id, category_name,title,description,image, tags, fullname as 'author', blogs.is_active, blogs.is_featured,blogs.created_at FROM blogs INNER JOIN blog_categories ON blogs.blog_category_id = blog_categories.category_id INNER JOIN admins on blogs.inputted_by = admins.admin_id;";
+    "SELECT blog_id, category_name,title,description,image, tags, disclaimer, fullname as 'author', blogs.is_active, blogs.is_featured,blogs.created_at FROM blogs INNER JOIN blog_categories ON blogs.blog_category_id = blog_categories.category_id INNER JOIN admins on blogs.inputted_by = admins.admin_id;";
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, (error, results) => {
       if (error) return reject(error);
@@ -14,7 +14,7 @@ exports.getAllBlogs = () => {
 
 exports.getBlogById = (id) => {
   const sql =
-    "SELECT blog_id, category_name,title,description,image, tags, fullname as 'author', blogs.is_active, blogs.is_featured,blogs.created_at FROM blogs INNER JOIN blog_categories ON blogs.blog_category_id = blog_categories.category_id INNER JOIN admins on blogs.inputted_by = admins.admin_id WHERE blog_id = ? LIMIT 1";
+    "SELECT blog_id, category_name,title,description,image, tags, disclaimer, fullname as 'author', blogs.is_active, blogs.is_featured,blogs.created_at FROM blogs INNER JOIN blog_categories ON blogs.blog_category_id = blog_categories.category_id INNER JOIN admins on blogs.inputted_by = admins.admin_id WHERE blog_id = ? LIMIT 1";
 
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [id], (error, results) => {
