@@ -50,9 +50,11 @@ router.post(
     body("amount")
       .notEmpty()
       .withMessage("Withdrawal amount is required")
+      .bail()
       .isNumeric({ no_symbols: true })
       .isInt({ lt: 51000, gt: 99 })
       .withMessage("Withdrawal Amount Must be between NLE 100 - NLE 50,000")
+      .bail()
       .custom(async (value, { req }) => {
         const doctor = await getDoctorByUserId(req.user.id);
         if (!doctor) {
@@ -73,13 +75,14 @@ router.post(
     body("paymentMethod")
       .notEmpty({ ignore_whitespace: false })
       .withMessage("Payment Method is required")
+      .bail()
       .trim()
       .toLowerCase()
       .escape()
+      .isIn(["orange_money", "bank_transfer"])
+      .withMessage("Invalid payment method")
+      .bail()
       .custom(async (value, { req }) => {
-        if (value !== "orange_money" || value !== "bank_transfer") {
-          throw new Error("Invalid payment method");
-        }
         if (value === "orange_money" && req.body.mobileMoneyNumber === "") {
           throw new Error(
             "Please specify Mobile Money Number for Orange Money Payment",
