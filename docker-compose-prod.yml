@@ -2,7 +2,7 @@ version: "3"
 
 services:
   api:
-    image: imotechsl/kenecare-api:${TAG}
+    image: imotechsl/kenecare-api-prod:${TAG}
     container_name: kenecare-api-${ENV}
     ports:
       - 9500:8000
