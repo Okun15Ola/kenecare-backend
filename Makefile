@@ -16,7 +16,9 @@ stop-dev:
 	
 
 run-prod:
-	@ENV=production docker compose --env-file=production.env  -f docker-compose-prod.yml up -d
+	@ENV=production docker compose --env-file=.env  -f docker-compose-prod.yml up -d
+stop-prod:
+	@ENV=production docker compose --env-file=.env  -f docker-compose-prod.yml down
 
 run-staging:
 	@ENV=staging docker compose --env-file=.env  -f docker-compose-staging.yml up -d
@@ -25,8 +27,7 @@ stop-staging:
 	@ENV=staging docker compose --env-file=.env  -f docker-compose-staging.yml down
 	
 	
-stop-prod:
-	@ENV=production docker compose --env-file=production.env -f docker-compose-prod.yml down  -v
+
 	
 
 push-staging-image:

@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  api:
+    image: imotechsl/kenecare-api:${ENV}
+    container_name: kenecare-api-${ENV}
+    ports:
+      - 9500:8000
+    networks:
+      - kenecare-prod-net
+    restart: always
+    env_file: ./.env
+    environment:
+      - DB_HOST=$DB_HOST
+      - DB_USER=$DB_USER
+      - DB_PASS=$DB_PASS
+      - DB_NAME=$DB_NAME
+      - DB_PORT=$DB_PORT
+      - DB_CONNECTION_LIMIT=$DB_CONNECTION_LIMIT
+      - NODE_ENV=$NODE_ENV
+      - APP_PORT=$APP_PORT
+      - SESSION_SECRET=$SESSION_SECRET
+      - CLIENT_APP_URL=$CLIENT_APP_URL
+      - API_BASE_URL=$API_BASE_URL
+      - PATIENTS_JWT_SECRET=$PATIENTS_JWT_SECRET
+      - ADMINS_JWT_SECRET=$ADMINS_JWT_SECRET
+      - JWT_AUDIENCE=$JWT_AUDIENCE
+      - JWT_ADMIN_AUDIENCE=$JWT_ADMIN_AUDIENCE
+      - JWT_ISSUER=$JWT_ISSUER
+      - OM_WEB_PAYMENT_URL=$OM_WEB_PAYMENT_URL
+      - OM_MERCHANT_KEY=$OM_MERCHANT_KEY
+      - OM_BASIC_AUTH_TOKEN=$OM_BASIC_AUTH_TOKEN
+      - OM_RETURN_URL=$OM_RETURN_URL
+      - OM_CANCEL_URL=$OM_CANCEL_URL
+      - OM_NOTIFICATION_URL=$OM_NOTIFICATION_URL
+      - OM_TOKEN_URL=$OM_TOKEN_URL
+      - OM_TRANSACTION_STATUS_URL=$OM_TRANSACTION_STATUS_URL
+      - OM_CURRENCY=$OM_CURRENCY
+      - TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID
+      - TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
+      - TWILIO_PHONE_NUMBER=$TWILIO_PHONE_NUMBER
+      - SENDGRID_API_KEY=$SENDGRID_API_KEY
+      - SENDGRID_EMAIL=$SENDGRID_EMAIL
+      - SMS_HIVE_CLIENT_ID=$SMS_HIVE_CLIENT_ID
+      - SMS_HIVE_CLIENT_SECRET=$SMS_HIVE_CLIENT_SECRET
+      - SMS_HIVE_AUTH_TOKEN=$SMS_HIVE_AUTH_TOKEN
+      - SMS_HIVE_URL=$SMS_HIVE_URL
+    volumes:
+      - kenecare-app-data-prod:/usr/src/app/src/public/upload
+
+volumes:
+  kenecare-app-data-prod:
+    name: kenecare-app-data-prod
+
+networks:
+  kenecare-prod-net:
+    name: kenecare-prod-net
+    driver: bridge
