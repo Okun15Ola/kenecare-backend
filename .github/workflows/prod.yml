@@ -105,4 +105,4 @@ jobs:
         run: cp ~/.env.kenecare.api-prod ./.env.production
 
       - name: Run Compose
-        run: make run-prod
+        run: make run-prod TAG=${IMAGE_TAG}
