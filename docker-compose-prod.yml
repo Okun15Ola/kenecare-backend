@@ -9,7 +9,7 @@ services:
     networks:
       - kenecare-prod-net
     restart: always
-    env_file: ./.env
+    env_file: ./.env.${ENV}
     environment:
       - DB_HOST=$DB_HOST
       - DB_USER=$DB_USER

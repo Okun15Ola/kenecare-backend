@@ -78,4 +78,31 @@ jobs:
           DIGEST: ${{steps.build-and-push.outputs.digest}}
 
       - name: Copy Variables
-        run: cp ~/.env.kenecare.api-prod ./.env
+        run: cp ~/.env.kenecare.api-prod ./.env.production
+
+  deploy-to-prod:
+    needs: build-and-push-image
+    runs-on: ["self-hosted", "imotechsl-apps"]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Retrieve Old Image Tag
+        run: |
+          echo "OLD_IMAGE_TAG=1.0.$(($GITHUB_RUN_NUMBER-1))" >> $GITHUB_ENV
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Remove Old Container
+        run: docker rm -f kenecare-api-production-${OLD_IMAGE_TAG} || true
+
+      - name: Remove Cached Images
+        run: docker rmi imotechsl/kenecare-api-prod:${OLD_IMAGE_TAG} || true
+
+      - name: Copy Variables
+        run: cp ~/.env.kenecare.api-prod ./.env.production
+
+      - name: Run Compose
+        run: make run-prod
