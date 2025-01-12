@@ -63,12 +63,14 @@
     "winston-daily-rotate-file": "^4.7.1"
   },
   "scripts": {
+    "start": "NODE_ENV=production node dist/server.bundle.js",
     "start:prod": "NODE_ENV=production node src/server.js",
     "start:dev": "NODE_ENV=development nodemon src/server.js",
     "test": "jest --watchAll --detectOpenHandles",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prepare": "husky install"
+    "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install; fi",
+    "build": "webpack --mode=production --config webpack.config.prod.js"
   },
   "lint-staged": {
     "./src/*.{js,jsx,ts,tsx}": [
@@ -81,6 +83,10 @@
   "author": "IMO TECH SOLUTIONS",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "babel-loader": "^9.2.1",
+    "copy-webpack-plugin": "^12.0.2",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
@@ -92,6 +98,12 @@
     "lint-staged": "^15.2.7",
     "nodemon": "^3.0.1",
     "prettier": "^3.3.1",
-    "supertest": "^6.3.3"
+    "supertest": "^6.3.3",
+    "webpack": "^5.97.1",
+    "webpack-bundle-analyzer": "^4.10.2",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-middleware": "^7.4.2",
+    "webpack-hot-middleware": "^2.26.1",
+    "webpack-node-externals": "^3.0.0"
   }
 }

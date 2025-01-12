@@ -19,6 +19,10 @@ const {
 
 const { getPaymentURL } = require("../utils/payment.utils");
 const { getAppointmentFollowUps } = require("../db/db.follow-up");
+const {
+  doctorAppointmentBookedSms,
+  appointmentBookedSms,
+} = require("../utils/sms.utils");
 
 exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
@@ -338,10 +342,18 @@ exports.createPatientAppointment = async ({
 
     const {
       patient_id: patientId,
+      first_name: userFirstName,
+      last_name: userLastName,
       booked_first_appointment: hasBookedFirstAppointment,
+      mobile_number: mobileNumber,
     } = patient;
 
-    const { consultation_fee: consultationFee } = doctor;
+    const {
+      consultation_fee: consultationFee,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
+      mobile_number: doctorMobileNumber,
+    } = doctor;
 
     // DONE check if patient profile exist for the user booking appointment
     if (!patientId) {
@@ -395,6 +407,22 @@ exports.createPatientAppointment = async ({
       });
 
       await updatePatientFirstAppointmentStatus(patientId);
+
+      appointmentBookedSms({
+        mobileNumber,
+        patientName: `${userFirstName} ${userLastName}`,
+        doctorName: `${doctorFirstName} ${doctorLastName}`,
+        patientNameOnPrescription: patientName,
+        appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+        appointmentTime,
+      });
+      doctorAppointmentBookedSms({
+        mobileNumber: doctorMobileNumber,
+        doctorName: `${doctorLastName}`,
+        patientNameOnPrescription: patientName,
+        appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+        appointmentTime,
+      });
 
       return Response.CREATED({
         message:
