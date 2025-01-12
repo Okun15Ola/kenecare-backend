@@ -1,7 +1,6 @@
 const path = require("path");
 const nodeExternals = require("webpack-node-externals");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 const CURRENT_WORKING_DIR = process.cwd();
 
@@ -40,12 +39,12 @@ module.exports = {
       openAnalyzer: false, // Prevents opening the report automatically
       reportFilename: "bundle-report.html", // Name of the report file
     }),
-    new CopyWebpackPlugin({
-      patterns: [
-        { from: "./src/logs", to: "logs" },
-        { from: "./src/public", to: "public" },
-      ],
-    }),
+    // new CopyWebpackPlugin({
+    //   patterns: [
+    //     { from: "./src/logs", to: "logs" },
+    //     { from: "./src/public", to: "public" },
+    //   ],
+    // }),
   ],
 
   optimization: {

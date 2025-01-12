@@ -10,7 +10,6 @@ exports.getAllPatientAppointments = ({ patientId, page = 1, limit = 20 }) => {
   return new Promise((resolve, reject) => {
     connectionPool.query(sql, [patientId], (error, results) => {
       if (error) return reject(error);
-      console.log(results);
       return resolve(results);
     });
   });
