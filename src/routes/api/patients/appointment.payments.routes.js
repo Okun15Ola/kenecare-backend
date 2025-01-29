@@ -107,8 +107,9 @@ router.post("/monimee/webhook/return", async (req, res, next) => {
         paymentEventStatus: status === "completed" ? "success" : status,
       });
     }
+    logger.info(response);
     // Respond with the appropriate status code
-    return res.sendStatus(response.statusCode);
+    return res.sendStatus(200);
   } catch (error) {
     console.error("Error handling webhook:", error);
     logger.error("Error handling paymen webhook: ", error);
