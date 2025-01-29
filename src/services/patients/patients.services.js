@@ -1,11 +1,11 @@
 const moment = require("moment");
 const path = require("path");
-const dbObject = require("../db/db.patients");
-const Response = require("../utils/response.utils");
-const { USERTYPE } = require("../utils/enum.utils");
-const { getUserById } = require("../db/db.users");
-const { appBaseURL } = require("../config/default.config");
-const { deleteFile } = require("../utils/file-upload.utils");
+const dbObject = require("../../db/db.patients");
+const Response = require("../../utils/response.utils");
+const { USERTYPE } = require("../../utils/enum.utils");
+const { getUserById } = require("../../db/db.users");
+const { appBaseURL } = require("../../config/default.config");
+const { deleteFile } = require("../../utils/file-upload.utils");
 
 exports.getAllPatients = async () => {
   try {

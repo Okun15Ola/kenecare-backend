@@ -3,7 +3,7 @@ const {
   getAppointmentPrescriptions,
 
   getAppointmentPrescriptionById,
-} = require("../../services/patients.prescriptions.services");
+} = require("../../services/patients/patients.prescriptions.services");
 
 const GetAppointmentPrescriptionsController = async (req, res, next) => {
   try {

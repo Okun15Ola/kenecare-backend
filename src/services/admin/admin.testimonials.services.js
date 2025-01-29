@@ -1,4 +1,4 @@
-const Response = require("../utils/response.utils");
+const Response = require("../../utils/response.utils");
 
 exports.getAllTestimonials = async () => {
   try {

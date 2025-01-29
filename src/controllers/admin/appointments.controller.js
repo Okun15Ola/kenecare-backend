@@ -3,7 +3,7 @@ const {
   getAdminppointments,
   getAdminAppointmentById,
   getAdminAppointmentsByDoctorId,
-} = require("../../services/admin.appointments.services");
+} = require("../../services/admin/admin.appointments.services");
 
 exports.GetAdminAppointmentsController = async (req, res, next) => {
   try {

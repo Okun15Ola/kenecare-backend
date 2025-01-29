@@ -3,7 +3,7 @@ const {
   getAdminById,
   getAdminByEmail,
   getAdminByMobileNumber,
-} = require("../services/admins.services");
+} = require("../services/admin/admins.services");
 const { comparePassword } = require("../utils/auth.utils");
 const { STATUS } = require("../utils/enum.utils");
 

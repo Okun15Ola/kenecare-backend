@@ -6,7 +6,7 @@ const {
   updateBlog,
   updateBlogStatus,
   deleteBlog,
-} = require("../../services/blogs.services");
+} = require("../../services/admin/blogs.services");
 
 exports.GetBlogsController = async (req, res, next) => {
   try {

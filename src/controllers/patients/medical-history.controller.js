@@ -3,7 +3,7 @@ const {
   createPatientMedicalHistory,
   getPatientMedicalHistory,
   updatePatientMedicalHistory,
-} = require("../../services/patients.medical-history.services");
+} = require("../../services/patients/patients.medical-history.services");
 
 exports.GetPatientMedicalHistoryController = async (req, res, next) => {
   try {

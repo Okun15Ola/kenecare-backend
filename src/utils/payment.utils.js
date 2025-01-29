@@ -1,7 +1,7 @@
 require("dotenv").config({
   path: "../../.env",
 });
-
+const moment = require("moment");
 const qs = require("qs");
 const { v4: uuidV4 } = require("uuid");
 const axios = require("axios").default;
@@ -121,12 +121,14 @@ const checkTransactionStatus = async ({ orderId, amount, payToken }) => {
 
 const getPaymentUSSD = async ({ orderId, amount }) => {
   try {
+    const idempotencyKey = uuidV4();
     const finalAmount = amount * 100;
     const options = {
       headers: {
+        // eslint-disable-next-line prefer-template
         Authorization: `Bearer ${monimeeApiKey}`,
         "Monime-Space-Id": monimeeSpaceId,
-        "Idempotency-Key": uuidV4(),
+        "Idempotency-Key": idempotencyKey,
         "Content-Type": "application/json",
       },
     };
@@ -136,24 +138,43 @@ const getPaymentUSSD = async ({ orderId, amount }) => {
       mode: "oneTime",
       isActive: true,
       amount: { currency: "SLE", value: finalAmount },
-      duration: "10m",
+      duration: "3m",
       metadata: {
         orderId,
+        idempotencyKey,
       },
     };
 
-    const response = await axios.post(
-      `${monimeeApiUrl}/payment-codes`,
-      body,
-      options,
-    );
+    const response = await axios
+      .post(`${monimeeApiUrl}/payment-codes`, body, options)
+      .catch((error) => {
+        throw error;
+      });
+
     const { success, result } = response.data;
-    const { ussdCode } = result;
-    console.log(ussdCode);
-    return success ? ussdCode : null;
+
+    const {
+      ussdCode,
+      id: paymentCodeId,
+      status: paymentCodeStatus,
+      metadata,
+      expireTime,
+    } = result;
+    const expiresAt = moment(expireTime).format("hh:mm");
+
+    return success
+      ? {
+          ussdCode,
+          paymentCodeId,
+          paymentCodeStatus,
+          idempotencyKey: metadata.idempotencyKey,
+          expiresAt,
+          cancelUrl: `${baseUrl}${omCancelURL}?consultationId=${orderId}&referrer=kenecare.com`,
+        }
+      : null;
   } catch (error) {
-    console.error("Error: ", error.response);
-    throw error;
+    console.error("Error: ", error.response.data.error);
+    throw error.response.data.error;
   }
 };
 

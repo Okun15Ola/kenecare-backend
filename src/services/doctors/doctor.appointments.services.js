@@ -1,19 +1,19 @@
 const moment = require("moment");
-const dbObject = require("../db/db.appointments.doctors");
-const { getDoctorByUserId } = require("../db/db.doctors");
-const { getUserById } = require("../db/db.users");
-const { USERTYPE, VERIFICATIONSTATUS } = require("../utils/enum.utils");
-const Response = require("../utils/response.utils");
-const { getPatientById } = require("../db/db.patients");
-const { createZoomMeeting } = require("../utils/zoom.utils");
+const dbObject = require("../../db/db.appointments.doctors");
+const { getDoctorByUserId } = require("../../db/db.doctors");
+const { getUserById } = require("../../db/db.users");
+const { USERTYPE, VERIFICATIONSTATUS } = require("../../utils/enum.utils");
+const Response = require("../../utils/response.utils");
+const { getPatientById } = require("../../db/db.patients");
+const { createZoomMeeting } = require("../../utils/zoom.utils");
 const {
   appointmentApprovalSms,
   appointmentPostponedSms,
   appointmentStartedSms,
   appointmentEndedSms,
-} = require("../utils/sms.utils");
-const logger = require("../middlewares/logger.middleware");
-const { getAppointmentFollowUps } = require("../db/db.follow-up");
+} = require("../../utils/sms.utils");
+const logger = require("../../middlewares/logger.middleware");
+const { getAppointmentFollowUps } = require("../../db/db.follow-up");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {

@@ -1,11 +1,11 @@
-const dbObject = require("../db/db.doctors");
-const Response = require("../utils/response.utils");
-const { USERTYPE } = require("../utils/enum.utils");
-const { getUserById } = require("../db/db.users");
+const dbObject = require("../../db/db.doctors");
+const Response = require("../../utils/response.utils");
+const { USERTYPE } = require("../../utils/enum.utils");
+const { getUserById } = require("../../db/db.users");
 const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
-} = require("../utils/email.utils");
+} = require("../../utils/email.utils");
 
 exports.getDoctorCouncilRegistration = async (id) => {
   try {

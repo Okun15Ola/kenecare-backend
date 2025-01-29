@@ -2,9 +2,9 @@ const moment = require("moment");
 const {
   getAppointmentPrescriptions,
   getAppointmentPrescriptionById,
-} = require("../db/db.prescriptions");
-const Response = require("../utils/response.utils");
-const { decryptText } = require("../utils/auth.utils");
+} = require("../../db/db.prescriptions");
+const Response = require("../../utils/response.utils");
+const { decryptText } = require("../../utils/auth.utils");
 // const {
 //   getPatientAppointmentById,
 //   getAppointmentByID,

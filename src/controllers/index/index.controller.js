@@ -2,9 +2,9 @@ const logger = require("../../middlewares/logger.middleware");
 const {
   getBlogCategories,
   getBlogCategory,
-} = require("../../services/blog-categories.services");
-const { getBlogs, getBlog } = require("../../services/blogs.services");
-const { getCities, getCity } = require("../../services/cities.services");
+} = require("../../services/admin/blog-categories.services");
+const { getBlogs, getBlog } = require("../../services/admin/blogs.services");
+const { getCities, getCity } = require("../../services/admin/cities.services");
 const {
   getCommonSymptoms,
   getCommonSymptom,
@@ -14,7 +14,7 @@ const {
   getDoctorById,
   getDoctorBySpecialtyId,
   getDoctorByQuery,
-} = require("../../services/doctors.services");
+} = require("../../services/doctors/doctors.services");
 
 const {
   getMedicalCouncils,
@@ -23,7 +23,7 @@ const {
 const {
   getSpecializations,
   getSpecializationById,
-} = require("../../services/specializations.services");
+} = require("../../services/admin/specializations.services");
 const {
   getSpecialties,
   getSpecialtyById,

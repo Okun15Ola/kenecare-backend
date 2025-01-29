@@ -6,7 +6,7 @@ const {
   updateSpecialization,
   deleteSpecialization,
   updateSpecializationStatus,
-} = require("../../services/specializations.services");
+} = require("../../services/admin/specializations.services");
 
 exports.GetSpecializationsController = async (req, res, next) => {
   try {

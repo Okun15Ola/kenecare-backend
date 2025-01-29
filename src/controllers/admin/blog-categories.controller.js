@@ -4,9 +4,9 @@ const {
   createBlogCategory,
   updateBlogCategory,
   updateBlogCategoryStatus,
-} = require("../../services/blog-categories.services");
+} = require("../../services/admin/blog-categories.services");
 const logger = require("../../middlewares/logger.middleware");
-const { deleteBlog } = require("../../services/blogs.services");
+const { deleteBlog } = require("../../services/admin/blogs.services");
 
 exports.GetBlogCategoriesController = async (req, res, next) => {
   try {

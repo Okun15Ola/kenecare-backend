@@ -3,7 +3,7 @@ const {
   getPatientAppointment,
   getPatientAppointments,
   createPatientAppointment,
-} = require("../../services/patients.appointments.services");
+} = require("../../services/patients/patients.appointments.services");
 
 exports.GetAppointmentsController = async (req, res, next) => {
   try {

@@ -4,7 +4,7 @@ const {
   createPatientProfile,
   updatePatientProfile,
   updatePatientProfilePicture,
-} = require("../../services/patients.services");
+} = require("../../services/patients/patients.services");
 
 exports.GetPatientProfileController = async (req, res, next) => {
   try {

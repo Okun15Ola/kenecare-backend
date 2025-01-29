@@ -11,17 +11,17 @@ const {
   getPatientSharedMedicalDocuments,
   getPatientSharedMedicalDocument,
   deletePatientSharedMedicalDocument,
-} = require("../db/db.patient-docs");
-const { getPatientByUserId } = require("../db/db.patients");
-const Response = require("../utils/response.utils");
+} = require("../../db/db.patient-docs");
+const { getPatientByUserId } = require("../../db/db.patients");
+const Response = require("../../utils/response.utils");
 const {
   uploadFileToS3Bucket,
   deleteFileFromS3Bucket,
   // getObjectFromS3Bucket,
   getFileUrlFromS3Bucket,
-} = require("../utils/aws-s3.utils");
-const { documentSharedWithDoctorSMS } = require("../utils/sms.utils");
-const { getDoctorById } = require("../db/db.doctors");
+} = require("../../utils/aws-s3.utils");
+const { documentSharedWithDoctorSMS } = require("../../utils/sms.utils");
+const { getDoctorById } = require("../../db/db.doctors");
 // const { encryptFile, decryptFile } = require("../utils/file-upload.utils");
 // const { getUserById } = require("../db/db.users");
 

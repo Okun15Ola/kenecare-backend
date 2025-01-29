@@ -5,7 +5,7 @@ const {
   // getDoctorsCouncilRegistration,
   // getDoctorByUserId,
   approveDoctorProfile,
-} = require("../../services/doctors.services");
+} = require("../../services/doctors/doctors.services");
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {

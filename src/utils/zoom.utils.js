@@ -119,7 +119,7 @@ const createZoomMeeting = async ({
       zoomMeetingStatus,
     };
   } catch (error) {
-    console.log(error.response.data);
+    logger.error(error);
     throw error;
   }
 };

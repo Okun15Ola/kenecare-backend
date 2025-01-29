@@ -2,11 +2,11 @@ const moment = require("moment");
 const {
   getSharedMedicalDocumentsByDoctorId,
   getDoctorSharedMedicalDocumentById,
-} = require("../db/db.patient-docs");
-const Response = require("../utils/response.utils");
+} = require("../../db/db.patient-docs");
+const Response = require("../../utils/response.utils");
 // const { getFileFromS3Bucket } = require("../utils/aws-s3.utils");
-const { getDoctorByUserId } = require("../db/db.doctors");
-const { getFileUrlFromS3Bucket } = require("../utils/aws-s3.utils");
+const { getDoctorByUserId } = require("../../db/db.doctors");
+const { getFileUrlFromS3Bucket } = require("../../utils/aws-s3.utils");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {
   try {

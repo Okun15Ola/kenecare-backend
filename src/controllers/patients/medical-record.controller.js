@@ -9,7 +9,7 @@ const {
   getPatientSharedMedicalDocuments,
   getPatientSharedMedicalDocument,
   deletePatientSharedMedicalDocument,
-} = require("../../services/patients.documents.services");
+} = require("../../services/patients/patients.documents.services");
 
 exports.GetAllMedicalRecordsController = async (req, res, next) => {
   try {

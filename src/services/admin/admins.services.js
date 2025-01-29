@@ -1,7 +1,7 @@
-const dbObject = require("../db/db.admins");
-const { generateAdminJwtAccessToken } = require("../utils/auth.utils");
-const { STATUS } = require("../utils/enum.utils");
-const { hashUsersPassword } = require("../utils/auth.utils");
+const dbObject = require("../../db/db.admins");
+const { generateAdminJwtAccessToken } = require("../../utils/auth.utils");
+const { STATUS } = require("../../utils/enum.utils");
+const { hashUsersPassword } = require("../../utils/auth.utils");
 
 exports.getAdmins = async () => {
   try {

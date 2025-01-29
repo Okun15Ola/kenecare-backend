@@ -1,5 +1,5 @@
-const dbObject = require("../db/db.specializations");
-const Response = require("../utils/response.utils");
+const dbObject = require("../../db/db.specializations");
+const Response = require("../../utils/response.utils");
 
 /**
  * Retrieve a list of specializations from the database and transform the data.

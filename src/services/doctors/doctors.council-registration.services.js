@@ -1,20 +1,20 @@
 const moment = require("moment");
-const dbObject = require("../db/db.doctors");
-const Response = require("../utils/response.utils");
-const { USERTYPE } = require("../utils/enum.utils");
-const { getUserById } = require("../db/db.users");
+const dbObject = require("../../db/db.doctors");
+const Response = require("../../utils/response.utils");
+const { USERTYPE } = require("../../utils/enum.utils");
+const { getUserById } = require("../../db/db.users");
 const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
   doctorCouncilRegistrationApprovedEmail,
   doctorCouncilRegistrationRejectedEmail,
-} = require("../utils/email.utils");
-const { appBaseURL } = require("../config/default.config");
+} = require("../../utils/email.utils");
+const { appBaseURL } = require("../../config/default.config");
 const {
   uploadFileToS3Bucket,
   getFileUrlFromS3Bucket,
-} = require("../utils/aws-s3.utils");
-const { generateFileName } = require("../utils/file-upload.utils");
+} = require("../../utils/aws-s3.utils");
+const { generateFileName } = require("../../utils/file-upload.utils");
 
 // DOCTORS
 exports.getDoctorCouncilRegistration = async (id) => {

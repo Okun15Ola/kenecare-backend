@@ -6,7 +6,7 @@ const {
   createDoctorCouncilRegistration,
   updateDoctorProfile,
   updateDoctorProfilePicture,
-} = require("../../services/doctors.services");
+} = require("../../services/doctors/doctors.services");
 
 const GetDoctorProfileController = async (req, res, next) => {
   try {

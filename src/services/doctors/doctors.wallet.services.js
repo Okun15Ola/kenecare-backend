@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 const moment = require("moment");
-const { getDoctorByUserId } = require("../db/db.doctors");
-const Response = require("../utils/response.utils");
+const { getDoctorByUserId } = require("../../db/db.doctors");
+const Response = require("../../utils/response.utils");
 const {
   getWalletByDoctorId,
   getWalletById,
@@ -10,9 +10,9 @@ const {
   createWithDrawalRequest,
   getWithdrawalRequestByDoctorId,
   getWithdrawalRequestByDoctorIdAndDate,
-} = require("../db/db.doctor-wallet");
-const { hashUsersPassword } = require("../utils/auth.utils");
-const { adminWithdrawalRequestEmail } = require("../utils/email.utils");
+} = require("../../db/db.doctor-wallet");
+const { hashUsersPassword } = require("../../utils/auth.utils");
+const { adminWithdrawalRequestEmail } = require("../../utils/email.utils");
 
 exports.getDoctorsWallet = async (userId) => {
   try {

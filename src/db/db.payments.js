@@ -29,9 +29,10 @@ exports.createAppointmentPayment = ({
   orderId,
   paymentToken,
   notificationToken,
+  transactionId,
 }) => {
   const sql =
-    "INSERT INTO appointment_payments (appointment_id, amount_paid, payment_method, order_id, payment_token,notification_token) VALUES (?,?,?,?,?,?)";
+    "INSERT INTO appointment_payments (appointment_id, amount_paid, payment_method, order_id, payment_token,notification_token,transaction_id) VALUES (?,?,?,?,?,?,?)";
   return new Promise((resolve, reject) => {
     connectionPool.query(
       sql,
@@ -42,6 +43,7 @@ exports.createAppointmentPayment = ({
         orderId,
         paymentToken,
         notificationToken,
+        transactionId,
       ],
       (error, results) => {
         if (error) return reject(error);

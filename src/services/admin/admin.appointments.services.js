@@ -1,5 +1,5 @@
-const dbObject = require("../db/db.appointments.admin");
-const Response = require("../utils/response.utils");
+const dbObject = require("../../db/db.appointments.admin");
+const Response = require("../../utils/response.utils");
 
 exports.getAdminppointments = async () => {
   try {

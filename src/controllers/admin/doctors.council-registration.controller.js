@@ -4,7 +4,7 @@ const {
   getCouncilRegistration,
   approveCouncilRegistration,
   rejectCouncilRegistration,
-} = require("../../services/doctors.council-registration.services");
+} = require("../../services/doctors/doctors.council-registration.services");
 
 exports.GetCouncilRegistrationController = async (req, res, next) => {
   try {

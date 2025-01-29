@@ -1,5 +1,8 @@
 const Response = require("../../utils/response.utils");
-const { createAdmin, loginAdmin } = require("../../services/admins.services");
+const {
+  createAdmin,
+  loginAdmin,
+} = require("../../services/admin/admins.services");
 const logger = require("../../middlewares/logger.middleware");
 
 exports.AuthenticateController = async (req, res, next) => {

@@ -2,7 +2,7 @@ const logger = require("../../middlewares/logger.middleware");
 const {
   getDoctorSharedMedicalDocuments,
   getDoctorSharedMedicalDocument,
-} = require("../../services/doctors.documents.services");
+} = require("../../services/doctors/doctors.documents.services");
 
 exports.GetAllSharedMedicalRecordsController = async (req, res, next) => {
   try {

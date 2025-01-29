@@ -3,7 +3,7 @@ const {
   getAllPatients,
   getPatientById,
   getPatientsTestimonial,
-} = require("../../services/patients.services");
+} = require("../../services/patients/patients.services");
 
 exports.GetPatientsController = async (req, res, next) => {
   try {

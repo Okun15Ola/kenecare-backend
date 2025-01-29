@@ -1,18 +1,18 @@
-const dbObject = require("../db/db.patients");
-const Response = require("../utils/response.utils");
+const dbObject = require("../../db/db.patients");
+const Response = require("../../utils/response.utils");
 
 exports.getPatientMedicalHistory = async (userId) => {
   try {
-    const { patient_id: patientId } =
-      (await dbObject.getPatientByUserId(userId)) || null;
-    if (!patientId) {
+    const patient = await dbObject.getPatientByUserId(userId);
+    if (!patient) {
       return Response.BAD_REQUEST({
         message:
           "Patient Profile Does not exist for the logged in user. Please create a patient profile",
       });
     }
+    const { patient_id: patientID } = patient;
 
-    const data = await dbObject.getPatientMedicalInfoByPatientId(patientId);
+    const data = await dbObject.getPatientMedicalInfoByPatientId(patientID);
     if (!data) {
       return Response.NOT_FOUND({
         message: "Medical History Not Found.",
@@ -20,7 +20,7 @@ exports.getPatientMedicalHistory = async (userId) => {
     }
     const {
       medical_history_id: medicalHistoryId,
-      patient_id: patient,
+      patient_id: patientId,
       height,
       weight,
       allergies,
@@ -35,7 +35,7 @@ exports.getPatientMedicalHistory = async (userId) => {
     } = data;
     const medicalHistory = {
       medicalHistoryId,
-      patient,
+      patientId,
       height,
       weight,
       allergies,
@@ -70,13 +70,14 @@ exports.createPatientMedicalHistory = async ({
   caffineIntakeFreq,
 }) => {
   try {
-    const { patient_id: patientId } = await dbObject.getPatientByUserId(userId);
-    if (!patientId) {
+    const patient = await dbObject.getPatientByUserId(userId);
+    if (!patient) {
       return Response.BAD_REQUEST({
         message:
           "Patient Profile Does not exist for the logged in user. Please create a patient profile",
       });
     }
+    const { patient_id: patientId } = patient;
 
     const medicalInfoExist =
       await dbObject.getPatientMedicalInfoByPatientId(patientId);
@@ -125,13 +126,14 @@ exports.updatePatientMedicalHistory = async ({
   caffineIntakeFreq,
 }) => {
   try {
-    const { patient_id: patientId } = await dbObject.getPatientByUserId(userId);
-    if (!patientId) {
+    const patient = await dbObject.getPatientByUserId(userId);
+    if (!patient) {
       return Response.BAD_REQUEST({
         message:
           "Patient Profile Does not exist for the logged in user. Please create a patient profile",
       });
     }
+    const { patient_id: patientId } = patient;
 
     const data = await dbObject.getPatientMedicalInfoByPatientId(patientId);
     if (!data) {

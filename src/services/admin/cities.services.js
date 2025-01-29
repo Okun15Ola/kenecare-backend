@@ -1,5 +1,5 @@
-const dbObject = require("../db/db.cities");
-const Response = require("../utils/response.utils");
+const dbObject = require("../../db/db.cities");
+const Response = require("../../utils/response.utils");
 
 exports.getCities = async () => {
   try {

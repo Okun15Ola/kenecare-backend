@@ -1,5 +1,5 @@
-const dbObject = require("../db/db.blog-categories");
-const Response = require("../utils/response.utils");
+const dbObject = require("../../db/db.blog-categories");
+const Response = require("../../utils/response.utils");
 
 exports.getBlogCategories = async () => {
   try {

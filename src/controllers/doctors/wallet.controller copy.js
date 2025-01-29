@@ -3,7 +3,7 @@ const {
   getDoctorsWallet,
   updateDoctorWalletPin,
   requestWithdrawal,
-} = require("../../services/doctors.wallet.services");
+} = require("../../services/doctors/doctors.wallet.services");
 
 const GetDoctorWalletController = async (req, res, next) => {
   try {

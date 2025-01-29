@@ -1,28 +1,28 @@
 const moment = require("moment");
 const { v4: uuidv4 } = require("uuid");
-const logger = require("../middlewares/logger.middleware");
-const dbObject = require("../db/db.appointments.patients");
+const logger = require("../../middlewares/logger.middleware");
+const dbObject = require("../../db/db.appointments.patients");
 const {
   getPatientByUserId,
   updatePatientFirstAppointmentStatus,
-} = require("../db/db.patients");
+} = require("../../db/db.patients");
 const {
   getDoctorAppointByDateAndTime,
-} = require("../db/db.appointments.doctors");
+} = require("../../db/db.appointments.doctors");
 
-const Response = require("../utils/response.utils");
-const { getDoctorById } = require("../db/db.doctors");
+const Response = require("../../utils/response.utils");
+const { getDoctorById } = require("../../db/db.doctors");
 const {
   createAppointmentPayment,
   createFirstAppointmentPayment,
-} = require("../db/db.payments");
+} = require("../../db/db.payments");
 
-const { getPaymentURL } = require("../utils/payment.utils");
-const { getAppointmentFollowUps } = require("../db/db.follow-up");
+const { getPaymentUSSD } = require("../../utils/payment.utils");
+const { getAppointmentFollowUps } = require("../../db/db.follow-up");
 const {
   doctorAppointmentBookedSms,
   appointmentBookedSms,
-} = require("../utils/sms.utils");
+} = require("../../utils/sms.utils");
 
 exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
@@ -340,6 +340,21 @@ exports.createPatientAppointment = async ({
       getDoctorById(doctorId),
     ]);
 
+    //  check if patient profile exist for the user booking appointment
+    if (!patient) {
+      return Response.BAD_REQUEST({
+        message:
+          "Please create a patient profile before booking an appointment",
+      });
+    }
+
+    // check if the specified doctor exist
+    if (!doctor) {
+      return Response.BAD_REQUEST({
+        message: "Specified Doctor does not exist. Please try again",
+      });
+    }
+
     const {
       patient_id: patientId,
       first_name: userFirstName,
@@ -355,14 +370,6 @@ exports.createPatientAppointment = async ({
       mobile_number: doctorMobileNumber,
     } = doctor;
 
-    // DONE check if patient profile exist for the user booking appointment
-    if (!patientId) {
-      return Response.BAD_REQUEST({
-        message:
-          "User must be registered as a patient before booking an appointment",
-      });
-    }
-
     // Check if the selected doctor's timeslot is available,
     const timeBooked = await getDoctorAppointByDateAndTime({
       doctorId,
@@ -377,11 +384,11 @@ exports.createPatientAppointment = async ({
       });
     }
     // Generate a unique ID for each appointment
-    const genUUID = uuidv4();
+    const generatedOrderId = uuidv4();
 
     const { insertId: appointmentId } =
       await dbObject.createNewPatientAppointment({
-        uuid: genUUID,
+        uuid: generatedOrderId,
         patientId,
         doctorId,
         patientName,
@@ -398,8 +405,8 @@ exports.createPatientAppointment = async ({
       await createFirstAppointmentPayment({
         appointmentId,
         amountPaid: consultationFee,
-        orderId: genUUID,
-        paymentMethod: "ORANGE MONEY",
+        orderId: generatedOrderId,
+        paymentMethod: "FIRST_FREE_APPOINTMENT",
         transactionId: "FIRST_FREE_APPOINTMENT",
         paymentToken: "FIRST_FREE_APPOINTMENT",
         notificationToken: "FIRST_FREE_APPOINTMENT",
@@ -434,33 +441,52 @@ exports.createPatientAppointment = async ({
       });
     }
     // Get and send payment url to process payment
-    const { paymentUrl, notificationToken, paymentToken } = await getPaymentURL(
-      {
-        orderId: genUUID,
-        amount: consultationFee,
-      },
-    ).catch((error) => {
+    const response = await getPaymentUSSD({
+      orderId: generatedOrderId,
+      amount: consultationFee,
+    }).catch((error) => {
       throw error;
     });
+
+    if (!response) {
+      await dbObject.deleteAppointmentById({ appointmentId });
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "An Error Occured on our side, please try again",
+      });
+    }
+
+    const { ussdCode, paymentCodeId, idempotencyKey, expiresAt, cancelUrl } =
+      response;
+
+    // const { paymentUrl, notificationToken, paymentToken } = await getPaymentURL(
+    //   {
+    //     orderId: genUUID,
+    //     amount: consultationFee,
+    //   },
+    // ).catch((error) => {
+    //   throw error;
+    // });
 
     // create new appointment payments record
     await createAppointmentPayment({
       appointmentId,
       amountPaid: consultationFee,
-      orderId: genUUID,
-      paymentMethod: "ORANGE MONEY",
-      paymentToken,
-      notificationToken,
+      orderId: generatedOrderId,
+      paymentMethod: "",
+      paymentToken: ussdCode,
+      notificationToken: idempotencyKey,
+      transactionId: paymentCodeId,
     });
 
     return Response.CREATED({
       message: "Appointment Booked Successfully. Proceed to payment.",
       data: {
-        paymentUrl,
+        paymentUrl: ussdCode,
+        cancelUrl,
+        paymentUrlExpiresAt: expiresAt,
       },
     });
   } catch (error) {
-    console.log(error);
     logger.error("Create Appointment Error", error);
     throw error;
   }

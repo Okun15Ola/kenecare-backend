@@ -1,6 +1,3 @@
-// const fs = require("fs");
-// const crypto = require("crypto");
-// const AWS = require("aws-sdk");
 const {
   S3Client,
   PutObjectCommand,

@@ -6,7 +6,7 @@ const {
   updateCity,
   updateCityStatus,
   deleteCity,
-} = require("../../services/cities.services");
+} = require("../../services/admin/cities.services");
 
 exports.GetCitiesController = async (req, res, next) => {
   try {

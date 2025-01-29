@@ -8,7 +8,7 @@ const {
   startDoctorAppointment,
   getDoctorAppointmentByDateRange,
   endDoctorAppointment,
-} = require("../../services/doctor.appointments.services");
+} = require("../../services/doctors/doctor.appointments.services");
 
 exports.GetDoctorAppointmentsController = async (req, res, next) => {
   try {

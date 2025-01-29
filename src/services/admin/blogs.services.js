@@ -1,12 +1,12 @@
 const moment = require("moment");
-const dbObject = require("../db/db.blogs");
+const dbObject = require("../../db/db.blogs");
 const {
   uploadFileToS3Bucket,
 
   getFileUrlFromS3Bucket,
-} = require("../utils/aws-s3.utils");
-const { generateFileName } = require("../utils/file-upload.utils");
-const Response = require("../utils/response.utils");
+} = require("../../utils/aws-s3.utils");
+const { generateFileName } = require("../../utils/file-upload.utils");
+const Response = require("../../utils/response.utils");
 
 exports.getBlogs = async () => {
   try {
