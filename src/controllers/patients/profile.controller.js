@@ -28,7 +28,7 @@ exports.CreatePatientProfileController = async (req, res, next) => {
       middleName: middlename,
       lastName: lastname,
       gender,
-      dateOfBirth,
+      dateOfBirth: dateOfBirth || null,
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {

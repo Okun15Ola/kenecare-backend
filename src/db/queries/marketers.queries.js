@@ -15,6 +15,10 @@ module.exports = {
     "SELECT * FROM marketers WHERE phone_verification_token = ? LIMIT 1",
   GET_MARKETER_BY_EMAIL_VERIFICATION_TOKEN:
     "SELECT * FROM marketers WHERE  email_verification_token = ? LIMIT 1",
+  GET_USERS_BY_MARKETER_REFERRAL_CODE:
+    "SELECT * FROM users WHERE referral_code = ?",
+  GET_TOTAL_USERS_REGISTERED_BY_MARKETER_REFERRAL_CODE:
+    "SELECT COUNT(*) as 'total_registered' FROM users WHERE referral_code = ? AND is_verified = 1",
   CREATE_NEW_MARKETER:
     "INSERT INTO marketers (marketer_uuid,referral_code,first_name,middle_name,last_name,gender,dob,phone_number, phone_verification_token,email,email_verification_token,home_address, id_document_type, id_document_number, id_document_uuid, nin,emergency_contact_name_1,emergency_contact_phone_1,emergency_contact_address_1, emergency_contact_name_2,emergency_contact_phone_2, emergency_contact_address_2 ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
   UPDATE_MARKETER_BY_ID:

@@ -15,10 +15,22 @@ const {
   VERIFY_PHONE_NUMBER,
   VERIFY_EMAIL,
   GET_MARKETER_BY_EMAIL_VERIFICATION_TOKEN,
+  GET_USERS_BY_MARKETER_REFERRAL_CODE,
+  GET_TOTAL_USERS_REGISTERED_BY_MARKETER_REFERRAL_CODE,
 } = require("./queries/marketers.queries");
 
 exports.getAllMarketers = async () => {
   return query(GET_ALL_MARKETERS);
+};
+exports.getUsersByMarketerReferralCode = async (referralCode) => {
+  return query(GET_USERS_BY_MARKETER_REFERRAL_CODE, [referralCode]);
+};
+exports.getMarketersTotalRegisteredUsers = async (referralCode) => {
+  const result = await query(
+    GET_TOTAL_USERS_REGISTERED_BY_MARKETER_REFERRAL_CODE,
+    [referralCode],
+  );
+  return result[0];
 };
 
 exports.getMarketerById = async (id) => {

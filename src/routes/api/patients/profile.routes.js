@@ -36,23 +36,23 @@ router.post(
       .trim()
       .escape()
       .toLowerCase(),
-    body("dateOfBirth")
-      .notEmpty()
-      .withMessage("Date of Birth is required")
-      .custom((value) => {
-        const formattedDate = moment(value).format("YYYY-MM-DD");
-        if (!moment(formattedDate).isValid()) {
-          throw new Error("Invalid date format. Expected format (YYYY-MM-DD)");
-        }
-        if (moment(formattedDate).isAfter(moment())) {
-          throw new Error("Birth date must not be a future date");
-        }
-
-        if (moment().diff(formattedDate, "years") < 18) {
-          throw new Error("Must be at least 18 years old");
-        }
+    body("dateOfBirth").custom((value) => {
+      if (!value) {
         return true;
-      }),
+      }
+      const formattedDate = moment(value).format("YYYY-MM-DD");
+      if (!moment(formattedDate).isValid()) {
+        throw new Error("Invalid date format. Expected format (YYYY-MM-DD)");
+      }
+      if (moment(formattedDate).isAfter(moment())) {
+        throw new Error("Birth date must not be a future date");
+      }
+
+      if (moment().diff(formattedDate, "years") < 18) {
+        throw new Error("Must be at least 18 years old");
+      }
+      return true;
+    }),
   ],
   Validate,
   CreatePatientProfileController,

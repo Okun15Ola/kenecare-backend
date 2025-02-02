@@ -2,10 +2,19 @@ const moment = require("moment");
 const path = require("path");
 const dbObject = require("../../db/db.patients");
 const Response = require("../../utils/response.utils");
-const { USERTYPE } = require("../../utils/enum.utils");
+const {
+  USERTYPE,
+  STATUS,
+  VERIFICATIONSTATUS,
+} = require("../../utils/enum.utils");
 const { getUserById } = require("../../db/db.users");
 const { appBaseURL } = require("../../config/default.config");
 const { deleteFile } = require("../../utils/file-upload.utils");
+const {
+  getMarketerByReferralCode,
+  getMarketersTotalRegisteredUsers,
+} = require("../../db/db.marketers");
+const { sendMarketerUserRegisteredSMS } = require("../../utils/sms.utils");
 
 exports.getAllPatients = async () => {
   try {
@@ -255,24 +264,43 @@ exports.createPatientProfile = async ({
   dateOfBirth,
 }) => {
   try {
-    const { user_type: userType } = await getUserById(userId);
+    const user = await getUserById(userId);
 
-    if (userType !== USERTYPE.PATIENT) {
-      return Response.UNAUTHORIZED({
-        message:
-          "Unauthorized action, you must register as a patient to create a patient profile",
+    if (!user) {
+      return Response.NOT_FOUND({
+        message: "Error Creating Patient Profile, please try again!",
       });
     }
-    const patientExist = await dbObject.getPatientByUserId(userId);
-    if (patientExist) {
+    const {
+      user_type: userType,
+      referral_code: referralCode,
+      mobile_number: userMobileNumber,
+      is_verified: isVerified,
+      is_account_active: isAccountActive,
+    } = user;
+
+    if (
+      userType !== USERTYPE.PATIENT ||
+      isVerified !== VERIFICATIONSTATUS.VERIFIED ||
+      isAccountActive !== STATUS.ACTIVE
+    ) {
+      return Response.FORBIDDEN({
+        message: "Unauthorized Action. Please Try again",
+      });
+    }
+    const patient = await dbObject.getPatientByUserId(userId);
+
+    if (patient) {
       return Response.BAD_REQUEST({
-        message: "Patient Profile already exist for this user",
+        message: "Patient Profile already exist for logged in user.",
       });
     }
 
-    const formattedDate = moment(dateOfBirth).format("YYYY-MM-DD");
+    const formattedDate = dateOfBirth
+      ? moment(dateOfBirth).format("YYYY-MM-DD")
+      : null;
 
-    await dbObject.createPatient({
+    const { affectedRows } = await dbObject.createPatient({
       userId,
       firstName,
       middleName,
@@ -280,6 +308,35 @@ exports.createPatientProfile = async ({
       gender,
       dateOfBirth: formattedDate,
     });
+
+    if (affectedRows <= 0) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Creating Patient Profile. Please Try again",
+      });
+    }
+    if (referralCode) {
+      const [{ value: marketer }, { value: registeredUsersCount }] =
+        await Promise.allSettled([
+          getMarketerByReferralCode(referralCode),
+          getMarketersTotalRegisteredUsers(referralCode),
+        ]);
+
+      if (marketer) {
+        const {
+          phone_number: marketerPhoneNumber,
+          first_name: marketerFirstName,
+        } = marketer;
+
+        const { total_registered: totalRegistered } = registeredUsersCount;
+
+        sendMarketerUserRegisteredSMS({
+          marketerName: marketerFirstName,
+          mobileNumber: marketerPhoneNumber,
+          userPhoneNumber: userMobileNumber,
+          totalRegistered,
+        });
+      }
+    }
 
     return Response.CREATED({
       message: "Patient profile created successfully.",

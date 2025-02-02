@@ -9,11 +9,8 @@ const {
   sendAuthTokenSMS,
   sendPasswordResetSMS,
   sendForgotPasswordRequestTokenSMS,
-  sendMarketerUserRegisteredSMS,
 } = require("../utils/sms.utils");
-// const { sendPushNotifications } = require("../utils/notification.utils");
 const Response = require("../utils/response.utils");
-const { getMarketerByReferralCode } = require("../db/db.marketers");
 
 exports.getUsers = async () => {
   const rawData = await dbObject.getAllUsers();
@@ -200,24 +197,12 @@ exports.verifyRegistrationOTP = async (token) => {
       user_id: userId,
       user_type: userType,
       account_active: accountActive,
-      referral_code: referralCode,
-      mobile_number: userMobileNumber,
     } = user;
 
     dbObject.updateUserVerificationStatusByToken({
       token,
       verificationStatus: VERIFICATIONSTATUS.VERIFIED,
     });
-    const marketer = await getMarketerByReferralCode(referralCode);
-    if (marketer) {
-      const { phone_number: phoneNumber, first_name: marketerFirstName } =
-        marketer;
-      sendMarketerUserRegisteredSMS({
-        marketerName: marketerFirstName,
-        mobileNumber: phoneNumber,
-        userPhoneNumber: userMobileNumber,
-      });
-    }
 
     // Generate access token
     const accessToken = generateUsersJwtAccessToken({

@@ -55,6 +55,17 @@ Response.UNAUTHORIZED = ({ message, error, errorCode }) => {
     errors: error,
   };
 };
+Response.FORBIDDEN = ({ message, error, errorCode }) => {
+  const timestamp = new Date();
+  return {
+    status: "error",
+    errorCode,
+    statusCode: HttpStatus.StatusCodes.FORBIDDEN,
+    timestamp,
+    message,
+    errors: error,
+  };
+};
 Response.NOT_FOUND = ({ message, error, errorCode }) => {
   const timestamp = new Date();
   return {

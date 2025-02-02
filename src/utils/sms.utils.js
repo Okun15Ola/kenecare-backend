@@ -87,13 +87,14 @@ const sendMarketerUserRegisteredSMS = async ({
   marketerName,
   mobileNumber,
   userPhoneNumber,
+  totalRegistered,
 }) => {
   try {
     const data = JSON.stringify({
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Congratulations! ${marketerName}, you have succesfully signed up ${userPhoneNumber} on Kenecare.\n\nKENECARE`,
+      content: `Congratulations! ${marketerName}, you have succesfully signed up ${userPhoneNumber} on Kenecare.\n\nTotal VERIFIED Users Registered: ${totalRegistered}\n\nKENECARE`,
     });
 
     config.data = data;

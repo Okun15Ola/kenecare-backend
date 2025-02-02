@@ -61,8 +61,9 @@ exports.RegisterController = async (req, res, next) => {
     const email = req.body.email || "";
     const { mobileNumber, userType, password, referralCode } = req.body;
 
+    const refinedMobileNumber = refineMobileNumber(mobileNumber);
     const response = await registerNewUser({
-      mobileNumber: refineMobileNumber(mobileNumber),
+      mobileNumber: refinedMobileNumber,
       password,
       email,
       userType,
