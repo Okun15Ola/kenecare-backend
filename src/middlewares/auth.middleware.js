@@ -10,6 +10,7 @@ const {
 const {
   STATUS,
   VERIFICATIONSTATUS,
+  USERTYPE,
   // USERTYPE,
   // ERROR_CODES,
 } = require("../utils/enum.utils");
@@ -103,20 +104,40 @@ const requireUserAuth = async (req, res, next) => {
   }
 };
 
-const requireDoctorAuth = async (req, res, next) => {
+const requireDoctorProfile = async (req, res, next) => {
   try {
-    const doctorProfile = await getDoctorByUserId(req.user.id);
-    if (!doctorProfile) {
-      return res.status(404).json(
-        Response.NOT_FOUND({
-          message: "Doctor Profile Not FounD",
+    const { id: userId } = req.user;
+    const user = await getUserById(userId);
+    const {
+      user_type: userType,
+      is_account_active: isAccountActive,
+      is_verified: isVerified,
+    } = user;
+    if (
+      userType !== USERTYPE.DOCTOR ||
+      isAccountActive !== STATUS.ACTIVE ||
+      isVerified !== VERIFICATIONSTATUS.VERIFIED
+    ) {
+      return res.status(403).json(
+        Response.FORBIDDEN({
+          message: "Unauthorized Action, please try again",
         }),
       );
     }
-    const { is_profile_approved: isProfileApproved } = doctorProfile;
+    const doctor = await getDoctorByUserId(userId);
+    if (!doctor) {
+      return res.status(404).json(
+        Response.NOT_FOUND({
+          message:
+            "Doctor Profile Not Found. Please create profile before proceeding",
+          errorCode: "DOCTOR_PROFILE_NOT_FOUND",
+        }),
+      );
+    }
+    const { is_profile_approved: isProfileApproved } = doctor;
     if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
-      return res.status(401).json(
-        Response.UNAUTHORIZED({
+      return res.status(403).json(
+        Response.FORBIDDEN({
           message:
             "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
         }),
@@ -189,6 +210,6 @@ const requireAdminAuth = async (req, res, next) => {
 
 module.exports = {
   requireUserAuth,
-  requireDoctorAuth,
+  requireDoctorAuth: requireDoctorProfile,
   requireAdminAuth,
 };

@@ -106,7 +106,13 @@ exports.createDoctorCouncilRegistration = async ({
         message: "Please upload medical council registration certificate.",
       });
     }
-    const { user_type: userType } = await getUserById(userId);
+    const user = await getUserById(userId);
+    if (!user) {
+      return Response.NOT_FOUND({
+        message: "Error Creating Doctor Profile, please try again!",
+      });
+    }
+    const { user_type: userType } = user;
 
     if (userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({

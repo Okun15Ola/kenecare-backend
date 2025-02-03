@@ -247,12 +247,6 @@ exports.getDoctorAppointmentByDateRange = async ({
   try {
     const doctor = await getDoctorByUserId(userId);
 
-    if (!doctor) {
-      return Response.NOT_FOUND({
-        message: "Unauthorized Action",
-      });
-    }
-
     const { doctor_id: doctorId, title } = doctor;
 
     const rawData = await dbObject.getDoctorAppointByDate({
@@ -585,7 +579,7 @@ exports.cancelDoctorAppointment = async ({
       });
     }
 
-    // TODO Check if the appointment exist
+    //  Check if the appointment exist
     const rawData = await dbObject.getDoctorAppointmentById({
       doctorId,
       appointmentId,
