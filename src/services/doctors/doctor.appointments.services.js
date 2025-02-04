@@ -5,15 +5,17 @@ const { getUserById } = require("../../db/db.users");
 const { USERTYPE, VERIFICATIONSTATUS } = require("../../utils/enum.utils");
 const Response = require("../../utils/response.utils");
 const { getPatientById } = require("../../db/db.patients");
-const { createZoomMeeting } = require("../../utils/zoom.utils");
+// const { createZoomMeeting } = require("../../utils/zoom.utils");
 const {
   appointmentApprovalSms,
   appointmentPostponedSms,
-  appointmentStartedSms,
+  // appointmentStartedSms,
   appointmentEndedSms,
 } = require("../../utils/sms.utils");
 const logger = require("../../middlewares/logger.middleware");
 const { getAppointmentFollowUps } = require("../../db/db.follow-up");
+const { createStreamCall } = require("../../utils/stream.utils");
+const { nodeEnv } = require("../../config/default.config");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
@@ -395,10 +397,15 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
 
+    if (!doctor) {
+      return Response.BAD_REQUEST({
+        message: "Error Starting Appointment, please try again",
+      });
+    }
     const {
       doctor_id: doctorId,
-      first_name: doctorFirstName,
-      last_name: doctorLastName,
+      // first_name: doctorFirstName,
+      // last_name: doctorLastName,
     } = doctor;
     // Get doctor's appointment by ID
     const appointment = await dbObject.getDoctorAppointmentById({
@@ -406,50 +413,79 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentId,
     });
 
-    // Extract patient id from appointment to get patient email
-    const {
-      patient_id: patientId,
-      first_name: firstName,
-      last_name: lastName,
-      patient_name_on_prescription: patientNameOnPrescription,
-      appointment_date: appointmentDate,
-      appointment_time: appointmentTime,
-      appointment_status: appointmentStatus,
-    } = appointment;
-
-    if (appointmentStatus === "started") {
-      return Response.NOT_MODIFIED();
+    if (!appointment) {
+      return Response.BAD_REQUEST({
+        message: "Error Starting Appointment, please try again",
+      });
     }
 
+    // Extract patient id from appointment to get patient email
     const {
-      zoomMeetingID,
-      zoomMeetingUUID,
-      zoomMeetingTopic,
-      zoomMeetingJoinURL,
-      zoomMeetingStartURL,
-      zoomMeetingEncPassword,
-    } = await createZoomMeeting({
-      patientName: patientNameOnPrescription,
-      appointmentDate,
-      appointmentStartTime: appointmentTime,
-      doctorName: `${doctorFirstName} ${doctorLastName}`,
-    });
-    const { insertId } = await dbObject.createNewZoomMeeting({
-      meetingId: zoomMeetingID.toString(),
-      meetingUUID: zoomMeetingUUID,
-      meetingTopic: zoomMeetingTopic,
-      joinUrl: zoomMeetingJoinURL,
-      startUrl: zoomMeetingStartURL,
-      encryptedPassword: zoomMeetingEncPassword,
-    });
+      appointment_uuid: appointmentUUID,
+      patient_id: patientId,
+      // first_name: firstName,
+      // last_name: lastName,
+      // patient_name_on_prescription: patientNameOnPrescription,
+      // appointment_date: appointmentDate,
+      // appointment_time: appointmentTime,
+      // appointment_status: appointmentStatus,
+    } = appointment;
 
-    const [patient] = await Promise.allSettled([
+    const ptnt = await getPatientById(patientId);
+    if (!ptnt) {
+      return Response.BAD_REQUEST({
+        message: "Error Starting Appointment, please try again",
+      });
+    }
+
+    const { user_id: patientUserId } = ptnt;
+    // if (appointmentStatus === "started") {
+    //   return Response.NOT_MODIFIED();
+    // }
+
+    const call = {
+      callType: nodeEnv === "development" ? "development" : "default",
+      callID: appointmentUUID,
+      userId,
+      members: [
+        { user_id: userId.toString() },
+        { user_id: patientUserId.toString() },
+      ],
+      appointmentId,
+    };
+
+    await createStreamCall(call);
+
+    // const {
+    //   zoomMeetingID,
+    //   zoomMeetingUUID,
+    //   zoomMeetingTopic,
+    //   zoomMeetingJoinURL,
+    //   zoomMeetingStartURL,
+    //   zoomMeetingEncPassword,
+    // } = await createZoomMeeting({
+    //   patientName: patientNameOnPrescription,
+    //   appointmentDate,
+    //   appointmentStartTime: appointmentTime,
+    //   doctorName: `${doctorFirstName} ${doctorLastName}`,
+    // });
+
+    // const { insertId } = await dbObject.createNewZoomMeeting({
+    //   meetingId: zoomMeetingID.toString(),
+    //   meetingUUID: zoomMeetingUUID,
+    //   meetingTopic: zoomMeetingTopic,
+    //   joinUrl: zoomMeetingJoinURL,
+    //   startUrl: zoomMeetingStartURL,
+    //   encryptedPassword: zoomMeetingEncPassword,
+    // });
+
+    await Promise.allSettled([
       getPatientById(patientId),
-      dbObject.updateDoctorAppointmentMeetingId({
-        doctorId,
-        appointmentId,
-        meetingId: insertId,
-      }),
+      // dbObject.updateDoctorAppointmentMeetingId({
+      //   doctorId,
+      //   appointmentId,
+      //   meetingId: appointmentUUID,
+      // }),
       dbObject.updateDoctorAppointmentStartTime({
         appointmentId,
         startTime: moment().format("HH:mm:ss"),
@@ -457,19 +493,18 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
     ]);
 
     //  Send a notification(sms) to the user
-    const { mobile_number: mobileNumber } = patient.value;
-    await appointmentStartedSms({
-      doctorName: `${doctorFirstName} ${doctorLastName}`,
-      patientName: `${firstName} ${lastName}`,
-      mobileNumber,
-      meetingJoinUrl: zoomMeetingJoinURL,
-    });
+    // const { mobile_number: mobileNumber } = patient.value;
+    // await appointmentStartedSms({
+    //   doctorName: `${doctorFirstName} ${doctorLastName}`,
+    //   patientName: `${firstName} ${lastName}`,
+    //   mobileNumber,
+    //   meetingJoinUrl: appointmentUUID,
+    // });
 
     return Response.SUCCESS({
       message: "Appointment Started Successfully",
       data: {
-        meetingStartUrl: zoomMeetingStartURL,
-        meetingJoinUrl: zoomMeetingJoinURL,
+        callID: appointmentUUID,
       },
     });
   } catch (error) {

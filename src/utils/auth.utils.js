@@ -10,6 +10,10 @@ const {
   jwtAudience,
   jwtAdminAudience,
 } = require("../config/default.config");
+const { updateUserVerificationTokenById } = require("../db/db.users");
+
+const { sendAuthTokenSMS } = require("./sms.utils");
+const Response = require("./response.utils");
 
 const SL_COUNTRY_CODE = "+232";
 
@@ -112,6 +116,22 @@ const generateVerificationToken = () => {
   return formattedSixDigitNumber;
 };
 
+const generateAndSendVerificationOTP = async ({ userId, mobileNumber }) => {
+  const token = generateVerificationToken();
+  await Promise.all([
+    updateUserVerificationTokenById({
+      userId,
+      token,
+    }),
+    sendAuthTokenSMS({
+      token,
+      mobileNumber,
+    }),
+  ]);
+
+  return Response.SUCCESS({ message: "Verification OTP sent succesfully" });
+};
+
 const validateExpoToken = (token) => {
   return Expo.isExpoPushToken(token);
 };
@@ -134,4 +154,5 @@ module.exports = {
   generateMarketerVerificaitonJwt,
   verifyMarketerEmailJwt,
   refineMobileNumber,
+  generateAndSendVerificationOTP,
 };

@@ -93,8 +93,6 @@ exports.OTPLoginValidation = [
     .notEmpty()
     .withMessage("Mobile Number is required")
     .bail()
-    // .matches(/^\+(232)?(\d{8})$/)
-    // .withMessage("Mobile Number must be a regsitered SL (+232) number")
     .trim()
     .escape()
     .custom(async (mobileNumber, { req }) => {
@@ -125,8 +123,6 @@ exports.RegisterValidations = [
     .notEmpty()
     .withMessage("Mobile Number is required")
     .bail()
-    // .matches(/^\+(232)?(\d{8})$/)
-    // .withMessage("Mobile Number must be a registered SL (+232) number.")
     .trim()
     .escape()
     .custom(async (mobileNumber) => {

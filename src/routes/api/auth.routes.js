@@ -28,11 +28,13 @@ const {
   getUserByMobileNumber,
   getUserByVerificationToken,
 } = require("../../db/db.users");
-const { validateExpoToken } = require("../../utils/auth.utils");
+const {
+  validateExpoToken,
+  refineMobileNumber,
+} = require("../../utils/auth.utils");
 // const { limiter } = require("../../utils/rate-limit.utils");
 // regex constants
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/;
-const PHONE_NUMBER_REGEX = /^\+(232)?(\d{8})$/;
 
 // limiter(router);
 router.get("/authenticate", requireUserAuth, (req, res, next) => {
@@ -76,14 +78,13 @@ router.post(
     body("phoneNumber")
       .trim()
       .escape()
-      .custom(async (value, { req }) => {
-        if (!value) {
+      .custom(async (phoneNumber, { req }) => {
+        if (!phoneNumber) {
           throw new Error("Phone Number is required");
         }
-        if (!PHONE_NUMBER_REGEX.test(value)) {
-          throw new Error("Invalid number format.");
-        }
-        const user = await getUserByMobileNumber(value);
+        const refinedMobileNumber = refineMobileNumber(phoneNumber);
+
+        const user = await getUserByMobileNumber(refinedMobileNumber);
 
         if (!user) {
           throw new Error(
@@ -129,21 +130,23 @@ router.post(
   "/otp-resend",
   [
     body("phoneNumber")
-      .notEmpty()
-      .withMessage("Phone Number is required")
       .trim()
       .escape()
-      .custom(async (value, { req }) => {
-        const data = await getUserByMobileNumber(value);
+      .custom(async (phoneNumber, { req }) => {
+        if (!phoneNumber) {
+          throw new Error("Phone Number is required");
+        }
+        const refinedMobileNumber = refineMobileNumber(phoneNumber);
 
-        if (!data) {
+        const user = await getUserByMobileNumber(refinedMobileNumber);
+
+        if (!user) {
           throw new Error(
-            "BAD_REQUEST. Error Resending OTP. Please check mobile number",
+            "No Account associated with the phone number you provided",
           );
         }
-        console.log(data);
 
-        req.user = data;
+        req.user = user;
         return true;
       }),
   ],

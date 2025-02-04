@@ -93,9 +93,6 @@ exports.VerifyRegisterOTPController = async (req, res, next) => {
 
 exports.RequestForgotPasswordOTPController = async (req, res, next) => {
   try {
-    // Forgot Password Controller
-    // const { phoneNumber } = req.body;
-
     const response = await sendVerificationOTP(req.user);
 
     return res.status(response.statusCode).json(response);

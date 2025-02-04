@@ -154,11 +154,11 @@ exports.StartAppointmentValidation = [
         );
       }
 
-      // if (appointmentMoment.isAfter(today)) {
-      //   throw new Error(
-      //     "Cannot Start an appointment before the scheduled date",
-      //   );
-      // }
+      if (appointmentMoment.isAfter(today)) {
+        throw new Error(
+          "Cannot Start an appointment before the scheduled date",
+        );
+      }
 
       return true;
     }),

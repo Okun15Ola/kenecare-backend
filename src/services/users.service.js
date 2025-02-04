@@ -2,15 +2,22 @@ const dbObject = require("../db/db.users");
 const {
   generateVerificationToken,
   generateUsersJwtAccessToken,
+  generateAndSendVerificationOTP,
 } = require("../utils/auth.utils");
 const { USERTYPE, VERIFICATIONSTATUS, STATUS } = require("../utils/enum.utils");
 const { hashUsersPassword } = require("../utils/auth.utils");
 const {
   sendAuthTokenSMS,
   sendPasswordResetSMS,
-  sendForgotPasswordRequestTokenSMS,
 } = require("../utils/sms.utils");
 const Response = require("../utils/response.utils");
+const {
+  createOrUpdateStreamUser,
+  generateStreamUserToken,
+} = require("../utils/stream.utils");
+const { getPatientByUserId } = require("../db/db.patients");
+const { getFileUrlFromS3Bucket } = require("../utils/aws-s3.utils");
+const { getDoctorByUserId } = require("../db/db.doctors");
 
 exports.getUsers = async () => {
   const rawData = await dbObject.getAllUsers();
@@ -116,6 +123,39 @@ exports.getUserByEmail = async (userEmail) => {
     throw error;
   }
 };
+exports.getUserByToken = async (token) => {
+  try {
+    const rawData = await dbObject.getUserByVerificationToken(token);
+    if (!rawData) {
+      return null;
+    }
+    const {
+      user_id: userId,
+      mobile_number: mobileNumber,
+      email,
+      user_type: userType,
+      is_verified: accountVerified,
+      is_account_active: accountActive,
+      is_online: isOnline,
+      is_2fa_enabled: is2faEnabled,
+      referral_code: referralCode,
+    } = rawData;
+    return {
+      userId,
+      mobileNumber,
+      email,
+      userType,
+      accountVerified,
+      accountActive,
+      isOnline,
+      is2faEnabled,
+      referralCode,
+    };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 exports.registerNewUser = async ({
   mobileNumber,
@@ -155,39 +195,6 @@ exports.registerNewUser = async ({
     throw error;
   }
 };
-exports.getUserByToken = async (token) => {
-  try {
-    const rawData = await dbObject.getUserByVerificationToken(token);
-    if (!rawData) {
-      return null;
-    }
-    const {
-      user_id: userId,
-      mobile_number: mobileNumber,
-      email,
-      user_type: userType,
-      is_verified: accountVerified,
-      is_account_active: accountActive,
-      is_online: isOnline,
-      is_2fa_enabled: is2faEnabled,
-      referral_code: referralCode,
-    } = rawData;
-    return {
-      userId,
-      mobileNumber,
-      email,
-      userType,
-      accountVerified,
-      accountActive,
-      isOnline,
-      is2faEnabled,
-      referralCode,
-    };
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
 
 exports.verifyRegistrationOTP = async (token) => {
   try {
@@ -204,15 +211,43 @@ exports.verifyRegistrationOTP = async (token) => {
       verificationStatus: VERIFICATIONSTATUS.VERIFIED,
     });
 
+    if ([USERTYPE.PATIENT, USERTYPE.DOCTOR].includes(userType)) {
+      const fetchUserDetails =
+        userType === USERTYPE.PATIENT ? getPatientByUserId : getDoctorByUserId;
+      const userDetails = await fetchUserDetails(userId);
+
+      if (userDetails) {
+        const {
+          first_name: firstName,
+          last_name: lastName,
+          profile_pic_url: profilePicUrl,
+          mobile_number: mobileNumber,
+        } = userDetails;
+        const imageUrl = await getFileUrlFromS3Bucket(profilePicUrl);
+
+        await createOrUpdateStreamUser({
+          userId: userId.toString(),
+          mobileNumber,
+          userType,
+          username: `${firstName} ${lastName}`,
+          image: imageUrl,
+        });
+      }
+    }
+
     // Generate access token
     const accessToken = generateUsersJwtAccessToken({
       sub: userId,
     });
 
+    const streamToken = await generateStreamUserToken(userId.toString());
+
+    //
     return Response.SUCCESS({
       message: "Account Verified Successfully",
       data: {
         token: accessToken,
+        streamToken,
         type: userType,
         isVerified: VERIFICATIONSTATUS.VERIFIED,
         isActive: accountActive,
@@ -255,26 +290,51 @@ exports.loginUser = async (user) => {
 
     // Check if 2FA is enabled on the user's account
     if (is2faEnabled === STATUS.ACTIVE) {
-      // generate token for 2-factor authentication
       const token = generateVerificationToken();
 
-      await dbObject.updateUserVerificationTokenById({
-        userId,
-        token,
-      });
+      await Promise.allSettled([
+        dbObject.updateUserVerificationTokenById({
+          userId,
+          token,
+        }),
+        sendAuthTokenSMS({ token, mobileNumber }),
+      ]);
 
-      // send sms notifcation with 2fa token
-      await sendAuthTokenSMS({ token, mobileNumber });
       return Response.SUCCESS({ message: "2FA Token Sent successfully" });
     }
 
-    // Generate access token
+    if ([USERTYPE.PATIENT, USERTYPE.DOCTOR].includes(userType)) {
+      const fetchUserDetails =
+        userType === USERTYPE.PATIENT ? getPatientByUserId : getDoctorByUserId;
+      const userDetails = await fetchUserDetails(userId);
+
+      if (userDetails) {
+        const {
+          first_name: firstName,
+          last_name: lastName,
+          profile_pic_url: profilePicUrl,
+        } = userDetails;
+
+        const imageUrl = await getFileUrlFromS3Bucket(profilePicUrl);
+
+        await createOrUpdateStreamUser({
+          userId: userId.toString(),
+          mobileNumber,
+          userType,
+          username: `${firstName} ${lastName}`,
+          image: imageUrl,
+        });
+      }
+    }
+
     const accessToken = generateUsersJwtAccessToken({
       sub: userId,
     });
 
+    const streamToken = await generateStreamUserToken(userId.toString());
+
     // update user's active status in the database
-    dbObject.updateUserAccountStatusById({
+    await dbObject.updateUserAccountStatusById({
       userId,
       status: STATUS.ACTIVE,
     });
@@ -283,6 +343,7 @@ exports.loginUser = async (user) => {
       message: "Logged In Successfully",
       data: {
         token: accessToken,
+        streamToken,
         type: userType,
         isVerified: accountVerified,
         isActive: accountActive,
@@ -298,10 +359,12 @@ exports.requestUserLoginOtp = async (user) => {
     const { userId, accountVerified, accountActive, mobileNumber } = user;
 
     //  Check if the account is verified
+    //  Check if the account is verified
     if (accountVerified !== STATUS.ACTIVE) {
       return Response.UNAUTHORIZED({
         message:
           "Account has not been verified. Please Verify account and try again",
+        errorCode: "ACCOUNT_UNVERIFIED",
       });
     }
 
@@ -310,6 +373,7 @@ exports.requestUserLoginOtp = async (user) => {
       return Response.UNAUTHORIZED({
         message:
           "Account has been been disabled by system administrator. Please Contact for further instructions",
+        errorCode: "ACCOUNT_INACTIVE",
       });
     }
     // Generate Login OTP
@@ -344,27 +408,25 @@ exports.verifyUserLoginOtp = async (user) => {
     } = user;
 
     // Delete login OTP token from users account
-    await dbObject.updateUserVerificationTokenById({
-      userId,
-      token: null,
-    });
-
-    dbObject.updateUserAccountStatusById({
-      userId,
-      status: STATUS.ACTIVE,
-    });
+    await Promise.all([
+      dbObject.updateUserVerificationTokenById({
+        userId,
+        token: null,
+      }),
+      dbObject.updateUserAccountStatusById({
+        userId,
+        status: STATUS.ACTIVE,
+      }),
+    ]);
 
     if (is2faEnabled === STATUS.ACTIVE) {
       // generate token for 2-factor authentication
-      const token = generateVerificationToken();
 
-      await dbObject.updateUserVerificationTokenById({
+      const response = await generateAndSendVerificationOTP({
         userId,
-        token,
+        mobileNumber,
       });
-      // send sms notifcation with 2fa token
-      await sendAuthTokenSMS({ token, mobileNumber });
-      return { message: "2FA Token Sent successfully", data: null };
+      return response;
     }
 
     const accessToken = generateUsersJwtAccessToken({
@@ -390,18 +452,19 @@ exports.resendVerificationOTP = async (user) => {
       return Response.BAD_REQUEST({ message: "Error Resending OTP" });
     }
     const {
+      user_id: userId,
       verification_token: token,
       is_verified: isVerified,
       mobile_number: mobileNumber,
     } = user;
 
     if (token && isVerified !== STATUS.ACTIVE) {
-      console.log("in");
       // Send TOKEN VIA SMS
-      await sendAuthTokenSMS({ token, mobileNumber });
-      return Response.SUCCESS({
-        message: "Verification OTP resent succesfully",
+      const response = await generateAndSendVerificationOTP({
+        userId,
+        mobileNumber,
       });
+      return response;
     }
     return Response.NOT_MODIFIED();
   } catch (error) {
@@ -435,18 +498,12 @@ exports.sendVerificationOTP = async (user) => {
         message: "Error Sending OTP. User Account Inactive",
       });
     }
-    const token = generateVerificationToken();
-
-    await dbObject.updateUserVerificationTokenById({
+    const response = await generateAndSendVerificationOTP({
       userId,
-      token,
+      mobileNumber,
     });
-    // Send TOKEN VIA SMS
-    await sendForgotPasswordRequestTokenSMS({ token, mobileNumber });
-    // return success response to user
-    return Response.SUCCESS({
-      message: "Verification OTP sent succesfully",
-    });
+
+    return response;
   } catch (error) {
     console.error(error);
     throw error;

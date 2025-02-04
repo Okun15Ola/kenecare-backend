@@ -45,6 +45,8 @@ module.exports = {
   smsHiveClientSecret: env.SMS_HIVE_CLIENT_SECRET,
   smsHiveAuthToken: env.SMS_HIVE_AUTH_TOKEN,
   smsHiveUrl: env.SMS_HIVE_URL,
+  streamSdkApiKey: env.STREAM_SDK_API_KEY,
+  streamSdkApiSecret: env.STREAM_SDK_API_SECRET,
   zoomAccountId: env.ZOOM_ACCOUNT_ID,
   zoomClientId: env.ZOOM_CLIENT_ID,
   zoomClientSecret: env.ZOOM_CLIENT_SECRET,
