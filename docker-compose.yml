@@ -63,7 +63,7 @@ services:
     image: mysql:latest
     container_name: mysql-db-${ENV}
     restart: always
-    # command: --default-authentication-plugin=mysql_native_password
+
     env_file: ./.env.${ENV}
     environment:
       - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
@@ -85,5 +85,6 @@ volumes:
 
 networks:
   kenecare-net:
+    attachable: true
     name: kenecare-net
     driver: bridge

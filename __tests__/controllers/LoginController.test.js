@@ -1,5 +1,6 @@
 const { LoginController } = require("../../src/controllers/auth.controller");
 const { loginUser } = require("../../src/services/users.service");
+// const app = require("../../src/app");
 
 jest.mock("../../src/services/users.service");
 
