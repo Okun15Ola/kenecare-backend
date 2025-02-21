@@ -45,7 +45,7 @@ const createOrUpdateStreamUser = async ({
 };
 
 const createStreamCall = async (call) => {
-  const { callType, callID, members, userId, appointmentId } = call;
+  const { callType, callID, userId, appointmentId } = call;
   const streamCall = client.video.call(callType, callID);
   streamCall.getOrCreate({
     members_limit: 2,
@@ -55,7 +55,6 @@ const createStreamCall = async (call) => {
     video: true,
     data: {
       created_by_id: userId.toString(),
-      members,
       custom: {
         appointmentId,
       },
