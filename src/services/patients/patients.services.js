@@ -231,6 +231,7 @@ exports.getPatientByUser = async (id) => {
     }
 
     const patient = {
+      userId,
       patientId,
       title,
       firstName,
