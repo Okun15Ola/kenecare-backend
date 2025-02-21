@@ -119,17 +119,18 @@ exports.createDoctorCouncilRegistration = async ({
         message: "Unauthorized Action.",
       });
     }
+    const doctor = await dbObject.getDoctorByUserId(userId);
+    if (!doctor) {
+      return Response.BAD_REQUEST({
+        message: "Doctor Profile does not exist please create a profile. ",
+      });
+    }
     const {
       doctor_id: doctorId,
       first_name: doctorFirstName,
       last_name: doctorLastName,
       email: doctorEmail,
-    } = await dbObject.getDoctorByUserId(userId);
-    if (!doctorId) {
-      return Response.BAD_REQUEST({
-        message: "Doctor Profile does not exist please create a profile. ",
-      });
-    }
+    } = doctor;
 
     const councilRegistrationExist =
       await dbObject.getCouncilRegistrationByDoctorId(doctorId);
