@@ -2,3 +2,11 @@ node_modules
 npm-debug.log
 .vscode
 *.pem
+keys
+__tests__
+*.excalidraw
+sample-env.txt
+nginx
+.vscode
+.husky
+.github
