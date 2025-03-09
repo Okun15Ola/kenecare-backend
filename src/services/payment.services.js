@@ -34,7 +34,6 @@ exports.processAppointmentPayment = async ({
   paymentEventStatus,
 }) => {
   try {
-    console.log("Payment Event Status: ", paymentEventStatus);
     if (!consultationId || referrer !== "kenecare.com") {
       return Response.BAD_REQUEST({ message: "Error Processing Request" });
     }

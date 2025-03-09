@@ -52,6 +52,7 @@
     "pm2": "^5.2.2",
     "promise": "^8.1.0",
     "qs": "^6.12.1",
+    "newrelic": "latest",
     "req-flash": "0.0.3",
     "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.2.8",

@@ -1,11 +1,14 @@
+// const crypto = require("crypto");
+// const moment = require("moment");
+// const { zoomSecretToken } = require("./config/default.config");
+
+require("newrelic");
 require("dotenv").config();
 const express = require("express");
-const crypto = require("crypto");
 const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
 const bodyParser = require("body-parser");
-const moment = require("moment");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
@@ -22,7 +25,6 @@ const {
   SUCCESS,
   BAD_REQUEST,
 } = require("./utils/response.utils");
-const { zoomSecretToken } = require("./config/default.config");
 
 // INDEX ROUTES
 const indexRouter = require("./routes/api/index.routes");
@@ -69,12 +71,12 @@ const adminPatientsRouter = require("./routes/api/admin/patients.routes");
 const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes");
 const adminMarketersRouter = require("./routes/api/admin/marketers.routes");
 
-const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings");
-const {
-  getAppointmentByMeetingId,
-  updateDoctorAppointmentStartTime,
-  updateDoctorAppointmentEndTime,
-} = require("./db/db.appointments.doctors");
+// const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings");
+// const {
+//   getAppointmentByMeetingId,
+//   updateDoctorAppointmentStartTime,
+//   updateDoctorAppointmentEndTime,
+// } = require("./db/db.appointments.doctors");
 
 const app = express();
 runCron();
@@ -108,90 +110,6 @@ app.use("/api/v1/health-check", (req, res) =>
     .status(200)
     .json(SUCCESS({ message: "Health Check Passed. API Working!!!" })),
 );
-
-//  TODO MOVE TO A SEPERATE ROUTE FILE
-app.post("/zoom-hook", async (req, res) => {
-  try {
-    const { body } = req;
-    const { event } = body;
-
-    const message = `v0:${
-      req.headers["x-zm-request-timestamp"]
-    }:${JSON.stringify(req.body)}`;
-
-    const hashForVerify = crypto
-      .createHmac("sha256", zoomSecretToken)
-      .update(message)
-      .digest("hex");
-
-    const signature = `v0=${hashForVerify}`;
-
-    if (req.headers["x-zm-signature"] === signature) {
-      // check for url validation event
-      if (event === "endpoint.url_validation") {
-        const { plainToken } = body.payload;
-        const hashForValidate = crypto
-          .createHmac("sha256", zoomSecretToken)
-          .update(req.body.payload.plainToken)
-          .digest("hex");
-
-        return res.status(200).json({
-          plainToken,
-          encryptedToken: hashForValidate,
-        });
-      }
-
-      if (event === "meeting.started") {
-        // meeting was started
-        // TODO SEND NOTIFICATION TO PATIENT THAT THE MEETING HAS STARTED
-        const { start_time: startTime, id } = body.payload.object;
-
-        const data = await getZoomMeetingByZoomId(id);
-        if (data) {
-          const { meeting_id: meetingId } = data;
-          const appointment = await getAppointmentByMeetingId(meetingId);
-          if (appointment) {
-            const { appointment_id: appointmentId } = appointment;
-            // update appointment start time
-            const done = await updateDoctorAppointmentStartTime({
-              appointmentId,
-              startTime: moment(startTime).format("HH:mm"),
-            });
-
-            console.log(done);
-          }
-        }
-      }
-      if (body.event === "meeting.ended") {
-        // meeting was ended
-        // TODO SEND NOTIFICATION TO PATIENT THAT THE MEETING HAS ENDED
-        const { end_time: endTime, id } = body.payload.object;
-
-        const data = await getZoomMeetingByZoomId(id);
-        if (data) {
-          const { meeting_id: meetingId } = data;
-          const appointment = await getAppointmentByMeetingId(meetingId);
-          if (appointment) {
-            const { appointment_id: appointmentId } = appointment;
-
-            // update appointment end time
-            const done = await updateDoctorAppointmentEndTime({
-              appointmentId,
-              endTime: moment(endTime).format("HH:mm"),
-            });
-            console.log(done);
-          }
-        }
-      }
-
-      return res.sendStatus(200);
-    }
-    return null;
-  } catch (error) {
-    console.log(error);
-    return error;
-  }
-});
 
 app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
