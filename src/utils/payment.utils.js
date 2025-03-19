@@ -173,6 +173,40 @@ const getPaymentUSSD = async ({ orderId, amount }) => {
         }
       : null;
   } catch (error) {
+    console.error(error);
+    console.error("Error: ", error.response.data.error);
+    throw error.response.data.error;
+  }
+};
+
+const cancelPaymentUSSD = async (paymentId) => {
+  try {
+    const idempotencyKey = uuidV4();
+    const options = {
+      headers: {
+        // eslint-disable-next-line prefer-template
+        Authorization: `Bearer ${monimeeApiKey}`,
+        "Monime-Space-Id": monimeeSpaceId,
+        "Idempotency-Key": idempotencyKey,
+        "Content-Type": "application/json",
+      },
+    };
+    const body = {
+      name: "Consultation Fee",
+      isActive: false,
+      status: "cancelled",
+      expireTime: moment(),
+      allowedProviders: null,
+      metadata: {
+        idempotencyKey,
+      },
+    };
+    await axios
+      .patch(`${monimeeApiUrl}/payment-codes/${paymentId}`, body, options)
+      .catch((error) => {
+        throw error;
+      });
+  } catch (error) {
     console.error("Error: ", error.response.data.error);
     throw error.response.data.error;
   }
@@ -182,4 +216,5 @@ module.exports = {
   getPaymentURL,
   checkTransactionStatus,
   getPaymentUSSD,
+  cancelPaymentUSSD,
 };

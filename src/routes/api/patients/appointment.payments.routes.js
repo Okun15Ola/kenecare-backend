@@ -37,13 +37,15 @@ router.get("/om/cancel", async (req, res, next) => {
       consultationId,
       referrer,
     });
-    const { statusCode } = response;
 
-    if (statusCode === 304) {
-      return res.redirect(clientAppUrl);
-    }
+    return res.status(response.statusCode).json(response);
+    // const { statusCode } = response;
 
-    return res.redirect(`${clientAppUrl}/paymentFailure`);
+    // if (statusCode === 304) {
+    //   return res.redirect(clientAppUrl);
+    // }
+
+    // return res.redirect(`${clientAppUrl}/paymentFailure`);
   } catch (error) {
     return next(error);
   }

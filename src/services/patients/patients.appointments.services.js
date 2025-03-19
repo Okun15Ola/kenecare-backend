@@ -349,11 +349,11 @@ exports.createPatientAppointment = async ({
     }
 
     // check if the specified doctor exist
-    if (!doctor) {
-      return Response.BAD_REQUEST({
-        message: "Specified Doctor does not exist. Please try again",
-      });
-    }
+    // if (!doctor) {
+    //   return Response.BAD_REQUEST({
+    //     message: "Specified Doctor does not exist. Please try again",
+    //   });
+    // }
 
     const {
       patient_id: patientId,
@@ -380,7 +380,7 @@ exports.createPatientAppointment = async ({
     if (timeBooked) {
       return Response.BAD_REQUEST({
         message:
-          "An appointment has already been booked for the specified time, please select a new appointment time",
+          "An appointment has already been booked for the specified time. Please choose a new appointment time",
       });
     }
     // Generate a unique ID for each appointment

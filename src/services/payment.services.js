@@ -1,19 +1,16 @@
 const moment = require("moment");
 const {
-  // getPatientAppointmentByUUID,
   deleteAppointmentById,
   getAppointmentByUUID,
 } = require("../db/db.appointments.patients");
 
 const Response = require("../utils/response.utils");
 
-// const { newDoctorAppointmentEmail } = require("../utils/email.utils");
 const {
   updateAppointmentPaymentStatus,
   getAppointmentPaymentByAppointmentId,
   deleteAppointmentPaymentByAppointmentId,
 } = require("../db/db.payments");
-// const { checkTransactionStatus } = require("../utils/payment.utils");
 const { getPatientById } = require("../db/db.patients");
 const { getDoctorById } = require("../db/db.doctors");
 const {
@@ -25,11 +22,11 @@ const {
   getCurrentWalletBalance,
 } = require("../db/db.doctor-wallet");
 const { sendPushNotification } = require("../utils/notification.utils");
+const { cancelPaymentUSSD } = require("../utils/payment.utils");
 
 exports.processAppointmentPayment = async ({
   consultationId,
   referrer,
-
   transactionId,
   paymentEventStatus,
 }) => {
@@ -215,15 +212,15 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
     } = payment;
 
     if (transactionID !== null && paymentStatus === "success") {
-      return Response.NOT_MODIFIED();
+      return Response.NO_CONTENT({});
     }
 
-    // Delete the apppointment and appointment paymetn from the database
+    // Delete the apppointment and appointment payment from the database if payment was not successful
     await Promise.all([
       deleteAppointmentPaymentByAppointmentId({ appointmentId }),
       deleteAppointmentById({ appointmentId }),
+      cancelPaymentUSSD(transactionID),
     ]);
-
     return Response.SUCCESS({
       message: "Medical Appointment Cancelled Successfully.",
     });

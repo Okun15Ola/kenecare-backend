@@ -4,6 +4,7 @@ const {
   getPatientAppointments,
   createPatientAppointment,
 } = require("../../services/patients/patients.appointments.services");
+const { refineMobileNumber } = require("../../utils/time.utils");
 
 exports.GetAppointmentsController = async (req, res, next) => {
   try {
@@ -46,10 +47,13 @@ exports.CreateAppointmentController = async (req, res, next) => {
       appointmentDate,
       appointmentTime,
     } = req.body;
+
+    const refined = refineMobileNumber(patientNumber);
+
     const response = await createPatientAppointment({
       userId,
       patientName,
-      patientNumber,
+      patientNumber: refined,
       appointmentType,
       doctorId,
       specialtyId,

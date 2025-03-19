@@ -9,13 +9,15 @@ const { getDoctorAppointmentById } = require("../db/db.appointments.doctors");
 const {
   validateAppointmentPostponedDate,
   validateAppointmentTime,
+  validateDate,
+  validateDateTime,
 } = require("../utils/time.utils");
 
 exports.CreateAppointmentValidation = [
   body("patientName")
     .notEmpty()
     .withMessage("Patient Name is required")
-    .toLowerCase()
+    .toUpperCase()
     .trim()
     .escape()
     .custom(async (name) => {
@@ -28,78 +30,72 @@ exports.CreateAppointmentValidation = [
   body("patientNumber")
     .notEmpty()
     .withMessage("Patient Mobile Number is required")
-    .toLowerCase()
     .trim()
-    .escape(),
+    .escape()
+    .bail(),
   body("doctorId")
     .notEmpty()
     .withMessage("Doctor ID is required")
-    .toLowerCase()
+    .isInt({ allow_leading_zeroes: false, gt: 0 })
+    .withMessage("Invalid Doctor Id")
     .trim()
     .escape()
     .custom(async (doctorId) => {
       const data = await getDoctorById(doctorId);
       if (!data) {
-        throw new Error("Doctor Not Found");
+        throw new Error("Specified Doctor Not Found");
       }
       return true;
-    }),
+    })
+    .bail(),
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty is required")
-    .toLowerCase()
+    .isInt({ allow_leading_zeroes: false, gt: 0 })
+    .withMessage("Invalid Specialty Id")
     .trim()
     .escape()
     .custom(async (id) => {
       const data = await getSpecialtiyById(id);
       if (!data) {
-        throw new Error("Specialty Not Found");
+        throw new Error("Specified Specialty Not Found");
       }
       return true;
-    }),
+    })
+    .bail(),
   body("symptoms")
     .notEmpty()
     .withMessage("Patient Symptom(s) is required")
     .toLowerCase()
     .trim()
-    .escape(),
+    .escape()
+    .bail(),
   body("appointmentType")
     .notEmpty()
     .withMessage("Appointment Type is required")
     .toLowerCase()
-    .trim(),
+    .trim()
+    .bail(),
   body("appointmentDate")
     .notEmpty()
     .withMessage("Appointment Date is required")
-    .toLowerCase()
     .trim()
     .escape()
     .custom(async (date) => {
-      const today = moment().format("YYYY-MM-DD");
-      const userDate = moment(date, "YYYY-MM-DD", true);
-      const isValidDate = moment(userDate).isValid();
-      if (!isValidDate) {
-        throw new Error("Appointment date must be a valid date (yyyy-mm-dd)");
-      }
-      if (userDate.isBefore(today)) {
-        throw new Error(
-          "Appointment must either be today or later. Please choose another date",
-        );
-      }
-    }),
+      validateDate(date);
+    })
+    .bail(),
 
   body("appointmentTime")
     .notEmpty()
     .withMessage("Appointment Time is required")
-    .toLowerCase()
     .trim()
-    .escape(),
-  // body("timeSlotId")
-  //   .notEmpty()
-  //   .withMessage("Time Slot is required")
-  //   .toLowerCase()
-  //   .trim()
-  //   .escape(),
+    .escape()
+    .custom(async (time, { req }) => {
+      const date = req.body.appointmentDate;
+
+      validateDateTime({ date, time });
+    }),
 ];
 
 exports.StartAppointmentValidation = [

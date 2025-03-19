@@ -1,11 +1,21 @@
 const HttpStatus = require("http-status-codes");
 
 const Response = {};
-Response.SUCCESS = ({ message, data }) => {
+Response.SUCCESS = ({ message = null, data = null }) => {
   const timestamp = new Date();
   return {
     status: "success",
     statusCode: HttpStatus.StatusCodes.OK,
+    timestamp,
+    message,
+    data,
+  };
+};
+Response.NO_CONTENT = ({ message = null, data = null }) => {
+  const timestamp = new Date();
+  return {
+    status: "success",
+    statusCode: HttpStatus.StatusCodes.NO_CONTENT,
     timestamp,
     message,
     data,
@@ -21,7 +31,7 @@ Response.NOT_MODIFIED = () => {
     data: null,
   };
 };
-Response.CREATED = ({ data, message }) => {
+Response.CREATED = ({ message = null, data = null }) => {
   const timestamp = new Date();
   return {
     status: "created",
@@ -32,7 +42,7 @@ Response.CREATED = ({ data, message }) => {
   };
 };
 
-Response.BAD_REQUEST = ({ message, error, errorCode }) => {
+Response.BAD_REQUEST = ({ message = null, error = null, errorCode = null }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -44,7 +54,11 @@ Response.BAD_REQUEST = ({ message, error, errorCode }) => {
   };
 };
 
-Response.UNAUTHORIZED = ({ message, error, errorCode }) => {
+Response.UNAUTHORIZED = ({
+  message = null,
+  error = null,
+  errorCode = null,
+}) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -55,7 +69,7 @@ Response.UNAUTHORIZED = ({ message, error, errorCode }) => {
     errors: error,
   };
 };
-Response.FORBIDDEN = ({ message, error, errorCode }) => {
+Response.FORBIDDEN = ({ message = null, error = null, errorCode = null }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -66,7 +80,7 @@ Response.FORBIDDEN = ({ message, error, errorCode }) => {
     errors: error,
   };
 };
-Response.NOT_FOUND = ({ message, error, errorCode }) => {
+Response.NOT_FOUND = ({ message = null, error = null, errorCode = null }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -78,7 +92,7 @@ Response.NOT_FOUND = ({ message, error, errorCode }) => {
   };
 };
 
-Response.INTERNAL_SERVER_ERROR = ({ message, errorCode }) => {
+Response.INTERNAL_SERVER_ERROR = ({ message = null, errorCode = null }) => {
   const timestamp = new Date();
   return {
     status: "error",

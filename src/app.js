@@ -2,7 +2,7 @@
 // const moment = require("moment");
 // const { zoomSecretToken } = require("./config/default.config");
 
-require("newrelic");
+// require("newrelic");
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");

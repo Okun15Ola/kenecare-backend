@@ -361,8 +361,15 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       appointment_status: appointmentStatus,
     } = appointment;
 
-    if (appointmentStatus === "approved" || appointmentStatus === "started") {
-      return Response.NOT_MODIFIED();
+    if (appointmentStatus === "approved") {
+      return Response.SUCCESS({
+        message: "Appointment has already been approved",
+      });
+    }
+    if (appointmentStatus === "started") {
+      return Response.SUCCESS({
+        message: "Appointment meeting has already started",
+      });
     }
 
     const [, patient] = await Promise.allSettled([
