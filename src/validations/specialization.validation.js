@@ -1,7 +1,5 @@
 const { body } = require("express-validator");
-const {
-  getSpecializationByName,
-} = require("../services/specializations.services");
+const { getSpecializationByName } = require("../services/specialties.services");
 
 exports.CreateSpecializationValidation = [
   body("name")
