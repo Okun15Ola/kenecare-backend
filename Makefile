@@ -10,7 +10,7 @@ build-prod:
 
 
 run-dev:
-	@ENV=development  docker compose --env-file=.env.development up --build --remove-orphans
+	@ENV=development  docker compose --env-file=.env.development up --build 
 stop-dev:
 	@ENV=development  docker compose --env-file=.env.development down
 	

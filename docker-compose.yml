@@ -12,6 +12,7 @@ services:
       - 8500:8000
     networks:
       - kenecare-net
+      - redis-net
     restart: always
     env_file: ./.env.${ENV}
     environment:
@@ -58,8 +59,25 @@ services:
       - ZOOM_VERIFICATION_TOKEN=$ZOOM_VERIFICATION_TOKEN
       - ZOOM_ACCESS_TOKEN_URL=$ZOOM_ACCESS_TOKEN_URL
       - ZOOM_API_URL=$ZOOM_API_URL
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB:-0}
+      - CACHE_TTL=${CACHE_TTL:-3600}
     volumes:
       - .:/usr/src/app
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:${APP_PORT}/api/v1/health-check",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   db:
     image: mysql:latest
@@ -90,3 +108,9 @@ networks:
     attachable: true
     name: kenecare-net
     driver: bridge
+  redis-net:
+    external: true
+    driver_opts:
+      com.docker.network.driver.mtu: 1450
+    labels:
+      - "com.docker.compose.network.optional=true"
