@@ -13,7 +13,6 @@ exports.getAllCouncilRegistrations = async () => {
   try {
     const cacheKey = "admin-doctors-council-registrations:all";
     const cachedData = await redisClient.get(cacheKey);
-    console.log(cachedData);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
