@@ -1,8 +1,14 @@
 const dbObject = require("../../db/db.patients");
 const Response = require("../../utils/response.utils");
+const redisClient = require("../../config/redis.config");
 
 exports.getPatientMedicalHistory = async (userId) => {
   try {
+    const cacheKey = "patient-medicalHistory:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const patient = await dbObject.getPatientByUserId(userId);
     if (!patient) {
       return Response.BAD_REQUEST({
@@ -48,6 +54,10 @@ exports.getPatientMedicalHistory = async (userId) => {
       caffineIntake: caffineIntake !== null,
       caffineIntakeFreq,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(medicalHistory),
+    });
     return Response.SUCCESS({ data: medicalHistory });
   } catch (error) {
     console.error("GET PATIENT MEDICAL HISTORY ERROR: ", error);

@@ -23,9 +23,15 @@ const {
   doctorAppointmentBookedSms,
   appointmentBookedSms,
 } = require("../../utils/sms.utils");
+const redisClient = require("../../config/redis.config");
 
 exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
+    const cacheKey = "patient-appointments:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const patient = await getPatientByUserId(userId);
 
     if (!patient) {
@@ -113,6 +119,11 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
       }),
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointments),
+    });
+
     return Response.SUCCESS({ data: appointments });
   } catch (error) {
     logger.error(error);
@@ -122,6 +133,11 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
 
 exports.getPatientAppointment = async ({ userId, id }) => {
   try {
+    const cacheKey = `patient-appointments:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const { patient_id: patientId } = await getPatientByUserId(userId);
 
     const rawData = await dbObject.getPatientAppointmentById({
@@ -225,6 +241,11 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       followUps,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointment),
+    });
+
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
     logger.error(error);
@@ -235,6 +256,11 @@ exports.getPatientAppointment = async ({ userId, id }) => {
 
 exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
   try {
+    const cacheKey = `patient-appointments-by-uuid:${uuId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const { patient_id: patientId } = await getPatientByUserId(userId);
 
     const rawData = await dbObject.getPatientAppointmentByUUID({
@@ -314,6 +340,10 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
       createdAt: moment(createdAt).format("YYYY-MM-DD"),
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointment),
+    });
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
     console.error(error);

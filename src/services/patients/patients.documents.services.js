@@ -22,11 +22,17 @@ const {
 } = require("../../utils/aws-s3.utils");
 const { documentSharedWithDoctorSMS } = require("../../utils/sms.utils");
 const { getDoctorById } = require("../../db/db.doctors");
+const redisClient = require("../../config/redis.config");
 // const { encryptFile, decryptFile } = require("../utils/file-upload.utils");
 // const { getUserById } = require("../db/db.users");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {
+    const cacheKey = "patient-documents:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const patient = await getPatientByUserId(userId).catch((error) => {
       throw error;
     });
@@ -50,6 +56,10 @@ exports.getPatientMedicalDocuments = async (userId) => {
       },
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(documents),
+    });
     return Response.SUCCESS({ data: documents });
   } catch (error) {
     console.error(error);
@@ -59,7 +69,12 @@ exports.getPatientMedicalDocuments = async (userId) => {
 
 exports.getPatientMedicalDocument = async ({ userId, docId }) => {
   try {
-    // const { password } = await getUserById(userId);
+    const cacheKey = `patient-documents:${docId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
     const patient = await getPatientByUserId(userId);
 
     const { patient_id: patientId } = patient;
@@ -89,6 +104,10 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
       fileUrl,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(document),
+    });
     return Response.SUCCESS({ data: document });
   } catch (error) {
     console.error(error);

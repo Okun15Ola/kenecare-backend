@@ -1,8 +1,14 @@
 const dbObject = require("../../db/db.blog-categories");
 const Response = require("../../utils/response.utils");
+const redisClient = require("../../config/redis.config");
 
 exports.getBlogCategories = async () => {
   try {
+    const cacheKey = "blog-categories:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAllBlogCategories();
     const categories = rawData.map(
       ({
@@ -18,15 +24,24 @@ exports.getBlogCategories = async () => {
       }),
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(categories),
+    });
+
     return Response.SUCCESS({ data: categories });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-
 exports.getBlogCategory = async (id) => {
   try {
+    const cacheKey = `blog-categories:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getBlogCategoryById(id);
 
     if (!rawData) {
@@ -44,6 +59,10 @@ exports.getBlogCategory = async (id) => {
       status,
       inputtedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(category),
+    });
     return Response.SUCCESS({ data: category });
   } catch (error) {
     console.error(error);

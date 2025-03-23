@@ -4,14 +4,19 @@ const {
   getDoctorSharedMedicalDocumentById,
 } = require("../../db/db.patient-docs");
 const Response = require("../../utils/response.utils");
-// const { getFileFromS3Bucket } = require("../utils/aws-s3.utils");
 const { getDoctorByUserId } = require("../../db/db.doctors");
 const { getFileUrlFromS3Bucket } = require("../../utils/aws-s3.utils");
+const redisClient = require("../../config/redis.config");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {
   try {
+    const cacheKey = `doctor-shared-medical-documents:${userId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
     const doctor = await getDoctorByUserId(userId);
-    // console.log(doctor);
 
     if (!doctor) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
@@ -50,8 +55,12 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
         };
       },
     );
-    const data = await Promise.all(dataPromises);
-    return Response.SUCCESS({ data });
+    const sharedMedicalDocuments = await Promise.all(dataPromises);
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(sharedMedicalDocuments),
+    });
+    return Response.SUCCESS({ data: sharedMedicalDocuments });
   } catch (error) {
     console.error(error);
     throw error;
@@ -59,6 +68,12 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
 };
 exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
   try {
+    const cacheKey = `doctor-shared-medical-documents:${sharedDocId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
@@ -66,7 +81,6 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
     }
     const { doctor_id: doctorId, title } = doctor;
 
-    // const document = await getSharedMedicalDocumentById(sharedDocId);
     const document = await getDoctorSharedMedicalDocumentById({
       doctorId,
       sharedDocumentId: sharedDocId,
@@ -94,7 +108,7 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
 
     const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
 
-    const data = {
+    const sharedMedicalDocument = {
       sharingId,
       documentId,
       documentUUID,
@@ -107,7 +121,12 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
       createdAt: moment(createdAt).format("YYYY-MM-DD"),
     };
 
-    return Response.SUCCESS({ data });
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(sharedMedicalDocument),
+    });
+
+    return Response.SUCCESS({ data: sharedMedicalDocument });
   } catch (error) {
     console.error(error);
     throw error;

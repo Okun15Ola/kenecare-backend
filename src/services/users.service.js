@@ -18,10 +18,25 @@ const {
 const { getPatientByUserId } = require("../db/db.patients");
 const { getFileUrlFromS3Bucket } = require("../utils/aws-s3.utils");
 const { getDoctorByUserId } = require("../db/db.doctors");
+const redisClient = require("../config/redis.config");
 
 exports.getUsers = async () => {
-  const rawData = await dbObject.getAllUsers();
-  return rawData;
+  try {
+    const cacheKey = "users:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+    const rawData = await dbObject.getAllUsers();
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(rawData),
+    });
+    return rawData;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
 
 exports.getUserById = async (id) => {

@@ -5,8 +5,14 @@ const dbObject = require("../db/db.specialities");
 const Response = require("../utils/response.utils");
 const { deleteFile } = require("../utils/file-upload.utils");
 const { appBaseURL } = require("../config/default.config");
+const redisClient = require("../config/redis.config");
 
 exports.getSpecialties = async () => {
+  const cacheKey = "specialties:all";
+  const cachedData = await redisClient.get(cacheKey);
+  if (cachedData) {
+    return Response.SUCCESS({ data: JSON.parse(cachedData) });
+  }
   const rawData = await dbObject.getAllSpecialties();
 
   const specialties = rawData.map(
@@ -28,11 +34,20 @@ exports.getSpecialties = async () => {
       inputtedBy,
     }),
   );
+  await redisClient.set({
+    key: cacheKey,
+    value: JSON.stringify(specialties),
+  });
   return Response.SUCCESS({ data: specialties });
 };
 
 exports.getSpecialtyByName = async (name) => {
   try {
+    const cacheKey = `specialties:${name}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getSpecialtyByName(name);
 
     if (!rawData) {
@@ -57,6 +72,10 @@ exports.getSpecialtyByName = async (name) => {
       isActive,
       inputtedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(specialty),
+    });
     return Response.SUCCESS({ data: specialty });
   } catch (error) {
     console.error(error);
@@ -66,6 +85,11 @@ exports.getSpecialtyByName = async (name) => {
 
 exports.getSpecialtyById = async (id) => {
   try {
+    const cacheKey = `specialties:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getSpecialtiyById(id);
 
     if (!rawData) {
@@ -88,6 +112,10 @@ exports.getSpecialtyById = async (id) => {
       isActive,
       inputtedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(specialty),
+    });
     return Response.SUCCESS({ data: specialty });
   } catch (error) {
     console.error(error);

@@ -15,9 +15,15 @@ const {
   getMarketersTotalRegisteredUsers,
 } = require("../../db/db.marketers");
 const { sendMarketerUserRegisteredSMS } = require("../../utils/sms.utils");
+const redisClient = require("../../config/redis.config");
 
 exports.getAllPatients = async () => {
   try {
+    const cacheKey = "patients:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAllPatients();
 
     const patients = rawData.map(
@@ -53,6 +59,10 @@ exports.getAllPatients = async () => {
         isOnline,
       }),
     );
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(patients),
+    });
     return Response.SUCCESS({ data: patients });
   } catch (error) {
     console.error(error);
@@ -61,6 +71,11 @@ exports.getAllPatients = async () => {
 };
 exports.getPatientById = async (id) => {
   try {
+    const cacheKey = `patients:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getPatientById(id);
     if (!rawData) {
       return Response.NOT_FOUND({
@@ -85,7 +100,7 @@ exports.getPatientById = async (id) => {
       is_online: isOnline,
     } = rawData;
 
-    // TODO Get medical Record details
+    //  Get medical Record details
     const medicalRecord =
       await dbObject.getPatientMedicalInfoByPatientId(patientId);
 
@@ -138,6 +153,11 @@ exports.getPatientById = async (id) => {
       isOnline,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(patient),
+    });
+
     return Response.SUCCESS({ data: patient });
   } catch (error) {
     console.error(error);
@@ -147,6 +167,11 @@ exports.getPatientById = async (id) => {
 
 exports.getPatientsTestimonial = async (userId) => {
   try {
+    const cacheKey = "patient-testimonials:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const patient = await dbObject.getPatientByUserId(userId);
     if (!patient) {
       return Response.NOT_FOUND({
@@ -154,6 +179,7 @@ exports.getPatientsTestimonial = async (userId) => {
       });
     }
     const rawData = await dbObject.getAllPatients();
+
     return Response.SUCCESS({ data: rawData });
   } catch (error) {
     console.error(error);
@@ -163,6 +189,12 @@ exports.getPatientsTestimonial = async (userId) => {
 
 exports.getPatientByUser = async (id) => {
   try {
+    const cacheKey = `patients-user:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
     // Get profile from database
     const rawData = await dbObject.getPatientByUserId(id);
     if (!rawData) {
@@ -191,12 +223,12 @@ exports.getPatientByUser = async (id) => {
       is_online: isOnline,
     } = rawData;
 
-    // TODO Check if the profile requested belongs to the requesting user
+    //  Check if the profile requested belongs to the requesting user
     if (id !== userId || userType !== USERTYPE.PATIENT) {
-      return Response.UNAUTHORIZED({ message: "Unauthorized account access." });
+      return Response.FORBIDDEN({ message: "Unauthorized account access." });
     }
 
-    // TODO Get medical Record details
+    //  Get medical Record details
     const medicalRecord =
       await dbObject.getPatientMedicalInfoByPatientId(patientId);
 
@@ -250,6 +282,10 @@ exports.getPatientByUser = async (id) => {
       isOnline,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(patient),
+    });
     return Response.SUCCESS({ data: patient });
   } catch (error) {
     console.error(error);

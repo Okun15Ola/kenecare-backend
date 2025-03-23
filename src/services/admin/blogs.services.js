@@ -2,14 +2,19 @@ const moment = require("moment");
 const dbObject = require("../../db/db.blogs");
 const {
   uploadFileToS3Bucket,
-
   getFileUrlFromS3Bucket,
 } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
 const Response = require("../../utils/response.utils");
+const redisClient = require("../../config/redis.config");
 
 exports.getBlogs = async () => {
   try {
+    const cacheKey = "blogs:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAllBlogs();
 
     const blogsPromises = rawData.map(
@@ -45,6 +50,11 @@ exports.getBlogs = async () => {
 
     const blogs = await Promise.all(blogsPromises);
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(blogs),
+    });
+
     return Response.SUCCESS({ data: blogs });
   } catch (error) {
     console.error(error);
@@ -54,6 +64,11 @@ exports.getBlogs = async () => {
 
 exports.getBlog = async (id) => {
   try {
+    const cacheKey = `blogs:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Blog Not Found" });
@@ -88,6 +103,10 @@ exports.getBlog = async (id) => {
       createdAt: moment(createdAt).format("YYYY-MM-DD"),
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(blog),
+    });
     return Response.SUCCESS({ data: blog });
   } catch (error) {
     console.error(error);

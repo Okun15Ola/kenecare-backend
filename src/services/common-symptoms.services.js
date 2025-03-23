@@ -1,5 +1,6 @@
 const dbObject = require("../db/db.common-symptoms");
 const Response = require("../utils/response.utils");
+const redisClient = require("../config/redis.config");
 const {
   getFileFromS3Bucket,
   uploadFileToS3Bucket,
@@ -9,6 +10,12 @@ const { generateFileName } = require("../utils/file-upload.utils");
 
 exports.getCommonSymptoms = async () => {
   try {
+    const cacheKey = "common-symptoms:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
     const rawData = await dbObject.getAllCommonSymptoms();
     const promises = rawData.map(
       async ({
@@ -37,6 +44,10 @@ exports.getCommonSymptoms = async () => {
       },
     );
     const symptoms = await Promise.all(promises);
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(symptoms),
+    });
     return Response.SUCCESS({ data: symptoms });
   } catch (error) {
     console.error("GET ALL COMMON SYMPTOMS ERROR: ", error);
@@ -46,6 +57,11 @@ exports.getCommonSymptoms = async () => {
 
 exports.getCommonSymptom = async (id) => {
   try {
+    const cacheKey = `common-symptoms:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getCommonSymptomById(id);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
@@ -76,6 +92,10 @@ exports.getCommonSymptom = async (id) => {
       inputtedBy,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(symptom),
+    });
     return Response.SUCCESS({ data: symptom });
   } catch (error) {
     console.error("GET COMMON SYMPTOMS BY ID ERROR: ", error);

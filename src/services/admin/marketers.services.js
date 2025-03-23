@@ -29,6 +29,7 @@ const {
   sendMarketerPhoneVerifiedSMS,
 } = require("../../utils/sms.utils");
 const { marketerEmailVerificationToken } = require("../../utils/email.utils");
+const redisClient = require("../../config/redis.config");
 
 const generateReferralCode = ({ firstName, lastName }) => {
   const randomNumbers = Math.floor(100 + Math.random() * 900); // Generate 3 random numbers
@@ -40,6 +41,11 @@ const generateReferralCode = ({ firstName, lastName }) => {
 
 exports.getAllMarketersService = async () => {
   try {
+    const cacheKey = "marketers:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await getAllMarketers();
     const marketers = rawData.map(
       ({
@@ -98,6 +104,10 @@ exports.getAllMarketersService = async () => {
         };
       },
     );
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(marketers),
+    });
     return Response.SUCCESS({ data: marketers });
   } catch (error) {
     console.error("Service Error: ", error);
@@ -106,6 +116,11 @@ exports.getAllMarketersService = async () => {
 };
 exports.getMarketerByIdService = async (id) => {
   try {
+    const cacheKey = `marketers:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await getMarketerById(id);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
@@ -165,6 +180,10 @@ exports.getMarketerByIdService = async (id) => {
       createdAt: moment(createdAt).format("YYYY-MM-DD hh:mm"),
       updatedAt: moment(updatedAt).format("YYYY-MM-DD hh:mm"),
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(marketer),
+    });
     return Response.SUCCESS({ data: marketer });
   } catch (error) {
     console.error("Service Error: ", error);

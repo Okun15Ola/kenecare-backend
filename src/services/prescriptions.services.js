@@ -17,9 +17,15 @@ const {
 const { sendPrescriptionToken } = require("../utils/sms.utils");
 const { getAppointmentByID } = require("../db/db.appointments.patients");
 const { getPatientById } = require("../db/db.patients");
+const redisClient = require("../config/redis.config");
 
 exports.getAppointmentPrescriptions = async (id) => {
   try {
+    const cacheKey = "appointment-prescriptions:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await getAppointmentPrescriptions(id);
 
     const prescriptions = rawData.map(
@@ -36,6 +42,10 @@ exports.getAppointmentPrescriptions = async (id) => {
       }),
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(prescriptions),
+    });
     return Response.SUCCESS({ data: prescriptions });
   } catch (error) {
     console.error(error);
@@ -45,14 +55,19 @@ exports.getAppointmentPrescriptions = async (id) => {
 
 exports.getAppointmentPrescriptionById = async (id) => {
   try {
-    const prescription = await getAppointmentPrescriptionById(id);
+    const cacheKey = `appointment-prescriptions:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+    const prescriptionExist = await getAppointmentPrescriptionById(id);
 
-    if (!prescription) {
+    if (!prescriptionExist) {
       return Response.NOT_FOUND({
         message: "Prescription Not Found. Try again",
       });
     }
-    const { access_jwt: hashedToken } = prescription;
+    const { access_jwt: hashedToken } = prescriptionExist;
 
     // //TODO Check accesstoken
     // const isTokenMatch = await comparePassword({
@@ -68,7 +83,7 @@ exports.getAppointmentPrescriptionById = async (id) => {
       doctors_comment: doctorComment,
       created_at: dateCreated,
       updated_at: dateUpdated,
-    } = prescription;
+    } = prescriptionExist;
 
     const decryptedDiagnosis = decryptText({
       encryptedText: diagnosis,
@@ -83,7 +98,7 @@ exports.getAppointmentPrescriptionById = async (id) => {
       key: hashedToken,
     });
 
-    const data = {
+    const prescription = {
       prescriptionId,
       appointmentId,
       diagnosis: decryptedDiagnosis,
@@ -92,8 +107,12 @@ exports.getAppointmentPrescriptionById = async (id) => {
       createdAt: moment(dateCreated).format("YYYY-MM-DD"),
       updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(prescription),
+    });
 
-    return Response.SUCCESS({ data });
+    return Response.SUCCESS({ data: prescription });
   } catch (error) {
     console.error(error);
     throw error;

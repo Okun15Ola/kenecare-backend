@@ -16,9 +16,15 @@ const logger = require("../../middlewares/logger.middleware");
 const { getAppointmentFollowUps } = require("../../db/db.follow-up");
 const { createStreamCall } = require("../../utils/stream.utils");
 const { nodeEnv } = require("../../config/default.config");
+const redisClient = require("../../config/redis.config");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
+    const cacheKey = "doctor-appointments:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
@@ -108,6 +114,10 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
       }),
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointments),
+    });
     return Response.SUCCESS({ data: appointments });
   } catch (error) {
     console.error(error);
@@ -117,6 +127,11 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
 
 exports.getDoctorAppointment = async ({ userId, id }) => {
   try {
+    const cacheKey = `doctor-appointments:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
       return Response.NOT_FOUND({
@@ -232,6 +247,10 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       followUps,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointment),
+    });
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
     console.error(error);
@@ -247,6 +266,11 @@ exports.getDoctorAppointmentByDateRange = async ({
   limit,
 }) => {
   try {
+    const cacheKey = `doctor-appointments-by-date:${startDate}-${endDate}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const doctor = await getDoctorByUserId(userId);
 
     const { doctor_id: doctorId, title } = doctor;
@@ -328,6 +352,10 @@ exports.getDoctorAppointmentByDateRange = async ({
       }),
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointments),
+    });
     return Response.SUCCESS({ data: appointments });
   } catch (error) {
     console.error(error);

@@ -1,7 +1,13 @@
 const dbObject = require("../db/db.medical-councils");
 const Response = require("../utils/response.utils");
+const redisClient = require("../config/redis.config");
 
 exports.getMedicalCouncils = async () => {
+  const cacheKey = "medical-council:all";
+  const cachedData = await redisClient.get(cacheKey);
+  if (cachedData) {
+    return Response.SUCCESS({ data: JSON.parse(cachedData) });
+  }
   const rawData = await dbObject.getAllMedicalCouncils();
 
   const councils = rawData.map(
@@ -23,11 +29,20 @@ exports.getMedicalCouncils = async () => {
       inputtedBy,
     }),
   );
+  await redisClient.set({
+    key: cacheKey,
+    value: JSON.stringify(councils),
+  });
   return Response.SUCCESS({ data: councils });
 };
 
 exports.getMedicalCouncilByEmail = async (councilEmail) => {
   try {
+    const cacheKey = `medical-council:${councilEmail}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getMedicalCouncilById(councilEmail);
 
     if (!rawData) {
@@ -54,6 +69,10 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
       isActive,
       inputtedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(council),
+    });
     return Response.SUCCESS({ data: council });
   } catch (error) {
     console.error(error);
@@ -62,6 +81,11 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
 };
 exports.getMedicalCouncilByMobileNumber = async (number) => {
   try {
+    const cacheKey = `medical-council:${number}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getMedicalCouncilByMobileNumber(number);
 
     if (!rawData) {
@@ -88,6 +112,10 @@ exports.getMedicalCouncilByMobileNumber = async (number) => {
       isActive,
       inputtedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(council),
+    });
     return Response.SUCCESS({ data: council });
   } catch (error) {
     console.error(error);
@@ -97,6 +125,11 @@ exports.getMedicalCouncilByMobileNumber = async (number) => {
 
 exports.getMedicalCouncil = async (id) => {
   try {
+    const cacheKey = `medical-council:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getMedicalCouncilById(id);
 
     if (!rawData) {
@@ -121,6 +154,10 @@ exports.getMedicalCouncil = async (id) => {
       isActive,
       inputtedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(council),
+    });
     return Response.SUCCESS({ data: council });
   } catch (error) {
     console.error(error);

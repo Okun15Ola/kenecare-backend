@@ -1,9 +1,15 @@
 const dbObject = require("../../db/db.appointments.admin");
 const Response = require("../../utils/response.utils");
+const redisClient = require("../../config/redis.config");
 
-exports.getAdminppointments = async () => {
+exports.getAdminppointments = async ({ page, limit }) => {
   try {
-    const rawData = await dbObject.getAllAppointments({ page: 1, limit: 10 });
+    const cacheKey = "admin-appointments:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+    const rawData = await dbObject.getAllAppointments({ page, limit });
 
     const appointments = rawData.map(
       ({
@@ -61,6 +67,10 @@ exports.getAdminppointments = async () => {
       }),
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointments),
+    });
     return Response.SUCCESS({ data: appointments });
   } catch (error) {
     console.error(error);
@@ -69,6 +79,11 @@ exports.getAdminppointments = async () => {
 };
 exports.getAdminAppointmentsByDoctorId = async (doctorId) => {
   try {
+    const cacheKey = `admin-appointments-by-doctor-id:${doctorId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAppointmentsByDoctorId(doctorId);
 
     const appointments = rawData.map(
@@ -127,6 +142,11 @@ exports.getAdminAppointmentsByDoctorId = async (doctorId) => {
       }),
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointments),
+    });
+
     return Response.SUCCESS({ data: appointments });
   } catch (error) {
     console.error(error);
@@ -136,6 +156,11 @@ exports.getAdminAppointmentsByDoctorId = async (doctorId) => {
 
 exports.getAdminAppointmentById = async (id) => {
   try {
+    const cacheKey = `admin-appointments:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAppointmentById(id);
 
     if (!rawData) {
@@ -198,6 +223,10 @@ exports.getAdminAppointmentById = async (id) => {
       createAt,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointment),
+    });
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
     console.error(error);
@@ -207,6 +236,11 @@ exports.getAdminAppointmentById = async (id) => {
 
 exports.getAdminAppointmentByUUID = async (uuid) => {
   try {
+    const cacheKey = `admin-appointments-by-uuid:${uuid}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAppointmentByUUID(uuid);
 
     const {
@@ -265,6 +299,10 @@ exports.getAdminAppointmentByUUID = async (uuid) => {
       createAt,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(appointment),
+    });
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
     console.error(error);

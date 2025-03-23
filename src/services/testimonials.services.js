@@ -1,9 +1,15 @@
 const dbObject = require("../db/db.testimonials");
 const Response = require("../utils/response.utils");
 const { appBaseURL } = require("../config/default.config");
+const redisClient = require("../config/redis.config");
 
 exports.getTestimonials = async () => {
   try {
+    const cacheKey = "testimonials:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAllTestimonials();
     if (!rawData) return null;
 
@@ -27,6 +33,10 @@ exports.getTestimonials = async () => {
         approvedBy,
       }),
     );
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(testimonials),
+    });
     return Response.SUCCESS({ data: testimonials });
   } catch (error) {
     console.error(error);
@@ -36,6 +46,11 @@ exports.getTestimonials = async () => {
 
 exports.getTestimonialById = async (id) => {
   try {
+    const cacheKey = `testimonials:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getTestimonialById(id);
 
     if (!rawData) {
@@ -61,6 +76,10 @@ exports.getTestimonialById = async (id) => {
       isApproved,
       approvedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(testimonial),
+    });
     return Response.SUCCESS({ data: testimonial });
   } catch (error) {
     console.error(error);

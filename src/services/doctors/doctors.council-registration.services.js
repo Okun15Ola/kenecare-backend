@@ -15,10 +15,16 @@ const {
   getFileUrlFromS3Bucket,
 } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
+const redisClient = require("../../config/redis.config");
 
 // DOCTORS
 exports.getDoctorCouncilRegistration = async (id) => {
   try {
+    const cacheKey = `doctor-council-registration:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     // Get profile from database
     const doctor = await dbObject.getDoctorByUserId(id);
 
@@ -84,6 +90,10 @@ exports.getDoctorCouncilRegistration = async (id) => {
       verifiedBy,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(registration),
+    });
     return Response.SUCCESS({ data: registration });
   } catch (error) {
     console.error(error);

@@ -5,6 +5,7 @@ const {
 } = require("../../db/db.prescriptions");
 const Response = require("../../utils/response.utils");
 const { decryptText } = require("../../utils/auth.utils");
+const redisClient = require("../../config/redis.config");
 // const {
 //   getPatientAppointmentById,
 //   getAppointmentByID,
@@ -13,9 +14,14 @@ const { decryptText } = require("../../utils/auth.utils");
 
 exports.getAppointmentPrescriptions = async (id) => {
   try {
-    const prescriptions = await getAppointmentPrescriptions(id);
+    const cacheKey = "patient-prescriptions:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+    const rawData = await getAppointmentPrescriptions(id);
 
-    const data = prescriptions.map(
+    const prescriptions = rawData.map(
       ({
         prescription_id: prescriptionId,
         appointment_id: appointmentId,
@@ -51,7 +57,12 @@ exports.getAppointmentPrescriptions = async (id) => {
       },
     );
 
-    return Response.SUCCESS({ data });
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(prescriptions),
+    });
+
+    return Response.SUCCESS({ data: prescriptions });
   } catch (error) {
     console.error(error);
     throw error;
@@ -60,14 +71,19 @@ exports.getAppointmentPrescriptions = async (id) => {
 
 exports.getAppointmentPrescriptionById = async (presId) => {
   try {
-    const prescription = await getAppointmentPrescriptionById(presId);
+    const cacheKey = `patient-prescriptions:${presId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+    const rawData = await getAppointmentPrescriptionById(presId);
 
-    if (!prescription) {
+    if (!rawData) {
       return Response.NOT_FOUND({
         message: "Prescription Not Found. Try again",
       });
     }
-    const { access_jwt: hashedToken } = prescription;
+    const { access_jwt: hashedToken } = rawData;
 
     const {
       prescription_id: prescriptionId,
@@ -77,7 +93,7 @@ exports.getAppointmentPrescriptionById = async (presId) => {
       doctors_comment: doctorComment,
       created_at: dateCreated,
       updated_at: dateUpdated,
-    } = prescription;
+    } = rawData;
 
     const decryptedDiagnosis = decryptText({
       encryptedText: diagnosis,
@@ -92,7 +108,7 @@ exports.getAppointmentPrescriptionById = async (presId) => {
       key: hashedToken,
     });
 
-    const data = {
+    const prescription = {
       prescriptionId,
       appointmentId,
       diagnosis: decryptedDiagnosis,
@@ -102,7 +118,12 @@ exports.getAppointmentPrescriptionById = async (presId) => {
       updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
     };
 
-    return Response.SUCCESS({ data });
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(prescription),
+    });
+
+    return Response.SUCCESS({ data: prescription });
   } catch (error) {
     console.error(error);
     throw error;

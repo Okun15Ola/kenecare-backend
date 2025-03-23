@@ -1,8 +1,14 @@
 const dbObject = require("../../db/db.cities");
 const Response = require("../../utils/response.utils");
+const redisClient = require("../../config/redis.config");
 
 exports.getCities = async () => {
   try {
+    const cacheKey = "cities:all";
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAllCities();
     const cities = rawData.map(
       ({
@@ -22,15 +28,23 @@ exports.getCities = async () => {
       }),
     );
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(cities),
+    });
     return Response.SUCCESS({ data: cities });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-
 exports.getCity = async (id) => {
   try {
+    const cacheKey = `cities:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getCityById(id);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "City Not Found" });
@@ -53,6 +67,10 @@ exports.getCity = async (id) => {
       inputtedBy,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(city),
+    });
     return Response.SUCCESS({ data: city });
   } catch (error) {
     console.error(error);
@@ -61,6 +79,11 @@ exports.getCity = async (id) => {
 };
 exports.getCityByName = async (name) => {
   try {
+    const cacheKey = `cities:${name}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getCityByName(name);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "City Not Found" });
@@ -83,6 +106,10 @@ exports.getCityByName = async (name) => {
       inputtedBy,
     };
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(city),
+    });
     return Response.SUCCESS({ data: city });
   } catch (error) {
     console.error(error);

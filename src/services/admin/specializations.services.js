@@ -1,5 +1,6 @@
 const dbObject = require("../../db/db.specializations");
 const Response = require("../../utils/response.utils");
+const redisClient = require("../../config/redis.config");
 
 /**
  * Retrieve a list of specializations from the database and transform the data.
@@ -14,6 +15,11 @@ const Response = require("../../utils/response.utils");
  * // Returns an array of specialization objects.
  */
 exports.getSpecializations = async () => {
+  const cacheKey = "specializations:all";
+  const cachedData = await redisClient.get(cacheKey);
+  if (cachedData) {
+    return Response.SUCCESS({ data: JSON.parse(cachedData) });
+  }
   const rawData = await dbObject.getAllSpecialization();
 
   const specializations = rawData.map(
@@ -33,6 +39,10 @@ exports.getSpecializations = async () => {
       inputtedBy,
     }),
   );
+  await redisClient.set({
+    key: cacheKey,
+    value: JSON.stringify(specializations),
+  });
   return Response.SUCCESS({ data: specializations });
 };
 
@@ -51,6 +61,11 @@ exports.getSpecializations = async () => {
  */
 exports.getSpecializationByName = async (name) => {
   try {
+    const cacheKey = `specializations:${name}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getSpecializationByName(name);
 
     if (!rawData) {
@@ -73,6 +88,10 @@ exports.getSpecializationByName = async (name) => {
       isActive,
       inputtedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(specialization),
+    });
     return Response.SUCCESS({ data: specialization });
   } catch (error) {
     console.error(error);
@@ -95,6 +114,11 @@ exports.getSpecializationByName = async (name) => {
  */
 exports.getSpecializationById = async (id) => {
   try {
+    const cacheKey = `specializations:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getSpecializationById(id);
 
     if (!rawData) {
@@ -117,6 +141,10 @@ exports.getSpecializationById = async (id) => {
       isActive,
       inputtedBy,
     };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(specialization),
+    });
     return Response.SUCCESS({ data: specialization });
   } catch (error) {
     console.error(error);

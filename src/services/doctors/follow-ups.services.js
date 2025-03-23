@@ -8,6 +8,7 @@ const dbObject = require("../../db/db.follow-up");
 const { getPatientById } = require("../../db/db.patients");
 const Response = require("../../utils/response.utils");
 const { newFollowAppointmentSms } = require("../../utils/sms.utils");
+const redisClient = require("../../config/redis.config");
 
 exports.createFollowUp = async ({
   appointmentId,
@@ -198,6 +199,12 @@ exports.getAllAppointmentFollowupService = async ({
   appointmentId,
 }) => {
   try {
+    const cacheKey = `doctor-appointment-follow-up:${userId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
@@ -222,7 +229,7 @@ exports.getAllAppointmentFollowupService = async ({
 
     const rawData = await dbObject.getAppointmentFollowUps(appointmentId);
 
-    const followups =
+    const followUps =
       rawData?.map(
         ({
           followup_id: followUpId,
@@ -249,8 +256,12 @@ exports.getAllAppointmentFollowupService = async ({
         },
       ) || [];
 
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(followUps),
+    });
     return Response.SUCCESS({
-      data: followups,
+      data: followUps,
     });
   } catch (error) {
     console.error(error);
@@ -259,6 +270,12 @@ exports.getAllAppointmentFollowupService = async ({
 };
 exports.getFollowUpByIdService = async ({ userId, id }) => {
   try {
+    const cacheKey = `doctor-appointment-follow-up-by-id:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
     const { doctor_id: doctorId } = await getDoctorByUserId(userId);
     if (!doctorId) {
       return Response.UNAUTHORIZED({
