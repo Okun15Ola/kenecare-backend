@@ -1,10 +1,11 @@
 const logger = require("../../middlewares/logger.middleware");
+
 const {
   getAllCouncilRegistrations,
   getCouncilRegistration,
   approveCouncilRegistration,
   rejectCouncilRegistration,
-} = require("../../services/doctors/doctors.council-registration.services");
+} = require("../../services/admin/doctor-council-registration.services");
 
 exports.GetCouncilRegistrationController = async (req, res, next) => {
   try {
