@@ -1,7 +1,3 @@
-// const crypto = require("crypto");
-// const moment = require("moment");
-// const { zoomSecretToken } = require("./config/default.config");
-
 // require("newrelic");
 require("dotenv").config();
 const express = require("express");
@@ -13,7 +9,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
-const { runCron } = require("./utils/cron.utils");
+// const { runCron } = require("./utils/cron.utils");
 const {
   requireUserAuth,
   requireAdminAuth,
@@ -71,15 +67,7 @@ const adminPatientsRouter = require("./routes/api/admin/patients.routes");
 const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes");
 const adminMarketersRouter = require("./routes/api/admin/marketers.routes");
 
-// const { getZoomMeetingByZoomId } = require("./db/db.zoom-meetings");
-// const {
-//   getAppointmentByMeetingId,
-//   updateDoctorAppointmentStartTime,
-//   updateDoctorAppointmentEndTime,
-// } = require("./db/db.appointments.doctors");
-
 const app = express();
-runCron();
 app.disable("x-powered-by");
 app.use(cors());
 app.use(

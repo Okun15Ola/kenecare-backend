@@ -1,6 +1,7 @@
 const app = require("./app");
 const { appPort, appBaseURL } = require("./config/default.config");
 const { connectionPool } = require("./db/db.connection");
+const { startCron: runCron } = require("./utils/cron.utils");
 
 connectionPool.getConnection((err, connection) => {
   if (err) {
@@ -16,6 +17,7 @@ connectionPool.getConnection((err, connection) => {
         console.error("There was an error running the server:", err);
       } else {
         console.info(`Server running on ${appBaseURL}:${appPort}`);
+        runCron();
       }
     });
   }
