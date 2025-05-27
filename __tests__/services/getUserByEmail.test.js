@@ -1,8 +1,8 @@
 require("dotenv").config({ path: "../.env.test" });
 const dbObject = require("../../src/db/db.users");
-
 const userService = require("../../src/services/users.service");
 
+// Only mock modules specific to this test file
 jest.mock("../../src/db/db.users");
 
 describe("GetUserByEmail - Unit Tests", () => {
@@ -17,12 +17,22 @@ describe("GetUserByEmail - Unit Tests", () => {
     is_2fa_enabled: false,
     password: "hashedpassword",
   };
+
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  afterAll(async () => {
+    // Close any open connections
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
+  });
+
   test("should return formatted user data when email exists", async () => {
     dbObject.getUserByEmail.mockResolvedValue(mockUserData);
     const result = await userService.getUserByEmail("test@example.com");
+
     expect(result).toEqual({
       userId: 1,
       mobileNumber: "1234567890",
@@ -37,6 +47,7 @@ describe("GetUserByEmail - Unit Tests", () => {
     expect(dbObject.getUserByEmail).toHaveBeenCalledWith("test@example.com");
     expect(dbObject.getUserByEmail).toHaveBeenCalledTimes(1);
   });
+
   test("should return null when email does not exist", async () => {
     dbObject.getUserByEmail.mockResolvedValue(null);
 

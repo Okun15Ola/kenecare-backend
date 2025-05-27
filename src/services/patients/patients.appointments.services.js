@@ -27,11 +27,6 @@ const redisClient = require("../../config/redis.config");
 
 exports.getPatientAppointments = async ({ userId, page, limit }) => {
   try {
-    const cacheKey = "patient-appointments:all";
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
     const patient = await getPatientByUserId(userId);
 
     if (!patient) {
@@ -41,6 +36,11 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
       });
     }
     const { patient_id: patientId } = patient;
+    const cacheKey = `patient-appointments-${patientId}:all`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await dbObject.getAllPatientAppointments({
       patientId,
       page,
@@ -133,12 +133,12 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
 
 exports.getPatientAppointment = async ({ userId, id }) => {
   try {
-    const cacheKey = `patient-appointments:${id}`;
+    const { patient_id: patientId } = await getPatientByUserId(userId);
+    const cacheKey = `patient-appointments-${patientId}:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const { patient_id: patientId } = await getPatientByUserId(userId);
 
     const rawData = await dbObject.getPatientAppointmentById({
       patientId,
@@ -256,12 +256,12 @@ exports.getPatientAppointment = async ({ userId, id }) => {
 
 exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
   try {
+    const { patient_id: patientId } = await getPatientByUserId(userId);
     const cacheKey = `patient-appointments-by-uuid:${uuId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const { patient_id: patientId } = await getPatientByUserId(userId);
 
     const rawData = await dbObject.getPatientAppointmentByUUID({
       patientId,

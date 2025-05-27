@@ -28,11 +28,6 @@ const redisClient = require("../../config/redis.config");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {
-    const cacheKey = "patient-documents:all";
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
     const patient = await getPatientByUserId(userId).catch((error) => {
       throw error;
     });
@@ -40,6 +35,11 @@ exports.getPatientMedicalDocuments = async (userId) => {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
     const { patient_id: patientId } = patient;
+    const cacheKey = `patient-documents-${patientId}:all`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await getMedicalDocumentsByPatientId(patientId);
 
     const documents = rawData.map(

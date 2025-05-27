@@ -1,7 +1,8 @@
+require("dotenv").config({ path: "../.env.test" });
 const { LoginController } = require("../../src/controllers/auth.controller");
 const { loginUser } = require("../../src/services/users.service");
-// const app = require("../../src/app");
 
+// Only mock modules specific to this test file
 jest.mock("../../src/services/users.service");
 
 describe("LoginController", () => {
@@ -16,6 +17,13 @@ describe("LoginController", () => {
       json: jest.fn(),
     };
     next = jest.fn();
+  });
+
+  afterAll(async () => {
+    // Close any open connections
+    await new Promise((resolve) => {
+      setTimeout(resolve, 100);
+    });
   });
 
   it("should return response with status code and json body on successful login", async () => {

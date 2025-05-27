@@ -1,4 +1,4 @@
-name: production-workflow
+name: api-prod-workflow
 
 on:
   workflow_dispatch:
@@ -64,7 +64,7 @@ jobs:
           tags: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
           labels: ${{steps.docker-metadata.outputs.labels}}
 
-      - name: Sign Docker Image
+      - name: Sign Docker Image with Cosign
         run: |
           images=""
           for tag in ${TAGS}; do
@@ -88,12 +88,19 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - name: Retrieve Old Image Tag
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Old Image Tag
         run: |
           echo "OLD_IMAGE_TAG=1.0.$(($GITHUB_RUN_NUMBER-1))" >> $GITHUB_ENV
 
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Verify Docker Image Signature
+        run: |
+          cosign verify --key env://COSIGN_PUBLIC_KEY \
+            ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+        env:
+          COSIGN_PUBLIC_KEY: ${{secrets.COSIGN_PUBLIC_KEY}}
 
       - name: Remove Old Container
         run: docker rm -f kenecare-api-production-${OLD_IMAGE_TAG} || true
@@ -106,3 +113,21 @@ jobs:
 
       - name: Run Compose
         run: make run-prod TAG=${IMAGE_TAG}
+
+      - name: Run Health Check
+        run: |
+          echo "Waiting for service to become healthy...."
+          for i in {1..10}; do
+            curl -f http://localhost:8500/health-check || sleep 5
+          done
+          echo "Service is up and running"
+
+      - name: Rollback deployment (if health check fails)
+        if: failure()
+        run: make rollback-prod
+
+      - name: Clean up Dangling Images
+        run: docker image prune -f
+
+      - name: Notify Deployment Success
+        run: echo "Deployment completed successfully"

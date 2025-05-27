@@ -20,11 +20,6 @@ const redisClient = require("../../config/redis.config");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
-    const cacheKey = "doctor-appointments:all";
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
@@ -35,6 +30,11 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
     }
 
     const { doctor_id: doctorId, title } = doctor;
+    const cacheKey = `doctor-appointments-${doctorId}:all`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
 
     // Get doctor's appointments
     const rawData = await dbObject.getAppointmentsByDoctorId({
@@ -127,11 +127,6 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
 
 exports.getDoctorAppointment = async ({ userId, id }) => {
   try {
-    const cacheKey = `doctor-appointments:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
       return Response.NOT_FOUND({
@@ -144,6 +139,12 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
 
     if (userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
+    }
+
+    const cacheKey = `doctor-appointments-${doctorId}:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
     const rawData = await dbObject.getDoctorAppointmentById({
