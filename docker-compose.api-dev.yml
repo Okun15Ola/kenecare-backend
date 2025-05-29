@@ -1,9 +1,7 @@
-version: "3"
-
 services:
   api:
-    depends_on:
-      - db
+    # depends_on:
+    #   - db
     build:
       context: .
     container_name: kenecare-api-${ENV}
@@ -12,11 +10,12 @@ services:
       - 8500:8000
     networks:
       - kenecare-net
+      - mysql-net
       - redis-net
     restart: always
     env_file: ./.env.${ENV}
     environment:
-      - DB_HOST=db
+      - DB_HOST=$DB_HOST
       - DB_USER=$DB_USER
       - DB_PASS=$DB_PASS
       - DB_NAME=$DB_NAME
@@ -79,25 +78,25 @@ services:
       retries: 3
       start_period: 40s
 
-  db:
-    image: mysql:latest
-    container_name: mysql-db-${ENV}
-    restart: always
+  # db:
+  #   image: mysql:latest
+  #   container_name: mysql-db-${ENV}
+  #   restart: always
 
-    env_file: ./.env.${ENV}
-    environment:
-      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
-      - MYSQL_USER=$MYSQL_USER
-      - MYSQL_PASSWORD=$MYSQL_PASSWORD
-      - MYSQL_DATABASE=$MYSQL_DATABASE
-      - MYSQL_ROOT_HOST=MYSQL_ROOT_HOST
-    ports:
-      - 3307:3306
-    volumes:
-      - ./src/db/kenecare.sql:/docker-entrypoint-initdb.d/init.sql
-      - kenecare-api-db-data:/var/lib/mysql
-    networks:
-      - kenecare-net
+  #   env_file: ./.env.${ENV}
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+  #     - MYSQL_USER=$MYSQL_USER
+  #     - MYSQL_PASSWORD=$MYSQL_PASSWORD
+  #     - MYSQL_DATABASE=$MYSQL_DATABASE
+  #     - MYSQL_ROOT_HOST=MYSQL_ROOT_HOST
+  #   ports:
+  #     - 3307:3306
+  #   volumes:
+  #     - ./src/db/kenecare.sql:/docker-entrypoint-initdb.d/init.sql
+  #     - kenecare-api-db-data:/var/lib/mysql
+  #   networks:
+  #     - kenecare-net
 
 volumes:
   kenecare-api-db-data:
@@ -110,7 +109,9 @@ networks:
     driver: bridge
   redis-net:
     external: true
-    driver_opts:
-      com.docker.network.driver.mtu: 1450
+    labels:
+      - "com.docker.compose.network.optional=true"
+  mysql-net:
+    external: true
     labels:
       - "com.docker.compose.network.optional=true"

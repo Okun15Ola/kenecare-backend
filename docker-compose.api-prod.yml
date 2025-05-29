@@ -2,7 +2,7 @@ version: "3"
 
 services:
   api:
-    image: imotechsl/kenecare-api-prod:${TAG}
+    image: imotechsl/kenecare-api:${TAG}
     container_name: kenecare-api-${ENV}
     ports:
       - 9500:8000
@@ -12,13 +12,15 @@ services:
     env_file: ./.env.${ENV}
     environment:
       - DB_HOST=$DB_HOST
-      - DB_USER=$DB_USER
+        - DB_USER=$DB_USER
       - DB_PASS=$DB_PASS
       - DB_NAME=$DB_NAME
       - DB_PORT=$DB_PORT
       - DB_CONNECTION_LIMIT=$DB_CONNECTION_LIMIT
       - NODE_ENV=$NODE_ENV
       - APP_PORT=$APP_PORT
+      - NEW_RELIC_LICENSE_KEY=$NEW_RELIC_LICENSE_KEY
+      - NEW_RELIC_APP_NAME=$NEW_RELIC_APP_NAME
       - SESSION_SECRET=$SESSION_SECRET
       - CLIENT_APP_URL=$CLIENT_APP_URL
       - API_BASE_URL=$API_BASE_URL
@@ -45,6 +47,13 @@ services:
       - SMS_HIVE_CLIENT_SECRET=$SMS_HIVE_CLIENT_SECRET
       - SMS_HIVE_AUTH_TOKEN=$SMS_HIVE_AUTH_TOKEN
       - SMS_HIVE_URL=$SMS_HIVE_URL
+      - ZOOM_ACCOUNT_ID=$ZOOM_ACCOUNT_ID
+      - ZOOM_CLIENT_ID=$ZOOM_CLIENT_ID
+      - ZOOM_CLIENT_SECRET=$ZOOM_CLIENT_SECRET
+      - ZOOM_SECRET_TOKEN=$ZOOM_SECRET_TOKEN
+      - ZOOM_VERIFICATION_TOKEN=$ZOOM_VERIFICATION_TOKEN
+      - ZOOM_ACCESS_TOKEN_URL=$ZOOM_ACCESS_TOKEN_URL
+      - ZOOM_API_URL=$ZOOM_API_URL
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -61,3 +70,7 @@ networks:
   kenecare-prod-net:
     name: kenecare-prod-net
     driver: bridge
+  redis-net:
+    external: true
+    labels:
+      - "com.docker.compose.network.optional=true"
