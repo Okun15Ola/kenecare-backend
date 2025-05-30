@@ -113,3 +113,5 @@ typings/
 *.excalidraw
 keys
 dist
+
+.last_deployed_image

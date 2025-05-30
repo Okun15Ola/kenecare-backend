@@ -1,9 +1,23 @@
 const path = require("path");
 const nodeExternals = require("webpack-node-externals");
 const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+const dotenv = require("dotenv");
 const webpack = require("webpack");
 
 const CURRENT_WORKING_DIR = process.cwd();
+
+// Load environment variables from .env.production
+const env =
+  dotenv.config({ path: path.resolve(CURRENT_WORKING_DIR, ".env.production") })
+    .parsed || {};
+
+// Convert to format expected by DefinePlugin
+const envKeys = Object.keys(env).reduce((prev, next) => {
+  return {
+    ...prev,
+    [`process.env.${next}`]: JSON.stringify(env[next]),
+  };
+}, {});
 
 module.exports = {
   name: "server",
@@ -43,6 +57,7 @@ module.exports = {
       reportFilename: "bundle-report.html", // Name of the report file
     }),
     new webpack.DefinePlugin({
+      ...envKeys,
       "process.env.NODE_ENV": JSON.stringify("production"),
     }),
   ],

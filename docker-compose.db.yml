@@ -1,0 +1,49 @@
+services:
+  mysql-db:
+    image: mysql:9.2.0
+    container_name: mysql-db
+    env_file: ./.env.${ENV:-development}
+    ports:
+      - "${DB_PORT:-3306}:${DB_PORT:-3306}"
+    environment:
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+      - MYSQL_DATABASE=$MYSQL_DATABASE
+      - MYSQL_ROOT_HOST=$MYSQL_ROOT_HOST
+    volumes:
+      - ./sql-scripts:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
+    networks:
+      mysql-net:
+        aliases:
+          - db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u ${DB_USER:-root} -p${DB_PASS}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    command:
+      [
+        "mysqld",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+      ]
+
+volumes:
+  mysql-data:
+    name: mysql-data-${ENV:-development}
+
+networks:
+  mysql-net:
+    name: mysql-net
+    attachable: true
+    external: true
+    driver: bridge
+    labels:
+      - "com.docker.compose.network.optional=true"
