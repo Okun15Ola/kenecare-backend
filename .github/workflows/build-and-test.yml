@@ -75,7 +75,8 @@ jobs:
       - name: Save Docker Image Digest
         id: digest
         run: |
-          echo "DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} | cut -d'@' -f2)" >> $GITHUB_ENV
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} | cut -d'@' -f2)
+          echo "DIGEST=$DIGEST" >> GITHUB_ENV
 
       - name: Sign Docker Image with Cosign
         run: |
