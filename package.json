@@ -69,7 +69,7 @@
     "start": "NODE_ENV=production node ./dist/server.bundle.js",
     "start:prod": "NODE_ENV=production node src/server.js",
     "start:dev": "NODE_ENV=development nodemon src/server.js",
-    "test": "jest --clearCache && jest --watchAll --detectOpenHandles",
+    "test": "jest --clearCache && jest --detectOpenHandles",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install; fi",
