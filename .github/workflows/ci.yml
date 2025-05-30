@@ -2,10 +2,10 @@ name: build-and-push-images
 
 on:
   push:
-    branches: [ "deployment" ]
+    branches: ["deployment"]
   pull_request:
-    branches: [ "deployment" ]
- 
+    branches: ["deployment"]
+
 env:
   DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
@@ -15,15 +15,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Login to docker hub
-      run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - name: Login to docker hub
+        run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
-    - name: Build Docker Image
-      run: make build-staging
-    
-    - name: Push Image to Docker Hub
-      run: make push-staging-image
-        
+      - name: Build Docker Image
+        run: make build-staging
+
+      - name: Push Image to Docker Hub
+        run: make push-staging-image
+
+        # - name: Sign Docker Image with Cosign
+        # run: |
+        #   images=""
+        #   for tag in ${TAGS}; do
+        #     images+="${tag}@${DIGEST} "
+        #   done
+        #   cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${images}
+        # env:
+        #   TAGS: ${{steps.docker-metadata.outputs.tags}}
+        #   COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_PRIVATE_KEY}}
+        #   COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
+        #   DIGEST: ${{steps.build.outputs.digest}}
