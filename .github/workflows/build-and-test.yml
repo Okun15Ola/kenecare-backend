@@ -78,11 +78,11 @@ jobs:
           tags: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
           labels: ${{steps.docker-metadata.outputs.labels}}
 
-      - name: Save Docker Image Digest
-        id: digest
-        run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{env.REGISTRY}}/imotechsl/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} | cut -d'@' -f2)
-          echo "DIGEST=$DIGEST" >> GITHUB_ENV
+      # - name: Save Docker Image Digest
+      #   id: digest
+      #   run: |
+      #     DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{env.REGISTRY}}/imotechsl/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} | cut -d'@' -f2)
+      #     echo "DIGEST=$DIGEST" >> GITHUB_ENV
 
       - name: Sign Docker Image
         run: |
