@@ -52,6 +52,14 @@ jobs:
         if: github.event_name != 'pull_request'
         run: cosign version
 
+      - name: Login to Registry ${{env.REGISTRY}}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{env.REGISTRY}}
+          username: ${{env.DOCKER_USERNAME}}
+          password: ${{env.DOCKER_PASSWORD}}
+
       - name: Extract Docker Metadata
         id: docker-metadata
         uses: docker/metadata-action@v4.4.0
@@ -60,15 +68,13 @@ jobs:
           tags: |
             ${{env.IMAGE_TAG}}
 
-      - name: Build  Docker Image
-        id: build
+      - name: Build and Push Docker Image
+        id: build-and-push
         uses: docker/build-push-action@v4.0.0
         with:
           context: .
           file: Dockerfile.prod
-          # push: ${{github.event_name != 'pull_request'}}
-          push: false
-          load: true
+          push: ${{github.event_name != 'pull_request'}}
           tags: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
           labels: ${{steps.docker-metadata.outputs.labels}}
 
@@ -78,34 +84,29 @@ jobs:
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{env.REGISTRY}}/imotechsl/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} | cut -d'@' -f2)
           echo "DIGEST=$DIGEST" >> GITHUB_ENV
 
-      - name: Sign Docker Image with Cosign
+      - name: Sign Docker Image
         run: |
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY \
-          ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${{env.DIGEST}}
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${images}
         env:
-          # TAGS: ${{steps.docker-metadata.outputs.tags}}
-          # DIGEST: ${{steps.build.outputs.digest}}
+          TAGS: ${{steps.docker-metadata.outputs.tags}}
           COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_PRIVATE_KEY}}
           COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
+          DIGEST: ${{steps.build-and-push.outputs.digest}}
 
       - name: Verify Signature Before Push
         run: |
           cosign verify --key env://COSIGN_PUBLIC_KEY \
-           ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${{env.DIGEST}}
+           ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${DIGEST}
         env:
           COSIGN_PUBLIC_KEY: ${{secrets.COSIGN_PUBLIC_KEY}}
 
-      - name: Login to Registry ${{env.REGISTRY}}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2.1.0
-        with:
-          registry: ${{env.REGISTRY}}
-          username: ${{env.DOCKER_USERNAME}}
-          password: ${{env.DOCKER_PASSWORD}}
-
-      - name: Push Docker Image
-        run: |
-          docker push ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
+      # - name: Push Docker Image
+      #   run: |
+      #     docker push ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
 
       - name: Copy Variables
         run: cp ~/.env.kenecare.api-prod ./.env.production
