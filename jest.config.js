@@ -1,6 +1,7 @@
 module.exports = {
   testEnvironment: "node",
   setupFilesAfterEnv: ["<rootDir>/test/setup.js"],
+  testMatch: ["**/__tests__/**/*.js"],
   // Optional: Add these for better test experience
   forceExit: true,
   detectOpenHandles: true,

@@ -1,13 +1,13 @@
 const logger = require("../../middlewares/logger.middleware");
 const {
-  getAdminppointments,
+  getAdminAppointments,
   getAdminAppointmentById,
   getAdminAppointmentsByDoctorId,
 } = require("../../services/admin/admin.appointments.services");
 
 exports.GetAdminAppointmentsController = async (req, res, next) => {
   try {
-    const response = await getAdminppointments();
+    const response = await getAdminAppointments();
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

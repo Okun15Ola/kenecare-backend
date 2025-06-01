@@ -1,8 +1,8 @@
-const dbObject = require("../../db/db.appointments.admin");
+const dbObject = require("../../repository/adminAppointments.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 
-exports.getAdminppointments = async ({ page, limit }) => {
+exports.getAdminAppointments = async ({ page, limit }) => {
   try {
     const cacheKey = "admin-appointments:all";
     const cachedData = await redisClient.get(cacheKey);

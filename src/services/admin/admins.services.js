@@ -1,4 +1,4 @@
-const dbObject = require("../../db/db.admins");
+const dbObject = require("../../repository/admins.repository");
 const { generateAdminJwtAccessToken } = require("../../utils/auth.utils");
 const { STATUS } = require("../../utils/enum.utils");
 const { hashUsersPassword } = require("../../utils/auth.utils");
