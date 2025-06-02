@@ -50,7 +50,8 @@ afterAll(async () => {
       }
     } catch (err) {
       console.warn("Failed to close MySQL pool:", err.message);
-      }
+    }
+  }
 });
 
 // You can add other global mocks here as needed
