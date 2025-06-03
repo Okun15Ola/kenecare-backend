@@ -1,11 +1,13 @@
 const { body, param } = require("express-validator");
 const moment = require("moment");
+const { getSpecialtiyById } = require("../repository/specialities.repository");
 const {
-  getSpecialtyByName,
-  getSpecialtiyById,
-} = require("../db/db.specialities");
-const { getDoctorById, getDoctorByUserId } = require("../db/db.doctors");
-const { getDoctorAppointmentById } = require("../db/db.appointments.doctors");
+  getDoctorById,
+  getDoctorByUserId,
+} = require("../repository/doctors.repository");
+const {
+  getDoctorAppointmentById,
+} = require("../repository/doctorAppointments.repository");
 const {
   validateAppointmentPostponedDate,
   validateAppointmentTime,
@@ -19,14 +21,14 @@ exports.CreateAppointmentValidation = [
     .withMessage("Patient Name is required")
     .toUpperCase()
     .trim()
-    .escape()
-    .custom(async (name) => {
-      const data = await getSpecialtyByName(name);
-      if (data) {
-        throw new Error("Specified Specialty Name Already Exists");
-      }
-      return true;
-    }),
+    .escape(),
+  // .custom(async (name) => {
+  //   const data = await getSpecialtyByName(name);
+  //   if (data) {
+  //     throw new Error("Specified Specialty Name Already Exists");
+  //   }
+  //   return true;
+  // }),
   body("patientNumber")
     .notEmpty()
     .withMessage("Patient Mobile Number is required")

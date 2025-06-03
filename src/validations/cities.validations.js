@@ -1,5 +1,8 @@
 const { body, param, query } = require("express-validator");
-const { getCityByName, getCityById } = require("../db/db.cities");
+const {
+  getCityByName,
+  getCityById,
+} = require("../repository/cities.repository");
 
 exports.CreateCityValidation = [
   body("name")

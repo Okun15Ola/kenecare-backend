@@ -2,7 +2,7 @@ const { body, param } = require("express-validator");
 const {
   getSpecialtyByName,
   getSpecialtiyById,
-} = require("../db/db.specialities");
+} = require("../repository/specialities.repository");
 
 exports.CreateSpecialtyValidation = [
   body("name")

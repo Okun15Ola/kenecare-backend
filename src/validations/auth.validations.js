@@ -5,9 +5,14 @@ const {
 } = require("../services/users.service");
 const { comparePassword, refineMobileNumber } = require("../utils/auth.utils");
 const { STATUS, VERIFICATIONSTATUS, USERTYPE } = require("../utils/enum.utils");
-const { getDoctorByUserId } = require("../db/db.doctors");
-const { getUserById, getUserByVerificationToken } = require("../db/db.users");
-const { getMarketerByReferralCode } = require("../db/db.marketers");
+const { getDoctorByUserId } = require("../repository/doctors.repository");
+const {
+  getUserById,
+  getUserByVerificationToken,
+} = require("../repository/users.repository");
+const {
+  getMarketerByReferralCode,
+} = require("../repository/marketers.repository");
 
 exports.LoginValidations = [
   body("mobileNumber")
@@ -200,13 +205,14 @@ exports.VerifyTokenValidations = [
     .isLength({ max: 6, min: 6 })
     .trim()
     .escape()
-    .custom(async (token) => {
+    .custom(async (token, { req }) => {
       const user = await getUserByVerificationToken(token);
 
       if (!user) {
         throw new Error("Invalid AUTH Token. Please enter a valid AUTH Token");
       }
 
+      req.user = user;
       return true;
     }),
 ];

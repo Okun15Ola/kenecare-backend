@@ -3,7 +3,7 @@ const {
   getMedicalCouncilByEmail,
   getMedicalCouncilByMobileNumber,
   getMedicalCouncilById,
-} = require("../db/db.medical-councils");
+} = require("../repository/medical-councils.repository");
 
 exports.CreateMedicalCouncilValidation = [
   body("name")

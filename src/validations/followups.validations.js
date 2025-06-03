@@ -1,8 +1,10 @@
 const { body, param } = require("express-validator");
 const moment = require("moment");
-const { getSpecialtiyById } = require("../db/db.specialities");
-const { getDoctorByUserId } = require("../db/db.doctors");
-const { getDoctorAppointmentById } = require("../db/db.appointments.doctors");
+const { getSpecialtiyById } = require("../repository/specialities.repository");
+const { getDoctorByUserId } = require("../repository/doctors.repository");
+const {
+  getDoctorAppointmentById,
+} = require("../repository/doctorAppointments.repository");
 const Response = require("../utils/response.utils");
 
 const today = moment().format("YYYY-MM-DD");

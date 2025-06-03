@@ -1,7 +1,11 @@
 const { param } = require("express-validator");
-const { getAppointmentPrescriptionById } = require("../db/db.prescriptions");
-const { getPatientByUserId } = require("../db/db.patients");
-const { getPatientAppointmentById } = require("../db/db.appointments.patients");
+const {
+  getAppointmentPrescriptionById,
+} = require("../repository/prescriptions.repository");
+const { getPatientByUserId } = require("../repository/patients.repository");
+const {
+  getPatientAppointmentById,
+} = require("../repository/patientAppointments.repository");
 
 exports.GetPrescriptionsByAppointmentValidation = [
   param("id")

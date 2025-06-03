@@ -1,9 +1,9 @@
 const { body, param } = require("express-validator");
-const { getSpecialtiyById } = require("../db/db.specialities");
+const { getSpecialtiyById } = require("../repository/specialities.repository");
 const {
   getCommonSymptomByName,
   getCommonSymptomById,
-} = require("../db/db.common-symptoms");
+} = require("../repository/common-symptoms.repository");
 
 exports.CreateSymptomValidation = [
   body("name")
