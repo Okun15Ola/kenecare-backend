@@ -101,8 +101,9 @@ jobs:
 
       - name: Verify Signature Before Push
         run: |
+          echo "Digest: ${{ steps.build-and-push.outputs.digest }}" 
           cosign verify --key env://COSIGN_PUBLIC_KEY \
-           ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${DIGEST}
+           ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${steps.build-and-push.outputs.digest}
         env:
           COSIGN_PUBLIC_KEY: ${{secrets.COSIGN_PUBLIC_KEY}}
 
