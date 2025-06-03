@@ -94,14 +94,19 @@ jobs:
       - name: Scan Docker Image with Docker Scout
         id: docker-scout
         if: ${{ github.event_name != 'pull_request' }}
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
-          output: table
-          ignore-unchanged: true
-          only-severities: critical, high
-          only-fixed: true
+        run: |
+         docker scout cves ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} \
+          --only-severities critical,high \
+          --only-fixed \
+          --output table
+        # uses: docker/scout-action@v1
+        # with:
+        #   command: cves
+        #   image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
+        #   output: table
+        #   ignore-unchanged: true
+        #   only-severities: critical, high
+        #   only-fixed: true
 
       - name: Fail if fixable high/critical vulnerabilities exist
         run: |
