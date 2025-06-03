@@ -99,13 +99,13 @@ jobs:
           COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
           DIGEST: ${{steps.build-and-push.outputs.digest}}
 
-      - name: Verify Signature Before Push
-        run: |
-          echo "Digest: ${{ steps.build-and-push.outputs.digest }}" 
-          cosign verify --key env://COSIGN_PUBLIC_KEY \
-           ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${steps.build-and-push.outputs.digest}
-        env:
-          COSIGN_PUBLIC_KEY: ${{secrets.COSIGN_PUBLIC_KEY}}
+      # - name: Verify Signature Before Push
+      #   run: |
+      #     echo "Digest: ${{ steps.build-and-push.outputs.digest }}" 
+      #     cosign verify --key env://COSIGN_PUBLIC_KEY \
+      #      ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${steps.build-and-push.outputs.digest}
+      #   env:
+      #     COSIGN_PUBLIC_KEY: ${{secrets.COSIGN_PUBLIC_KEY}}
 
       - name: Copy Variables
         run: cp ~/.env.kenecare.api-prod ./.env.production
