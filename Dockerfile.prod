@@ -1,4 +1,4 @@
-FROM node:22.7.0-alpine AS builder
+FROM node:23.11.1-alpine AS builder
 
 LABEL Author="imotechsl"
 LABEL Stage="production"
