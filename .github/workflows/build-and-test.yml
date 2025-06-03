@@ -3,7 +3,7 @@ name: build-and-test
 on:
   workflow_dispatch:
   push:
-    branches: ["development"]
+    branches: ["development", "feature/*"]
 
 env:
   REGISTRY: docker.io
@@ -52,6 +52,9 @@ jobs:
         if: github.event_name != 'pull_request'
         run: cosign version
 
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2.1.0 
+
       - name: Login to Registry ${{env.REGISTRY}}
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v2.1.0
@@ -65,8 +68,7 @@ jobs:
         uses: docker/metadata-action@v4.4.0
         with:
           images: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}
-          tags: |
-            ${{env.IMAGE_TAG}}
+          tags: type=sha, format=long
 
       - name: Build and Push Docker Image
         id: build-and-push
@@ -103,10 +105,6 @@ jobs:
            ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${DIGEST}
         env:
           COSIGN_PUBLIC_KEY: ${{secrets.COSIGN_PUBLIC_KEY}}
-
-      # - name: Push Docker Image
-      #   run: |
-      #     docker push ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
 
       - name: Copy Variables
         run: cp ~/.env.kenecare.api-prod ./.env.production

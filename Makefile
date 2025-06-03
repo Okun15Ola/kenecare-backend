@@ -101,16 +101,13 @@ check-db-status:
 		fi; \
 	else \
 		echo "$(DB_SERVICE_NAME) is not running."; \
-		read -p "Do you want to start $(DB_SERVICE_NAME) service? [y/N] " response; \
-		if [ "$$response" != "n" ] && [ "$$response" != "N" ]; then \
-			$(MAKE) run-db; \
-		fi; \
+		$(MAKE) run-db; \
 	fi
 
 .PHONY: check-redis-status
 check-redis-status:
 	@echo "Checking $(REDIS_SERVICE_NAME) service status..."
-	@if $(call is-service-running, $(DOCKER_COMPOSE_REDIS), $(ENV_FILE_DEV), $(REDIS_SERVICE_NAME)); then \
+	@if $(call is-service-running, $(REDIS_SERVICE_NAME)); then \
 		echo "$(REDIS_SERVICE_NAME) is already running."; \
 		read -p "Do you want to use the existing $(REDIS_SERVICE_NAME) container? [y/N] " response; \
 		if [ "$$response" != "y" ] && [ "$$response" != "Y" ]; then \
@@ -119,10 +116,7 @@ check-redis-status:
 		fi; \
 	else \
 		echo "$(REDIS_SERVICE_NAME) is not running."; \
-		read -p "Do you want to start a new $(REDIS_SERVICE_NAME) container? [y/N] " response ; \
-		if [ "$$response" != "n" ] && [ "$$response" != "N" ]; then \
-			$(MAKE) run-redis; \
-		fi; \
+		$(MAKE) run-redis; \
 	fi
 
 # ==============================================================================
