@@ -5,7 +5,7 @@ const {
   getMarketerByIdNumber,
   getMarketerByNin,
   getMarketerById,
-} = require("../../db/db.marketers");
+} = require("../../repository/marketers.repository");
 
 exports.CreateMarketerValidation = [
   body("firstName")
