@@ -3,7 +3,7 @@ name: build-and-test
 on:
   workflow_dispatch:
   push:
-    branches: ["development", "feature/*"]
+    branches: ["development"]
 
 env:
   REGISTRY: docker.io
@@ -12,10 +12,11 @@ env:
   GH_RUN_NUMBER: ${{github.run_number}}
   DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+  SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
 
 jobs:
   run-tests:
-    runs-on: ["self-hosted", "imotechsl-apps"]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -26,21 +27,27 @@ jobs:
       - name: Run Unit Test
         run: npm test
 
-  build-and-push-image:
+  build-and-scan-image:
     needs: run-tests
-    runs-on: ["self-hosted", "imotechsl-apps"]
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
       packages: write
       id-token: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
 
       - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2.1.0
+        uses: docker/setup-buildx-action@v2.5.0
+        with:
+          driver-opts: |
+            image=moby/buildkit:v0.10.6
 
       - name: Install Cosign
         if: github.event_name != 'pull_request'
@@ -51,9 +58,6 @@ jobs:
       - name: Check if Cosign is installed
         if: github.event_name != 'pull_request'
         run: cosign version
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2.1.0 
 
       - name: Login to Registry ${{env.REGISTRY}}
         if: github.event_name != 'pull_request'
@@ -68,7 +72,12 @@ jobs:
         uses: docker/metadata-action@v4.4.0
         with:
           images: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}
-          tags: type=sha, format=long
+          labels: |
+            org.opencontainers.image.revision=${{ env.SHA }}
+          tags: |
+            type=edge,branch=$repo.default_branch
+            type=semver,pattern=v{{version}}
+            type=sha,prefix=,suffix=, format=short
 
       - name: Build and Push Docker Image
         id: build-and-push
@@ -76,17 +85,40 @@ jobs:
         with:
           context: .
           file: Dockerfile.prod
-          push: ${{github.event_name != 'pull_request'}}
+          push: false
           tags: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
           labels: ${{steps.docker-metadata.outputs.labels}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      # - name: Save Docker Image Digest
-      #   id: digest
-      #   run: |
-      #     DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${{env.REGISTRY}}/imotechsl/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} | cut -d'@' -f2)
-      #     echo "DIGEST=$DIGEST" >> GITHUB_ENV
+      - name: Scan Docker Image with Docker Scout
+        id: docker-scout
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
+          output: table
+          ignore-unchanged: true
+          only-severities: critical, high
+          only-fixed: true
+
+      - name: Fail if fixable high/critical vulnerabilities exist
+        run: |
+          docker scout cves ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} --format sarif > scout.sarif
+
+          if grep -q '"severity":"CRITICAL"\|"severity":"HIGH"' scout.serif; then
+             echo "❌ Fixable high/critical vulnerabilities found. Please Fix Before Proceeding!"
+             exit 1
+          fi
+
+      - name: Push Docker Image
+        if: github.event_name != 'pull_request'
+        run: |
+          docker push ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
 
       - name: Sign Docker Image
+        if: github.event_name != 'pull_request'
         run: |
           images=""
           for tag in ${TAGS}; do
@@ -98,14 +130,6 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_PRIVATE_KEY}}
           COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
           DIGEST: ${{steps.build-and-push.outputs.digest}}
-
-      # - name: Verify Signature Before Push
-      #   run: |
-      #     echo "Digest: ${{ steps.build-and-push.outputs.digest }}" 
-      #     cosign verify --key env://COSIGN_PUBLIC_KEY \
-      #      ${{env.REGISTRY}}/${{env.IMAGE_NAME}}@${steps.build-and-push.outputs.digest}
-      #   env:
-      #     COSIGN_PUBLIC_KEY: ${{secrets.COSIGN_PUBLIC_KEY}}
 
       - name: Copy Variables
         run: cp ~/.env.kenecare.api-prod ./.env.production
