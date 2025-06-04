@@ -12,7 +12,7 @@ env:
   GH_RUN_NUMBER: ${{github.run_number}}
   DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-  SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
+  SHA: ${{ github.event.after}}
 
 jobs:
   run-tests:
@@ -85,7 +85,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.prod
-          push: false
+          push: true
           tags: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
           labels: ${{steps.docker-metadata.outputs.labels}}
           # cache-from: type=gha
@@ -93,24 +93,15 @@ jobs:
 
       - name: Scan Docker Image with Docker Scout
         id: docker-scout
-        if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          docker scout cves ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} --format json > scout-results.json
-          echo "Filtered CVEs (only HIGH/CRITICAL and fixable):"
-          jq -r '
-            .vulnerabilities[] 
-            | select(.severity | IN("high", "critical")) 
-            | select(.fix_version != null) 
-            | "CVE: \(.cve_id)\nSeverity: \(.severity)\nAffected Versions: \(.affected_range)\nFix Version: \(.fix_version)\n---"
-          ' scout-results.json
-        # uses: docker/scout-action@v1
-        # with:
-        #   command: cves
-        #   image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
-        #   output: table
-        #   ignore-unchanged: true
-        #   only-severities: critical, high
-        #   only-fixed: true
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{ steps.docker-metadata.outputs.tags}}
+          output: table
+          ignore-unchanged: true
+          only-severities: critical,high
+          only-fixed: true
 
       - name: Fail if fixable high/critical vulnerabilities exist
         run: |
