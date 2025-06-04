@@ -111,10 +111,6 @@ jobs:
       #        exit 1
       #     fi
 
-      - name: Push Docker Image
-        if: github.event_name != 'pull_request'
-        run: |
-          docker push ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
 
       - name: Sign Docker Image
         if: github.event_name != 'pull_request'
