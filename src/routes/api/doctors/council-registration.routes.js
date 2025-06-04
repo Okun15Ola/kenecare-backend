@@ -10,8 +10,12 @@ const {
 } = require("../../../controllers/doctors/council-registration.controller");
 
 const { AWSUploader } = require("../../../utils/file-upload.utils");
-const { getMedicalCouncilById } = require("../../../db/db.medical-councils");
-const { getCouncilRegistrationByRegNumber } = require("../../../db/db.doctors");
+const {
+  getMedicalCouncilById,
+} = require("../../../repository/medical-councils.repository");
+const {
+  getCouncilRegistrationByRegNumber,
+} = require("../../../repository/doctors.repository");
 
 router.post(
   "/",

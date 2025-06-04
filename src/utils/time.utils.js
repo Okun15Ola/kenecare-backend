@@ -109,7 +109,7 @@ const validateDateTime = ({ date, time }) => {
   const now = moment();
   const userDateTime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm", true);
   const today = moment().format("YYYY-MM-DD");
-
+  console.log("Date: ", date, "Time: ", time);
   if (!userDateTime.isValid()) {
     throw new Error(
       "Appointment date and time must be valid (YYYY-MM-DD HH:mm)",

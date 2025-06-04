@@ -1,10 +1,13 @@
 const { body, param } = require("express-validator");
-const { getDoctorById, getDoctorByUserId } = require("../db/db.doctors");
+const {
+  getDoctorById,
+  getDoctorByUserId,
+} = require("../repository/doctors.repository");
 const {
   getPatientMedicalDocumentById,
   getDoctorSharedMedicalDocumentById,
-} = require("../db/db.patient-docs");
-const { getUserById } = require("../db/db.users");
+} = require("../repository/patient-docs.repository");
+const { getUserById } = require("../repository/users.repository");
 const { comparePassword } = require("../utils/auth.utils");
 
 exports.CreateNewMedicalRecordValidation = [

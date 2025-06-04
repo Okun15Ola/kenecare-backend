@@ -18,7 +18,7 @@ const { Validate } = require("../../../validations/validate");
 const {
   getMarketerByVerficationToken,
   getMarketerByEmailVerficationToken,
-} = require("../../../db/db.marketers");
+} = require("../../../repository/marketers.repository");
 const { requireAdminAuth } = require("../../../middlewares/auth.middleware");
 
 router.get("/", requireAdminAuth, GetAllMarketersController);

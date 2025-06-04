@@ -43,10 +43,10 @@ exports.GetMedicalRecordByIDController = async (req, res, next) => {
     return next(error);
   }
 };
-exports.CreateMedicalReocrdController = async (req, res, next) => {
+exports.CreateMedicalRecordController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const { file } = req.file ? req : null;
+    const file = req.file || null;
     const { documentTitle } = req.body || null;
 
     const response = await createPatientMedicalDocument({
@@ -62,12 +62,12 @@ exports.CreateMedicalReocrdController = async (req, res, next) => {
   }
 };
 
-exports.UpdateMedicalReocrdByIdController = async (req, res, next) => {
+exports.UpdateMedicalRecordByIdController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
     const docId = parseInt(req.params.id, 10);
 
-    const { file } = req.file ? req : null;
+    const file = req.file || null;
     const { documentTitle } = req.body || null;
 
     const response = await updatePatientMedicalDocument({

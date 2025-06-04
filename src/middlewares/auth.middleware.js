@@ -7,17 +7,12 @@ const {
   jwtAdminAudience,
   jwtIssuer,
 } = require("../config/default.config");
+const { STATUS, VERIFICATIONSTATUS, USERTYPE } = require("../utils/enum.utils");
 const {
-  STATUS,
-  VERIFICATIONSTATUS,
-  USERTYPE,
-  // USERTYPE,
-  // ERROR_CODES,
-} = require("../utils/enum.utils");
-const { getUserById, updateUserAccountStatusById } = require("../db/db.users");
-const { getDoctorByUserId } = require("../db/db.doctors");
-// const { getPatientByUserId } = require("../db/db.patients");
-// const { generateUsersJwtAccessToken } = require("../utils/auth.utils");
+  getUserById,
+  updateUserAccountStatusById,
+} = require("../repository/users.repository");
+const { getDoctorByUserId } = require("../repository/doctors.repository");
 const logger = require("./logger.middleware");
 
 const getAuthToken = (req) => {

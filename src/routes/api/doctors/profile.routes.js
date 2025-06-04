@@ -7,11 +7,15 @@ const {
   UpdateDoctorProfileByIdController,
   UpdateDoctorProfilePictureController,
 } = require("../../../controllers/doctors/profile.controller");
-const { getCityById } = require("../../../db/db.cities");
-const { getSpecializationById } = require("../../../db/db.specializations");
+const { getCityById } = require("../../../repository/cities.repository");
+const {
+  getSpecializationById,
+} = require("../../../repository/specializations.repository");
 
 const { localProfilePicUploader } = require("../../../utils/file-upload.utils");
-const { getSpecialtiyById } = require("../../../db/db.specialities");
+const {
+  getSpecialtiyById,
+} = require("../../../repository/specialities.repository");
 
 router.get("/profile", GetDoctorProfileController);
 router.post(

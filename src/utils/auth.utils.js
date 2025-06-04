@@ -10,7 +10,9 @@ const {
   jwtAudience,
   jwtAdminAudience,
 } = require("../config/default.config");
-const { updateUserVerificationTokenById } = require("../db/db.users");
+const {
+  updateUserVerificationTokenById,
+} = require("../repository/users.repository");
 
 const { sendAuthTokenSMS } = require("./sms.utils");
 const Response = require("./response.utils");

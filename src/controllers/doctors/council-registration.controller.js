@@ -8,7 +8,7 @@ const {
 const {
   getDoctorByUserId,
   getCouncilRegistrationByDoctorId,
-} = require("../../db/db.doctors");
+} = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 
 const GetDoctorCouncilRegistrationController = async (req, res, next) => {

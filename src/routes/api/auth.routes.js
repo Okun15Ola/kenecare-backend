@@ -27,7 +27,7 @@ const { requireUserAuth } = require("../../middlewares/auth.middleware");
 const {
   getUserByMobileNumber,
   getUserByVerificationToken,
-} = require("../../db/db.users");
+} = require("../../repository/users.repository");
 const {
   validateExpoToken,
   refineMobileNumber,

@@ -3,8 +3,8 @@ const { param } = require("express-validator");
 const {
   GetAllMedicalRecordsController,
   GetMedicalRecordByIDController,
-  CreateMedicalReocrdController,
-  UpdateMedicalReocrdByIdController,
+  CreateMedicalRecordController,
+  UpdateMedicalRecordByIdController,
   DeletemedicaRecordByIdController,
 } = require("../../../controllers/patients/medical-record.controller");
 const { AWSUploader } = require("../../../utils/file-upload.utils");
@@ -14,8 +14,10 @@ const {
 const { Validate } = require("../../../validations/validate");
 const {
   getPatientMedicalDocumentByDocumentId,
-} = require("../../../db/db.patient-docs");
-const { getPatientByUserId } = require("../../../db/db.patients");
+} = require("../../../repository/patient-docs.repository");
+const {
+  getPatientByUserId,
+} = require("../../../repository/patients.repository");
 
 router.get("/", GetAllMedicalRecordsController);
 router.get(
@@ -52,7 +54,7 @@ router.post(
   AWSUploader.single("medicalDocument"),
   CreateNewMedicalRecordValidation,
   Validate,
-  CreateMedicalReocrdController,
+  CreateMedicalRecordController,
 );
 
 router.put(
@@ -60,7 +62,7 @@ router.put(
   AWSUploader.single("medicalDocument"),
   CreateNewMedicalRecordValidation,
   Validate,
-  UpdateMedicalReocrdByIdController,
+  UpdateMedicalRecordByIdController,
 );
 router.delete(
   "/:id",

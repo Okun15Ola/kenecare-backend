@@ -1,6 +1,6 @@
 const app = require("./app");
 const { appPort, appBaseURL } = require("./config/default.config");
-const { connectionPool } = require("./db/db.connection");
+const { connectionPool } = require("./repository/db.connection");
 const { startCron: runCron } = require("./utils/cron.utils");
 
 connectionPool.getConnection((err, connection) => {

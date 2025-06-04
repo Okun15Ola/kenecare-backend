@@ -1,7 +1,7 @@
 const { param } = require("express-validator");
 const router = require("express").Router();
 const IndexController = require("../../controllers/index/index.controller");
-const { getDoctorById } = require("../../db/db.doctors");
+const { getDoctorById } = require("../../repository/doctors.repository");
 const { Validate } = require("../../validations/validate");
 
 router.get("/blogs", IndexController.GetBlogsController);

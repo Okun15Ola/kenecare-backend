@@ -1,6 +1,8 @@
 const { CronJob } = require("cron");
 const moment = require("moment");
-const { getAppointments } = require("../db/db.appointments.admin");
+const {
+  getAppointments,
+} = require("../repository/adminAppointments.repository");
 const logger = require("../middlewares/logger.middleware");
 const redisClient = require("../config/redis.config");
 

@@ -1,4 +1,4 @@
-const dbObject = require("../../db/db.patients");
+const repo = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 
@@ -9,7 +9,7 @@ exports.getPatientMedicalHistory = async (userId) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const patient = await dbObject.getPatientByUserId(userId);
+    const patient = await repo.getPatientByUserId(userId);
     if (!patient) {
       return Response.BAD_REQUEST({
         message:
@@ -18,7 +18,7 @@ exports.getPatientMedicalHistory = async (userId) => {
     }
     const { patient_id: patientID } = patient;
 
-    const data = await dbObject.getPatientMedicalInfoByPatientId(patientID);
+    const data = await repo.getPatientMedicalInfoByPatientId(patientID);
     if (!data) {
       return Response.NOT_FOUND({
         message: "Medical History Not Found.",
@@ -80,7 +80,7 @@ exports.createPatientMedicalHistory = async ({
   caffineIntakeFreq,
 }) => {
   try {
-    const patient = await dbObject.getPatientByUserId(userId);
+    const patient = await repo.getPatientByUserId(userId);
     if (!patient) {
       return Response.BAD_REQUEST({
         message:
@@ -90,14 +90,14 @@ exports.createPatientMedicalHistory = async ({
     const { patient_id: patientId } = patient;
 
     const medicalInfoExist =
-      await dbObject.getPatientMedicalInfoByPatientId(patientId);
+      await repo.getPatientMedicalInfoByPatientId(patientId);
     if (medicalInfoExist) {
       return Response.BAD_REQUEST({
         message:
           "Medical Information Already Exist for the current user. Please update",
       });
     }
-    await dbObject.createPatientMedicalInfo({
+    await repo.createPatientMedicalInfo({
       patientId,
       height,
       weight,
@@ -136,7 +136,7 @@ exports.updatePatientMedicalHistory = async ({
   caffineIntakeFreq,
 }) => {
   try {
-    const patient = await dbObject.getPatientByUserId(userId);
+    const patient = await repo.getPatientByUserId(userId);
     if (!patient) {
       return Response.BAD_REQUEST({
         message:
@@ -145,14 +145,14 @@ exports.updatePatientMedicalHistory = async ({
     }
     const { patient_id: patientId } = patient;
 
-    const data = await dbObject.getPatientMedicalInfoByPatientId(patientId);
+    const data = await repo.getPatientMedicalInfoByPatientId(patientId);
     if (!data) {
       return Response.NOT_FOUND({
         message:
           "Medical History Not Found. Create one before trying to update",
       });
     }
-    await dbObject.updatePatientMedicalHistory({
+    await repo.updatePatientMedicalHistory({
       patientId,
       height,
       weight,

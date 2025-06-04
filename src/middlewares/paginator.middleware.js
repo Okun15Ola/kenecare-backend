@@ -1,4 +1,4 @@
-const { connectionPool } = require("../db/db.connection");
+const { connectionPool } = require("../repository/db.connection");
 
 const executeQuery = (sql) =>
   new Promise((resolve, reject) => {
