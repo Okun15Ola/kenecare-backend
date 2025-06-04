@@ -1,4 +1,4 @@
-const dbObject = require("../db/db.medical-councils");
+const repo = require("../repository/medical-councils.repository");
 const Response = require("../utils/response.utils");
 const redisClient = require("../config/redis.config");
 
@@ -8,7 +8,7 @@ exports.getMedicalCouncils = async () => {
   if (cachedData) {
     return Response.SUCCESS({ data: JSON.parse(cachedData) });
   }
-  const rawData = await dbObject.getAllMedicalCouncils();
+  const rawData = await repo.getAllMedicalCouncils();
 
   const councils = rawData.map(
     ({
@@ -43,7 +43,7 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getMedicalCouncilById(councilEmail);
+    const rawData = await repo.getMedicalCouncilById(councilEmail);
 
     if (!rawData) {
       return Response.NOT_FOUND({
@@ -86,7 +86,7 @@ exports.getMedicalCouncilByMobileNumber = async (number) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getMedicalCouncilByMobileNumber(number);
+    const rawData = await repo.getMedicalCouncilByMobileNumber(number);
 
     if (!rawData) {
       return Response.NOT_FOUND({
@@ -130,7 +130,7 @@ exports.getMedicalCouncil = async (id) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getMedicalCouncilById(id);
+    const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
@@ -173,7 +173,7 @@ exports.createMedicalCouncil = async ({
   inputtedBy,
 }) => {
   try {
-    await dbObject.createNewMedicalCouncil({
+    await repo.createNewMedicalCouncil({
       name,
       email,
       mobileNumber,
@@ -198,12 +198,12 @@ exports.updateMedicalCouncil = async ({
   address,
 }) => {
   try {
-    const rawData = await dbObject.getMedicalCouncilById(id);
+    const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
-    await dbObject.updateMedicalCouncilById({
+    await repo.updateMedicalCouncilById({
       id,
       name,
       email,
@@ -221,7 +221,7 @@ exports.updateMedicalCouncil = async ({
 };
 exports.updateMedicalCouncilStatus = async ({ id, status }) => {
   try {
-    const rawData = await dbObject.getMedicalCouncilById(id);
+    const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
@@ -231,7 +231,7 @@ exports.updateMedicalCouncilStatus = async ({ id, status }) => {
       return Response.BAD_REQUEST({ message: "Invalid Status Code" });
     }
 
-    await dbObject.updateMedicalCouncilStatusById({
+    await repo.updateMedicalCouncilStatusById({
       id,
       status,
     });
@@ -247,12 +247,12 @@ exports.updateMedicalCouncilStatus = async ({ id, status }) => {
 
 exports.deleteMedicalCouncil = async (id) => {
   try {
-    const rawData = await dbObject.getMedicalCouncilById(id);
+    const rawData = await repo.getMedicalCouncilById(id);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
 
-    await dbObject.deleteMedicalCouncilById(id);
+    await repo.deleteMedicalCouncilById(id);
 
     return Response.SUCCESS({
       message: "Medical Council Deleted Successfully",

@@ -1,4 +1,4 @@
-const dbObject = require("../db/db.users");
+const repo = require("../repository/users.repository");
 const {
   generateVerificationToken,
   generateUsersJwtAccessToken,
@@ -15,9 +15,9 @@ const {
   createOrUpdateStreamUser,
   generateStreamUserToken,
 } = require("../utils/stream.utils");
-const { getPatientByUserId } = require("../db/db.patients");
+const { getPatientByUserId } = require("../repository/patients.repository");
 const { getFileUrlFromS3Bucket } = require("../utils/aws-s3.utils");
-const { getDoctorByUserId } = require("../db/db.doctors");
+const { getDoctorByUserId } = require("../repository/doctors.repository");
 const redisClient = require("../config/redis.config");
 
 exports.getUsers = async () => {
@@ -27,7 +27,7 @@ exports.getUsers = async () => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getAllUsers();
+    const rawData = await repo.getAllUsers();
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(rawData),
@@ -41,7 +41,7 @@ exports.getUsers = async () => {
 
 exports.getUserById = async (id) => {
   try {
-    const rawData = await dbObject.getUserById(id);
+    const rawData = await repo.getUserById(id);
     if (!rawData) {
       return null;
     }
@@ -74,7 +74,7 @@ exports.getUserById = async (id) => {
 };
 exports.getUserByMobileNumber = async (number) => {
   try {
-    const rawData = await dbObject.getUserByMobileNumber(number);
+    const rawData = await repo.getUserByMobileNumber(number);
     if (!rawData) {
       return null;
     }
@@ -107,7 +107,7 @@ exports.getUserByMobileNumber = async (number) => {
 };
 exports.getUserByEmail = async (userEmail) => {
   try {
-    const rawData = await dbObject.getUserByEmail(userEmail);
+    const rawData = await repo.getUserByEmail(userEmail);
     if (!rawData) {
       return null;
     }
@@ -140,7 +140,7 @@ exports.getUserByEmail = async (userEmail) => {
 };
 exports.getUserByToken = async (token) => {
   try {
-    const rawData = await dbObject.getUserByVerificationToken(token);
+    const rawData = await repo.getUserByVerificationToken(token);
     if (!rawData) {
       return null;
     }
@@ -191,7 +191,7 @@ exports.registerNewUser = async ({
 
     // reate user and send OTP via SMS
     await Promise.allSettled([
-      dbObject.createNewUser({
+      repo.createNewUser({
         mobileNumber,
         email,
         password: hashedPassword,
@@ -213,7 +213,7 @@ exports.registerNewUser = async ({
 
 exports.verifyRegistrationOTP = async (token) => {
   try {
-    const user = await dbObject.getUserByVerificationToken(token);
+    const user = await repo.getUserByVerificationToken(token);
 
     const {
       user_id: userId,
@@ -221,7 +221,7 @@ exports.verifyRegistrationOTP = async (token) => {
       account_active: accountActive,
     } = user;
 
-    dbObject.updateUserVerificationStatusByToken({
+    repo.updateUserVerificationStatusByToken({
       token,
       verificationStatus: VERIFICATIONSTATUS.VERIFIED,
     });
@@ -308,7 +308,7 @@ exports.loginUser = async (user) => {
       const token = generateVerificationToken();
 
       await Promise.allSettled([
-        dbObject.updateUserVerificationTokenById({
+        repo.updateUserVerificationTokenById({
           userId,
           token,
         }),
@@ -349,7 +349,7 @@ exports.loginUser = async (user) => {
     const streamToken = await generateStreamUserToken(userId.toString());
 
     // update user's active status in the database
-    await dbObject.updateUserAccountStatusById({
+    await repo.updateUserAccountStatusById({
       userId,
       status: STATUS.ACTIVE,
     });
@@ -395,7 +395,7 @@ exports.requestUserLoginOtp = async (user) => {
     const token = generateVerificationToken();
 
     // Update user's OTP in database
-    await dbObject.updateUserVerificationTokenById({
+    await repo.updateUserVerificationTokenById({
       userId,
       token,
     });
@@ -424,11 +424,11 @@ exports.verifyUserLoginOtp = async (user) => {
 
     // Delete login OTP token from users account
     await Promise.all([
-      dbObject.updateUserVerificationTokenById({
+      repo.updateUserVerificationTokenById({
         userId,
         token: null,
       }),
-      dbObject.updateUserAccountStatusById({
+      repo.updateUserAccountStatusById({
         userId,
         status: STATUS.ACTIVE,
       }),
@@ -454,7 +454,7 @@ exports.verifyUserLoginOtp = async (user) => {
       accountActive,
     });
 
-    return { message: "Login Successful", data: accessToken };
+    return Response.SUCCESS({ message: "Login Successful", data: accessToken });
   } catch (error) {
     console.error(error);
     throw error;
@@ -472,7 +472,6 @@ exports.resendVerificationOTP = async (user) => {
       is_verified: isVerified,
       mobile_number: mobileNumber,
     } = user;
-
     if (token && isVerified !== STATUS.ACTIVE) {
       // Send TOKEN VIA SMS
       const response = await generateAndSendVerificationOTP({
@@ -571,11 +570,11 @@ exports.updateUserPassword = async ({ newPassword, user }) => {
     const hashedPassword = await hashUsersPassword(newPassword);
 
     await Promise.all([
-      dbObject.updateUserPasswordById({
+      repo.updateUserPasswordById({
         userId,
         password: hashedPassword,
       }),
-      dbObject.updateUserVerificationTokenById({ userId, token: null }),
+      repo.updateUserVerificationTokenById({ userId, token: null }),
       sendPasswordResetSMS(mobileNumber),
     ]);
 
@@ -598,7 +597,7 @@ exports.updatePushNotificationToken = async ({ token, user }) => {
     }
 
     const { id: userId } = user;
-    await dbObject.updateUserNotificationToken({ userId, notifToken: token });
+    await repo.updateUserNotificationToken({ userId, notifToken: token });
 
     return Response.SUCCESS({ message: "Token Updated Successfully" });
   } catch (error) {

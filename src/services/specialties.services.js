@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const he = require("he");
-const dbObject = require("../db/db.specialities");
+const repo = require("../repository/specialities.repository");
 const Response = require("../utils/response.utils");
 const { deleteFile } = require("../utils/file-upload.utils");
 const { appBaseURL } = require("../config/default.config");
@@ -13,7 +13,7 @@ exports.getSpecialties = async () => {
   if (cachedData) {
     return Response.SUCCESS({ data: JSON.parse(cachedData) });
   }
-  const rawData = await dbObject.getAllSpecialties();
+  const rawData = await repo.getAllSpecialties();
 
   const specialties = rawData.map(
     ({
@@ -48,7 +48,7 @@ exports.getSpecialtyByName = async (name) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getSpecialtyByName(name);
+    const rawData = await repo.getSpecialtyByName(name);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
@@ -90,7 +90,7 @@ exports.getSpecialtyById = async (id) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getSpecialtiyById(id);
+    const rawData = await repo.getSpecialtiyById(id);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
@@ -126,7 +126,7 @@ exports.getSpecialtyById = async (id) => {
 exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
   try {
     // save to database
-    await dbObject.createNewSpecialty({
+    await repo.createNewSpecialty({
       name,
       description,
       image,
@@ -142,7 +142,7 @@ exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
 
 exports.updateSpecialty = async ({ id, name, image, description }) => {
   try {
-    const rawData = await dbObject.getSpecialtiyById(id);
+    const rawData = await repo.getSpecialtiyById(id);
     if (!rawData) return null;
 
     const { image_url: imageUrl } = rawData;
@@ -151,7 +151,7 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
       const file = path.join(__dirname, "../public/upload/media/", imageUrl);
       await deleteFile(file);
     }
-    await dbObject.updateSpecialtiyById({
+    await repo.updateSpecialtiyById({
       id,
       name,
       image,
@@ -170,7 +170,7 @@ exports.updateSpecialtyStatus = async ({ id, status }) => {
       return Response.BAD_REQUEST({ message: "Invalid Status Code" });
     }
 
-    await dbObject.updateSpecialtiyStatusById({
+    await repo.updateSpecialtiyStatusById({
       id,
       status,
     });
@@ -186,13 +186,13 @@ exports.updateSpecialtyStatus = async ({ id, status }) => {
 
 exports.deleteSpecialty = async (id) => {
   try {
-    const { image_url: imageUrl } = await dbObject.getSpecialtiyById(id);
+    const { image_url: imageUrl } = await repo.getSpecialtiyById(id);
     if (imageUrl) {
       const file = path.join(__dirname, "../public/upload/media/", imageUrl);
       fs.unlinkSync(file);
     }
 
-    await dbObject.deleteSpecialtieById(id);
+    await repo.deleteSpecialtieById(id);
 
     return Response.SUCCESS({ message: "Specialty Deleted Successfully" });
   } catch (error) {

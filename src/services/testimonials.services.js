@@ -1,4 +1,4 @@
-const dbObject = require("../db/db.testimonials");
+const repo = require("../repository/testimonials.repository");
 const Response = require("../utils/response.utils");
 const { appBaseURL } = require("../config/default.config");
 const redisClient = require("../config/redis.config");
@@ -10,7 +10,7 @@ exports.getTestimonials = async () => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getAllTestimonials();
+    const rawData = await repo.getAllTestimonials();
     if (!rawData) return null;
 
     const testimonials = rawData.map(
@@ -51,7 +51,7 @@ exports.getTestimonialById = async (id) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getTestimonialById(id);
+    const rawData = await repo.getTestimonialById(id);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
@@ -90,7 +90,7 @@ exports.getTestimonialById = async (id) => {
 exports.createTestimonial = async ({ userId, patientId, content }) => {
   try {
     // save to database
-    await dbObject.createNewTestimonial({
+    await repo.createNewTestimonial({
       patientId,
       content,
       inputtedBy: userId,
@@ -105,12 +105,12 @@ exports.createTestimonial = async ({ userId, patientId, content }) => {
 
 exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
   try {
-    const rawData = await dbObject.getTestimonialById(testimonialId);
+    const rawData = await repo.getTestimonialById(testimonialId);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
-    await dbObject.approveTestimonialById({
+    await repo.approveTestimonialById({
       testimonialId,
       approvedBy,
     });
@@ -123,12 +123,12 @@ exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
 };
 exports.denyTestimonialById = async ({ testimonialId, approvedBy }) => {
   try {
-    const rawData = await dbObject.getTestimonialById(testimonialId);
+    const rawData = await repo.getTestimonialById(testimonialId);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
-    await dbObject.denyTestimonialById({
+    await repo.denyTestimonialById({
       testimonialId,
       approvedBy,
     });
@@ -142,13 +142,13 @@ exports.denyTestimonialById = async ({ testimonialId, approvedBy }) => {
 
 exports.deleteSpecialization = async (specializationId) => {
   try {
-    const rawData = await dbObject.getSpecializationById(specializationId);
+    const rawData = await repo.getSpecializationById(specializationId);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
-    await dbObject.deleteSpecializationById(specializationId);
+    await repo.deleteSpecializationById(specializationId);
 
     return Response.SUCCESS({ message: "Specialization Deleted Successfully" });
   } catch (error) {

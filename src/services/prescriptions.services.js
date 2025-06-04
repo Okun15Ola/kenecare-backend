@@ -5,7 +5,7 @@ const {
   updateAppointmentPrescriptions,
 
   getAppointmentPrescriptionById,
-} = require("../db/db.prescriptions");
+} = require("../repository/prescriptions.repository");
 const Response = require("../utils/response.utils");
 
 const {
@@ -15,8 +15,10 @@ const {
   decryptText,
 } = require("../utils/auth.utils");
 const { sendPrescriptionToken } = require("../utils/sms.utils");
-const { getAppointmentByID } = require("../db/db.appointments.patients");
-const { getPatientById } = require("../db/db.patients");
+const {
+  getAppointmentByID,
+} = require("../repository/patientAppointments.repository");
+const { getPatientById } = require("../repository/patients.repository");
 const redisClient = require("../config/redis.config");
 
 exports.getAppointmentPrescriptions = async (id) => {

@@ -2,7 +2,7 @@ const moment = require("moment");
 const {
   deleteAppointmentById,
   getAppointmentByUUID,
-} = require("../db/db.appointments.patients");
+} = require("../repository/patientAppointments.repository");
 
 const Response = require("../utils/response.utils");
 
@@ -10,9 +10,9 @@ const {
   updateAppointmentPaymentStatus,
   getAppointmentPaymentByAppointmentId,
   deleteAppointmentPaymentByAppointmentId,
-} = require("../db/db.payments");
-const { getPatientById } = require("../db/db.patients");
-const { getDoctorById } = require("../db/db.doctors");
+} = require("../repository/payments.repository");
+const { getPatientById } = require("../repository/patients.repository");
+const { getDoctorById } = require("../repository/doctors.repository");
 const {
   appointmentBookedSms,
   doctorAppointmentBookedSms,
@@ -20,7 +20,7 @@ const {
 const {
   updateDoctorWalletBalance,
   getCurrentWalletBalance,
-} = require("../db/db.doctor-wallet");
+} = require("../repository/doctor-wallet.repository");
 const { sendPushNotification } = require("../utils/notification.utils");
 const { cancelPaymentUSSD } = require("../utils/payment.utils");
 

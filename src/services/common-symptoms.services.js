@@ -1,4 +1,4 @@
-const dbObject = require("../db/db.common-symptoms");
+const repo = require("../repository/common-symptoms.repository");
 const Response = require("../utils/response.utils");
 const redisClient = require("../config/redis.config");
 const {
@@ -16,7 +16,7 @@ exports.getCommonSymptoms = async () => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
-    const rawData = await dbObject.getAllCommonSymptoms();
+    const rawData = await repo.getAllCommonSymptoms();
     const promises = rawData.map(
       async ({
         symptom_id: symptomId,
@@ -62,7 +62,7 @@ exports.getCommonSymptom = async (id) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getCommonSymptomById(id);
+    const rawData = await repo.getCommonSymptomById(id);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
@@ -124,7 +124,7 @@ exports.createCommonSymptom = async ({
         fileName,
         mimetype,
       }),
-      dbObject.createNewCommonSymptom({
+      repo.createNewCommonSymptom({
         name,
         description,
         specialtyId,
@@ -152,7 +152,7 @@ exports.updateCommonSymptom = async ({
   tags,
 }) => {
   try {
-    const symptom = await dbObject.getCommonSymptomById(id);
+    const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
@@ -167,7 +167,7 @@ exports.updateCommonSymptom = async ({
         mimetype: file.mimetype,
       });
     }
-    await dbObject.updateCommonSymptomById({
+    await repo.updateCommonSymptomById({
       id,
       name,
       description,
@@ -186,7 +186,7 @@ exports.updateCommonSymptom = async ({
 };
 exports.updateCommonSymptomStatus = async ({ id, status }) => {
   try {
-    const symptom = await dbObject.getCommonSymptomById(id);
+    const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
@@ -202,12 +202,12 @@ exports.updateCommonSymptomStatus = async ({ id, status }) => {
 };
 exports.deleteCommonSymptom = async (id) => {
   try {
-    const symptom = await dbObject.getCommonSymptomById(id);
+    const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
-    await dbObject.deleteCommonSymptomById(id);
+    await repo.deleteCommonSymptomById(id);
     return Response.SUCCESS({ message: "Common Symptom Deleted Successfully" });
   } catch (error) {
     console.error("DELETE COMMON SYMPTOMS ERROR: ", error);
