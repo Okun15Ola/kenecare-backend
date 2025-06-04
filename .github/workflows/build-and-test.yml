@@ -126,8 +126,8 @@ jobs:
           COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
           DIGEST: ${{steps.build-and-push.outputs.digest}}
 
-      - name: Copy Variables
-        run: cp ~/.env.kenecare.api-prod ./.env.production
+      # - name: Copy Variables
+      #   run: cp ~/.env.kenecare.api-prod ./.env.production
 
   # deploy-to-prod:
   #   needs: build-and-push-image
