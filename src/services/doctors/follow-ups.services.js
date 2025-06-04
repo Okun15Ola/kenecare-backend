@@ -2,10 +2,10 @@ const moment = require("moment");
 const {
   getDoctorAppointByDateAndTime,
   getDoctorAppointmentById,
-} = require("../../db/db.appointments.doctors");
-const { getDoctorByUserId } = require("../../db/db.doctors");
-const dbObject = require("../../db/db.follow-up");
-const { getPatientById } = require("../../db/db.patients");
+} = require("../../repository/doctorAppointments.repository");
+const { getDoctorByUserId } = require("../../repository/doctors.repository");
+const followUpRepo = require("../../repository/follow-up.repository");
+const { getPatientById } = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
 const { newFollowAppointmentSms } = require("../../utils/sms.utils");
 const redisClient = require("../../config/redis.config");
@@ -51,7 +51,7 @@ exports.createFollowUp = async ({
     }
 
     const followUpDateAndTimeSlotBooked =
-      await dbObject.getDoctorsFollowByDateAndTime({
+      await followUpRepo.getDoctorsFollowByDateAndTime({
         doctorId,
         followUpDate,
         followUpTime,
@@ -76,7 +76,7 @@ exports.createFollowUp = async ({
     const { mobile_number: mobileNumber } = await getPatientById(patientId);
 
     // Save follow-up to database
-    await dbObject.createNewFollowUp({
+    await followUpRepo.createNewFollowUp({
       appointmentId,
       followUpDate,
       followUpTime,
@@ -151,7 +151,7 @@ exports.updateAppointmentFollowUpService = async ({
     }
 
     const followUpDateAndTimeSlotBooked =
-      await dbObject.getDoctorsFollowByDateAndTime({
+      await followUpRepo.getDoctorsFollowByDateAndTime({
         doctorId,
         followUpDate,
         followUpTime,
@@ -176,7 +176,7 @@ exports.updateAppointmentFollowUpService = async ({
     // const { mobile_number: mobileNumber } = await getPatientById(patientId);
 
     // Save follow-up to database
-    await dbObject.updateAppointmentFollowUp({
+    await followUpRepo.updateAppointmentFollowUp({
       followUpId,
       appointmentId,
       followUpDate,
@@ -227,7 +227,7 @@ exports.getAllAppointmentFollowupService = async ({
       });
     }
 
-    const rawData = await dbObject.getAppointmentFollowUps(appointmentId);
+    const rawData = await followUpRepo.getAppointmentFollowUps(appointmentId);
 
     const followUps =
       rawData?.map(
@@ -283,7 +283,7 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
       });
     }
 
-    const rawData = await dbObject.getDoctorFollowUpById({
+    const rawData = await followUpRepo.getDoctorFollowUpById({
       followUpId: id,
       doctorId,
     });
@@ -326,7 +326,7 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
 };
 exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
   try {
-    const followUp = await dbObject.getFollowUpById(followUpId);
+    const followUp = await followUpRepo.getFollowUpById(followUpId);
     if (!followUp) {
       return Response.NOT_FOUND({ message: "Follow-up not found" });
     }
@@ -357,7 +357,7 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
     }
 
     // Save follow-up to database
-    await dbObject.deleteAppointmentFollowUp(followUpId);
+    await followUpRepo.deleteAppointmentFollowUp(followUpId);
 
     return Response.SUCCESS({
       message: "Appointment Follow-up Deleted Successfully",

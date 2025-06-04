@@ -11,7 +11,7 @@ const {
   deleteMarketerById,
   updateMarketerById,
   getMarketerByEmailVerficationToken,
-} = require("../../db/db.marketers");
+} = require("../../repository/marketers.repository");
 const Response = require("../../utils/response.utils");
 const {
   generateVerificationToken,

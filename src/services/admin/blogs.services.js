@@ -1,5 +1,5 @@
 const moment = require("moment");
-const dbObject = require("../../db/db.blogs");
+const dbObject = require("../../repository/blogs.repository");
 const {
   uploadFileToS3Bucket,
   getFileUrlFromS3Bucket,

@@ -1,4 +1,4 @@
-const dbObject = require("../../db/db.blog-categories");
+const dbObject = require("../../repository/blog-categories.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 

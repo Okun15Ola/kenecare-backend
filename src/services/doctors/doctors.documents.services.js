@@ -2,9 +2,9 @@ const moment = require("moment");
 const {
   getSharedMedicalDocumentsByDoctorId,
   getDoctorSharedMedicalDocumentById,
-} = require("../../db/db.patient-docs");
+} = require("../../repository/patient-docs.repository");
 const Response = require("../../utils/response.utils");
-const { getDoctorByUserId } = require("../../db/db.doctors");
+const { getDoctorByUserId } = require("../../repository/doctors.repository");
 const { getFileUrlFromS3Bucket } = require("../../utils/aws-s3.utils");
 const redisClient = require("../../config/redis.config");
 

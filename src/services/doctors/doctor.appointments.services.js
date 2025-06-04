@@ -1,10 +1,10 @@
 const moment = require("moment");
-const dbObject = require("../../db/db.appointments.doctors");
-const { getDoctorByUserId } = require("../../db/db.doctors");
-const { getUserById } = require("../../db/db.users");
+const dbObject = require("../../repository/doctorAppointments.repository");
+const { getDoctorByUserId } = require("../../repository/doctors.repository");
+const { getUserById } = require("../../repository/users.repository");
 const { USERTYPE, VERIFICATIONSTATUS } = require("../../utils/enum.utils");
 const Response = require("../../utils/response.utils");
-const { getPatientById } = require("../../db/db.patients");
+const { getPatientById } = require("../../repository/patients.repository");
 // const { createZoomMeeting } = require("../../utils/zoom.utils");
 const {
   appointmentApprovalSms,
@@ -13,7 +13,9 @@ const {
   appointmentEndedSms,
 } = require("../../utils/sms.utils");
 const logger = require("../../middlewares/logger.middleware");
-const { getAppointmentFollowUps } = require("../../db/db.follow-up");
+const {
+  getAppointmentFollowUps,
+} = require("../../repository/follow-up.repository");
 const { createStreamCall } = require("../../utils/stream.utils");
 const { nodeEnv } = require("../../config/default.config");
 const redisClient = require("../../config/redis.config");

@@ -1,4 +1,4 @@
-const dbObject = require("../../db/db.doctors");
+const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 
 // DOCTORS

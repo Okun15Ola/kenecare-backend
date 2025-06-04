@@ -4,12 +4,12 @@ const {
   getWithdrawalRequestById,
   approveWithdrawalRequest,
   denyWithdrawalRequest,
-} = require("../../db/db.withdrawal-requests");
-const { getDoctorById } = require("../../db/db.doctors");
+} = require("../../repository/withdrawal-requests.repository");
+const { getDoctorById } = require("../../repository/doctors.repository");
 const {
   getCurrentWalletBalance,
   updateDoctorWalletBalance,
-} = require("../../db/db.doctor-wallet");
+} = require("../../repository/doctor-wallet.repository");
 const {
   withdrawalApprovedSMS,
   withdrawalDeniedSMS,

@@ -1,7 +1,7 @@
-const dbObject = require("../../db/db.doctors");
+const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 const { USERTYPE } = require("../../utils/enum.utils");
-const { getUserById } = require("../../db/db.users");
+const { getUserById } = require("../../repository/users.repository");
 const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,

@@ -1,24 +1,26 @@
 const moment = require("moment");
 const { v4: uuidv4 } = require("uuid");
 const logger = require("../../middlewares/logger.middleware");
-const dbObject = require("../../db/db.appointments.patients");
+const repo = require("../../repository/patientAppointments.repository");
 const {
   getPatientByUserId,
   updatePatientFirstAppointmentStatus,
-} = require("../../db/db.patients");
+} = require("../../repository/patients.repository");
 const {
   getDoctorAppointByDateAndTime,
-} = require("../../db/db.appointments.doctors");
+} = require("../../repository/doctorAppointments.repository");
 
 const Response = require("../../utils/response.utils");
-const { getDoctorById } = require("../../db/db.doctors");
+const { getDoctorById } = require("../../repository/doctors.repository");
 const {
   createAppointmentPayment,
   createFirstAppointmentPayment,
-} = require("../../db/db.payments");
+} = require("../../repository/payments.repository");
 
 const { getPaymentUSSD } = require("../../utils/payment.utils");
-const { getAppointmentFollowUps } = require("../../db/db.follow-up");
+const {
+  getAppointmentFollowUps,
+} = require("../../repository/follow-up.repository");
 const {
   doctorAppointmentBookedSms,
   appointmentBookedSms,
@@ -41,7 +43,7 @@ exports.getPatientAppointments = async ({ userId, page, limit }) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getAllPatientAppointments({
+    const rawData = await repo.getAllPatientAppointments({
       patientId,
       page,
       limit,
@@ -140,7 +142,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
-    const rawData = await dbObject.getPatientAppointmentById({
+    const rawData = await repo.getPatientAppointmentById({
       patientId,
       appointmentId: id,
     });
@@ -263,7 +265,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
-    const rawData = await dbObject.getPatientAppointmentByUUID({
+    const rawData = await repo.getPatientAppointmentByUUID({
       patientId,
       uuId,
     });
@@ -416,20 +418,19 @@ exports.createPatientAppointment = async ({
     // Generate a unique ID for each appointment
     const generatedOrderId = uuidv4();
 
-    const { insertId: appointmentId } =
-      await dbObject.createNewPatientAppointment({
-        uuid: generatedOrderId,
-        patientId,
-        doctorId,
-        patientName,
-        patientNumber,
-        symptoms,
-        appointmentType,
-        consultationFee,
-        specialtyId,
-        appointmentDate,
-        appointmentTime,
-      });
+    const { insertId: appointmentId } = await repo.createNewPatientAppointment({
+      uuid: generatedOrderId,
+      patientId,
+      doctorId,
+      patientName,
+      patientNumber,
+      symptoms,
+      appointmentType,
+      consultationFee,
+      specialtyId,
+      appointmentDate,
+      appointmentTime,
+    });
 
     if (!hasBookedFirstAppointment) {
       await createFirstAppointmentPayment({
@@ -479,7 +480,7 @@ exports.createPatientAppointment = async ({
     });
 
     if (!response) {
-      await dbObject.deleteAppointmentById({ appointmentId });
+      await repo.deleteAppointmentById({ appointmentId });
       return Response.INTERNAL_SERVER_ERROR({
         message: "An Error Occured on our side, please try again",
       });

@@ -1,19 +1,21 @@
 const path = require("path");
 const fs = require("fs");
-const dbObject = require("../../db/db.doctors");
+const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 const {
   USERTYPE,
   STATUS,
   VERIFICATIONSTATUS,
 } = require("../../utils/enum.utils");
-const { getUserById } = require("../../db/db.users");
+const { getUserById } = require("../../repository/users.repository");
 const {
   adminDoctorProfileRegistrationEmail,
 } = require("../../utils/email.utils");
 const { appBaseURL } = require("../../config/default.config");
 const { doctorProfileApprovalSms } = require("../../utils/sms.utils");
-const { createDoctorWallet } = require("../../db/db.doctor-wallet");
+const {
+  createDoctorWallet,
+} = require("../../repository/doctor-wallet.repository");
 const { hashUsersPassword } = require("../../utils/auth.utils");
 
 exports.getAllDoctors = async () => {

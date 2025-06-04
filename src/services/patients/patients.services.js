@@ -1,19 +1,19 @@
 const moment = require("moment");
 const path = require("path");
-const dbObject = require("../../db/db.patients");
+const repo = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
 const {
   USERTYPE,
   STATUS,
   VERIFICATIONSTATUS,
 } = require("../../utils/enum.utils");
-const { getUserById } = require("../../db/db.users");
+const { getUserById } = require("../../repository/users.repository");
 const { appBaseURL } = require("../../config/default.config");
 const { deleteFile } = require("../../utils/file-upload.utils");
 const {
   getMarketerByReferralCode,
   getMarketersTotalRegisteredUsers,
-} = require("../../db/db.marketers");
+} = require("../../repository/marketers.repository");
 const { sendMarketerUserRegisteredSMS } = require("../../utils/sms.utils");
 const redisClient = require("../../config/redis.config");
 
@@ -24,7 +24,7 @@ exports.getAllPatients = async () => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getAllPatients();
+    const rawData = await repo.getAllPatients();
 
     const patients = rawData.map(
       ({
@@ -76,7 +76,7 @@ exports.getPatientById = async (id) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getPatientById(id);
+    const rawData = await repo.getPatientById(id);
     if (!rawData) {
       return Response.NOT_FOUND({
         errorCode: "PROFILE_NOT_FOUND",
@@ -102,7 +102,7 @@ exports.getPatientById = async (id) => {
 
     //  Get medical Record details
     const medicalRecord =
-      await dbObject.getPatientMedicalInfoByPatientId(patientId);
+      await repo.getPatientMedicalInfoByPatientId(patientId);
 
     let medicalInfo = null;
     if (medicalRecord) {
@@ -172,13 +172,13 @@ exports.getPatientsTestimonial = async (userId) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const patient = await dbObject.getPatientByUserId(userId);
+    const patient = await repo.getPatientByUserId(userId);
     if (!patient) {
       return Response.NOT_FOUND({
         message: "Patient Not Found.",
       });
     }
-    const rawData = await dbObject.getAllPatients();
+    const rawData = await repo.getAllPatients();
 
     return Response.SUCCESS({ data: rawData });
   } catch (error) {
@@ -196,7 +196,7 @@ exports.getPatientByUser = async (id) => {
     }
 
     // Get profile from database
-    const rawData = await dbObject.getPatientByUserId(id);
+    const rawData = await repo.getPatientByUserId(id);
     if (!rawData) {
       return Response.NOT_FOUND({
         errorCode: "PROFILE_NOT_FOUND",
@@ -230,7 +230,7 @@ exports.getPatientByUser = async (id) => {
 
     //  Get medical Record details
     const medicalRecord =
-      await dbObject.getPatientMedicalInfoByPatientId(patientId);
+      await repo.getPatientMedicalInfoByPatientId(patientId);
 
     let medicalInfo = null;
     if (medicalRecord) {
@@ -325,7 +325,7 @@ exports.createPatientProfile = async ({
         message: "Unauthorized Action. Please Try again",
       });
     }
-    const patient = await dbObject.getPatientByUserId(userId);
+    const patient = await repo.getPatientByUserId(userId);
 
     if (patient) {
       return Response.BAD_REQUEST({
@@ -337,7 +337,7 @@ exports.createPatientProfile = async ({
       ? moment(dateOfBirth).format("YYYY-MM-DD")
       : null;
 
-    const { affectedRows } = await dbObject.createPatient({
+    const { affectedRows } = await repo.createPatient({
       userId,
       firstName,
       middleName,
@@ -398,7 +398,7 @@ exports.createPatientMedicalInfo = async ({
   caffineIntakeFreq,
 }) => {
   try {
-    const { patient_id: patientId } = await dbObject.getPatientByUserId(userId);
+    const { patient_id: patientId } = await repo.getPatientByUserId(userId);
     if (!patientId) {
       return Response.BAD_REQUEST({
         message: "Patient Profile Does not exist for the logged in user",
@@ -406,14 +406,14 @@ exports.createPatientMedicalInfo = async ({
     }
 
     const medicalInfoExist =
-      await dbObject.getPatientMedicalInfoByPatientId(patientId);
+      await repo.getPatientMedicalInfoByPatientId(patientId);
     if (medicalInfoExist) {
       return Response.BAD_REQUEST({
         message:
           "Medical Information Already Exist for the current user. Please update",
       });
     }
-    await dbObject.createPatientMedicalInfo({
+    await repo.createPatientMedicalInfo({
       patientId,
       height,
       weight,
@@ -447,7 +447,7 @@ exports.updatePatientProfile = async ({
 }) => {
   try {
     const { user_type: userType } = await getUserById(userId);
-    const { patient_id: patientId } = await dbObject.getPatientByUserId(userId);
+    const { patient_id: patientId } = await repo.getPatientByUserId(userId);
 
     if (userType !== USERTYPE.PATIENT) {
       return Response.UNAUTHORIZED({
@@ -458,7 +458,7 @@ exports.updatePatientProfile = async ({
 
     const formattedDate = moment(dateOfBirth).format("YYYY-MM-DD");
 
-    await dbObject.updatePatientById({
+    await repo.updatePatientById({
       patientId,
       firstName,
       middleName,
@@ -478,7 +478,7 @@ exports.updatePatientProfile = async ({
 exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
   try {
     const { profile_pic_url: profilePicUrl } =
-      await dbObject.getPatientByUserId(userId);
+      await repo.getPatientByUserId(userId);
 
     if (profilePicUrl) {
       // delete old profile pic from file system
@@ -490,7 +490,7 @@ exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
       await deleteFile(file);
     }
 
-    await dbObject.updatePatientProfilePictureByUserId({
+    await repo.updatePatientProfilePictureByUserId({
       userId,
       imageUrl,
     });
