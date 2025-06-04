@@ -95,10 +95,14 @@ jobs:
         id: docker-scout
         if: ${{ github.event_name != 'pull_request' }}
         run: |
-         docker scout cves ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} \
-          --only-severities critical,high \
-          --only-fixed \
-          --output table
+          docker scout cves ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} --format json > scout-results.json
+          echo "Filtered CVEs (only HIGH/CRITICAL and fixable):"
+          jq -r '
+            .vulnerabilities[] 
+            | select(.severity | IN("high", "critical")) 
+            | select(.fix_version != null) 
+            | "CVE: \(.cve_id)\nSeverity: \(.severity)\nAffected Versions: \(.affected_range)\nFix Version: \(.fix_version)\n---"
+          ' scout-results.json
         # uses: docker/scout-action@v1
         # with:
         #   command: cves
