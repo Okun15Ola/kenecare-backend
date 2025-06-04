@@ -85,7 +85,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.prod
-          push: true
+          push: ${{github.event_name != 'pull_request'}}
           tags: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
           labels: ${{steps.docker-metadata.outputs.labels}}
           # cache-from: type=gha
@@ -93,7 +93,6 @@ jobs:
 
       - name: Scan Docker Image with Docker Scout
         id: docker-scout
-        if: ${{ github.event_name == 'pull_request' }}
         uses: docker/scout-action@v1
         with:
           command: cves
@@ -103,14 +102,14 @@ jobs:
           only-severities: critical,high
           only-fixed: true
 
-      - name: Fail if fixable high/critical vulnerabilities exist
-        run: |
-          docker scout cves ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} --format sarif > scout.sarif
+      # - name: Fail if fixable high/critical vulnerabilities exist
+      #   run: |
+      #     docker scout cves ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}} --format sarif > scout.sarif
 
-          if grep -q '"severity":"CRITICAL"\|"severity":"HIGH"' scout.serif; then
-             echo "❌ Fixable high/critical vulnerabilities found. Please Fix Before Proceeding!"
-             exit 1
-          fi
+      #     if grep -q '"severity":"CRITICAL"\|"severity":"HIGH"' scout.serif; then
+      #        echo "❌ Fixable high/critical vulnerabilities found. Please Fix Before Proceeding!"
+      #        exit 1
+      #     fi
 
       - name: Push Docker Image
         if: github.event_name != 'pull_request'
