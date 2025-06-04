@@ -96,7 +96,7 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
-          image: ${{ steps.docker-metadata.outputs.tags}}
+          image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
           output: table
           ignore-unchanged: true
           only-severities: critical,high
