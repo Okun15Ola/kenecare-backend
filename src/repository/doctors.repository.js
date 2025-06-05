@@ -1,0 +1,203 @@
+const { query } = require("./db.connection");
+const queries = require("./queries/doctors.queries");
+
+exports.getAllDoctors = async () => {
+  return query(queries.GET_ALL_DOCTORS);
+};
+
+exports.getDoctorByQuery = async ({ locationId, query: search }) => {
+  return query(queries.SEARCH_DOCTOR_BY_QUERY, [
+    locationId,
+    `%${search}%`,
+    `%${search}%`,
+    `%${search}%`,
+    `%${search}%`,
+  ]);
+};
+
+exports.getDoctorById = async (doctorId) => {
+  const result = await query(queries.GET_DOCTOR_BY_ID, [doctorId]);
+  return result[0];
+};
+
+exports.getDoctorByUserId = async (userId) => {
+  const result = await query(queries.GET_DOCTOR_BY_USER_ID, [userId]);
+  return result[0];
+};
+
+exports.getDoctorsByCityId = async (cityId) => {
+  return query(queries.GET_DOCTOR_BY_CITY_ID, [cityId]);
+};
+
+exports.getDoctorsBySpecializationId = async (specializationId) => {
+  return query(queries.GET_DOCTOR_BY_SPECIALIZATION_ID, [specializationId]);
+};
+
+exports.getDoctorsByHospitalId = async (hospitalId) => {
+  return query(queries.GET_DOCTOR_BY_HOSPITAL_ID, [hospitalId]);
+};
+
+exports.getCouncilRegistrationByDoctorId = async (doctorId) => {
+  const result = await query(
+    queries.GET_DOCTOR_COUNCIL_REGISTRATION_BY_DOCTOR_ID,
+    [doctorId],
+  );
+  return result[0];
+};
+
+exports.getAllMedicalCouncilRegistration = async () => {
+  return query(queries.GET_DOCTOR_ALL_COUNCIL_REGISTRATIONS);
+};
+
+exports.getCouncilRegistrationById = async (registrationId) => {
+  const result = await query(queries.GET_DOCTOR_COUNCIL_REGISTRATION_BY_ID, [
+    registrationId,
+  ]);
+  return result[0];
+};
+
+exports.getCouncilRegistrationByRegNumber = async (registrationNumber) => {
+  const result = await query(
+    queries.GET_DOCTOR_COUNCIL_REGISTRATION_BY_REG_NUMBER,
+    [registrationNumber],
+  );
+  return result[0];
+};
+
+exports.createDoctor = async ({
+  userId,
+  title,
+  firstName,
+  middleName,
+  lastName,
+  gender,
+  professionalSummary,
+  specializationId,
+  qualifications,
+  consultationFee,
+  cityId,
+  yearOfExperience,
+}) => {
+  return query(queries.CREATE_DOCTOR, [
+    userId,
+    title,
+    firstName,
+    middleName,
+    lastName,
+    gender,
+    professionalSummary,
+    specializationId,
+    qualifications,
+    consultationFee,
+    cityId,
+    yearOfExperience,
+  ]);
+};
+
+exports.createDoctorMedicalCouncilRegistration = async ({
+  doctorId,
+  councilId,
+  regNumber,
+  regYear,
+  certIssuedDate,
+  certExpiryDate,
+  fileName,
+}) => {
+  return query(queries.CREATE_DOCTOR_COUNCIL_REGISTRATION, [
+    doctorId,
+    councilId,
+    regNumber,
+    regYear,
+    fileName,
+    certIssuedDate,
+    certExpiryDate,
+  ]);
+};
+
+exports.updateDoctorMedicalCouncilRegistration = async ({
+  registrationId,
+  doctorId,
+  councilId,
+  regNumber,
+  regYear,
+  certIssuedDate,
+  certExpiryDate,
+  fileName,
+}) => {
+  return query(queries.UPDATE_DOCTOR_COUNCIL_REGISTRATION, [
+    councilId,
+    regNumber,
+    regYear,
+    fileName,
+    certIssuedDate,
+    certExpiryDate,
+    registrationId,
+    doctorId,
+  ]);
+};
+
+exports.getDoctorMedicalCouncilRegistration = async ({ doctorId }) => {
+  return query(queries.GET_DOCTOR_COUNCIL_REGISTRATION_BY_DOCTOR_ID, [
+    doctorId,
+  ]);
+};
+
+exports.updateDoctorById = async ({
+  doctorId,
+  title,
+  firstName,
+  middleName,
+  lastName,
+  gender,
+  professionalSummary,
+  specializationId,
+  qualifications,
+  consultationFee,
+  cityId,
+  yearOfExperience,
+}) => {
+  return query(queries.UPDATE_DOCTOR, [
+    title,
+    firstName,
+    middleName,
+    lastName,
+    gender,
+    professionalSummary,
+    specializationId,
+    qualifications,
+    consultationFee,
+    cityId,
+    yearOfExperience,
+    doctorId,
+  ]);
+};
+
+exports.updateDoctorProfilePictureById = async ({ doctorId, imageUrl }) => {
+  return query(queries.UPDATE_DOCTOR_PROFILE_PICTURE, [imageUrl, doctorId]);
+};
+
+exports.approveDoctorProfileByDoctorId = async ({ doctorId, approvedBy }) => {
+  return query(queries.APPROVE_PROFILE, [approvedBy, doctorId]);
+};
+
+exports.approveDoctorMedicalCouncilRegistrationById = async ({
+  registrationId,
+  approvedBy,
+}) => {
+  return query(queries.APPROVE_DOCTOR_COUNCIL_REGISTRATION, [
+    approvedBy,
+    registrationId,
+  ]);
+};
+
+exports.rejectDoctorMedicalCouncilRegistrationById = async ({
+  registrationId,
+  rejectionReason,
+  approvedBy,
+}) => {
+  return query(queries.REJECT_DOCTOR_COUNCIL_REGISTRATION, [
+    rejectionReason,
+    approvedBy,
+    registrationId,
+  ]);
+};
