@@ -1,5 +1,5 @@
 require("dotenv").config({ path: "../.env.test" });
-const dbObject = require("../../src/db/db.users");
+const dbObject = require("../../src/repository/users.repository");
 const userService = require("../../src/services/users.service");
 
 // Only mock modules specific to this test file
