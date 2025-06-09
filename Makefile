@@ -84,7 +84,7 @@ check-env:
 	@echo "✅ Environment file .env.${ENV} found."
 
 # Internal check to see if a Docker Compose service is running
-# Usage: $(call is-service-running, <compose_file>, <env_file>, <service_name>)
+# Usage: $(call is-service-running, <service_name>)
 define is-service-running
 	docker ps --filter "name=$(1)" --filter "status=running" -q | grep -q .
 endef
