@@ -2,7 +2,7 @@ module.exports = {
   GET_ALL_PATIENTS: `
     SELECT patient_id, title, first_name, middle_name, last_name, gender, profile_pic_url, dob, mobile_number, email, user_type, is_account_active, is_online
     FROM patients
-    INNER JOIN users ON patients.user_id = users.user_id;
+    INNER JOIN users ON patients.user_id = users.user_id
   `,
   GET_PATIENT_BY_ID: `
     SELECT patient_id, title, first_name, middle_name, last_name, gender, profile_pic_url, dob, booked_first_appointment, mobile_number, email, users.user_id, notification_token, user_type, is_account_active, is_online

@@ -9,11 +9,10 @@ exports.getAllPatientAppointments = async ({
   const newPage = page < 1 ? 1 : page;
   const newLimit = limit < 1 ? 10 : limit;
   const offset = (newPage - 1) * newLimit;
-  return query(queries.GET_ALL_PATIENT_APPOINTMENTS, [
-    patientId,
-    newLimit,
-    offset,
-  ]);
+
+  const optimizedQuery = `${queries.GET_ALL_PATIENT_APPOINTMENTS} LIMIT ${newLimit} OFFSET ${offset}`;
+
+  return query(optimizedQuery, [patientId]);
 };
 
 exports.getPatientAppointmentById = async ({ patientId, appointmentId }) => {

@@ -16,11 +16,10 @@ const COMMON_SELECT = `
 `;
 
 module.exports = {
-  GET_APPOINTMENTS_BY_DOCTOR_ID: (limit, offset) => `
+  GET_APPOINTMENTS_BY_DOCTOR_ID: `
     ${COMMON_SELECT}
     WHERE medical_appointments.doctor_id = ? AND payment_status = 'success'
-    ORDER BY medical_appointments.appointment_id DESC
-    LIMIT ${limit} OFFSET ${offset};
+    ORDER BY medical_appointments.appointment_id DESC 
   `,
 
   GET_DOCTOR_APPOINTMENT_BY_ID: `

@@ -22,13 +22,6 @@ exports.CreateAppointmentValidation = [
     .toUpperCase()
     .trim()
     .escape(),
-  // .custom(async (name) => {
-  //   const data = await getSpecialtyByName(name);
-  //   if (data) {
-  //     throw new Error("Specified Specialty Name Already Exists");
-  //   }
-  //   return true;
-  // }),
   body("patientNumber")
     .notEmpty()
     .withMessage("Patient Mobile Number is required")

@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const { body } = require("express-validator");
 const { Validate } = require("../../../validations/validate");
 const {
   GetSpecializationsController,
@@ -9,56 +8,41 @@ const {
   UpdateSpecializationStatusController,
   DeleteSpecializationByIdController,
 } = require("../../../controllers/admin/specializations.controller");
+const {
+  SpecializationValidation,
+  SpecializationIDValidation,
+} = require("../../../validations/specialization.validation");
 
 router.get("/", GetSpecializationsController);
-router.get("/:id", GetSpecializationByIDController);
+router.get(
+  "/:id",
+  SpecializationIDValidation,
+  Validate,
+  GetSpecializationByIDController,
+);
 router.post(
   "/",
-  [
-    body("name")
-      .notEmpty()
-      .withMessage("Specialization Name is required")
-      .toLowerCase()
-      .trim()
-      .isLength({ max: 150, min: 3 })
-      .withMessage("Must be more than 3 characters long")
-      .escape(),
-    body("description")
-      .notEmpty()
-      .withMessage("Specialization Name is required")
-      .toLowerCase()
-      .trim()
-      .isLength({ max: 250, min: 3 })
-      .withMessage("Must be more than 3 characters long")
-      .escape(),
-  ],
+  SpecializationValidation,
   Validate,
   CreateSpecializationController,
 );
-router.put("/:id", UpdateSpecializationByIdController);
+router.put(
+  "/:id",
+  SpecializationIDValidation,
+  Validate,
+  UpdateSpecializationByIdController,
+);
 router.patch(
   "/:id/",
-  [
-    body("name")
-      .notEmpty()
-      .withMessage("Specialization Name is required")
-      .toLowerCase()
-      .trim()
-      .isLength({ max: 150, min: 3 })
-      .withMessage("Must be more than 3 characters long")
-      .escape(),
-    body("description")
-      .notEmpty()
-      .withMessage("Specialization Name is required")
-      .toLowerCase()
-      .trim()
-      .isLength({ max: 250, min: 3 })
-      .withMessage("Must be more than 3 characters long")
-      .escape(),
-  ],
+  SpecializationValidation,
   Validate,
   UpdateSpecializationStatusController,
 );
-router.delete("/:id", DeleteSpecializationByIdController);
+router.delete(
+  "/:id",
+  SpecializationIDValidation,
+  Validate,
+  DeleteSpecializationByIdController,
+);
 
 module.exports = router;

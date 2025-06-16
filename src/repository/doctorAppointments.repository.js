@@ -10,11 +10,8 @@ exports.getAppointmentsByDoctorId = async ({
   const newLimit = limit < 1 ? 10 : limit;
   const offset = (newPage - 1) * newLimit;
 
-  return query(queries.GET_APPOINTMENTS_BY_DOCTOR_ID, [
-    doctorId,
-    newLimit,
-    offset,
-  ]);
+  const optimizedQuery = `${queries.GET_APPOINTMENTS_BY_DOCTOR_ID} LIMIT ${newLimit} OFFSET ${offset}`;
+  return query(optimizedQuery, [doctorId]);
 };
 
 exports.getDoctorAppointmentById = async ({ doctorId, appointmentId }) => {

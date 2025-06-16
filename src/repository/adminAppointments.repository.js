@@ -5,12 +5,14 @@ exports.getAllAppointments = async ({ page = 1, limit = 10 }) => {
   const newPage = page < 1 ? 1 : page;
   const newLimit = limit < 1 ? 10 : limit;
   const offset = (newPage - 1) * newLimit;
-
-  return query(queries.GET_ALL_APPOINTMENTS, [newPage, offset]);
+  const optimizedQuery = `${queries.GET_ALL_APPOINTMENTS} LIMIT ${newLimit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
+
 exports.getAppointments = async () => {
   return query(queries.GET_APPOINTMENTS);
 };
+
 exports.getAppointmentsByDoctorId = async ({
   page = 1,
   limit = 10,
@@ -19,11 +21,8 @@ exports.getAppointmentsByDoctorId = async ({
   const newPage = page < 1 ? 1 : page;
   const newLimit = limit < 1 ? 10 : limit;
   const offset = (newPage - 1) * newLimit;
-  return query(queries.GET_APPOINTMENTS_BY_DOCTOR_ID, [
-    doctorId,
-    newLimit,
-    offset,
-  ]);
+  const optimizedQuery = `${queries.GET_APPOINTMENTS_BY_DOCTOR_ID} LIMIT ${newLimit} OFFSET ${offset}`;
+  return query(optimizedQuery, [doctorId]);
 };
 
 exports.getAppointmentById = async (appointmentId) => {

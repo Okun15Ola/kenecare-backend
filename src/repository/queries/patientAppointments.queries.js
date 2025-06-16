@@ -21,7 +21,6 @@ module.exports = {
     ${COMMON_SELECT}
     WHERE medical_appointments.patient_id = ? AND payment_status = 'success'
     ORDER BY medical_appointments.appointment_id DESC
-    LIMIT ? OFFSET ?
   `,
 
   GET_PATIENT_APPOINTMENT_BY_ID: `
