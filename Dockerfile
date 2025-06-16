@@ -1,4 +1,4 @@
-FROM node:19-alpine
+FROM node:23.11.1-alpine 
 
 LABEL Author="imotechsl"
 
