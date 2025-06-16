@@ -3,7 +3,7 @@ const dbObject = require("../../src/repository/users.repository");
 const userService = require("../../src/services/users.service");
 
 // Only mock modules specific to this test file
-jest.mock("../../src/db/db.users");
+jest.mock("../../src/repository/users.repository");
 
 describe("GetUserByEmail - Unit Tests", () => {
   const mockUserData = {
