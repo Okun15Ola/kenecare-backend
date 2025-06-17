@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "_moduleAliases": {
+    "@services": "src/services",
+    "@controllers": "src/controllers",
+    "@utils": "src/utils"
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.490.0",
     "@aws-sdk/s3-request-presigner": "^3.502.0",
@@ -38,6 +43,7 @@
     "ioredis": "^5.6.0",
     "jsonwebtoken": "^9.0.2",
     "jsrsasign": "^11.1.0",
+    "module-alias": "^2.2.3",
     "moment": "^2.29.4",
     "multer": "^2.0.1",
     "multer-s3": "^3.0.1",

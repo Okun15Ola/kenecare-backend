@@ -1,5 +1,6 @@
 // require("newrelic");
 require("dotenv").config();
+require("module-alias/register");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");

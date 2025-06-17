@@ -11,6 +11,11 @@ module.exports = {
     "!src/**/*.test.js",
     "!src/**/*.spec.js",
   ],
+  moduleNameMapper: {
+    "^@controllers/(.*)$": "<rootDir>/src/controllers/$1",
+    "^@services/(.*)$": "<rootDir>/src/services/$1",
+    "^@utils/(.*)$": "<rootDir>/src/utils/$1",
+  },
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
 };
