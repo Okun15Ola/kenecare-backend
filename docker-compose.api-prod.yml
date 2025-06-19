@@ -5,14 +5,14 @@ services:
     image: imotechsl/kenecare-api:${TAG}
     container_name: kenecare-api-${ENV}
     ports:
-      - 9500:8000
+      - "${APP_PORT:-9500}:${APP_PORT:-8000}"
     networks:
       - kenecare-prod-net
     restart: always
     env_file: ./.env.${ENV}
     environment:
       - DB_HOST=$DB_HOST
-        - DB_USER=$DB_USER
+      - DB_USER=$DB_USER
       - DB_PASS=$DB_PASS
       - DB_NAME=$DB_NAME
       - DB_PORT=$DB_PORT
@@ -70,7 +70,7 @@ networks:
   kenecare-prod-net:
     name: kenecare-prod-net
     driver: bridge
-  redis-net:
-    external: true
-    labels:
-      - "com.docker.compose.network.optional=true"
+  # redis-net:
+  #   external: true
+  #   labels:
+  #     - "com.docker.compose.network.optional=true"

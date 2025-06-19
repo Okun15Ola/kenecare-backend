@@ -1,9 +1,27 @@
+/* eslint-disable class-methods-use-this */
 /* eslint-disable no-constructor-return */
 const Redis = require("ioredis");
-const { redisHost, redisPort, redisPassword } = require("./default.config");
+const {
+  redisHost,
+  redisPort,
+  redisPassword,
+  nodeEnv,
+} = require("./default.config");
 
 class RedisClient {
+  static instance;
+
   constructor() {
+    if (RedisClient.instance) return RedisClient.instance;
+    this.client = this.initializeClient();
+    this.client.on("connect", () => console.log("✅ Connected to Redis"));
+    this.client.on("error", (err) => console.error("❌ Redis Error:", err));
+    this.client.on("reconnecting", () =>
+      console.log("♻️ Reconnecting to Redis..."),
+    );
+
+    RedisClient.instance = this;
+
     if (!RedisClient.instance) {
       this.client = new Redis({
         host: redisHost,
@@ -12,16 +30,36 @@ class RedisClient {
         // tls: {}, // Required for AWS ElastiCache
         retryStrategy: (times) => Math.min(times * 50, 2000), // Exponential backoff
       });
-
-      this.client.on("connect", () => console.log("✅ Connected to Redis"));
-      this.client.on("error", (err) => console.error("❌ Redis Error:", err));
-      this.client.on("reconnecting", () =>
-        console.log("♻️ Reconnecting to Redis..."),
-      );
-
-      RedisClient.instance = this;
     }
     return RedisClient.instance;
+  }
+
+  initializeClient() {
+    if (nodeEnv === "production") {
+      return new Redis.Cluster(
+        [
+          {
+            host: redisHost,
+            port: redisPort,
+          },
+        ],
+        {
+          dnsLookup: (address, callback) => callback(null, address),
+          redisOptions: {
+            tls: {},
+            username: "imotechsl",
+            password: redisPassword,
+          },
+        },
+      );
+    }
+
+    return new Redis({
+      host: redisHost,
+      port: redisPort,
+      password: redisPassword,
+      retryStrategy: (times) => Math.min(times * 50, 2000),
+    });
   }
 
   async get(key) {

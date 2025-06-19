@@ -6,17 +6,17 @@ const { startCron: runCron } = require("./utils/cron.utils");
 connectionPool.getConnection((err, connection) => {
   if (err) {
     console.error(
-      "Error connecting to the database, exiting application:",
+      "❌ Error connecting to the database, exiting application:",
       err,
     );
     process.exit(1);
   } else {
-    console.info("Database connected Successfully");
+    console.info("✅ Database connected Successfully");
     app.listen(appPort, (err) => {
       if (err) {
-        console.error("There was an error running the server:", err);
+        console.error("❌ There was an error running the server:", err);
       } else {
-        console.info(`Server running on ${appBaseURL}:${appPort}`);
+        console.info(`🚀 Server running on ${appBaseURL}:${appPort}`);
         runCron();
       }
     });
@@ -24,7 +24,7 @@ connectionPool.getConnection((err, connection) => {
 
   connection.on("error", (error) => {
     console.error(error);
-    console.error("Database connection error:", error.sqlMessage);
+    console.error("❌ Database connection error:", error.sqlMessage);
     process.exit(1);
   });
 });

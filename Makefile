@@ -1,14 +1,9 @@
 REGISTRY = docker.io
 IMAGE_NAME = imotechsl/kenecare-api
-# CURRENT_IMAGE_TAG is dynamically generated. For CI/CD, RUN_NUMBER will be
-# provided by GitHub. For local dev, a timestamp or 'latest' can be used if RUN_NUMBER is not set.
-# CURRENT_IMAGE_TAG ?= 1.0.$(shell shuf -i 100000-999999 -n 1)
-CURRENT_IMAGE_TAG ?= 1.0.0
+CURRENT_IMAGE_TAG ?= $(TAG)
 # OLD_IMAGE_TAG stores the tag of the previously deployed image for rollback.
 OLD_IMAGE_TAG = $(shell cat .last_deployed_image 2>/dev/null || echo "")
 
-# Default environment for local development
-ENV ?= development
 
 # Define Docker Compose files for different environments.
 # These assume you have `docker-compose.db.yml`, `docker-compose.api.yml`,
@@ -23,6 +18,8 @@ DOCKER_COMPOSE_PROD = docker-compose.api-prod.yml
 ENV_FILE_DEV = .env.development
 ENV_FILE_PROD = .env.production
 ENV_FILE_STAGING = .env.staging
+ENV_FILE_DB = db.env 
+ENV_FILE_REDIS = redis.env
 
 # Service names as defined in Docker Compose files
 DB_SERVICE_NAME = mysql-db
@@ -74,6 +71,54 @@ help:
 	@echo "  flush-cache              Flush Redis cache for the development environment."
 	@echo "  clean                    Clean up all Docker containers, networks, and volumes."
 
+
+# Default environment
+ENV ?= 
+
+ifeq ($(findstring build-prod,$(MAKECMDGOALS)),build-prod)
+  ENV := production
+endif
+
+ifeq ($(findstring deploy-prod,$(MAKECMDGOALS)),deploy-prod)
+  ENV := production
+endif
+ifeq ($(findstring test-deploy,$(MAKECMDGOALS)),test-deploy)
+  ENV := production
+endif
+
+ifeq ($(findstring rollback-prod,$(MAKECMDGOALS)),rollback-prod)
+  ENV := production
+endif
+
+
+ifeq ($(findstring run-api,$(MAKECMDGOALS)),run-api)
+	ENV := development
+endif
+ifeq ($(findstring run-dev,$(MAKECMDGOALS)),run-dev)
+	ENV := development
+endif
+
+ifeq ($(findstring run-staging,$(MAKECMDGOALS)),run-staging)
+	ENV := staging
+endif
+
+
+ifeq ($(findstring check-db-status,$(MAKECMDGOALS)),check-db-status)
+	ENV := db.development
+endif
+
+ifeq ($(findstring run-db,$(MAKECMDGOALS)),run-db)
+	ENV := db.development
+endif
+
+ifeq ($(findstring check-redis-status,$(MAKECMDGOALS)),check-redis-status)
+	ENV := redis.development
+endif 
+ifeq ($(findstring flush-cache,$(MAKECMDGOALS)),flush-cache)
+	ENV := redis.development
+endif
+
+
 .PHONY: check-env
 check-env:
 	@echo "Checking for .env.${ENV} environment file..."
@@ -90,7 +135,7 @@ define is-service-running
 endef
 
 .PHONY: check-db-status
-check-db-status:
+check-db-status: check-env
 	@echo "Checking $(DB_SERVICE_NAME) service status..."
 	@if $(call is-service-running, $(DB_SERVICE_NAME)); then \
 		echo "$(DB_SERVICE_NAME) is already running."; \
@@ -105,7 +150,7 @@ check-db-status:
 	fi
 
 .PHONY: check-redis-status
-check-redis-status:
+check-redis-status: check-env
 	@echo "Checking $(REDIS_SERVICE_NAME) service status..."
 	@if $(call is-service-running, $(REDIS_SERVICE_NAME)); then \
 		echo "$(REDIS_SERVICE_NAME) is already running."; \
@@ -136,6 +181,7 @@ build-staging: check-env
 .PHONY: build-prod
 build-prod: check-env
 	@echo "Building Docker image for production: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
+	@sleep 5
 	@ENV=production docker build -t $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG) -f Dockerfile.prod .
 
 # ==============================================================================
@@ -201,7 +247,7 @@ stop-staging: check-env
 	@ENV=staging docker compose --env-file=$(ENV_FILE_STAGING) -f $(DOCKER_COMPOSE_STAGING) down
 
 .PHONY: deploy-prod
-deploy-prod: check-env build-prod push-production-image
+deploy-prod: check-env
 	@echo "Deploying new production image: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
 	@ENV=production TAG=$(CURRENT_IMAGE_TAG) docker compose --env-file=$(ENV_FILE_PROD) -f $(DOCKER_COMPOSE_PROD) up -d
 	@echo "$(CURRENT_IMAGE_TAG)" > .last_deployed_image
@@ -211,7 +257,7 @@ deploy-prod: check-env build-prod push-production-image
 .PHONY: stop-prod
 stop-prod: check-env
 	@echo "Stopping production environment..."
-	@ENV=production TAG=$(TAG) docker compose --env-file=$(ENV_FILE_PROD) -f $(DOCKER_COMPOSE_PROD) down
+	@ENV=production TAG=$(CURRENT_IMAGE_TAG) docker compose --env-file=$(ENV_FILE_PROD) -f $(DOCKER_COMPOSE_PROD) down
 
 .PHONY: rollback
 rollback: check-env
@@ -226,15 +272,15 @@ rollback: check-env
 	@echo "Rollback to $(OLD_IMAGE_TAG) successful!"
 
 .PHONY: test-deploy
-test-deploy:
+test-deploy: check-env
 	@echo "Running health check for newly deployed image: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
-	@sleep 15 # Give the service some time to start up and initialize
-	@curl -f http://localhost:9500/api/v1/health-check || ( \
+	@sleep 10 # Give the service some time to start up and initialize
+	@curl -f http://localhost:8000/api/v1/health-check || ( \
 		echo "Health check failed for $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG). Attempting rollback..."; \
 		$(MAKE) rollback; \
 		exit 1; \
 	)
-	@echo "Health check passed!"
+	@echo "\n\nHealth check passed!"
 
 # ==============================================================================
 # Image Management Commands
@@ -246,8 +292,9 @@ push-staging-image: check-env
 	@docker push $(IMAGE_NAME):staging
 
 .PHONY: push-production-image
-push-production-image: check-env
+push-production-image:
 	@echo "Pushing production image: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
+	@sleep 5 
 	@docker push $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)
 
 # ==============================================================================
@@ -263,7 +310,7 @@ logs:
 redis-cli: check-env
 	@echo "Opening Redis CLI for $(REDIS_SERVICE_NAME)..."
 	# Assumes Redis service is running and accessible via docker compose exec
-	@docker compose --env-file=$(ENV_FILE_DEV) -f $(DOCKER_COMPOSE_API) exec $(REDIS_SERVICE_NAME) redis-cli -a "$$(grep REDIS_PASSWORD $(ENV_FILE_DEV) | cut -d '=' -f2)"
+	@docker compose --env-file=$(ENV_FILE_REDIS) -f $(DOCKER_COMPOSE_REDIS) exec $(REDIS_SERVICE_NAME) redis-cli -a "$$(grep REDIS_PASSWORD $(ENV_FILE_REDIS) | cut -d '=' -f2)"
 
 .PHONY: flush-cache
 flush-cache: check-env
