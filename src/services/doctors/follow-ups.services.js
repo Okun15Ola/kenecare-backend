@@ -1,4 +1,3 @@
-const moment = require("moment");
 const {
   getDoctorAppointByDateAndTime,
   getDoctorAppointmentById,
@@ -9,6 +8,7 @@ const { getPatientById } = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
 const { newFollowAppointmentSms } = require("../../utils/sms.utils");
 const redisClient = require("../../config/redis.config");
+const { mapFollowUpRow } = require("../../utils/db-mapper.utils");
 
 exports.createFollowUp = async ({
   appointmentId,
@@ -102,6 +102,7 @@ exports.createFollowUp = async ({
     throw error;
   }
 };
+
 exports.updateAppointmentFollowUpService = async ({
   followUpId,
   appointmentId,
@@ -194,6 +195,7 @@ exports.updateAppointmentFollowUpService = async ({
     throw error;
   }
 };
+
 exports.getAllAppointmentFollowupService = async ({
   userId,
   appointmentId,
@@ -229,32 +231,7 @@ exports.getAllAppointmentFollowupService = async ({
 
     const rawData = await followUpRepo.getAppointmentFollowUps(appointmentId);
 
-    const followUps =
-      rawData?.map(
-        ({
-          followup_id: followUpId,
-          appointment_id: appointmentId,
-          followup_date: followUpDate,
-          followup_time: followUpTime,
-          reason,
-          followup_status: followUpStatus,
-          followup_type: followUpType,
-          created_at: createdAt,
-          updated_at: updatedAt,
-        }) => {
-          return {
-            followUpId,
-            appointmentId,
-            followUpDate: moment(followUpDate).format("YYYY-MM-DD"),
-            followUpTime,
-            reason,
-            followUpStatus,
-            followUpType,
-            createdAt: moment(createdAt).format("YYYY-MM-DD HH:MM"),
-            updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:MM"),
-          };
-        },
-      ) || [];
+    const followUps = rawData?.map(mapFollowUpRow) || [];
 
     await redisClient.set({
       key: cacheKey,
@@ -268,6 +245,7 @@ exports.getAllAppointmentFollowupService = async ({
     throw error;
   }
 };
+
 exports.getFollowUpByIdService = async ({ userId, id }) => {
   try {
     const cacheKey = `doctor-appointment-follow-up-by-id:${id}`;
@@ -292,29 +270,7 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
       return Response.NOT_FOUND({ message: "Follow up not found" });
     }
 
-    const {
-      followup_id: followUpId,
-      appointment_id: appointmentId,
-      followup_date: followUpDate,
-      followup_time: followUpTime,
-      reason,
-      followup_status: followUpStatus,
-      followup_type: followUpType,
-      created_at: createdAt,
-      updated_at: updatedAt,
-    } = rawData;
-
-    const followUp = {
-      followUpId,
-      appointmentId,
-      followUpDate: moment(followUpDate).format("YYYY-MM-DD"),
-      followUpTime,
-      reason,
-      followUpStatus,
-      followUpType,
-      createdAt: moment(createdAt).format("YYYY-MM-DD HH:MM"),
-      updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:MM"),
-    };
+    const followUp = mapFollowUpRow(rawData);
 
     return Response.SUCCESS({
       data: followUp,

@@ -1,11 +1,12 @@
-const moment = require("moment");
 const {
   getAppointmentPrescriptions,
   getAppointmentPrescriptionById,
 } = require("../../repository/prescriptions.repository");
 const Response = require("../../utils/response.utils");
-const { decryptText } = require("../../utils/auth.utils");
 const redisClient = require("../../config/redis.config");
+const {
+  mapAppointmentPrescriptionRow,
+} = require("../../utils/db-mapper.utils");
 
 exports.getAppointmentPrescriptions = async (id) => {
   try {
@@ -16,41 +17,7 @@ exports.getAppointmentPrescriptions = async (id) => {
     }
     const rawData = await getAppointmentPrescriptions(id);
 
-    const prescriptions = rawData.map(
-      ({
-        prescription_id: prescriptionId,
-        appointment_id: appointmentId,
-        created_at: dateCreated,
-        updated_at: dateUpdated,
-        access_jwt: hashedToken,
-        diagnosis,
-        medicines,
-        doctors_comment: doctorComment,
-      }) => {
-        const decryptedDiagnosis = decryptText({
-          encryptedText: diagnosis,
-          key: hashedToken,
-        });
-        const decryptedMedicines = decryptText({
-          encryptedText: medicines,
-          key: hashedToken,
-        });
-        const decryptedComment = decryptText({
-          encryptedText: doctorComment,
-          key: hashedToken,
-        });
-
-        return {
-          prescriptionId,
-          appointmentId,
-          diagnosis: decryptedDiagnosis,
-          medicines: JSON.parse(decryptedMedicines),
-          comment: decryptedComment,
-          createdAt: moment(dateCreated).format("YYYY-MM-DD"),
-          updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
-        };
-      },
-    );
+    const prescriptions = rawData.map(mapAppointmentPrescriptionRow);
 
     await redisClient.set({
       key: cacheKey,
@@ -78,40 +45,7 @@ exports.getAppointmentPrescriptionById = async (presId) => {
         message: "Prescription Not Found. Try again",
       });
     }
-    const { access_jwt: hashedToken } = rawData;
-
-    const {
-      prescription_id: prescriptionId,
-      appointment_id: appointmentId,
-      diagnosis,
-      medicines,
-      doctors_comment: doctorComment,
-      created_at: dateCreated,
-      updated_at: dateUpdated,
-    } = rawData;
-
-    const decryptedDiagnosis = decryptText({
-      encryptedText: diagnosis,
-      key: hashedToken,
-    });
-    const decryptedMedicines = decryptText({
-      encryptedText: medicines,
-      key: hashedToken,
-    });
-    const decryptedComment = decryptText({
-      encryptedText: doctorComment,
-      key: hashedToken,
-    });
-
-    const prescription = {
-      prescriptionId,
-      appointmentId,
-      diagnosis: decryptedDiagnosis,
-      medicines: JSON.parse(decryptedMedicines),
-      comment: decryptedComment,
-      createdAt: moment(dateCreated).format("YYYY-MM-DD"),
-      updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
-    };
+    const prescription = mapAppointmentPrescriptionRow(rawData);
 
     await redisClient.set({
       key: cacheKey,

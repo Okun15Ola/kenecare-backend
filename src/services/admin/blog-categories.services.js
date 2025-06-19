@@ -1,6 +1,7 @@
 const dbObject = require("../../repository/blog-categories.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
+const { mapBlogCategoryRow } = require("../../utils/db-mapper.utils");
 
 exports.getBlogCategories = async () => {
   try {
@@ -10,19 +11,7 @@ exports.getBlogCategories = async () => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
     const rawData = await dbObject.getAllBlogCategories();
-    const categories = rawData.map(
-      ({
-        category_id: categoryId,
-        category_name: categoryName,
-        is_active: status,
-        inputted_by: inputtedBy,
-      }) => ({
-        categoryId,
-        categoryName,
-        status,
-        inputtedBy,
-      }),
-    );
+    const categories = rawData.map(mapBlogCategoryRow);
 
     await redisClient.set({
       key: cacheKey,
@@ -35,6 +24,7 @@ exports.getBlogCategories = async () => {
     throw error;
   }
 };
+
 exports.getBlogCategory = async (id) => {
   try {
     const cacheKey = `blog-categories:${id}`;
@@ -47,18 +37,8 @@ exports.getBlogCategory = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Blog Categrory Not Found" });
     }
-    const {
-      category_id: categoryId,
-      category_name: categoryName,
-      is_active: status,
-      inputted_by: inputtedBy,
-    } = rawData;
-    const category = {
-      categoryId,
-      categoryName,
-      status,
-      inputtedBy,
-    };
+    const category = mapBlogCategoryRow(rawData);
+
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(category),
@@ -69,6 +49,7 @@ exports.getBlogCategory = async (id) => {
     throw error;
   }
 };
+
 exports.createBlogCategory = async (name) => {
   try {
     const rawData = await dbObject.getBlogCategoryByName(name);
@@ -89,6 +70,7 @@ exports.createBlogCategory = async (name) => {
     throw error;
   }
 };
+
 exports.updateBlogCategory = async ({ id, name }) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);
@@ -126,6 +108,7 @@ exports.updateBlogCategoryStatus = async ({ id, status }) => {
     throw error;
   }
 };
+
 exports.deleteBlogCategory = async (id) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);

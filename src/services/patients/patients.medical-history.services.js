@@ -1,6 +1,7 @@
 const repo = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
+const { mapPatientMedicalHistoryRow } = require("../../utils/db-mapper.utils");
 
 exports.getPatientMedicalHistory = async (userId) => {
   try {
@@ -24,36 +25,7 @@ exports.getPatientMedicalHistory = async (userId) => {
         message: "Medical History Not Found.",
       });
     }
-    const {
-      medical_history_id: medicalHistoryId,
-      patient_id: patientId,
-      height,
-      weight,
-      allergies,
-      is_patient_disabled: isDisabled,
-      disability_description: disabilityDesc,
-      tobacco_use: tobaccoIntake,
-      tobacco_use_frequency: tobaccoIntakeFreq,
-      alcohol_use: alcoholIntake,
-      alcohol_use_frequency: alcoholIntakeFreq,
-      caffine_use: caffineIntake,
-      caffine_use_frequency: caffineIntakeFreq,
-    } = data;
-    const medicalHistory = {
-      medicalHistoryId,
-      patientId,
-      height,
-      weight,
-      allergies,
-      isDisabled: isDisabled !== 0,
-      disabilityDesc,
-      tobaccoIntake: tobaccoIntake !== null,
-      tobaccoIntakeFreq,
-      alcoholIntake: alcoholIntake !== 0,
-      alcoholIntakeFreq,
-      caffineIntake: caffineIntake !== null,
-      caffineIntakeFreq,
-    };
+    const medicalHistory = mapPatientMedicalHistoryRow(data);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(medicalHistory),

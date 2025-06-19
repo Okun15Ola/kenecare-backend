@@ -1,27 +1,16 @@
 const repo = require("../repository/faqs.repository");
 const Response = require("../utils/response.utils");
+const { mapSpecializationRow } = require("../utils/db-mapper.utils");
 
 exports.getSpecialties = async () => {
-  const rawData = await repo.getAllSpecialization();
-
-  const specializations = rawData.map(
-    ({
-      specialization_id: specializationId,
-      specialization_name: specializationName,
-      description,
-      image_url: imageUrl,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    }) => ({
-      specializationId,
-      specializationName,
-      description,
-      imageUrl,
-      isActive,
-      inputtedBy,
-    }),
-  );
-  return Response.SUCCESS({ data: specializations });
+  try {
+    const rawData = await repo.getAllSpecialization();
+    const specializations = rawData.map(mapSpecializationRow);
+    return Response.SUCCESS({ data: specializations });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
 
 exports.getSpecialtyByName = async (name) => {
@@ -31,24 +20,7 @@ exports.getSpecialtyByName = async (name) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
-    const {
-      specialization_id: specializationId,
-      specialization_name: specializationName,
-      description,
-      image_url: imageUrl,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
-
-    const specialization = {
-      specializationId,
-      specializationName,
-      description,
-      imageUrl,
-      isActive,
-      inputtedBy,
-    };
-    return Response.SUCCESS({ data: specialization });
+    return Response.SUCCESS({ data: mapSpecializationRow(rawData) });
   } catch (error) {
     console.error(error);
     throw error;
@@ -62,24 +34,7 @@ exports.getSpecialtyById = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
-    const {
-      specialization_id: specializationId,
-      specialization_name: specializationName,
-      description,
-      image_url: imageUrl,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
-
-    const specialization = {
-      specializationId,
-      specializationName,
-      description,
-      imageUrl,
-      isActive,
-      inputtedBy,
-    };
-    return Response.SUCCESS({ data: specialization });
+    return Response.SUCCESS({ data: mapSpecializationRow(rawData) });
   } catch (error) {
     console.error(error);
     throw error;

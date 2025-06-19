@@ -21,7 +21,6 @@ const {
 const { generateFileName } = require("../../utils/file-upload.utils");
 const {
   uploadFileToS3Bucket,
-  getFileUrlFromS3Bucket,
   deleteFileFromS3Bucket,
 } = require("../../utils/aws-s3.utils");
 const {
@@ -30,6 +29,10 @@ const {
 } = require("../../utils/sms.utils");
 const { marketerEmailVerificationToken } = require("../../utils/email.utils");
 const redisClient = require("../../config/redis.config");
+const {
+  mapMarketersRow,
+  mapMarketersWithDocumentRow,
+} = require("../../utils/db-mapper.utils");
 
 const generateReferralCode = ({ firstName, lastName }) => {
   const randomNumbers = Math.floor(100 + Math.random() * 900); // Generate 3 random numbers
@@ -47,63 +50,10 @@ exports.getAllMarketersService = async () => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
     const rawData = await getAllMarketers();
-    const marketers = rawData.map(
-      ({
-        marketer_id: marketerId,
-        marketer_uuid: marketerUuid,
-        referral_code: referralCode,
-        first_name: firstName,
-        middle_name: middleName,
-        last_name: lastName,
-        gender,
-        dob: dateOfBirth,
-        phone_number: phoneNumber,
-        is_phone_verified: isPhoneVerified,
-        email,
-        is_email_verified: isEmailVerified,
-        home_address: homeAddress,
-        id_document_type: idDocumentType,
-        id_document_number: idDocumentNumber,
-        id_document_uuid: idDocumentUuuid,
-        nin,
-        emergency_contact_name_1: firstEmergencyContactName,
-        emergency_contact_phone_1: firstEmergencyContactNumber,
-        emergency_contact_address_1: firstEmergencyContactAddress,
-        emergency_contact_name_2: secondEmergencyContactName,
-        emergency_contact_phone_2: secondEmergencyContactNumber,
-        emergency_contact_address_2: secondEmergencyContactAddress,
-        created_at: createdAt,
-        updated_at: updatedAt,
-      }) => {
-        return {
-          marketerId,
-          marketerUuid,
-          referralCode,
-          firstName,
-          middleName,
-          lastName,
-          gender,
-          dateOfBirth: moment(dateOfBirth).format("YYYY-MM-DD"),
-          phoneNumber,
-          isPhoneVerified,
-          email,
-          isEmailVerified,
-          homeAddress,
-          idDocumentType,
-          idDocumentNumber,
-          idDocumentUuuid,
-          nin,
-          firstEmergencyContactName,
-          firstEmergencyContactNumber,
-          firstEmergencyContactAddress,
-          secondEmergencyContactName,
-          secondEmergencyContactNumber,
-          secondEmergencyContactAddress,
-          createdAt: moment(createdAt).format("YYYY-MM-DD hh:mm"),
-          updatedAt: moment(updatedAt).format("YYYY-MM-DD hh:mm"),
-        };
-      },
-    );
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Marketer Not Found" });
+    }
+    const marketers = rawData.map(mapMarketersRow);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(marketers),
@@ -114,6 +64,7 @@ exports.getAllMarketersService = async () => {
     throw error;
   }
 };
+
 exports.getMarketerByIdService = async (id) => {
   try {
     const cacheKey = `marketers:${id}`;
@@ -125,61 +76,8 @@ exports.getMarketerByIdService = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
-    const {
-      marketer_id: marketerId,
-      marketer_uuid: marketerUuid,
-      referral_code: referralCode,
-      first_name: firstName,
-      middle_name: middleName,
-      last_name: lastName,
-      gender,
-      dob: dateOfBirth,
-      phone_number: phoneNumber,
-      is_phone_verified: isPhoneVerified,
-      email,
-      is_email_verified: isEmailVerified,
-      home_address: homeAddress,
-      id_document_type: idDocumentType,
-      id_document_number: idDocumentNumber,
-      id_document_uuid: idDocumentUuuid,
-      nin,
-      emergency_contact_name_1: firstEmergencyContactName,
-      emergency_contact_phone_1: firstEmergencyContactNumber,
-      emergency_contact_address_1: firstEmergencyContactAddress,
-      emergency_contact_name_2: secondEmergencyContactName,
-      emergency_contact_phone_2: secondEmergencyContactNumber,
-      emergency_contact_address_2: secondEmergencyContactAddress,
-      created_at: createdAt,
-      updated_at: updatedAt,
-    } = rawData;
-    const documentUrl = await getFileUrlFromS3Bucket(idDocumentUuuid);
-    const marketer = {
-      marketerId,
-      marketerUuid,
-      referralCode,
-      firstName,
-      middleName,
-      lastName,
-      gender,
-      dateOfBirth: moment(dateOfBirth).format("YYYY-MM-DD"),
-      phoneNumber,
-      isPhoneVerified,
-      email,
-      isEmailVerified,
-      homeAddress,
-      idDocumentType,
-      idDocumentNumber,
-      idDocumentUrl: documentUrl,
-      nin,
-      firstEmergencyContactName,
-      firstEmergencyContactNumber,
-      firstEmergencyContactAddress,
-      secondEmergencyContactName,
-      secondEmergencyContactNumber,
-      secondEmergencyContactAddress,
-      createdAt: moment(createdAt).format("YYYY-MM-DD hh:mm"),
-      updatedAt: moment(updatedAt).format("YYYY-MM-DD hh:mm"),
-    };
+    const marketer = await mapMarketersWithDocumentRow(rawData);
+
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(marketer),
@@ -190,6 +88,7 @@ exports.getMarketerByIdService = async (id) => {
     throw error;
   }
 };
+
 exports.createMarketerService = async ({
   firstName,
   middleName,
@@ -322,6 +221,7 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
     throw error;
   }
 };
+
 exports.verifyMarketerEmailService = async (token) => {
   try {
     const marketer = await getMarketerByEmailVerficationToken(token);
@@ -358,6 +258,7 @@ exports.verifyMarketerEmailService = async (token) => {
     throw error;
   }
 };
+
 exports.updateMarketerByIdService = async ({
   marketerId,
   firstName,
@@ -416,6 +317,7 @@ exports.updateMarketerByIdService = async ({
     throw error;
   }
 };
+
 exports.deleteMarketerByIdService = async (id) => {
   try {
     const marketer = await getMarketerById(id);

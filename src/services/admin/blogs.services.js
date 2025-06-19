@@ -1,12 +1,9 @@
-const moment = require("moment");
 const dbObject = require("../../repository/blogs.repository");
-const {
-  uploadFileToS3Bucket,
-  getFileUrlFromS3Bucket,
-} = require("../../utils/aws-s3.utils");
+const { uploadFileToS3Bucket } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
+const { mapBlogRow } = require("../../utils/db-mapper.utils");
 
 exports.getBlogs = async () => {
   try {
@@ -17,38 +14,11 @@ exports.getBlogs = async () => {
     }
     const rawData = await dbObject.getAllBlogs();
 
-    const blogsPromises = rawData.map(
-      async ({
-        blog_id: blogId,
-        category_name: blogCategory,
-        title: blogTitle,
-        description,
-        image,
-        tags,
-        disclaimer,
-        author,
-        is_featured: featured,
-        is_active: isActive,
-        created_at: createdAt,
-      }) => {
-        const url = await getFileUrlFromS3Bucket(image);
-        return {
-          blogId,
-          blogCategory,
-          blogTitle,
-          description,
-          image: url,
-          tags: JSON.parse(tags),
-          disclaimer,
-          author,
-          featured,
-          isActive,
-          createdAt: moment(createdAt).format("YYYY-MM-DD"),
-        };
-      },
-    );
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Blogs Not Found" });
+    }
 
-    const blogs = await Promise.all(blogsPromises);
+    const blogs = await Promise.all(rawData.map(mapBlogRow));
 
     await redisClient.set({
       key: cacheKey,
@@ -73,35 +43,7 @@ exports.getBlog = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
-    const {
-      blog_id: blogId,
-      category_name: blogCategory,
-      title: blogTitle,
-      description,
-      image,
-      tags,
-      disclaimer,
-      author,
-      is_featured: featured,
-      is_active: isActive,
-      created_at: createdAt,
-    } = rawData;
-
-    const url = image ? await getFileUrlFromS3Bucket(image) : null;
-
-    const blog = {
-      blogId,
-      blogCategory,
-      blogTitle,
-      description,
-      image: url,
-      tags: JSON.parse(tags),
-      disclaimer,
-      author,
-      featured,
-      isActive,
-      createdAt: moment(createdAt).format("YYYY-MM-DD"),
-    };
+    const blog = await mapBlogRow(rawData);
 
     await redisClient.set({
       key: cacheKey,

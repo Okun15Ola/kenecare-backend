@@ -19,6 +19,10 @@ const {
 const { createStreamCall } = require("../../utils/stream.utils");
 const { nodeEnv } = require("../../config/default.config");
 const redisClient = require("../../config/redis.config");
+const {
+  mapDoctorAppointmentRow,
+  mapFollowUpsRow,
+} = require("../../utils/db-mapper.utils");
 
 exports.getDoctorAppointments = async ({ userId, page, limit }) => {
   try {
@@ -45,75 +49,12 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
       limit,
     });
 
-    const appointments = rawData.map(
-      ({
-        appointment_id: appointmentId,
-        appointment_uuid: appointmentUUID,
-        patient_id: patient,
-        first_name: firstName,
-        last_name: lastName,
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Appointment Not Found" });
+    }
 
-        doctor_id: doctorId,
-        doctor_first_name: doctorFirstName,
-        doctor_last_name: doctorLastName,
-        appointment_type: appointmentType,
-        appointment_date: appointmentDate,
-        appointment_time: appointmentTime,
-        patient_name_on_prescription: patientNameOnPrescription,
-        patient_mobile_number: patientMobileNumber,
-        patient_symptoms: patientSymptoms,
-        consultation_fee: consultationFees,
-        specialty_name: specialty,
-        time_slot: timeSlot,
-        meeting_id: meetingId,
-        join_url: meetingJoinUrl,
-        start_url: meetingStartUrl,
-        start_time: appointmentStartTime,
-        end_time: appointmentEndTime,
-        appointment_status: appointmentStatus,
-        cancelled_reason: cancelledReason,
-        cancelled_at: cancelledAt,
-        cancelled_by: cancelledBy,
-        postponed_reason: postponedReason,
-        postponed_date: postponeDate,
-        postponed_by: postponedBy,
-        created_at: createdAt,
-        payment_method: paymentMethod,
-        payment_status: paymentStatus,
-        transactionId: paymentTransactionId,
-      }) => ({
-        appointmentId,
-        appointmentUUID,
-        patient,
-        username: `${firstName} ${lastName}`,
-        doctorId,
-        doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
-        appointmentDate,
-        appointmentTime,
-        appointmentType,
-        patientNameOnPrescription,
-        patientMobileNumber,
-        patientSymptoms,
-        consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
-        specialty,
-        timeSlot,
-        meetingId,
-        meetingJoinUrl,
-        meetingStartUrl,
-        appointmentStartTime,
-        appointmentEndTime,
-        appointmentStatus,
-        paymentMethod,
-        paymentStatus,
-        paymentTransactionId,
-        cancelledReason,
-        cancelledAt,
-        cancelledBy,
-        postponedReason,
-        postponeDate,
-        postponedBy,
-        createdAt: moment(createdAt).format("YYYY-MM-DD"),
-      }),
+    const appointments = rawData.map((row) =>
+      mapDoctorAppointmentRow(row, title),
     );
 
     await redisClient.set({
@@ -193,27 +134,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
     } = rawData;
 
     const rawFollowUps = await getAppointmentFollowUps(appointmentId);
-    const followUps = rawFollowUps.map(
-      ({
-        followup_id: followUpId,
-        followup_date: followUpDate,
-        followup_time: followUpTime,
-        reason: followUpReason,
-        followup_status: followUpStatus,
-        followup_type: followUpType,
-        meeting_id: meetingId,
-      }) => {
-        return {
-          followUpId,
-          followUpDate,
-          followUpTime,
-          followUpReason,
-          followUpStatus,
-          followUpType,
-          meetingId,
-        };
-      },
-    );
+    const followUps = rawFollowUps.map(mapFollowUpsRow);
 
     const appointment = {
       appointmentId,
@@ -285,74 +206,8 @@ exports.getDoctorAppointmentByDateRange = async ({
       page,
       limit,
     });
-    const appointments = rawData.map(
-      ({
-        appointment_id: appointmentId,
-        appointment_uuid: appointmentUUID,
-        patient_id: patient,
-        first_name: firstName,
-        last_name: lastName,
-        doctor_id: doctorId,
-        doctor_first_name: doctorFirstName,
-        doctor_last_name: doctorLastName,
-        appointment_type: appointmentType,
-        appointment_date: appointmentDate,
-        appointment_time: appointmentTime,
-        patient_name_on_prescription: patientNameOnPrescription,
-        patient_mobile_number: patientMobileNumber,
-        patient_symptoms: patientSymptoms,
-        consultation_fee: consultationFees,
-        specialty_name: specialty,
-        time_slot: timeSlot,
-        meeting_id: meetingId,
-        join_url: meetingJoinUrl,
-        start_url: meetingStartUrl,
-        start_time: appointmentStartTime,
-        end_time: appointmentEndTime,
-        appointment_status: appointmentStatus,
-        cancelled_reason: cancelledReason,
-        cancelled_at: cancelledAt,
-        cancelled_by: cancelledBy,
-        postponed_reason: postponedReason,
-        postponed_date: postponeDate,
-        postponed_by: postponedBy,
-        created_at: createdAt,
-        payment_method: paymentMethod,
-        payment_status: paymentStatus,
-        transactionId: paymentTransactionId,
-      }) => ({
-        appointmentId,
-        appointmentUUID,
-        patient,
-        username: `${firstName} ${lastName}`,
-        doctorId,
-        doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
-        appointmentDate,
-        appointmentTime,
-        appointmentType,
-        patientNameOnPrescription,
-        patientMobileNumber,
-        patientSymptoms,
-        consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
-        specialty,
-        timeSlot,
-        meetingId,
-        meetingJoinUrl,
-        meetingStartUrl,
-        appointmentStartTime,
-        appointmentEndTime,
-        appointmentStatus,
-        paymentMethod,
-        paymentStatus,
-        paymentTransactionId,
-        cancelledReason,
-        cancelledAt,
-        cancelledBy,
-        postponedReason,
-        postponeDate,
-        postponedBy,
-        createdAt: moment(createdAt).format("YYYY-MM-DD"),
-      }),
+    const appointments = rawData.map((row) =>
+      mapDoctorAppointmentRow(row, title),
     );
 
     await redisClient.set({

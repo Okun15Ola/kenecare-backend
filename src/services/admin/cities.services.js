@@ -1,6 +1,7 @@
 const dbObject = require("../../repository/cities.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
+const { mapCityRow } = require("../../utils/db-mapper.utils");
 
 exports.getCities = async () => {
   try {
@@ -10,23 +11,10 @@ exports.getCities = async () => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
     const rawData = await dbObject.getAllCities();
-    const cities = rawData.map(
-      ({
-        city_id: cityId,
-        city_name: cityName,
-        latitude,
-        longitude,
-        is_active: isActive,
-        inputted_by: inputtedBy,
-      }) => ({
-        cityId,
-        cityName,
-        latitude,
-        longitude,
-        isActive,
-        inputtedBy,
-      }),
-    );
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "City Not Found" });
+    }
+    const cities = rawData.map(mapCityRow);
 
     await redisClient.set({
       key: cacheKey,
@@ -38,6 +26,7 @@ exports.getCities = async () => {
     throw error;
   }
 };
+
 exports.getCity = async (id) => {
   try {
     const cacheKey = `cities:${id}`;
@@ -49,23 +38,7 @@ exports.getCity = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
-    const {
-      city_id: cityId,
-      city_name: cityName,
-      latitude,
-      longitude,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
-
-    const city = {
-      cityId,
-      cityName,
-      latitude,
-      longitude,
-      isActive,
-      inputtedBy,
-    };
+    const city = mapCityRow(rawData);
 
     await redisClient.set({
       key: cacheKey,
@@ -77,6 +50,7 @@ exports.getCity = async (id) => {
     throw error;
   }
 };
+
 exports.getCityByName = async (name) => {
   try {
     const cacheKey = `cities:${name}`;
@@ -88,23 +62,7 @@ exports.getCityByName = async (name) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
-    const {
-      city_id: cityId,
-      city_name: cityName,
-      latitude,
-      longitude,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
-
-    const city = {
-      cityId,
-      cityName,
-      latitude,
-      longitude,
-      isActive,
-      inputtedBy,
-    };
+    const city = mapCityRow(rawData);
 
     await redisClient.set({
       key: cacheKey,
@@ -116,6 +74,7 @@ exports.getCityByName = async (name) => {
     throw error;
   }
 };
+
 exports.createCity = async ({ name, latitude, longitude, inputtedBy }) => {
   try {
     await dbObject.createNewCity({
@@ -131,6 +90,7 @@ exports.createCity = async ({ name, latitude, longitude, inputtedBy }) => {
     throw error;
   }
 };
+
 exports.updateCity = async ({ id, name, latitude, longitude }) => {
   try {
     const rawData = await dbObject.getCityById(id);
@@ -149,6 +109,7 @@ exports.updateCity = async ({ id, name, latitude, longitude }) => {
     throw error;
   }
 };
+
 exports.updateCityStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getCityById(id);
@@ -162,6 +123,7 @@ exports.updateCityStatus = async ({ id, status }) => {
     throw error;
   }
 };
+
 exports.deleteCity = async (id) => {
   try {
     const rawData = await dbObject.getCityById(id);

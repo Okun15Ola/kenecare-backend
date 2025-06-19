@@ -1,6 +1,7 @@
 const dbObject = require("../../repository/specializations.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
+const { mapSpecializationRow } = require("../../utils/db-mapper.utils");
 
 /**
  * Retrieve a list of specializations from the database and transform the data.
@@ -22,23 +23,11 @@ exports.getSpecializations = async () => {
   }
   const rawData = await dbObject.getAllSpecialization();
 
-  const specializations = rawData.map(
-    ({
-      specialization_id: specializationId,
-      specialization_name: specializationName,
-      description,
-      image_url: imageUrl,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    }) => ({
-      specializationId,
-      specializationName,
-      description,
-      imageUrl,
-      isActive,
-      inputtedBy,
-    }),
-  );
+  if (!rawData) {
+    return Response.NOT_FOUND({ message: "Specialization Not Found" });
+  }
+
+  const specializations = rawData.map(mapSpecializationRow);
   await redisClient.set({
     key: cacheKey,
     value: JSON.stringify(specializations),
@@ -71,23 +60,9 @@ exports.getSpecializationByName = async (name) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
-    const {
-      specialization_id: specializationId,
-      specialization_name: specializationName,
-      description,
-      image_url: imageUrl,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
 
-    const specialization = {
-      specializationId,
-      specializationName,
-      description,
-      imageUrl,
-      isActive,
-      inputtedBy,
-    };
+    const specialization = mapSpecializationRow(rawData);
+
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialization),
@@ -124,23 +99,8 @@ exports.getSpecializationById = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
-    const {
-      specialization_id: specializationId,
-      specialization_name: specializationName,
-      description,
-      image_url: imageUrl,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
+    const specialization = mapSpecializationRow(rawData);
 
-    const specialization = {
-      specializationId,
-      specializationName,
-      description,
-      imageUrl,
-      isActive,
-      inputtedBy,
-    };
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialization),

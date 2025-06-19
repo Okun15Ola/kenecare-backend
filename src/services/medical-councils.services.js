@@ -1,6 +1,7 @@
 const repo = require("../repository/medical-councils.repository");
 const Response = require("../utils/response.utils");
 const redisClient = require("../config/redis.config");
+const { mapMedicalCouncilRow } = require("../utils/db-mapper.utils");
 
 exports.getMedicalCouncils = async () => {
   const cacheKey = "medical-council:all";
@@ -9,26 +10,13 @@ exports.getMedicalCouncils = async () => {
     return Response.SUCCESS({ data: JSON.parse(cachedData) });
   }
   const rawData = await repo.getAllMedicalCouncils();
+  if (!rawData) {
+    return Response.NOT_FOUND({
+      message: "Medical Council Not Found ",
+    });
+  }
 
-  const councils = rawData.map(
-    ({
-      council_id: councilId,
-      council_name: councilName,
-      email,
-      address,
-      mobile_number: mobileNumber,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    }) => ({
-      councilId,
-      councilName,
-      email,
-      address,
-      mobileNumber,
-      isActive,
-      inputtedBy,
-    }),
-  );
+  const councils = rawData.map(mapMedicalCouncilRow);
   await redisClient.set({
     key: cacheKey,
     value: JSON.stringify(councils),
@@ -50,25 +38,7 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
         message: "Medical Council Not Found ",
       });
     }
-    const {
-      council_id: councilId,
-      council_name: councilName,
-      email,
-      address,
-      mobile_number: mobileNumber,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
-
-    const council = {
-      councilId,
-      councilName,
-      email,
-      address,
-      mobileNumber,
-      isActive,
-      inputtedBy,
-    };
+    const council = mapMedicalCouncilRow(rawData);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(council),
@@ -93,25 +63,7 @@ exports.getMedicalCouncilByMobileNumber = async (number) => {
         message: "Medical Council Not Found ",
       });
     }
-    const {
-      council_id: councilId,
-      council_name: councilName,
-      email,
-      mobile_number: mobileNumber,
-      address,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
-
-    const council = {
-      councilId,
-      councilName,
-      email,
-      address,
-      mobileNumber,
-      isActive,
-      inputtedBy,
-    };
+    const council = mapMedicalCouncilRow(rawData);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(council),
@@ -135,25 +87,7 @@ exports.getMedicalCouncil = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
-    const {
-      council_id: councilId,
-      council_name: councilName,
-      email,
-      address,
-      mobile_number: mobileNumber,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
-
-    const council = {
-      councilId,
-      councilName,
-      email,
-      address,
-      mobileNumber,
-      isActive,
-      inputtedBy,
-    };
+    const council = mapMedicalCouncilRow(rawData);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(council),

@@ -100,6 +100,15 @@ exports.AdminRegisterValidations = [
 ];
 
 exports.AdminUpdateStatusValidations = [
+  query("status")
+    .notEmpty()
+    .withMessage("Status is required")
+    .trim()
+    .escape()
+    .isNumeric({ no_symbols: true }),
+];
+
+exports.AdminIDValidations = [
   param("id")
     .notEmpty()
     .withMessage("Account ID is required")
@@ -114,12 +123,6 @@ exports.AdminUpdateStatusValidations = [
       req.user = user;
       return true;
     }),
-  query("status")
-    .notEmpty()
-    .withMessage("Status is required")
-    .trim()
-    .escape()
-    .isNumeric({ no_symbols: true }),
 ];
 
 exports.UpdatePasswordValidations = [

@@ -5,6 +5,7 @@ const {
 } = require("../../../controllers/admin/auth.admin.controller");
 const {
   AdminUpdateStatusValidations,
+  AdminIDValidations,
 } = require("../../../validations/auth.admin.validations");
 
 router.get("/", (req, res, next) => {
@@ -23,13 +24,13 @@ router.get("/:id/", (req, res, next) => {
 });
 router.put(
   "/:id",
-  AdminUpdateStatusValidations,
+  [...AdminIDValidations, ...AdminUpdateStatusValidations],
   Validate,
   AdminUpdateAccountStatusController,
 );
 router.patch(
   "/:id/",
-  AdminUpdateStatusValidations,
+  [...AdminIDValidations, ...AdminUpdateStatusValidations],
   Validate,
   AdminUpdateAccountStatusController,
 );

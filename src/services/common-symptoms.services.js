@@ -4,9 +4,9 @@ const redisClient = require("../config/redis.config");
 const {
   getFileFromS3Bucket,
   uploadFileToS3Bucket,
-  getFileUrlFromS3Bucket,
 } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
+const { mapCommonSystomsRow } = require("../utils/db-mapper.utils");
 
 exports.getCommonSymptoms = async () => {
   try {
@@ -17,33 +17,7 @@ exports.getCommonSymptoms = async () => {
     }
 
     const rawData = await repo.getAllCommonSymptoms();
-    const promises = rawData.map(
-      async ({
-        symptom_id: symptomId,
-        symptom_name: name,
-        symptom_descriptions: description,
-        speciality_name: specialty,
-        image_url: imageUrl,
-        general_consultation_fee: consultationFee,
-        tags,
-        is_active: isActive,
-        inputted_by: inputtedBy,
-      }) => {
-        const url = await getFileUrlFromS3Bucket(imageUrl);
-        return {
-          symptomId,
-          name: name.toUpperCase(),
-          description,
-          specialty,
-          imageUrl: url,
-          consultationFee,
-          tags,
-          isActive,
-          inputtedBy,
-        };
-      },
-    );
-    const symptoms = await Promise.all(promises);
+    const symptoms = await Promise.all(rawData.map(mapCommonSystomsRow));
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(symptoms),
@@ -66,31 +40,9 @@ exports.getCommonSymptom = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
-    const {
-      symptom_id: symptomId,
-      symptom_name: name,
-      symptom_descriptions: description,
-      specialty_id: specialty,
-      image_url: imageUrl,
-      general_consultation_fee: consultationFee,
-      tags,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
+    const url = await getFileFromS3Bucket(rawData.image_url);
 
-    const url = await getFileFromS3Bucket(imageUrl);
-
-    const symptom = {
-      symptomId,
-      name: name.toUpperCase(),
-      description,
-      specialty,
-      imageUrl: url,
-      consultationFee,
-      tags,
-      isActive,
-      inputtedBy,
-    };
+    const symptom = await mapCommonSystomsRow(rawData, url);
 
     await redisClient.set({
       key: cacheKey,

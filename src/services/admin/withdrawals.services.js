@@ -14,37 +14,15 @@ const {
   withdrawalApprovedSMS,
   withdrawalDeniedSMS,
 } = require("../../utils/sms.utils");
+const { mapWithdawalRow } = require("../../utils/db-mapper.utils");
 
 exports.getAllRequests = async () => {
   try {
     const rawData = await getAllWithdrawalRequests();
-    const data = rawData.map(
-      ({
-        request_id: requestId,
-        doctor_id: doctorId,
-        first_name: fistName,
-        last_name: lastName,
-        request_status: requestStatus,
-        requested_amount: requestedAmount,
-        payment_method: paymentMethod,
-        mobile_money_number: mobileMoneyNumber,
-        bank_name: bankName,
-        bank_account_number: bankAccountNumber,
-        bank_account_name: bankAccountName,
-      }) => ({
-        requestId,
-        doctorId,
-        fistName,
-        lastName,
-        requestStatus,
-        requestedAmount,
-        paymentMethod,
-        mobileMoneyNumber,
-        bankName,
-        bankAccountNumber,
-        bankAccountName,
-      }),
-    );
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
+    }
+    const data = rawData.map(mapWithdawalRow);
     return Response.SUCCESS({ data });
   } catch (error) {
     console.error("GET ALL WITHDRAWAL REQUESTS  ERROR: ", error);
@@ -57,32 +35,7 @@ exports.getRequestById = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
-    const {
-      request_id: requestId,
-      doctor_id: doctorId,
-      first_name: fistName,
-      last_name: lastName,
-      requested_amount: requestedAmount,
-      payment_method: paymentMethod,
-      mobile_money_number: mobileMoneyNumber,
-      request_status: requestStatus,
-      bank_name: bankName,
-      bank_account_number: bankAccountNumber,
-      bank_account_name: bankAccountName,
-    } = rawData;
-    const data = {
-      requestId,
-      doctorId,
-      fistName,
-      lastName,
-      requestStatus,
-      requestedAmount,
-      paymentMethod,
-      mobileMoneyNumber,
-      bankName,
-      bankAccountNumber,
-      bankAccountName,
-    };
+    const data = mapWithdawalRow(rawData);
     return Response.SUCCESS({ data });
   } catch (error) {
     console.error("GET WITHFRAWAL REQUEST BY ID ERROR: ", error);

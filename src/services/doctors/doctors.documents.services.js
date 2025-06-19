@@ -1,12 +1,11 @@
-const moment = require("moment");
 const {
   getSharedMedicalDocumentsByDoctorId,
   getDoctorSharedMedicalDocumentById,
 } = require("../../repository/patient-docs.repository");
 const Response = require("../../utils/response.utils");
 const { getDoctorByUserId } = require("../../repository/doctors.repository");
-const { getFileUrlFromS3Bucket } = require("../../utils/aws-s3.utils");
 const redisClient = require("../../config/redis.config");
+const { mapDoctorSharedMedicalDocs } = require("../../utils/db-mapper.utils");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {
   try {
@@ -26,36 +25,15 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
 
     const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
 
-    const dataPromises = rawData.map(
-      async ({
-        sharing_id: sharingId,
-        document_id: documentId,
-        document_uuid: documentUUID,
-        document_title: documentTitle,
-        patient_id: patientId,
-        patient_first_name: patientFirstName,
-        patient_last_name: patientLastName,
-        doctor_first_name: doctorFirstName,
-        doctor_last_name: doctorLastName,
-        note,
-        created_at: createdAt,
-      }) => {
-        const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
-        return {
-          sharingId,
-          documentId,
-          documentUUID,
-          documentTitle,
-          documentUrl,
-          patientId,
-          patientName: `${patientFirstName} ${patientLastName}`,
-          doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
-          note,
-          createdAt: moment(createdAt).format("YYYY-MM-DD"),
-        };
-      },
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Shared Medical Document Not Found.",
+      });
+    }
+
+    const sharedMedicalDocuments = await Promise.all(
+      rawData.map((row) => mapDoctorSharedMedicalDocs(row, title)),
     );
-    const sharedMedicalDocuments = await Promise.all(dataPromises);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(sharedMedicalDocuments),
@@ -92,34 +70,10 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
       });
     }
 
-    const {
-      sharing_id: sharingId,
-      document_id: documentId,
-      document_uuid: documentUUID,
-      document_title: documentTitle,
-      patient_id: patientId,
-      patient_first_name: patientFirstName,
-      patient_last_name: patientLastName,
-      doctor_first_name: doctorFirstName,
-      doctor_last_name: doctorLastName,
-      note,
-      created_at: createdAt,
-    } = document;
-
-    const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
-
-    const sharedMedicalDocument = {
-      sharingId,
-      documentId,
-      documentUUID,
-      documentUrl,
-      documentTitle,
-      patientId,
-      patientName: `${patientFirstName} ${patientLastName}`,
-      doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
-      note,
-      createdAt: moment(createdAt).format("YYYY-MM-DD"),
-    };
+    const sharedMedicalDocument = await mapDoctorSharedMedicalDocs(
+      document,
+      title,
+    );
 
     await redisClient.set({
       key: cacheKey,
