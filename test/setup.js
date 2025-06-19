@@ -1,13 +1,34 @@
-// Global test setup file
-// This file contains all common mocks used across test files
+// Force Jest to use local mock for DB connection
+jest.mock("../__tests__/__mock__/db.connection.js");
 
-// Mock the Stream SDK
-// Import MySQL connection pool for use in afterAll
-const { connectionPool } = require("../src/repository/db.connection");
+// Mock express-mysql-session to prevent real DB session creation
+jest.mock("express-mysql-session", () => {
+  return jest.fn(() => {
+    return class MySQLStoreMock {
+      constructor() {
+        this.store = {}; // example internal state
+      }
 
+      get(sid, callback) {
+        callback(null, this.store[sid] || null);
+      }
+
+      set(sid, session, callback) {
+        this.store[sid] = session;
+        callback(null);
+      }
+
+      destroy(sid, callback) {
+        delete this.store[sid];
+        callback(null);
+      }
+    };
+  });
+});
+
+// Mock Stream SDK
 jest.mock("@stream-io/node-sdk", () => ({
   StreamClient: jest.fn().mockImplementation(() => ({
-    // Add any Stream client methods you might need for testing
     connectUser: jest.fn(),
     disconnectUser: jest.fn(),
     createToken: jest.fn(),
@@ -28,15 +49,15 @@ jest.mock("ioredis", () => {
   }));
 });
 
-// Global test configuration
+// Suppress noisy console errors
 beforeAll(() => {
-  // Suppress console errors during tests to reduce noise
   jest.spyOn(console, "error").mockImplementation(() => {});
 });
 
-// Close MySQL connection pool after all tests
+// Close connection pool after tests
+const { connectionPool } = require("../src/repository/db.connection");
+
 afterAll(async () => {
-  // Restore mocked console.error
   if (console.error.mockRestore) {
     console.error.mockRestore();
     try {
@@ -53,13 +74,3 @@ afterAll(async () => {
     }
   }
 });
-
-// You can add other global mocks here as needed
-// For example, if you use other external services:
-/*
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn(() => ({
-    sendMail: jest.fn(),
-  })),
-}));
-*/
