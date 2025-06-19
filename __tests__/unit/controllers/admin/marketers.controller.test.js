@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/admin/marketers.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const marketersServices = require("../../../../src/services/admin/marketers.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -10,9 +13,6 @@ const {
   UpdateMarketerController,
   DeleteMarketerController,
 } = require("../../../../src/controllers/admin/marketers.controller");
-
-jest.mock("../../../../src/services/admin/marketers.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 const mockRes = () => {
   const res = {};

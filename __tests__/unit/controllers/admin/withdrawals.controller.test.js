@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/admin/withdrawals.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const withdrawalsServices = require("../../../../src/services/admin/withdrawals.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -7,9 +10,6 @@ const {
   ApproveWithdrawalRequestController,
   DenyWithdrawalRequestController,
 } = require("../../../../src/controllers/admin/withdrawals.controller");
-
-jest.mock("../../../../src/services/admin/withdrawals.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Withdrawals Controller", () => {
   let req;

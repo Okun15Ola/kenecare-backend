@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/common-symptoms.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/common-symptoms.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -9,9 +12,6 @@ const {
   UpdateCommonSymptomStatusController,
   DeleteCommonSymptomByIdController,
 } = require("../../../../src/controllers/admin/common-symptoms.controller");
-
-jest.mock("../../../../src/services/common-symptoms.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 const mockRes = () => {
   const res = {};

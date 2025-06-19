@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/patients/patients.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const patientsServices = require("../../../../src/services/patients/patients.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -6,9 +9,6 @@ const {
   GetPatientByIdController,
   GetPatientTestimonialsController,
 } = require("../../../../src/controllers/admin/patients.controller");
-
-jest.mock("../../../../src/services/patients/patients.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Patients Controller", () => {
   let req;

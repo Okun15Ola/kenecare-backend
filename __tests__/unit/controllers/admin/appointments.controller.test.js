@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/admin/admin.appointments.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/admin/admin.appointments.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 const {
@@ -5,9 +8,6 @@ const {
   GetAdminAppointmentByIdController,
   GetAdminAppointmentsByDoctorIdController,
 } = require("../../../../src/controllers/admin/appointments.controller");
-
-jest.mock("../../../../src/services/admin/admin.appointments.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Admin Appointments Controllers", () => {
   let req;

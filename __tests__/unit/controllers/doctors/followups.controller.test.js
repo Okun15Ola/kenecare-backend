@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/doctors/follow-ups.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const followUpServices = require("../../../../src/services/doctors/follow-ups.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -8,9 +11,6 @@ const {
   GetAppointmentFollowUpsController,
   GetFollowUpByIdController,
 } = require("../../../../src/controllers/doctors/followups.controller");
-
-jest.mock("../../../../src/services/doctors/follow-ups.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("FollowUps Controller", () => {
   let req;

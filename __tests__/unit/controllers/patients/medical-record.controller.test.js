@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/patients/patients.documents.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/patients/patients.documents.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -13,9 +16,6 @@ const {
   UpdateSharedMedicalDocumentByIdController,
   DeleteSharedMedicalDocumentByIdController,
 } = require("../../../../src/controllers/patients/medical-record.controller");
-
-jest.mock("../../../../src/services/patients/patients.documents.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Patient Medical Record Controllers", () => {
   let req;

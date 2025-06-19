@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/admin/cities.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/admin/cities.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -9,9 +12,6 @@ const {
   UpdateCityStatusController,
   DeleteCityByIdController,
 } = require("../../../../src/controllers/admin/cities.controller");
-
-jest.mock("../../../../src/services/admin/cities.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 const mockRes = () => {
   const res = {};

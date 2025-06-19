@@ -1,3 +1,15 @@
+jest.mock("../../../../src/services/doctors/doctors.services", () => ({
+  getDoctorByUser: jest.fn(),
+  getDoctorCouncilRegistration: jest.fn(),
+  createDoctorProfile: jest.fn(),
+  createDoctorCouncilRegistration: jest.fn(),
+  updateDoctorProfile: jest.fn(),
+  updateDoctorProfilePicture: jest.fn(),
+}));
+jest.mock("../../../../src/middlewares/logger.middleware", () => ({
+  error: jest.fn(),
+}));
+
 const services = require("../../../../src/services/doctors/doctors.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -10,18 +22,6 @@ const {
   UpdateDoctorProfileByIdController,
   UpdateDoctorProfilePictureController,
 } = require("../../../../src/controllers/doctors/profile.controller");
-
-jest.mock("../../../../src/services/doctors/doctors.services", () => ({
-  getDoctorByUser: jest.fn(),
-  getDoctorCouncilRegistration: jest.fn(),
-  createDoctorProfile: jest.fn(),
-  createDoctorCouncilRegistration: jest.fn(),
-  updateDoctorProfile: jest.fn(),
-  updateDoctorProfilePicture: jest.fn(),
-}));
-jest.mock("../../../../src/middlewares/logger.middleware", () => ({
-  error: jest.fn(),
-}));
 
 describe("Doctor Profile Controllers", () => {
   let req;

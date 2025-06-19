@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/patients/patients.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/patients/patients.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -7,9 +10,6 @@ const {
   UpdatePatientProfileController,
   UpdatePatientProfilePictureController,
 } = require("../../../../src/controllers/patients/profile.controller");
-
-jest.mock("../../../../src/services/patients/patients.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Patient Profile Controllers", () => {
   let req;

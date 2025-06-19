@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/admin/specializations.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/admin/specializations.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -9,9 +12,6 @@ const {
   UpdateSpecializationStatusController,
   DeleteSpecializationByIdController,
 } = require("../../../../src/controllers/admin/specializations.controller");
-
-jest.mock("../../../../src/services/admin/specializations.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 const mockRes = () => {
   const res = {};

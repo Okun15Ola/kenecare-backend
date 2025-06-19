@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/doctors/doctors.wallet.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/doctors/doctors.wallet.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -6,9 +9,6 @@ const {
   UpdateWalletPinController,
   RequestWithdrawalController,
 } = require("../../../../src/controllers/doctors/wallet.controller");
-
-jest.mock("../../../../src/services/doctors/doctors.wallet.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Doctor Wallet Controllers", () => {
   let req;

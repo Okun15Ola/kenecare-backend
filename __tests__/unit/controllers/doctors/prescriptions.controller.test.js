@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/prescriptions.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/prescriptions.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -8,9 +11,6 @@ const {
   GetPrescriptionsController,
   UpdatePrescriptionController,
 } = require("../../../../src/controllers/doctors/prescriptions.controller");
-
-jest.mock("../../../../src/services/prescriptions.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Doctor Prescriptions Controllers", () => {
   let req;

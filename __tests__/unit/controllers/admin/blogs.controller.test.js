@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/admin/blogs.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const blogsServices = require("../../../../src/services/admin/blogs.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -9,9 +12,6 @@ const {
   UpdateBlogStatusController,
   DeleteBlogByIdController,
 } = require("../../../../src/controllers/admin/blogs.controller");
-
-jest.mock("../../../../src/services/admin/blogs.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 const mockRes = () => {
   const res = {};

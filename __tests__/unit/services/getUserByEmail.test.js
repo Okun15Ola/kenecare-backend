@@ -1,9 +1,12 @@
 require("dotenv").config({ path: "../.env.test" });
+
+jest.mock("../../../src/repository/users.repository", () =>
+  // eslint-disable-next-line global-require
+  require("../../__mock__/users.repository"),
+);
+
 const dbObject = require("../../../src/repository/users.repository");
 const userService = require("../../../src/services/users.service");
-
-// Only mock modules specific to this test file
-jest.mock("../../../src/repository/users.repository");
 
 describe("GetUserByEmail - Unit Tests", () => {
   const mockUserData = {

@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/doctors/doctors.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const doctorsServices = require("../../../../src/services/doctors/doctors.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -10,9 +13,6 @@ const {
   ApproveDoctorAccountController,
   DeleteDoctorByIdController,
 } = require("../../../../src/controllers/admin/doctors.controller");
-
-jest.mock("../../../../src/services/doctors/doctors.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 const mockRes = () => {
   const res = {};

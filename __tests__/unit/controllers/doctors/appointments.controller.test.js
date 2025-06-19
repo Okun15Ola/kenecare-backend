@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/doctors/doctor.appointments.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/doctors/doctor.appointments.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -10,9 +13,6 @@ const {
   StartDoctorAppointmentController,
   EndDoctorAppointmentController,
 } = require("../../../../src/controllers/doctors/appointments.controller");
-
-jest.mock("../../../../src/services/doctors/doctor.appointments.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Doctor Appointments Controllers", () => {
   let req;

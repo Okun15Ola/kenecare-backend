@@ -1,3 +1,8 @@
+jest.mock(
+  "../../../../src/services/admin/doctor-council-registration.services",
+);
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/admin/doctor-council-registration.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -7,11 +12,6 @@ const {
   ApproveCouncilRegistrationController,
   RejectCouncilRegistrationController,
 } = require("../../../../src/controllers/admin/doctors.council-registration.controller");
-
-jest.mock(
-  "../../../../src/services/admin/doctor-council-registration.services",
-);
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Doctors Council Registration Controllers", () => {
   let req;

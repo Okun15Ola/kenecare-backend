@@ -1,3 +1,7 @@
+jest.mock("../../../../src/services/admin/blog-categories.services");
+jest.mock("../../../../src/services/admin/blogs.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const blogCategoriesServices = require("../../../../src/services/admin/blog-categories.services");
 const blogsServices = require("../../../../src/services/admin/blogs.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
@@ -10,10 +14,6 @@ const {
   UpdateBlogCategoryStatusController,
   DeleteBlogCategoryByIdController,
 } = require("../../../../src/controllers/admin/blog-categories.controller");
-
-jest.mock("../../../../src/services/admin/blog-categories.services");
-jest.mock("../../../../src/services/admin/blogs.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Blog Categories Controllers", () => {
   let req;

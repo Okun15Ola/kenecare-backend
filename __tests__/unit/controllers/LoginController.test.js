@@ -1,9 +1,9 @@
 require("dotenv").config({ path: "../.env.test" });
+
+jest.mock("../../../src/services/users.service");
+
 const { LoginController } = require("../../../src/controllers/auth.controller");
 const { loginUser } = require("../../../src/services/users.service");
-
-// Only mock modules specific to this test file
-jest.mock("../../../src/services/users.service");
 
 describe("LoginController", () => {
   let req;

@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/medical-councils.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/medical-councils.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -9,9 +12,6 @@ const {
   UpdateMedicalCouncilStatusController,
   DeleteMedicalCouncilByIdController,
 } = require("../../../../src/controllers/admin/medical-council.controller");
-
-jest.mock("../../../../src/services/medical-councils.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 const mockRes = () => {
   const res = {};

@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/doctors/doctors.documents.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/doctors/doctors.documents.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -5,9 +8,6 @@ const {
   GetAllSharedMedicalRecordsController,
   GetSharedMedicalRecordByIDController,
 } = require("../../../../src/controllers/doctors/medical-record.controller");
-
-jest.mock("../../../../src/services/doctors/doctors.documents.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Doctor Medical Record Controllers", () => {
   let req;

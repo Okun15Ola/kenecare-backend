@@ -1,3 +1,6 @@
+jest.mock("../../../../src/services/testimonials.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+
 const services = require("../../../../src/services/testimonials.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
@@ -10,9 +13,6 @@ const {
   UpdateTestimonialByIdController,
   DeleteTestimonialByIdController,
 } = require("../../../../src/controllers/admin/testimonials.controller");
-
-jest.mock("../../../../src/services/testimonials.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("Testimonials Admin Controllers", () => {
   let req;

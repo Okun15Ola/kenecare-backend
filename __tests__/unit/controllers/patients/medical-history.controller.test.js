@@ -1,3 +1,7 @@
+jest.mock("../../../../src/services/patients/patients.appointments.services");
+jest.mock("../../../../src/middlewares/logger.middleware");
+jest.mock("../../../../src/utils/time.utils");
+
 const services = require("../../../../src/services/patients/patients.appointments.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 const utils = require("../../../../src/utils/time.utils");
@@ -9,10 +13,6 @@ const {
   UpdatePatientMedicalAppointmentByIdController,
   UpdatePatientMedicalAppointmentStatusController,
 } = require("../../../../src/controllers/patients/appointments.controller");
-
-jest.mock("../../../../src/services/patients/patients.appointments.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
-jest.mock("../../../../src/utils/time.utils");
 
 describe("Patient Appointments Controllers", () => {
   let req;
