@@ -1,0 +1,18 @@
+module.exports = {
+  getAllPatientDocs: jest.fn(),
+  getPatientMedicalDocumentById: jest.fn(),
+  getPatientMedicalDocumentByDocumentId: jest.fn(),
+  getMedicalDocumentsByPatientId: jest.fn(),
+  createPatientMedicalDocument: jest.fn(),
+  updatePatientMedicalDocumentById: jest.fn(),
+  deletePatientDocById: jest.fn(),
+  createPatientDocumentSharing: jest.fn(),
+  getSharedMedicalDocumentByIdAndDoctorId: jest.fn(),
+  getPatientSharedMedicalDocuments: jest.fn(),
+  getSharedMedicalDocumentsByDoctorId: jest.fn(),
+  getPatientSharedMedicalDocument: jest.fn(),
+  getSharedMedicalDocumentById: jest.fn(),
+  getDoctorSharedMedicalDocumentById: jest.fn(),
+  updatePatientSharedMedicalDocument: jest.fn(),
+  deletePatientSharedMedicalDocument: jest.fn(),
+};
