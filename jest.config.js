@@ -3,6 +3,10 @@ module.exports = {
   setupFilesAfterEnv: ["<rootDir>/test/setup.js"],
   testMatch: ["**/__tests__/**/*.js"],
   // Optional: Add these for better test experience
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/__mock__/", // ignore all mocks as test suites
+  ],
   forceExit: true,
   detectOpenHandles: true,
   // Optional: Coverage settings
