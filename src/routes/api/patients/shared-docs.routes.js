@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const { param } = require("express-validator");
 const {
   ShareMedicalDocumentController,
   GetAllSharedMedicalDocumentsController,
@@ -9,11 +8,17 @@ const {
 } = require("../../../controllers/patients/medical-record.controller");
 const {
   ShareMedicalDocumentValidation,
+  GetDoctorSharedMedicalDocumentValidation,
 } = require("../../../validations/medical-records.validations");
 const { Validate } = require("../../../validations/validate");
 
 router.get("/", GetAllSharedMedicalDocumentsController);
-router.get("/:id", GetSharedMedicalDocumentByIDController);
+router.get(
+  "/:id",
+  GetDoctorSharedMedicalDocumentValidation,
+  Validate,
+  GetSharedMedicalDocumentByIDController,
+);
 router.post(
   "/",
   ShareMedicalDocumentValidation,
@@ -28,15 +33,7 @@ router.put(
 );
 router.delete(
   "/:id",
-  [
-    param("id")
-      .notEmpty()
-      .withMessage("Please Specify document ID to be deleted")
-      .custom((id) => {
-        console.log(id);
-        return true;
-      }),
-  ],
+  GetDoctorSharedMedicalDocumentValidation,
   Validate,
   DeleteSharedMedicalDocumentByIdController,
 );

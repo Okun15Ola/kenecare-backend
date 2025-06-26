@@ -1,8 +1,7 @@
-const { param } = require("express-validator");
 const router = require("express").Router();
 const IndexController = require("../../controllers/index/index.controller");
-const { getDoctorById } = require("../../repository/doctors.repository");
 const { Validate } = require("../../validations/validate");
+const { doctorIdValidation } = require("../../validations/index.validations");
 
 router.get("/blogs", IndexController.GetBlogsController);
 router.get("/blogs/:id", IndexController.GetBlogByIDController);
@@ -13,27 +12,7 @@ router.get("/medical-councils", IndexController.GetMedicalCouncilsController);
 router.get("/doctors", IndexController.GetDoctorsController);
 router.get(
   "/doctor/:id",
-  [
-    param("id")
-      .notEmpty()
-      .withMessage("Specify Doctor Id")
-      .escape()
-      .trim()
-      .custom(async (value) => {
-        const id = parseInt(value, 10);
-
-        const isValidNumber = Number.isSafeInteger(id);
-        if (!isValidNumber) {
-          throw new Error("Please provide a valid ID");
-        }
-        const doctorId = Number(id);
-        const data = await getDoctorById(doctorId);
-        if (!data) {
-          throw new Error("Doctor Not Found");
-        }
-        return true;
-      }),
-  ],
+  doctorIdValidation,
   Validate,
   IndexController.GetDoctorByIDController,
 );

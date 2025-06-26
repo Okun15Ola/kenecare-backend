@@ -1,6 +1,4 @@
 const router = require("express").Router();
-const { body } = require("express-validator");
-const logger = require("../../middlewares/logger.middleware");
 const { Validate } = require("../../validations/validate");
 const {
   LoginController,
@@ -15,6 +13,7 @@ const {
   UpdatePasswordController,
   UpdatePushNotificationTokenController,
   VerifyForgotPasswordOTPController,
+  AuthenticateController,
 } = require("../../controllers/auth.controller");
 const {
   LoginValidations,
@@ -22,30 +21,14 @@ const {
   OTPLoginValidation,
   VerifyTokenValidations,
   UpdatePasswordValidations,
+  MobileNumberValidations,
+  TokenValidations,
+  ResetPasswordValidations,
+  NotificationTokenValidations,
 } = require("../../validations/auth.validations");
 const { requireUserAuth } = require("../../middlewares/auth.middleware");
-const {
-  getUserByMobileNumber,
-  getUserByVerificationToken,
-} = require("../../repository/users.repository");
-const {
-  validateExpoToken,
-  refineMobileNumber,
-} = require("../../utils/auth.utils");
-// const { limiter } = require("../../utils/rate-limit.utils");
-// regex constants
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/;
 
-// limiter(router);
-router.get("/authenticate", requireUserAuth, (req, res, next) => {
-  try {
-    return res.sendStatus(200);
-  } catch (error) {
-    console.error(error);
-    logger.error(error);
-    return next(error);
-  }
-});
+router.get("/authenticate", requireUserAuth, AuthenticateController);
 
 router.post("/login", LoginValidations, Validate, LoginController);
 
@@ -74,82 +57,21 @@ router.put(
 
 router.post(
   "/forgot-password",
-  [
-    body("phoneNumber")
-      .trim()
-      .escape()
-      .custom(async (phoneNumber, { req }) => {
-        if (!phoneNumber) {
-          throw new Error("Phone Number is required");
-        }
-        const refinedMobileNumber = refineMobileNumber(phoneNumber);
-
-        const user = await getUserByMobileNumber(refinedMobileNumber);
-
-        if (!user) {
-          throw new Error(
-            "No Account associated with the phone number you provided",
-          );
-        }
-
-        req.user = user;
-        return true;
-      }),
-  ],
+  MobileNumberValidations,
   Validate,
   RequestForgotPasswordOTPController,
 );
 
 router.post(
   "/verify-forgot-password-otp",
-  [
-    body("token")
-      .trim()
-      .escape()
-      .custom(async (value, { req }) => {
-        if (!value) {
-          throw new Error("Token is required");
-        }
-        const user = await getUserByVerificationToken(value);
-
-        if (!user) {
-          throw new Error(
-            "Error verifying token, please try again with a valid token.",
-          );
-        }
-
-        req.user = user;
-        return true;
-      }),
-  ],
+  TokenValidations,
   Validate,
   VerifyForgotPasswordOTPController,
 );
 
 router.post(
   "/otp-resend",
-  [
-    body("phoneNumber")
-      .trim()
-      .escape()
-      .custom(async (phoneNumber, { req }) => {
-        if (!phoneNumber) {
-          throw new Error("Phone Number is required");
-        }
-        const refinedMobileNumber = refineMobileNumber(phoneNumber);
-
-        const user = await getUserByMobileNumber(refinedMobileNumber);
-
-        if (!user) {
-          throw new Error(
-            "No Account associated with the phone number you provided",
-          );
-        }
-
-        req.user = user;
-        return true;
-      }),
-  ],
+  MobileNumberValidations,
   Validate,
   ResendVerificationOTPController,
 );
@@ -162,45 +84,7 @@ router.put(
 );
 router.put(
   "/reset-password",
-  [
-    body("token")
-      .trim()
-      .escape()
-      .custom(async (value, { req }) => {
-        if (!value) {
-          throw new Error("Token is required");
-        }
-        const data = await getUserByVerificationToken(value);
-        if (!data) {
-          throw new Error("Error Resetting password, please try again");
-        }
-
-        req.user = data;
-        return true;
-      }),
-    body("newPassword")
-      .trim()
-      .custom(async (value) => {
-        if (value === "") {
-          throw new Error("Password is required");
-        }
-        if (!PASSWORD_REGEX.test(value)) {
-          throw new Error(
-            "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
-          );
-        }
-      }),
-    body("confirmNewPassword")
-      .trim()
-      .custom((value, { req }) => {
-        if (value === "") {
-          throw new Error("Confirm Password is required");
-        } else if (value !== req.body.newPassword) {
-          throw new Error("Passwords don't match");
-        }
-        return true;
-      }),
-  ],
+  [...TokenValidations, ...ResetPasswordValidations],
   Validate,
   UpdatePasswordController,
 );
@@ -210,21 +94,7 @@ router.post("/otp-request", requireUserAuth, VerifyRequestedOTPController);
 router.put(
   "/notif-token",
   requireUserAuth,
-  [
-    body("notification_token")
-      .notEmpty()
-      .withMessage("Push notification token is required")
-      .custom(async (value) => {
-        const isValidToken = validateExpoToken(value);
-
-        if (!isValidToken) {
-          throw new Error(
-            "Invalid Expo Notification Token. Please try again with a valid token.",
-          );
-        }
-        return true;
-      }),
-  ],
+  NotificationTokenValidations,
   Validate,
   UpdatePushNotificationTokenController,
 );

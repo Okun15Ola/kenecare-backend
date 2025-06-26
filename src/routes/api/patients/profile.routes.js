@@ -1,6 +1,4 @@
 const router = require("express").Router();
-const { body } = require("express-validator");
-const moment = require("moment");
 const { Validate } = require("../../../validations/validate");
 const {
   GetPatientProfileController,
@@ -8,98 +6,21 @@ const {
   UpdatePatientProfileController,
   UpdatePatientProfilePictureController,
 } = require("../../../controllers/patients/profile.controller");
-
+const {
+  profileValidation,
+} = require("../../../validations/patients/patient-profile.validations");
 const { localProfilePicUploader } = require("../../../utils/file-upload.utils");
 
 router.get("/profile", GetPatientProfileController);
 router.post(
   "/profile",
-  [
-    body("firstname")
-      .notEmpty()
-      .withMessage("First Name is required")
-      .isLength({ min: 1, max: 50 })
-      .withMessage("First Name Must not be longer than 50 character")
-      .trim()
-      .escape(),
-    body("middlename").trim().escape(),
-    body("lastname")
-      .notEmpty()
-      .withMessage("Last Name is required")
-      .isLength({ min: 1, max: 50 })
-      .withMessage("Last Name Must not be longer than 50 character")
-      .trim()
-      .escape(),
-    body("gender")
-      .notEmpty()
-      .withMessage("Gender is required")
-      .trim()
-      .escape()
-      .toLowerCase(),
-    body("dateOfBirth").custom((value) => {
-      if (!value) {
-        return true;
-      }
-      const formattedDate = moment(value).format("YYYY-MM-DD");
-      if (!moment(formattedDate).isValid()) {
-        throw new Error("Invalid date format. Expected format (YYYY-MM-DD)");
-      }
-      if (moment(formattedDate).isAfter(moment())) {
-        throw new Error("Birth date must not be a future date");
-      }
-
-      if (moment().diff(formattedDate, "years") < 18) {
-        throw new Error("Must be at least 18 years old");
-      }
-      return true;
-    }),
-  ],
+  profileValidation,
   Validate,
   CreatePatientProfileController,
 );
 router.put(
   "/profile/",
-  [
-    body("firstname")
-      .notEmpty()
-      .withMessage("First Name is required")
-      .isLength({ min: 1, max: 50 })
-      .withMessage("First Name Must not be longer than 50 character")
-      .trim()
-      .escape(),
-    body("middlename").trim().escape(),
-    body("lastname")
-      .notEmpty()
-      .withMessage("Last Name is required")
-      .isLength({ min: 1, max: 50 })
-      .withMessage("Last Name Must not be longer than 50 character")
-      .trim()
-      .escape(),
-    body("gender")
-      .notEmpty()
-      .withMessage("Gender is required")
-      .trim()
-      .escape()
-      .toLowerCase(),
-    body("dateOfBirth")
-      .notEmpty()
-      .withMessage("Date of Birth is required")
-      .custom((value) => {
-        const formattedDate = moment(value).format("YYYY-MM-DD");
-        console.log("Formatted Date:", formattedDate);
-        if (!moment(formattedDate).isValid()) {
-          throw new Error("Invalid date format. Expected format (YYYY-MM-DD)");
-        }
-        if (moment(formattedDate).isAfter(moment())) {
-          throw new Error("Birth date must not be a future date");
-        }
-
-        if (moment().diff(formattedDate, "years") < 18) {
-          throw new Error("Must be at least 18 years old");
-        }
-        return true;
-      }),
-  ],
+  profileValidation,
   Validate,
   UpdatePatientProfileController,
 );

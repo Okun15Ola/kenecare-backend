@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const { body } = require("express-validator");
 const {
   GetBlogCategoriesController,
   GetBlogCategoryByIDController,
@@ -9,36 +8,21 @@ const {
   DeleteBlogCategoryByIdController,
 } = require("../../../controllers/admin/blog-categories.controller");
 const { Validate } = require("../../../validations/validate");
+const {
+  blogCategoryValidations,
+} = require("../../../validations/admin/blog-category.validations");
 
 router.get("/", GetBlogCategoriesController);
 router.get("/:id", GetBlogCategoryByIDController);
 router.post(
   "/",
-  [
-    body("name")
-      .notEmpty()
-      .withMessage("Blog Category Name is required")
-      .toLowerCase()
-      .trim()
-      .isLength({ max: 150, min: 3 })
-      .withMessage("Must be more than 3 characters long")
-      .escape(),
-  ],
+  blogCategoryValidations,
   Validate,
   CreateBlogCategoryController,
 );
 router.put(
   "/:id",
-  [
-    body("name")
-      .notEmpty()
-      .withMessage("Blog Category Name is required")
-      .toLowerCase()
-      .trim()
-      .isLength({ max: 150, min: 3 })
-      .withMessage("Must be more than 3 characters long")
-      .escape(),
-  ],
+  blogCategoryValidations,
   Validate,
   UpdateBlogCategoryByIdController,
 );
