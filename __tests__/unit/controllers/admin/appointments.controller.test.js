@@ -27,17 +27,20 @@ describe("Admin Appointments Controllers", () => {
   describe("GetAdminAppointmentsController", () => {
     it("should return appointments with correct status", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
+      req.query = { page: "1", limit: "10" };
       services.getAdminAppointments.mockResolvedValue(mockResponse);
-
       await GetAdminAppointmentsController(req, res, next);
-
-      expect(services.getAdminAppointments).toHaveBeenCalled();
+      expect(services.getAdminAppointments).toHaveBeenCalledWith({
+        page: "1",
+        limit: "10",
+      });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should handle errors and call next", async () => {
       const error = new Error("Test error");
+      req.query = {};
       services.getAdminAppointments.mockRejectedValue(error);
 
       await GetAdminAppointmentsController(req, res, next);
