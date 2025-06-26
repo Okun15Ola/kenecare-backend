@@ -3,7 +3,7 @@ const { getFileUrlFromS3Bucket } = require("./aws-s3.utils");
 const { decryptText } = require("./auth.utils");
 const { appBaseURL } = require("../config/default.config");
 
-exports.mapCommonSymptomsRow = async (commonSymptoms, imgUrl) => {
+exports.mapCommonSymptomsRow = async (commonSymptoms) => {
   const {
     symptom_id: symptomId,
     symptom_name: name,
@@ -16,9 +16,9 @@ exports.mapCommonSymptomsRow = async (commonSymptoms, imgUrl) => {
     inputted_by: inputtedBy,
   } = commonSymptoms;
 
-  let finalImageUrl = imgUrl;
+  let finalImageUrl = null;
 
-  if (!imgUrl && imageUrl) {
+  if (imageUrl) {
     finalImageUrl = await getFileUrlFromS3Bucket(imageUrl);
   }
 
@@ -27,7 +27,7 @@ exports.mapCommonSymptomsRow = async (commonSymptoms, imgUrl) => {
     name: name?.toUpperCase() || "",
     description,
     specialty,
-    imageUrl: finalImageUrl || "",
+    imageUrl: finalImageUrl,
     consultationFee,
     tags,
     isActive,

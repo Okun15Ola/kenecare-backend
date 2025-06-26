@@ -29,14 +29,16 @@ const hashUsersPassword = async (password) => {
 };
 
 const encryptText = (text, key) => {
-  const cipher = crypto.createCipher("aes-256-cbc", key);
+  const cipher = crypto.createCipheriv("aes-256-cbc", key);
+  // changed from createCipher to createCipheriv due to the previous pagackage been expired
   let encryptedText = cipher.update(text, "utf8", "hex");
   encryptedText += cipher.final("hex");
   return encryptedText;
 };
 
 const decryptText = ({ encryptedText, key }) => {
-  const decipher = crypto.createDecipher("aes-256-cbc", key);
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key);
+  // changed from createDecipher to createDecipheriv due to the previous pagackage been expired
   let decryptedText = decipher.update(encryptedText, "hex", "utf8");
   decryptedText += decipher.final("utf8");
   return decryptedText;
