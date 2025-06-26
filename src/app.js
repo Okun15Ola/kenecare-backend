@@ -10,6 +10,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
+// const { limiter } = require("./utils/rate-limit.utils");
 // const { runCron } = require("./utils/cron.utils");
 const {
   requireUserAuth,
@@ -77,7 +78,7 @@ app.use(
     crossOriginResourcePolicy: false,
   }),
 );
-
+// app.use(limiter);
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
