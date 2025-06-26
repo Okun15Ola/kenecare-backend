@@ -18,8 +18,8 @@ DOCKER_COMPOSE_PROD = docker-compose.api-prod.yml
 ENV_FILE_DEV = .env.development
 ENV_FILE_PROD = .env.production
 ENV_FILE_STAGING = .env.staging
-ENV_FILE_DB = db.env 
-ENV_FILE_REDIS = redis.env
+ENV_FILE_DB = .env.db.development # @Roland I changed this from "db.env" to ".env.db.development"
+ENV_FILE_REDIS = .env.redis.development # @Roland I changed this from "redis.env" to ".env.redis.development"
 
 # Service names as defined in Docker Compose files
 DB_SERVICE_NAME = mysql-db
@@ -104,18 +104,21 @@ endif
 
 
 ifeq ($(findstring check-db-status,$(MAKECMDGOALS)),check-db-status)
-	ENV := db.development
+	ENV := development
 endif
 
 ifeq ($(findstring run-db,$(MAKECMDGOALS)),run-db)
-	ENV := db.development
+	ENV := development
 endif
 
 ifeq ($(findstring check-redis-status,$(MAKECMDGOALS)),check-redis-status)
-	ENV := redis.development
+	ENV := development
 endif 
 ifeq ($(findstring flush-cache,$(MAKECMDGOALS)),flush-cache)
-	ENV := redis.development
+	ENV := development
+endif
+ifeq ($(findstring check-env,$(MAKECMDGOALS)),check-env)
+	ENV := development
 endif
 
 
@@ -171,7 +174,7 @@ check-redis-status: check-env
 .PHONY: build-dev
 build-dev: check-env
 	@echo "Building Docker image for development: $(IMAGE_NAME):development"
-	@ENV=$(ENV) docker build -t $(IMAGE_NAME):development .
+	@ENV=$(ENV) docker build -t $(IMAGE_NAME):development.
 
 .PHONY: build-staging
 build-staging: check-env
