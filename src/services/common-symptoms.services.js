@@ -1,12 +1,9 @@
 const repo = require("../repository/common-symptoms.repository");
 const Response = require("../utils/response.utils");
 const redisClient = require("../config/redis.config");
-const {
-  getFileFromS3Bucket,
-  uploadFileToS3Bucket,
-} = require("../utils/aws-s3.utils");
+const { uploadFileToS3Bucket } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
-const { mapCommonSystomsRow } = require("../utils/db-mapper.utils");
+const { mapCommonSymptomsRow } = require("../utils/db-mapper.utils");
 
 exports.getCommonSymptoms = async () => {
   try {
@@ -17,7 +14,7 @@ exports.getCommonSymptoms = async () => {
     }
 
     const rawData = await repo.getAllCommonSymptoms();
-    const symptoms = await Promise.all(rawData.map(mapCommonSystomsRow));
+    const [symptoms] = await Promise.all(rawData.map(mapCommonSymptomsRow));
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(symptoms),
@@ -40,9 +37,8 @@ exports.getCommonSymptom = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
-    const url = await getFileFromS3Bucket(rawData.image_url);
 
-    const symptom = await mapCommonSystomsRow(rawData, url);
+    const symptom = await mapCommonSymptomsRow(rawData);
 
     await redisClient.set({
       key: cacheKey,
@@ -54,6 +50,7 @@ exports.getCommonSymptom = async (id) => {
     throw error;
   }
 };
+
 exports.createCommonSymptom = async ({
   name,
   description,

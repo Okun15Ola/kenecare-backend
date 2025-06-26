@@ -10,10 +10,11 @@ exports.getCities = async () => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getAllCities();
-    if (!rawData) {
+    const [rawData] = await dbObject.getAllCities();
+    if (!rawData || rawData.length === 0) {
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
+
     const cities = rawData.map(mapCityRow);
 
     await redisClient.set({
@@ -34,7 +35,7 @@ exports.getCity = async (id) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const rawData = await dbObject.getCityById(id);
+    const [rawData] = await dbObject.getCityById(id);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
