@@ -17,7 +17,6 @@ const { refineMobileNumber } = require("../utils/auth.utils");
 
 exports.AuthenticateController = async (req, res, next) => {
   try {
-    // Authenticate Controller
     return res.sendStatus(200);
   } catch (error) {
     console.error(error);

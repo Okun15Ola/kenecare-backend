@@ -7,7 +7,10 @@ const {
 
 exports.GetAdminAppointmentsController = async (req, res, next) => {
   try {
-    const response = await getAdminAppointments();
+    const response = await getAdminAppointments({
+      page: req.query.page || 1,
+      limit: req.query.limit || 10,
+    });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
