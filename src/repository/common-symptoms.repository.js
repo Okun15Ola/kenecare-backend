@@ -4,14 +4,17 @@ const queries = require("./queries/commonSymptoms.queries");
 exports.getAllCommonSymptoms = async () => {
   return query(queries.GET_ALL_COMMON_SYMPTOMS);
 };
+
 exports.getCommonSymptomById = async (id) => {
   const row = await query(queries.GET_COMMON_SYMPTOMS_BY_ID, [id]);
   return row[0];
 };
+
 exports.getCommonSymptomByName = async (name) => {
   const row = await query(queries.GET_COMMON_SYMPTOMS_BY_NAME, [name]);
   return row[0];
 };
+
 exports.createNewCommonSymptom = async ({
   name,
   description,

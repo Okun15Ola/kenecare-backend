@@ -6,7 +6,8 @@ exports.getAllCities = async () => {
 };
 
 exports.getCityById = async (id) => {
-  return query(queries.GET_CITY_BY_ID, [id]);
+  const row = await query(queries.GET_CITY_BY_ID, [id]);
+  return row[0];
 };
 
 exports.getCityByName = async (name) => {
