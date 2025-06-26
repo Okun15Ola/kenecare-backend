@@ -1,10 +1,14 @@
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 const {
   getMarketerByEmail,
   getMarketerByPhone,
   getMarketerByIdNumber,
   getMarketerByNin,
   getMarketerById,
+} = require("../../repository/marketers.repository");
+const {
+  getMarketerByVerficationToken,
+  getMarketerByEmailVerficationToken,
 } = require("../../repository/marketers.repository");
 
 exports.CreateMarketerValidation = [
@@ -408,4 +412,62 @@ exports.UpdateMarketerValidation = [
       "Second Emergency Contact Address Must not Exceed 150 Character",
     )
     .bail(),
+];
+
+exports.MarketerIdValidations = [
+  param("id")
+    .notEmpty()
+    .withMessage("Marketer ID is required")
+    .bail()
+    .isInt({ allow_leading_zeroes: false })
+    .withMessage("Marketer ID must be a valid ID")
+    .bail()
+    .custom(async (id) => {
+      const data = await getMarketerById(id);
+      if (!data) {
+        throw new Error("Marketer Not Found");
+      }
+      return true;
+    }),
+];
+
+exports.MarketerEmailValidations = [
+  query("token")
+    .escape()
+    .trim()
+    .notEmpty()
+    .withMessage("Verification token is required")
+    .bail()
+    .isJWT()
+    .withMessage("Corrupted Email Verification Token")
+    .bail()
+    .custom(async (token) => {
+      const data = await getMarketerByEmailVerficationToken(token);
+
+      if (!data) {
+        throw new Error("Invalid Email Verification Token");
+      }
+
+      return true;
+    })
+    .bail(),
+];
+
+exports.MarketerPhoneValidations = [
+  query("token")
+    .notEmpty()
+    .withMessage("Verification token is required")
+    .bail()
+    .isNumeric({ no_symbols: true })
+    .isLength({ max: 6, min: 6 })
+    .withMessage("Invalid Phone Verification Token")
+    .custom(async (token) => {
+      const data = await getMarketerByVerficationToken(token);
+
+      if (!data) {
+        throw new Error("Invalid Phone Verification Token");
+      }
+
+      return true;
+    }),
 ];

@@ -9,6 +9,10 @@ const {
 } = require("../repository/patient-docs.repository");
 const { getUserById } = require("../repository/users.repository");
 const { comparePassword } = require("../utils/auth.utils");
+const {
+  getPatientMedicalDocumentByDocumentId,
+} = require("../repository/patient-docs.repository");
+const { getPatientByUserId } = require("../repository/patients.repository");
 
 exports.CreateNewMedicalRecordValidation = [
   body("documentTitle")
@@ -37,6 +41,31 @@ exports.CreateNewMedicalRecordValidation = [
       }
     }),
 ];
+
+exports.MedicalRecordIdValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Document Id is required")
+    .bail()
+    .trim()
+    .escape()
+    .custom(async (value, { req }) => {
+      const { patient_id: patientId } = await getPatientByUserId(req.user.id);
+      if (!patientId) {
+        throw new Error("Error fetching document");
+      }
+      const documentId = parseInt(value, 10);
+      const data = await getPatientMedicalDocumentByDocumentId({
+        documentId,
+        patientId,
+      });
+      if (!data) {
+        throw new Error("Specified Document Not Found");
+      }
+      return true;
+    }),
+];
+
 exports.ShareMedicalDocumentValidation = [
   body("documentId")
     .notEmpty()

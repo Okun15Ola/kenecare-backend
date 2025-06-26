@@ -3,7 +3,11 @@ const {
   getUserByMobileNumber,
   getUserByEmail,
 } = require("../services/users.service");
-const { comparePassword, refineMobileNumber } = require("../utils/auth.utils");
+const {
+  comparePassword,
+  refineMobileNumber,
+  validateExpoToken,
+} = require("../utils/auth.utils");
 const { STATUS, VERIFICATIONSTATUS, USERTYPE } = require("../utils/enum.utils");
 const { getDoctorByUserId } = require("../repository/doctors.repository");
 const {
@@ -13,6 +17,8 @@ const {
 const {
   getMarketerByReferralCode,
 } = require("../repository/marketers.repository");
+
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/;
 
 exports.LoginValidations = [
   body("mobileNumber")
@@ -253,6 +259,91 @@ exports.UpdatePasswordValidations = [
         throw new Error("Confirm Password is required");
       } else if (value !== req.body.newPassword) {
         throw new Error("Passwords don't match");
+      }
+      return true;
+    }),
+];
+
+exports.MobileNumberValidations = [
+  body("phoneNumber")
+    .trim()
+    .escape()
+    .custom(async (phoneNumber, { req }) => {
+      if (!phoneNumber) {
+        throw new Error("Phone Number is required");
+      }
+      const refinedMobileNumber = refineMobileNumber(phoneNumber);
+
+      const user = await getUserByMobileNumber(refinedMobileNumber);
+
+      if (!user) {
+        throw new Error(
+          "No Account associated with the phone number you provided",
+        );
+      }
+
+      req.user = user;
+      return true;
+    }),
+];
+
+exports.TokenValidations = [
+  body("token")
+    .trim()
+    .escape()
+    .custom(async (value, { req }) => {
+      if (!value) {
+        throw new Error("Token is required");
+      }
+      const user = await getUserByVerificationToken(value);
+
+      if (!user) {
+        throw new Error(
+          "Error verifying token, please try again with a valid token.",
+        );
+      }
+
+      req.user = user;
+      return true;
+    }),
+];
+
+exports.ResetPasswordValidations = [
+  body("newPassword")
+    .trim()
+    .custom(async (value) => {
+      if (value === "") {
+        throw new Error("Password is required");
+      }
+      if (!PASSWORD_REGEX.test(value)) {
+        throw new Error(
+          "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
+        );
+      }
+    }),
+  body("confirmNewPassword")
+    .trim()
+    .custom((value, { req }) => {
+      if (value === "") {
+        throw new Error("Confirm Password is required");
+      } else if (value !== req.body.newPassword) {
+        throw new Error("Passwords don't match");
+      }
+      return true;
+    }),
+];
+
+exports.NotificationTokenValidations = [
+  body("notification_token")
+    .notEmpty()
+    .withMessage("Push notification token is required")
+    .custom(async (value) => {
+      const isValidToken = validateExpoToken(value);
+
+      if (!isValidToken) {
+        throw new Error(
+          "Invalid Expo Notification Token. Please try again with a valid token.",
+        );
       }
       return true;
     }),

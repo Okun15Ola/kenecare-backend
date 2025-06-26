@@ -1,13 +1,24 @@
 const { body, param } = require("express-validator");
 const moment = require("moment");
-const { getSpecialtiyById } = require("../repository/specialities.repository");
-const { getDoctorByUserId } = require("../repository/doctors.repository");
+const {
+  getSpecialtiyById,
+} = require("../../repository/specialities.repository");
+const { getDoctorByUserId } = require("../../repository/doctors.repository");
 const {
   getDoctorAppointmentById,
-} = require("../repository/doctorAppointments.repository");
-const Response = require("../utils/response.utils");
+} = require("../../repository/doctorAppointments.repository");
+const Response = require("../../utils/response.utils");
 
 const today = moment().format("YYYY-MM-DD");
+
+exports.followUpIdValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Appointment ID is required")
+    .isInt({ allow_leading_zeroes: false, gt: 0 })
+    .withMessage("Provide a valid Appointment ID")
+    .escape(),
+];
 
 exports.CreateFollowUpValidation = [
   body("appointmentId")
