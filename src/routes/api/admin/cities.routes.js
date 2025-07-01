@@ -13,6 +13,10 @@ const {
   UpdateCityStatusController,
   DeleteCityByIdController,
 } = require("../../../controllers/admin/cities.controller");
+const { adminLimiter } = require("../../../utils/rate-limit.utils");
+const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
+
+router.use(authenticateAdmin, adminLimiter); // Rate limiting middleware applied to all routes in this router
 
 router.get("/", GetCitiesController);
 router.get("/:id", CityIDValidation, Validate, GetCityByIDController);

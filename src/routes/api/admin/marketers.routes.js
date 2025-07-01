@@ -17,9 +17,12 @@ const {
   MarketerPhoneValidations,
 } = require("../../../validations/admin/marketers.validations");
 const { Validate } = require("../../../validations/validate");
-const { requireAdminAuth } = require("../../../middlewares/auth.middleware");
+const { adminLimiter } = require("../../../utils/rate-limit.utils");
+const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
 
-router.get("/", requireAdminAuth, GetAllMarketersController);
+router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+
+router.get("/", GetAllMarketersController);
 router.get(
   "/verify-email",
   MarketerEmailValidations,
@@ -28,16 +31,14 @@ router.get(
 );
 router.get(
   "/verify-phone",
-  requireAdminAuth,
   MarketerPhoneValidations,
   Validate,
   VerifyMarketerPhoneNumberController,
 );
-router.get("/:id", requireAdminAuth, GetMarketerByIdController);
+router.get("/:id", GetMarketerByIdController);
 
 router.post(
   "/",
-  requireAdminAuth,
   tempUpload.single("idDocument"),
   CreateMarketerValidation,
   Validate,
@@ -45,7 +46,6 @@ router.post(
 );
 router.put(
   "/:id",
-  requireAdminAuth,
   tempUpload.single("idDocument"),
   UpdateMarketerValidation,
   Validate,
@@ -53,7 +53,6 @@ router.put(
 );
 router.delete(
   "/:id",
-  requireAdminAuth,
   MarketerIdValidations,
   Validate,
   DeleteMarketerController,
