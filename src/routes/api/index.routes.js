@@ -2,6 +2,9 @@ const router = require("express").Router();
 const IndexController = require("../../controllers/index/index.controller");
 const { Validate } = require("../../validations/validate");
 const { doctorIdValidation } = require("../../validations/index.validations");
+const { limiter } = require("../../utils/rate-limit.utils");
+
+router.use(limiter); // Rate limiting middleware applied to all routes in this router
 
 router.get("/blogs", IndexController.GetBlogsController);
 router.get("/blogs/:id", IndexController.GetBlogByIDController);

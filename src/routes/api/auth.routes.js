@@ -26,14 +26,16 @@ const {
   ResetPasswordValidations,
   NotificationTokenValidations,
 } = require("../../validations/auth.validations");
-const { requireUserAuth } = require("../../middlewares/auth.middleware");
+const { authLimiter, otpLimiter } = require("../../utils/rate-limit.utils");
+const { authenticateUser } = require("../../middlewares/auth.middleware");
 
-router.get("/authenticate", requireUserAuth, AuthenticateController);
+router.get("/authenticate", authenticateUser, AuthenticateController);
 
-router.post("/login", LoginValidations, Validate, LoginController);
+router.post("/login", authLimiter, LoginValidations, Validate, LoginController);
 
 router.post(
   "/login/otp",
+  otpLimiter,
   OTPLoginValidation,
   Validate,
   RequestLoginOTPController,
@@ -41,15 +43,23 @@ router.post(
 
 router.post(
   "/login/:token",
+  authLimiter,
   VerifyTokenValidations,
   Validate,
   VerifyLoginOTPController,
 );
 
-router.post("/register", RegisterValidations, Validate, RegisterController);
+router.post(
+  "/register",
+  authLimiter,
+  RegisterValidations,
+  Validate,
+  RegisterController,
+);
 
 router.put(
   "/verify/:token",
+  authLimiter,
   VerifyTokenValidations,
   Validate,
   VerifyRegisterOTPController,
@@ -57,6 +67,7 @@ router.put(
 
 router.post(
   "/forgot-password",
+  otpLimiter,
   MobileNumberValidations,
   Validate,
   RequestForgotPasswordOTPController,
@@ -64,6 +75,7 @@ router.post(
 
 router.post(
   "/verify-forgot-password-otp",
+  authLimiter,
   TokenValidations,
   Validate,
   VerifyForgotPasswordOTPController,
@@ -71,29 +83,47 @@ router.post(
 
 router.post(
   "/otp-resend",
+  otpLimiter,
   MobileNumberValidations,
   Validate,
   ResendVerificationOTPController,
 );
+
 router.put(
   "/update-password",
-  requireUserAuth,
+  authenticateUser,
+  authLimiter,
   UpdatePasswordValidations,
   Validate,
   UpdatePasswordController,
 );
+
 router.put(
   "/reset-password",
+  authLimiter,
   [...TokenValidations, ...ResetPasswordValidations],
   Validate,
   UpdatePasswordController,
 );
-router.post("/otp-request", requireUserAuth, SendVerificationOTPController);
-router.post("/otp-request", requireUserAuth, VerifyRequestedOTPController);
+
+router.post(
+  "/otp-request",
+  otpLimiter,
+  authenticateUser,
+  SendVerificationOTPController,
+);
+
+router.post(
+  "/otp-request",
+  authLimiter,
+  authenticateUser,
+  VerifyRequestedOTPController,
+);
 
 router.put(
   "/notif-token",
-  requireUserAuth,
+  authLimiter,
+  authenticateUser,
   NotificationTokenValidations,
   Validate,
   UpdatePushNotificationTokenController,
