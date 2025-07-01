@@ -2,7 +2,7 @@ require("dotenv").config({ path: "../.env.test" });
 
 jest.mock("../../../src/repository/users.repository", () =>
   // eslint-disable-next-line global-require
-  require("../../__mock__/users.repository"),
+  require("../../__mocks__/users.repository"),
 );
 
 const dbObject = require("../../../src/repository/users.repository");
