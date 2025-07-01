@@ -10,13 +10,8 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
-// const { limiter } = require("./utils/rate-limit.utils");
-// const { runCron } = require("./utils/cron.utils");
-const {
-  requireUserAuth,
-  requireAdminAuth,
-  requireDoctorAuth,
-} = require("./middlewares/auth.middleware");
+
+const { authenticateAdmin } = require("./middlewares/auth.middleware");
 const {
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
@@ -78,7 +73,7 @@ app.use(
     crossOriginResourcePolicy: false,
   }),
 );
-// app.use(limiter);
+
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -91,7 +86,7 @@ app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
 
 app.use(
   "/docs/admin",
-  requireAdminAuth,
+  authenticateAdmin,
   express.static(path.join(__dirname, "public/upload/media")),
 );
 
@@ -111,68 +106,25 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api/v1/auth", authRouter);
 
 // DOCTORS ROUTES
-app.use("/api/v1/doctors", requireUserAuth, doctorsProfileRouter);
-app.use(
-  "/api/v1/doctors/prescriptions",
-  requireUserAuth,
-  doctorsPrescriptionsRouter,
-);
-app.use(
-  "/api/v1/doctors/shared-medical-docs",
-  requireUserAuth,
-  doctorsSharedMedicalDocsRouter,
-);
-app.use("/api/v1/doctors/wallets", requireUserAuth, doctorsWalletRouter);
-app.use(
-  "/api/v1/doctors/available-days",
-  requireUserAuth,
-  doctorsAvailableDaysRouter,
-);
+app.use("/api/v1/doctors", doctorsProfileRouter);
+app.use("/api/v1/doctors/prescriptions", doctorsPrescriptionsRouter);
+app.use("/api/v1/doctors/shared-medical-docs", doctorsSharedMedicalDocsRouter);
+app.use("/api/v1/doctors/wallets", doctorsWalletRouter);
+app.use("/api/v1/doctors/available-days", doctorsAvailableDaysRouter);
 app.use(
   "/api/v1/doctors/council-registration",
-  requireUserAuth,
   doctorsCounculRegistrationRouter,
 );
-app.use(
-  "/api/v1/doctors/appointments",
-  requireUserAuth,
-  requireDoctorAuth,
-  doctorsAppointmentRouter,
-);
-app.use(
-  "/api/v1/doctors/follow-ups",
-  requireUserAuth,
-  requireDoctorAuth,
-  doctorsFollowUpRouter,
-);
+app.use("/api/v1/doctors/appointments", doctorsAppointmentRouter);
+app.use("/api/v1/doctors/follow-ups", doctorsFollowUpRouter);
 
 // PATIENT'S ROUTES
-app.use("/api/v1/patients", requireUserAuth, patientsProfileRouter);
-app.use(
-  "/api/v1/patients/appointments",
-  requireUserAuth,
-  patientAppointmentRouter,
-);
-app.use(
-  "/api/v1/patients/medical-records",
-  requireUserAuth,
-  patientMedicalRecordRouter,
-);
-app.use(
-  "/api/v1/patients/shared-docs",
-  requireUserAuth,
-  patientSharedMedicalDocumentRouter,
-);
-app.use(
-  "/api/v1/patients/medical-info",
-  requireUserAuth,
-  patientMedicalHistoryRouter,
-);
-app.use(
-  "/api/v1/patients/prescriptions",
-  requireUserAuth,
-  patientPrescriptionRoutes,
-);
+app.use("/api/v1/patients", patientsProfileRouter);
+app.use("/api/v1/patients/appointments", patientAppointmentRouter);
+app.use("/api/v1/patients/medical-records", patientMedicalRecordRouter);
+app.use("/api/v1/patients/shared-docs", patientSharedMedicalDocumentRouter);
+app.use("/api/v1/patients/medical-info", patientMedicalHistoryRouter);
+app.use("/api/v1/patients/prescriptions", patientPrescriptionRoutes);
 
 // PAYMENT ROUTES
 app.use("/api/v1/payments", appointmentPaymentRoutes);
@@ -180,43 +132,23 @@ app.use("/api/v1/payments", appointmentPaymentRoutes);
 // ADMIN ROUTES
 // TODO Add a middle ware to authenticate ADMIN JWT
 app.use("/api/v1/admin/auth", adminAuthRouter);
-app.use("/api/v1/admin/accounts", requireAdminAuth, adminAccountsRouter);
-app.use(
-  "/api/v1/admin/appointments",
-  requireAdminAuth,
-  adminAppointmentsRouter,
-);
-app.use(
-  "/api/v1/admin/blog-categories",
-  requireAdminAuth,
-  adminBlogCategoriesRouter,
-);
-app.use("/api/v1/admin/blogs", requireAdminAuth, adminBlogsRouter);
-app.use("/api/v1/admin/cities", requireAdminAuth, adminCitiesRouter);
-app.use("/api/v1/admin/symptoms", requireAdminAuth, adminSymptomsRouter);
-app.use("/api/v1/admin/doctors", requireAdminAuth, adminDoctorsRoute);
-app.use("/api/v1/admin/faqs", requireAdminAuth, adminFaqRouter);
-app.use(
-  "/api/v1/admin/medical-councils",
-  requireAdminAuth,
-  adminMedicalCouncilRouter,
-);
-app.use("/api/v1/admin/services", requireAdminAuth, adminServicesRouter);
-app.use(
-  "/api/v1/admin/specializations",
-  requireAdminAuth,
-  adminSpecializationsRoute,
-);
-app.use("/api/v1/admin/testimonials", requireAdminAuth, adminTestimonialsRoute);
-app.use("/api/v1/admin/specialties", requireAdminAuth, adminSpecialtiesRouter);
+app.use("/api/v1/admin/accounts", adminAccountsRouter);
+app.use("/api/v1/admin/appointments", adminAppointmentsRouter);
+app.use("/api/v1/admin/blog-categories", adminBlogCategoriesRouter);
+app.use("/api/v1/admin/blogs", adminBlogsRouter);
+app.use("/api/v1/admin/cities", adminCitiesRouter);
+app.use("/api/v1/admin/symptoms", adminSymptomsRouter);
+app.use("/api/v1/admin/doctors", adminDoctorsRoute);
+app.use("/api/v1/admin/faqs", adminFaqRouter);
+app.use("/api/v1/admin/medical-councils", adminMedicalCouncilRouter);
+app.use("/api/v1/admin/services", adminServicesRouter);
+app.use("/api/v1/admin/specializations", adminSpecializationsRoute);
+app.use("/api/v1/admin/testimonials", adminTestimonialsRoute);
+app.use("/api/v1/admin/specialties", adminSpecialtiesRouter);
 app.use("/api/v1/admin/user-types", adminAccountsRouter);
-app.use("/api/v1/admin/patients", requireAdminAuth, adminPatientsRouter);
-app.use(
-  "/api/v1/admin/council-regsitrations",
-  requireAdminAuth,
-  adminCouncilRegistrationRouter,
-);
-app.use("/api/v1/admin/withdrawals", requireAdminAuth, adminWithdrawalsRoute);
+app.use("/api/v1/admin/patients", adminPatientsRouter);
+app.use("/api/v1/admin/council-regsitrations", adminCouncilRegistrationRouter);
+app.use("/api/v1/admin/withdrawals", adminWithdrawalsRoute);
 app.use("/api/v1/admin/marketers", adminMarketersRouter);
 app.use("/api/v1/marketers", adminMarketersRouter);
 
