@@ -8,6 +8,13 @@ const {
   CreateAppointmentValidation,
 } = require("../../../validations/appointments.validations");
 const { Validate } = require("../../../validations/validate");
+const { limiter } = require("../../../utils/rate-limit.utils");
+const {
+  authenticateUser,
+  authorizePatient,
+} = require("../../../middlewares/auth.middleware");
+
+router.use(authenticateUser, limiter, authorizePatient); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
 router.get("/", GetAppointmentsController);
 router.get("/:id", GetAppointmentsByIDController);
