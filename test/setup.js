@@ -1,5 +1,5 @@
 // Force Jest to use local mock for DB connection
-jest.mock("../__tests__/__mock__/db.connection.js");
+jest.mock("../__tests__/__mocks__/db.connection.js");
 
 // Mock express-mysql-session to prevent real DB session creation
 jest.mock("express-mysql-session", () => {
