@@ -3,14 +3,17 @@ const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 const { mapAdminAppointmentRow } = require("../../utils/db-mapper.utils");
 
-exports.getAdminAppointments = async ({ page, limit }) => {
+exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
   try {
     const cacheKey = "admin-appointments:all";
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await dbObject.getAllAppointments({ page, limit });
+    const rawData = await dbObject.getAllAppointments({ limit, offset });
 
     const appointments = rawData.map(mapAdminAppointmentRow);
 
@@ -18,7 +21,7 @@ exports.getAdminAppointments = async ({ page, limit }) => {
       key: cacheKey,
       value: JSON.stringify(appointments),
     });
-    return Response.SUCCESS({ data: appointments });
+    return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;
