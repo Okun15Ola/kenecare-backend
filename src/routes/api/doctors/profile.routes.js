@@ -10,6 +10,13 @@ const {
   createDoctorProfileValidations,
 } = require("../../../validations/doctors/doctor-profile.validations");
 const { localProfilePicUploader } = require("../../../utils/file-upload.utils");
+const { limiter } = require("../../../utils/rate-limit.utils");
+const {
+  authenticateUser,
+  authorizeDoctor,
+} = require("../../../middlewares/auth.middleware");
+
+router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
 router.get("/profile", GetDoctorProfileController);
 router.post(

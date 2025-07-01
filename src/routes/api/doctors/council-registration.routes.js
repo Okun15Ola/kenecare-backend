@@ -10,6 +10,13 @@ const {
   councilValidations,
 } = require("../../../validations/doctors/council-registration.validations");
 const { AWSUploader } = require("../../../utils/file-upload.utils");
+const { limiter } = require("../../../utils/rate-limit.utils");
+const {
+  authenticateUser,
+  authorizeDoctor,
+} = require("../../../middlewares/auth.middleware");
+
+router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
 router.post(
   "/",

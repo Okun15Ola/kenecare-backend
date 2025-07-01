@@ -5,8 +5,14 @@ const {
   CreatePrescriptionController,
   UpdatePrescriptionController,
 } = require("../../../controllers/doctors/prescriptions.controller");
-
 const { Validate } = require("../../../validations/validate");
+const { limiter } = require("../../../utils/rate-limit.utils");
+const {
+  authenticateUser,
+  authorizeDoctor,
+} = require("../../../middlewares/auth.middleware");
+
+router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware, Rate limiting & Authorization middleware applied to all routes in this router
 
 const {
   CreatePrescriptionValidation,
