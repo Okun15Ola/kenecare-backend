@@ -32,20 +32,32 @@ describe("Doctors Controller", () => {
   describe("GetDoctorsController", () => {
     it("should return doctors with correct status", async () => {
       const res = mockRes();
-      const req = {};
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       const response = { statusCode: 200, data: [{ id: 1 }] };
       doctorsServices.getAllDoctors.mockResolvedValue(response);
 
       await GetDoctorsController(req, res, mockNext);
 
-      expect(doctorsServices.getAllDoctors).toHaveBeenCalled();
+      expect(doctorsServices.getAllDoctors).toHaveBeenCalledWith(
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(response);
     });
 
     it("should handle errors", async () => {
       const res = mockRes();
-      const req = {};
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       const error = new Error("fail");
       doctorsServices.getAllDoctors.mockRejectedValue(error);
 
@@ -59,20 +71,32 @@ describe("Doctors Controller", () => {
   describe("GetDoctorsCouncilRegistrationController", () => {
     it("should return doctors with correct status", async () => {
       const res = mockRes();
-      const req = {};
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       const response = { statusCode: 200, data: [{ id: 2 }] };
       doctorsServices.getAllDoctors.mockResolvedValue(response);
 
       await GetDoctorsCouncilRegistrationController(req, res, mockNext);
 
-      expect(doctorsServices.getAllDoctors).toHaveBeenCalled();
+      expect(doctorsServices.getAllDoctors).toHaveBeenCalledWith(
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(response);
     });
 
     it("should handle errors", async () => {
       const res = mockRes();
-      const req = {};
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       const error = new Error("fail");
       doctorsServices.getAllDoctors.mockRejectedValue(error);
 

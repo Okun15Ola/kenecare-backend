@@ -28,17 +28,31 @@ describe("Patients Controller", () => {
   describe("GetPatientsController", () => {
     it("should return patients with correct status", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       patientsServices.getAllPatients.mockResolvedValue(mockResponse);
 
       await GetPatientsController(req, res, next);
 
-      expect(patientsServices.getAllPatients).toHaveBeenCalled();
+      expect(patientsServices.getAllPatients).toHaveBeenCalledWith(
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should handle errors and call next", async () => {
       const error = new Error("Test error");
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       patientsServices.getAllPatients.mockRejectedValue(error);
 
       await GetPatientsController(req, res, next);

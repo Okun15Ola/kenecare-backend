@@ -82,11 +82,22 @@ describe("Admin Appointments Controllers", () => {
   describe("GetAdminAppointmentsByDoctorIdController", () => {
     it("should return appointments by doctor id with correct status", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1, doctorId: 1 }] };
+      const req = {
+        params: { id: "1" },
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: {},
+      };
       services.getAdminAppointmentsByDoctorId.mockResolvedValue(mockResponse);
 
       await GetAdminAppointmentsByDoctorIdController(req, res, next);
+      expect(services.getAdminAppointmentsByDoctorId).toHaveBeenCalledWith(
+        parseInt(req.params.id, 10),
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
 
-      expect(services.getAdminAppointmentsByDoctorId).toHaveBeenCalledWith(1);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });

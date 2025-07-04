@@ -33,17 +33,32 @@ describe("Testimonials Admin Controllers", () => {
   describe("GetTestimonialsController", () => {
     it("should return testimonials with correct status", async () => {
       const mockResponse = { statusCode: 200, data: [] };
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       services.getTestimonials.mockResolvedValue(mockResponse);
 
       await GetTestimonialsController(req, res, next);
 
-      expect(services.getTestimonials).toHaveBeenCalled();
+      expect(services.getTestimonials).toHaveBeenCalledWith(
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should handle errors", async () => {
       const error = new Error("fail");
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
+
       services.getTestimonials.mockRejectedValue(error);
 
       await GetTestimonialsController(req, res, next);

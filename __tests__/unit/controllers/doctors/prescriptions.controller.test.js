@@ -1,5 +1,13 @@
-jest.mock("../../../../src/services/prescriptions.services");
-jest.mock("../../../../src/middlewares/logger.middleware");
+jest.mock("../../../../src/services/prescriptions.services", () => ({
+  getPrescriptions: jest.fn(),
+  getAppointmentPrescriptionById: jest.fn(),
+  getAppointmentPrescriptions: jest.fn(),
+  createPrescription: jest.fn(),
+  updatePrescriptions: jest.fn(),
+}));
+jest.mock("../../../../src/middlewares/logger.middleware", () => ({
+  error: jest.fn(),
+}));
 
 const services = require("../../../../src/services/prescriptions.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
@@ -22,6 +30,8 @@ describe("Doctor Prescriptions Controllers", () => {
       user: { id: "1" },
       params: { id: "2" },
       body: {},
+      pagination: { limit: 10, offset: 0 },
+      paginationInfo: {},
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -34,11 +44,19 @@ describe("Doctor Prescriptions Controllers", () => {
   describe("GetPrescriptionsController", () => {
     it("should return prescriptions for the doctor", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
+      req.query = {};
+      req.pagination = { limit: 10, offset: 0 };
+      req.paginationInfo = {};
       services.getAppointmentPrescriptions.mockResolvedValue(mockResponse);
 
       await GetPrescriptionsController(req, res, next);
 
-      expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(1);
+      expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(
+        parseInt(req.user.id, 10),
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
@@ -84,7 +102,12 @@ describe("Doctor Prescriptions Controllers", () => {
 
       await GetAppointmentPrescriptionsController(req, res, next);
 
-      expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(2);
+      expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(
+        2,
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });

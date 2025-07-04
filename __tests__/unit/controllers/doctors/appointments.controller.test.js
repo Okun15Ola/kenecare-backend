@@ -36,39 +36,53 @@ describe("Doctor Appointments Controllers", () => {
 
   describe("GetDoctorAppointmentsController", () => {
     it("should return appointments by date range if startDate and endDate are present", async () => {
-      req.query = {
-        startDate: "2024-01-01",
-        endDate: "2024-01-31",
-        page: "2",
-        limit: "10",
+      const req = {
+        query: {
+          startDate: "2024-01-01",
+          endDate: "2024-01-31",
+        },
+        user: { id: 1 },
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
       };
+      const userId = req.user.id;
       const mockResponse = { statusCode: 200, data: [] };
       services.getDoctorAppointmentByDateRange.mockResolvedValue(mockResponse);
 
       await GetDoctorAppointmentsController(req, res, next);
 
       expect(services.getDoctorAppointmentByDateRange).toHaveBeenCalledWith({
-        userId: 1,
-        startDate: "2024-01-01",
-        endDate: "2024-01-31",
-        page: "2",
-        limit: "10",
+        userId,
+        startDate: req.query.startDate,
+        endDate: req.query.endDate,
+        limit: req.pagination.limit,
+        offset: req.pagination.offset,
+        paginationInfo: req.paginationInfo,
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should return all appointments if no date range", async () => {
-      req.query = { page: "1", limit: "5" };
+      const req = {
+        query: {
+          // No startDate or endDate
+        },
+        user: { id: 1 },
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
+      const userId = req.user.id;
       const mockResponse = { statusCode: 200, data: [] };
       services.getDoctorAppointments.mockResolvedValue(mockResponse);
 
       await GetDoctorAppointmentsController(req, res, next);
 
       expect(services.getDoctorAppointments).toHaveBeenCalledWith({
-        userId: 1,
-        page: "1",
-        limit: "5",
+        userId,
+        limit: req.pagination.limit,
+        offset: req.pagination.offset,
+        paginationInfo: req.paginationInfo,
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -76,7 +90,16 @@ describe("Doctor Appointments Controllers", () => {
 
     it("should handle errors", async () => {
       const error = new Error("Test error");
-      services.getDoctorAppointments.mockRejectedValue(error);
+      const req = {
+        query: {
+          startDate: "2024-01-01",
+          endDate: "2024-01-31",
+        },
+        user: { id: 1 },
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
+      services.getDoctorAppointmentByDateRange.mockRejectedValue(error);
 
       await GetDoctorAppointmentsController(req, res, next);
 
