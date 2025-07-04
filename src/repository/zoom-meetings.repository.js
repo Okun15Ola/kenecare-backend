@@ -19,8 +19,9 @@ exports.createNewZoomMeeting = async ({
   ]);
 };
 
-exports.getZoomMeetings = async () => {
-  return query(queries.GET_ALL_ZOOM_MEETINGS);
+exports.getZoomMeetings = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_ZOOM_MEETINGS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getZoomMeetingByZoomId = async (meetingId) => {

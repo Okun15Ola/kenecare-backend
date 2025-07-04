@@ -17,6 +17,7 @@ const {
   INTERNAL_SERVER_ERROR,
   SUCCESS,
   BAD_REQUEST,
+  UNAUTHORIZED,
 } = require("./utils/response.utils");
 
 // INDEX ROUTES
@@ -185,6 +186,10 @@ app.use((err, req, res, next) => {
   if (err.statusCode === 400) {
     statusCode = 400;
     return res.status(statusCode).json(BAD_REQUEST({ message: err.message }));
+  }
+  if (err.statusCode === 401) {
+    statusCode = 401;
+    return res.status(statusCode).json(UNAUTHORIZED({ message: err.message }));
   }
   if (err.code === 404) {
     statusCode = 404;

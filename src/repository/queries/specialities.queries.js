@@ -1,6 +1,6 @@
 module.exports = {
   GET_ALL_SPECIALTIES: `
-    SELECT * FROM medical_specialities;
+    SELECT * FROM medical_specialities
   `,
   GET_SPECIALTY_BY_ID: `
     SELECT * FROM medical_specialities WHERE speciality_id = ? LIMIT 1;

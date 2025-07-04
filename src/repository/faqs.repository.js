@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/faqs.queries");
 
-exports.getAllFaqs = async () => {
-  return query(queries.GET_ALL_FAQS);
+exports.getAllFaqs = async (limit = 20, offset = 1) => {
+  const optimizedQuery = `${queries.GET_ALL_FAQS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getFaqById = async (id) => {

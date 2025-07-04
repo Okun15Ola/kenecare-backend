@@ -3,9 +3,7 @@ const {
   deleteAppointmentById,
   getAppointmentByUUID,
 } = require("../repository/patientAppointments.repository");
-
 const Response = require("../utils/response.utils");
-
 const {
   updateAppointmentPaymentStatus,
   getAppointmentPaymentByAppointmentId,

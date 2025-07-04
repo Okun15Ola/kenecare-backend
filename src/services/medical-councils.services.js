@@ -2,12 +2,21 @@ const repo = require("../repository/medical-councils.repository");
 const Response = require("../utils/response.utils");
 const redisClient = require("../config/redis.config");
 const { mapMedicalCouncilRow } = require("../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../utils/caching.utils");
 
-exports.getMedicalCouncils = async () => {
-  const cacheKey = "medical-council:all";
+/**
+ * @description Service to handle medical council related operations
+ * @module services/medical-councils.services
+ */
+
+exports.getMedicalCouncils = async (limit, offset, paginationInfo) => {
+  const cacheKey = cacheKeyBulider("medical-council:all", limit, offset);
   const cachedData = await redisClient.get(cacheKey);
   if (cachedData) {
-    return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    return Response.SUCCESS({
+      data: JSON.parse(cachedData),
+      pagination: paginationInfo,
+    });
   }
   const rawData = await repo.getAllMedicalCouncils();
   if (!rawData) {
@@ -21,7 +30,7 @@ exports.getMedicalCouncils = async () => {
     key: cacheKey,
     value: JSON.stringify(councils),
   });
-  return Response.SUCCESS({ data: councils });
+  return Response.SUCCESS({ data: councils, pagination: paginationInfo });
 };
 
 exports.getMedicalCouncilByEmail = async (councilEmail) => {

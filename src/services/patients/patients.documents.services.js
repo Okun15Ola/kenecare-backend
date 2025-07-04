@@ -17,14 +17,11 @@ const Response = require("../../utils/response.utils");
 const {
   uploadFileToS3Bucket,
   deleteFileFromS3Bucket,
-  // getObjectFromS3Bucket,
   getFileUrlFromS3Bucket,
 } = require("../../utils/aws-s3.utils");
 const { documentSharedWithDoctorSMS } = require("../../utils/sms.utils");
 const { getDoctorById } = require("../../repository/doctors.repository");
 const redisClient = require("../../config/redis.config");
-// const { encryptFile, decryptFile } = require("../utils/file-upload.utils");
-// const { getUserById } = require("../db/db.users");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {

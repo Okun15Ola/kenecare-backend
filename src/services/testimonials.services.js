@@ -1,43 +1,35 @@
 const repo = require("../repository/testimonials.repository");
 const Response = require("../utils/response.utils");
-const { appBaseURL } = require("../config/default.config");
 const redisClient = require("../config/redis.config");
+const { cacheKeyBulider } = require("../utils/caching.utils");
+const { mapTestimonialRow } = require("../utils/db-mapper.utils");
 
-exports.getTestimonials = async () => {
+/**
+ * @description Service to handle testimonials related operations
+ * @module services/testimonials.services
+ */
+
+exports.getTestimonials = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "testimonials:all";
+    const cacheKey = cacheKeyBulider("testimonials:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await repo.getAllTestimonials();
+    const rawData = await repo.getAllTestimonials(limit, offset);
     if (!rawData) return null;
 
-    const testimonials = rawData.map(
-      ({
-        testimonial_id: testimonialId,
-        first_name: firstName,
-        last_name: lastName,
-        profile_pic_url: patientPic,
-        testimonial_content: content,
-        is_active: isActive,
-        is_approved: isApproved,
-        approved_by: approvedBy,
-      }) => ({
-        testimonialId,
-        patientName: `${firstName} ${lastName}`,
-        patientPic: `${appBaseURL}/user-profile/${patientPic}`,
-        content,
-        isActive,
-        isApproved,
-        approvedBy,
-      }),
-    );
+    const testimonials = rawData
+      .filter((t) => t.is_approved && t.is_active)
+      .map(mapTestimonialRow);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(testimonials),
     });
-    return Response.SUCCESS({ data: testimonials });
+    return Response.SUCCESS({ data: testimonials, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     return error;
@@ -56,26 +48,8 @@ exports.getTestimonialById = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
-    const {
-      testimonial_id: testimonialId,
-      first_name: firstName,
-      last_name: lastName,
-      profile_pic_url: patientPic,
-      testimonial_content: content,
-      is_active: isActive,
-      is_approved: isApproved,
-      approved_by: approvedBy,
-    } = rawData;
 
-    const testimonial = {
-      testimonialId,
-      patientName: `${firstName} ${lastName}`,
-      patientPic,
-      content,
-      isActive,
-      isApproved,
-      approvedBy,
-    };
+    const testimonial = mapTestimonialRow(rawData);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(testimonial),

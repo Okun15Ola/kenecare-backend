@@ -4,15 +4,19 @@ const { generateFileName } = require("../../utils/file-upload.utils");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 const { mapBlogRow } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-exports.getBlogs = async () => {
+exports.getBlogs = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "blogs:all";
+    const cacheKey = cacheKeyBulider("blogs:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await dbObject.getAllBlogs();
+    const rawData = await dbObject.getAllBlogs(limit, offset);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Blogs Not Found" });
@@ -25,7 +29,7 @@ exports.getBlogs = async () => {
       value: JSON.stringify(blogs),
     });
 
-    return Response.SUCCESS({ data: blogs });
+    return Response.SUCCESS({ data: blogs, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;

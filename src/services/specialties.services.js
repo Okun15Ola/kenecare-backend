@@ -1,44 +1,35 @@
 const fs = require("fs");
 const path = require("path");
-const he = require("he");
 const repo = require("../repository/specialities.repository");
 const Response = require("../utils/response.utils");
 const { deleteFile } = require("../utils/file-upload.utils");
-const { appBaseURL } = require("../config/default.config");
 const redisClient = require("../config/redis.config");
+const { cacheKeyBulider } = require("../utils/caching.utils");
+const { mapSpecialityRow } = require("../utils/db-mapper.utils");
 
-exports.getSpecialties = async () => {
-  const cacheKey = "specialties:all";
-  const cachedData = await redisClient.get(cacheKey);
-  if (cachedData) {
-    return Response.SUCCESS({ data: JSON.parse(cachedData) });
+/**
+ * @description Service to handle specialties related operations
+ * @module services/specialties.services
+ */
+
+exports.getSpecialties = async (limit, offset, paginationInfo) => {
+  try {
+    const cacheKey = cacheKeyBulider("specialties:all", limit, offset);
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData), paginationInfo });
+    }
+    const rawData = await repo.getAllSpecialties(limit, offset);
+    const specialties = rawData.map(mapSpecialityRow);
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(specialties),
+    });
+    return Response.SUCCESS({ data: specialties, pagination: paginationInfo });
+  } catch (error) {
+    console.error("GET ALL SPECIALTIES ERROR: ", error);
+    throw error;
   }
-  const rawData = await repo.getAllSpecialties();
-
-  const specialties = rawData.map(
-    ({
-      speciality_id: specialtyId,
-      speciality_name: specialtyName,
-      speciality_description: description,
-      tags,
-      image_url: imageUrl,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    }) => ({
-      specialtyId,
-      specialtyName: he.decode(specialtyName),
-      description: he.decode(description),
-      tags,
-      imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
-      isActive,
-      inputtedBy,
-    }),
-  );
-  await redisClient.set({
-    key: cacheKey,
-    value: JSON.stringify(specialties),
-  });
-  return Response.SUCCESS({ data: specialties });
 };
 
 exports.getSpecialtyByName = async (name) => {
@@ -53,25 +44,8 @@ exports.getSpecialtyByName = async (name) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
-    const {
-      speciality_id: specialtyId,
-      speciality_name: specialtyName,
-      speciality_description: description,
-      image_url: imageUrl,
-      tags,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
 
-    const specialty = {
-      specialtyId,
-      specialtyName: he.decode(specialtyName),
-      description: he.decode(description),
-      tags,
-      imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
-      isActive,
-      inputtedBy,
-    };
+    const specialty = mapSpecialityRow(rawData);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialty),
@@ -95,23 +69,8 @@ exports.getSpecialtyById = async (id) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
-    const {
-      speciality_id: specialtyId,
-      speciality_name: specialtyName,
-      speciality_description: description,
-      image_url: imageUrl,
-      is_active: isActive,
-      inputted_by: inputtedBy,
-    } = rawData;
 
-    const specialty = {
-      specialtyId,
-      specialtyName: he.decode(specialtyName),
-      description: he.decode(description),
-      imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
-      isActive,
-      inputtedBy,
-    };
+    const specialty = mapSpecialityRow(rawData, true);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialty),

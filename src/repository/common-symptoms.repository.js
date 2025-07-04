@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/commonSymptoms.queries");
 
-exports.getAllCommonSymptoms = async () => {
-  return query(queries.GET_ALL_COMMON_SYMPTOMS);
+exports.getAllCommonSymptoms = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_COMMON_SYMPTOMS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getCommonSymptomById = async (id) => {

@@ -2,15 +2,19 @@ const dbObject = require("../../repository/blog-categories.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 const { mapBlogCategoryRow } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-exports.getBlogCategories = async () => {
+exports.getBlogCategories = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "blog-categories:all";
+    const cacheKey = cacheKeyBulider("blog-categories:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await dbObject.getAllBlogCategories();
+    const rawData = await dbObject.getAllBlogCategories(limit, offset);
     const categories = rawData.map(mapBlogCategoryRow);
 
     await redisClient.set({
@@ -18,7 +22,10 @@ exports.getBlogCategories = async () => {
       value: JSON.stringify(categories),
     });
 
-    return Response.SUCCESS({ data: categories });
+    return Response.SUCCESS({
+      data: categories,
+      paginationina: paginationInfo,
+    });
   } catch (error) {
     console.error(error);
     throw error;

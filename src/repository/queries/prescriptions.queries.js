@@ -1,6 +1,6 @@
 module.exports = {
   GET_PRESCRIPTIONS_BY_APPOINTMENT_ID: `
-    SELECT * FROM appointment_prescriptions WHERE appointment_id = ?;
+    SELECT * FROM appointment_prescriptions WHERE appointment_id = ?
   `,
   GET_PRESCRIPTION_BY_ID: `
     SELECT * FROM appointment_prescriptions WHERE prescription_id = ?;

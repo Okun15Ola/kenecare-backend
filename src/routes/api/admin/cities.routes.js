@@ -15,10 +15,22 @@ const {
 } = require("../../../controllers/admin/cities.controller");
 const { adminLimiter } = require("../../../utils/rate-limit.utils");
 const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
+const {
+  calculatePaginationInfo,
+} = require("../../../middlewares/paginator.middleware");
 
 router.use(authenticateAdmin, adminLimiter); // Rate limiting middleware applied to all routes in this router
 
-router.get("/", GetCitiesController);
+router.get(
+  "/",
+  paginationValidation,
+  Validate,
+  calculatePaginationInfo("cities"),
+  GetCitiesController,
+);
 router.get("/:id", CityIDValidation, Validate, GetCityByIDController);
 router.post("/", CreateCityValidation, Validate, CreateCityController);
 router.put("/:id", UpdateCityValidation, Validate, UpdateCityByIdController);

@@ -10,7 +10,11 @@ const {
 
 exports.GetCitiesController = async (req, res, next) => {
   try {
-    const response = await getCities();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getCities(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

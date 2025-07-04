@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/patientDocs.queries");
 
-exports.getAllPatientDocs = async () => {
-  return query(queries.GET_ALL_PATIENT_DOCS);
+exports.getAllPatientDocs = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_PATIENT_DOCS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getPatientMedicalDocumentById = async (documentId) => {

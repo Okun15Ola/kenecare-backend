@@ -19,10 +19,22 @@ const {
   authenticateUser,
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
+const {
+  calculatePaginationInfo,
+} = require("../../../middlewares/paginator.middleware");
 
 router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
-router.get("/", GetDoctorAppointmentsController);
+router.get(
+  "/",
+  paginationValidation,
+  Validate,
+  calculatePaginationInfo("medical_appointments"),
+  GetDoctorAppointmentsController,
+);
 router.get("/:id", GetDoctorAppointmentsByIDController);
 
 router.patch(

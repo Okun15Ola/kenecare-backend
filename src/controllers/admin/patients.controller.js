@@ -7,7 +7,11 @@ const {
 
 exports.GetPatientsController = async (req, res, next) => {
   try {
-    const response = await getAllPatients();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getAllPatients(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

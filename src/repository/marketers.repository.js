@@ -19,8 +19,9 @@ const {
   GET_TOTAL_USERS_REGISTERED_BY_MARKETER_REFERRAL_CODE,
 } = require("./queries/marketers.queries");
 
-exports.getAllMarketers = async () => {
-  return query(GET_ALL_MARKETERS);
+exports.getAllMarketers = async (limit, offset) => {
+  const optimizedQuery = `${GET_ALL_MARKETERS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 exports.getUsersByMarketerReferralCode = async (referralCode) => {
   return query(GET_USERS_BY_MARKETER_REFERRAL_CODE, [referralCode]);

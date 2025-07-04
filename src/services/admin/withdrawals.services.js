@@ -16,14 +16,14 @@ const {
 } = require("../../utils/sms.utils");
 const { mapWithdawalRow } = require("../../utils/db-mapper.utils");
 
-exports.getAllRequests = async () => {
+exports.getAllRequests = async (limit, offset, paginationInfo) => {
   try {
-    const rawData = await getAllWithdrawalRequests();
+    const rawData = await getAllWithdrawalRequests(limit, offset);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
     const data = rawData.map(mapWithdawalRow);
-    return Response.SUCCESS({ data });
+    return Response.SUCCESS({ data, pagination: paginationInfo });
   } catch (error) {
     console.error("GET ALL WITHDRAWAL REQUESTS  ERROR: ", error);
     throw error;

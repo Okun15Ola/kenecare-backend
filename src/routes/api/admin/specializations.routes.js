@@ -14,10 +14,22 @@ const {
 } = require("../../../validations/specialization.validation");
 const { adminLimiter } = require("../../../utils/rate-limit.utils");
 const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
+const {
+  calculatePaginationInfo,
+} = require("../../../middlewares/paginator.middleware");
 
 router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
-router.get("/", GetSpecializationsController);
+router.get(
+  "/",
+  paginationValidation,
+  Validate,
+  calculatePaginationInfo("specializations"),
+  GetSpecializationsController,
+);
 router.get(
   "/:id",
   SpecializationIDValidation,

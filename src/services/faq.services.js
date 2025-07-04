@@ -4,7 +4,7 @@ const { mapSpecializationRow } = require("../utils/db-mapper.utils");
 
 exports.getSpecialties = async () => {
   try {
-    const rawData = await repo.getAllSpecialization();
+    const rawData = await repo.getAllSpecialization(); // TODO: revisit this to use pagination
     const specializations = rawData.map(mapSpecializationRow);
     return Response.SUCCESS({ data: specializations });
   } catch (error) {

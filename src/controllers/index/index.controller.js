@@ -32,7 +32,11 @@ const { getTestimonials } = require("../../services/testimonials.services");
 
 exports.GetBlogsController = async (req, res, next) => {
   try {
-    const response = await getBlogs();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getBlogs(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -53,7 +57,11 @@ exports.GetBlogByIDController = async (req, res, next) => {
 };
 exports.GetBlogCategoriesController = async (req, res, next) => {
   try {
-    const response = await getBlogCategories();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getBlogCategories(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -74,15 +82,11 @@ exports.GetBlogCategoryByIDController = async (req, res, next) => {
 };
 exports.GetCitiesController = async (req, res, next) => {
   try {
-    const response = await getCities();
-    response.data = response.data.map(
-      ({ cityId, cityName, latitude, longitude }) => ({
-        cityId,
-        cityName,
-        latitude,
-        longitude,
-      }),
-    );
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getCities(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -103,28 +107,11 @@ exports.GetCityByIDController = async (req, res, next) => {
 };
 exports.GetCommonSymptomsController = async (req, res, next) => {
   try {
-    const response = await getCommonSymptoms();
-
-    response.data = response.data.map(
-      ({
-        symptomId,
-        name,
-        imageUrl,
-        description,
-        tags,
-        consultationFee,
-        specialty,
-      }) => ({
-        symptomId,
-        name,
-        imageUrl,
-        description,
-        consultationFee,
-        specialty,
-        tags,
-      }),
-    );
-
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getCommonSymptoms(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -145,6 +132,10 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
 };
 exports.GetDoctorsController = async (req, res, next) => {
   try {
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
     let response = null;
     if (Object.keys(req.query).length > 0) {
       const {
@@ -153,7 +144,12 @@ exports.GetDoctorsController = async (req, res, next) => {
         specialty_id: specialtyId,
       } = req.query || null;
       if (specialtyId) {
-        response = await getDoctorBySpecialtyId(specialtyId);
+        response = await getDoctorBySpecialtyId(
+          specialtyId,
+          limit,
+          offset,
+          paginationInfo,
+        );
       } else {
         // GET DOCTORS BY LOCATION
         response = await getDoctorByQuery({ locationId, query });
@@ -201,16 +197,11 @@ exports.GetFaqByIdController = async (req, res, next) => {
 };
 exports.GetMedicalCouncilsController = async (req, res, next) => {
   try {
-    const response = await getMedicalCouncils();
-    response.data = response.data.map(
-      ({ councilId, councilName, email, address, mobileNumber }) => ({
-        councilId,
-        councilName,
-        email,
-        address,
-        mobileNumber,
-      }),
-    );
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getMedicalCouncils(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -222,15 +213,6 @@ exports.GetMedicalCouncilByIDController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
     const response = await getMedicalCouncil(id);
-    response.data = response.data.map(
-      ({ councilId, councilName, email, address, mobileNumber }) => ({
-        councilId,
-        councilName,
-        email,
-        address,
-        mobileNumber,
-      }),
-    );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -285,7 +267,11 @@ exports.GetServiceByIDController = async (req, res, next) => {
 };
 exports.GetSpecializationsController = async (req, res, next) => {
   try {
-    const response = await getSpecializations();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getSpecializations(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -308,17 +294,11 @@ exports.GetSpecializationByIDController = async (req, res, next) => {
 };
 exports.GetSpecialtiesController = async (req, res, next) => {
   try {
-    const response = await getSpecialties();
-
-    response.data = response.data.map(
-      ({ specialtyId, specialtyName, description, imageUrl }) => ({
-        specialtyId,
-        specialtyName,
-        description,
-        imageUrl,
-      }),
-    );
-
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getSpecialties(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -359,16 +339,11 @@ exports.GetUserTypeByIDController = async (req, res, next) => {
 };
 exports.GetTestimonialsController = async (req, res, next) => {
   try {
-    const response = await getTestimonials();
-
-    response.data = response.data
-      .filter((t) => t.isApproved && t.isActive)
-      .map(({ testimonialId, patientName, patientPic, content }) => ({
-        testimonialId,
-        patientName,
-        patientPic,
-        content,
-      }));
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getTestimonials(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

@@ -20,11 +20,18 @@ const {
   GetPrescriptionsByAppointmentValidation,
   GetPrescriptionByIdValidation,
 } = require("../../../validations/doctor.prescriptions.validations");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
+const {
+  calculatePaginationInfo,
+} = require("../../../middlewares/paginator.middleware");
 
 router.get(
   "/appointment/:id",
-  GetPrescriptionsByAppointmentValidation,
+  [...GetPrescriptionsByAppointmentValidation, ...paginationValidation],
   Validate,
+  calculatePaginationInfo("appointment_prescriptions"),
   GetAppointmentPrescriptionsController,
 );
 router.get(

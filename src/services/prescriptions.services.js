@@ -3,11 +3,9 @@ const {
   getAppointmentPrescriptions,
   createAppointmentPrescriptions,
   updateAppointmentPrescriptions,
-
   getAppointmentPrescriptionById,
 } = require("../repository/prescriptions.repository");
 const Response = require("../utils/response.utils");
-
 const {
   generateVerificationToken,
   hashUsersPassword,
@@ -20,15 +18,33 @@ const {
 } = require("../repository/patientAppointments.repository");
 const { getPatientById } = require("../repository/patients.repository");
 const redisClient = require("../config/redis.config");
+const { cacheKeyBulider } = require("../utils/caching.utils");
 
-exports.getAppointmentPrescriptions = async (id) => {
+/**
+ * @description Service to handle appointment prescriptions related operations
+ * @module services/prescriptions.services
+ */
+
+exports.getAppointmentPrescriptions = async (
+  id,
+  limit,
+  offset,
+  paginationInfo,
+) => {
   try {
-    const cacheKey = "appointment-prescriptions:all";
+    const cacheKey = cacheKeyBulider(
+      "appointment-prescriptions:all",
+      limit,
+      offset,
+    );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await getAppointmentPrescriptions(id);
+    const rawData = await getAppointmentPrescriptions(limit, offset, id);
 
     const prescriptions = rawData.map(
       ({
@@ -48,7 +64,10 @@ exports.getAppointmentPrescriptions = async (id) => {
       key: cacheKey,
       value: JSON.stringify(prescriptions),
     });
-    return Response.SUCCESS({ data: prescriptions });
+    return Response.SUCCESS({
+      data: prescriptions,
+      pagination: paginationInfo,
+    });
   } catch (error) {
     console.error(error);
     throw error;

@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/payments.queries");
 
-exports.getAllAppointmentPayments = async () => {
-  return query(queries.GET_ALL_APPOINTMENT_PAYMENTS);
+exports.getAllAppointmentPayments = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_APPOINTMENT_PAYMENTS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getAppointmentPaymentById = async (paymentId) => {

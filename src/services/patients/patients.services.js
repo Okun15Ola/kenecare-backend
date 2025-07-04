@@ -16,15 +16,20 @@ const {
 } = require("../../repository/marketers.repository");
 const { sendMarketerUserRegisteredSMS } = require("../../utils/sms.utils");
 const redisClient = require("../../config/redis.config");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-exports.getAllPatients = async () => {
+exports.getAllPatients = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "patients:all";
+    const cacheKey = cacheKeyBulider("patients:all", limit, offset);
+    // Check if data is cached
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await repo.getAllPatients();
+    const rawData = await repo.getAllPatients(limit, offset);
 
     const patients = rawData.map(
       ({
@@ -63,7 +68,7 @@ exports.getAllPatients = async () => {
       key: cacheKey,
       value: JSON.stringify(patients),
     });
-    return Response.SUCCESS({ data: patients });
+    return Response.SUCCESS({ data: patients, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;

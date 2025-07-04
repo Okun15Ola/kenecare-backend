@@ -16,10 +16,22 @@ const {
 const { localMediaUploader } = require("../../../utils/file-upload.utils");
 const { adminLimiter } = require("../../../utils/rate-limit.utils");
 const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
+const {
+  calculatePaginationInfo,
+} = require("../../../middlewares/paginator.middleware");
 
 router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
-router.get("/", GetSpecialtiesController);
+router.get(
+  "/",
+  paginationValidation,
+  Validate,
+  calculatePaginationInfo("medical_specialities"),
+  GetSpecialtiesController,
+);
 router.get("/:id", SpecialtyIDValidation, Validate, GetSpecialtyByIDController);
 router.post(
   "/",

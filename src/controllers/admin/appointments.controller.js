@@ -38,8 +38,16 @@ exports.GetAdminAppointmentByIdController = async (req, res, next) => {
 exports.GetAdminAppointmentsByDoctorIdController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-
-    const response = await getAdminAppointmentsByDoctorId(id);
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getAdminAppointmentsByDoctorId(
+      id,
+      limit,
+      offset,
+      paginationInfo,
+    );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

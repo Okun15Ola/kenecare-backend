@@ -9,7 +9,11 @@ const {
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {
-    const response = await getAllDoctors();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getAllDoctors(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -19,7 +23,11 @@ exports.GetDoctorsController = async (req, res, next) => {
 };
 exports.GetDoctorsCouncilRegistrationController = async (req, res, next) => {
   try {
-    const response = await getAllDoctors();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getAllDoctors(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
