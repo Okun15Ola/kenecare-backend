@@ -197,12 +197,12 @@ exports.registerNewUser = async ({
     const hashedPassword = await hashUsersPassword(password);
 
     // reate user and send OTP via SMS
-    await Promise.allSettled([
+    await Promise.all([
       repo.createNewUser({
         mobileNumber,
+        userType: type,
         email,
         password: hashedPassword,
-        userType: type,
         vToken,
         referralCode,
       }),
