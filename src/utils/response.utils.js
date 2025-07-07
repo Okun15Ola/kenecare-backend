@@ -15,8 +15,18 @@ Response.SUCCESS = ({ message, data, pagination }) => {
 Response.NOT_MODIFIED = () => {
   const timestamp = new Date();
   return {
-    status: "no content",
+    status: "not modified",
     statusCode: HttpStatus.StatusCodes.NOT_MODIFIED,
+    timestamp,
+    message: null,
+    data: null,
+  };
+};
+Response.NO_CONTENT = () => {
+  const timestamp = new Date();
+  return {
+    status: "no content",
+    statusCode: HttpStatus.StatusCodes.NO_CONTENT,
     timestamp,
     message: null,
     data: null,
