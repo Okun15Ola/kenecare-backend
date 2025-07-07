@@ -1,5 +1,5 @@
 // Force Jest to use local mock for DB connection
-jest.mock("../__tests__/__mocks__/db.connection.js");
+jest.mock("../__tests__/__mocks__/src/repository/db.connection.js");
 
 // Mock express-mysql-session to prevent real DB session creation
 jest.mock("express-mysql-session", () => {
@@ -48,6 +48,11 @@ jest.mock("ioredis", () => {
     status: "ready",
   }));
 });
+
+jest.mock("@sendgrid/mail", () => ({
+  setApiKey: jest.fn(),
+  send: jest.fn().mockResolvedValue([{ statusCode: 202 }]),
+}));
 
 // Suppress noisy console errors
 beforeAll(() => {
