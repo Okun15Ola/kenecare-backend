@@ -14,6 +14,7 @@ module.exports = {
 
   connectionPool: {
     query: jest.fn(),
+    end: jest.fn(),
   },
 
   query: jest.fn(),
