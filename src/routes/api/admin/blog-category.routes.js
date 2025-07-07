@@ -11,8 +11,24 @@ const { Validate } = require("../../../validations/validate");
 const {
   blogCategoryValidations,
 } = require("../../../validations/admin/blog-category.validations");
+const { adminLimiter } = require("../../../utils/rate-limit.utils");
+const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
+const {
+  calculatePaginationInfo,
+} = require("../../../middlewares/paginator.middleware");
 
-router.get("/", GetBlogCategoriesController);
+router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+
+router.get(
+  "/",
+  paginationValidation,
+  Validate,
+  calculatePaginationInfo("blog_categories"),
+  GetBlogCategoriesController,
+);
 router.get("/:id", GetBlogCategoryByIDController);
 router.post(
   "/",

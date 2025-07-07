@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/degrees.queries");
 
-exports.getAllDegrees = async () => {
-  return query(queries.GET_ALL_DEGREES);
+exports.getAllDegrees = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_DEGREES} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getSpecializationById = async (degreeId) => {

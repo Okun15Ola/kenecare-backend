@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/medicalCouncils.queries");
 
-exports.getAllMedicalCouncils = async () => {
-  return query(queries.GET_ALL_MEDICAL_COUNCILS);
+exports.getAllMedicalCouncils = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_MEDICAL_COUNCILS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getMedicalCouncilById = async (id) => {

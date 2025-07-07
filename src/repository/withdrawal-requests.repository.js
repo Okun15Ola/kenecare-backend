@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/withdrawalRequest.queries");
 
-exports.getAllWithdrawalRequests = async () => {
-  return query(queries.GET_ALL_WITHDRAWAL_REQUESTS);
+exports.getAllWithdrawalRequests = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_WITHDRAWAL_REQUESTS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getWithdrawalRequestById = async (id) => {

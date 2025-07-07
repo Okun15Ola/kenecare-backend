@@ -2,6 +2,7 @@ const dbObject = require("../../repository/specializations.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 const { mapSpecializationRow } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
 /**
  * Retrieve a list of specializations from the database and transform the data.
@@ -15,11 +16,14 @@ const { mapSpecializationRow } = require("../../utils/db-mapper.utils");
  * const specializations = await getSpecializations();
  * // Returns an array of specialization objects.
  */
-exports.getSpecializations = async () => {
-  const cacheKey = "specializations:all";
+exports.getSpecializations = async (limit, offset, paginationInfo) => {
+  const cacheKey = cacheKeyBulider("specializations:all", limit, offset);
   const cachedData = await redisClient.get(cacheKey);
   if (cachedData) {
-    return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    return Response.SUCCESS({
+      data: JSON.parse(cachedData),
+      pagination: paginationInfo,
+    });
   }
   const rawData = await dbObject.getAllSpecialization();
 
@@ -32,7 +36,10 @@ exports.getSpecializations = async () => {
     key: cacheKey,
     value: JSON.stringify(specializations),
   });
-  return Response.SUCCESS({ data: specializations });
+  return Response.SUCCESS({
+    data: specializations,
+    pagination: paginationInfo,
+  });
 };
 
 /**

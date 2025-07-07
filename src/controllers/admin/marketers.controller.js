@@ -11,7 +11,15 @@ const {
 
 exports.GetAllMarketersController = async (req, res, next) => {
   try {
-    const response = await getAllMarketersService();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getAllMarketersService(
+      limit,
+      offset,
+      paginationInfo,
+    );
 
     return res.status(response.statusCode).json(response);
   } catch (error) {

@@ -1,5 +1,5 @@
 module.exports = {
-  GET_ALL_APPOINTMENT_PAYMENTS: "SELECT * FROM appointment_payments;",
+  GET_ALL_APPOINTMENT_PAYMENTS: "SELECT * FROM appointment_payments",
   GET_APPOINTMENT_PAYMENT_BY_ID:
     "SELECT * FROM appointment_payments WHERE payment_id = ?;",
   CREATE_APPOINTMENT_PAYMENT: `

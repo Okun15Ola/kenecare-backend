@@ -1,4 +1,5 @@
 const moment = require("moment");
+const he = require("he");
 const { getFileUrlFromS3Bucket } = require("./aws-s3.utils");
 const { decryptText } = require("./auth.utils");
 const { appBaseURL } = require("../config/default.config");
@@ -723,4 +724,175 @@ exports.mapAppointmentPrescriptionRow = (prescription) => {
     createdAt: moment(dateCreated).format("YYYY-MM-DD"),
     updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
   };
+};
+
+exports.mapDoctorRow = (doctor) => {
+  const {
+    doctor_id: doctorId,
+    title,
+    first_name: firstName,
+    middle_name: middleName,
+    last_name: lastName,
+    gender,
+    professional_summary: professionalSummary,
+    profile_pic_url: profilePic,
+    specialization_id: specialtyId,
+    speciality_name: specialization,
+    qualifications,
+    consultation_fee: consultationFee,
+    city_name: location,
+    latitude,
+    longitude,
+    years_of_experience: yearOfExperience,
+    is_profile_approved: isProfileApproved,
+    mobile_number: mobileNumber,
+    email,
+    user_type: userType,
+    is_account_active: isAccountActive,
+  } = doctor;
+  return {
+    doctorId,
+    title,
+    firstName,
+    middleName,
+    lastName,
+    gender,
+    professionalSummary,
+    profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
+    specialtyId,
+    specialization,
+    qualifications,
+    consultationFee,
+    location,
+    latitude,
+    longitude,
+    yearOfExperience,
+    isProfileApproved,
+    mobileNumber,
+    email,
+    userType,
+    isAccountActive,
+  };
+};
+
+exports.mapPatientAppointment = (appointment) => {
+  const {
+    appointment_id: appointmentId,
+    appointment_uuid: appointmentUUID,
+    patient_id: patient,
+    first_name: firstName,
+    last_name: lastName,
+    gender,
+    doctor_id: doctorId,
+    doctor_first_name: doctorFirstName,
+    doctor_last_name: doctorLastName,
+    appointment_type: appointmentType,
+    appointment_date: appointmentDate,
+    appointment_time: appointmentTime,
+    patient_name_on_prescription: patientNameOnPrescription,
+    patient_mobile_number: patientMobileNumber,
+    patient_symptoms: patientSymptoms,
+    consultation_fee: consultationFees,
+    specialization_id: specialtyId,
+    specialty_name: specialty,
+    time_slot: timeSlot,
+    meeting_id: meetingId,
+    join_url: meetingJoinUrl,
+    start_time: appointmentStartTime,
+    end_time: appointmentEndTime,
+    appointment_status: appointmentStatus,
+    cancelled_reason: cancelledReason,
+    cancelled_at: cancelledAt,
+    cancelled_by: cancelledBy,
+    postponed_reason: postponedReason,
+    postponed_date: postponeDate,
+    postponed_by: postponedBy,
+    created_at: createdAt,
+    payment_method: paymentMethod,
+    payment_status: paymentStatus,
+    transactionId: paymentTransactionId,
+  } = appointment;
+  return {
+    appointmentId,
+    appointmentUUID,
+    patient,
+    username: `${firstName} ${lastName}`,
+    gender,
+    doctorId,
+    doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+    appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+    appointmentTime,
+    appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
+    patientNameOnPrescription,
+    patientMobileNumber,
+    patientSymptoms,
+    consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
+    specialtyId,
+    specialty,
+    timeSlot,
+    meetingId,
+    meetingJoinUrl,
+    appointmentStartTime,
+    appointmentEndTime,
+    appointmentStatus,
+    paymentMethod,
+    paymentStatus,
+    paymentTransactionId,
+    cancelledReason,
+    cancelledAt,
+    cancelledBy,
+    postponedReason,
+    postponeDate,
+    postponedBy,
+    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+  };
+};
+
+exports.mapTestimonialRow = (testimonial) => {
+  const {
+    testimonial_id: testimonialId,
+    first_name: firstName,
+    last_name: lastName,
+    profile_pic_url: patientPic,
+    testimonial_content: content,
+    is_active: isActive,
+    is_approved: isApproved,
+    approved_by: approvedBy,
+  } = testimonial;
+  return {
+    testimonialId,
+    patientName: `${firstName} ${lastName}`,
+    patientPic: `${appBaseURL}/user-profile/${patientPic}`,
+    content,
+    isActive,
+    isApproved,
+    approvedBy,
+  };
+};
+
+exports.mapSpecialityRow = (speciality, excludeTags = false) => {
+  const {
+    speciality_id: specialtyId,
+    speciality_name: specialtyName,
+    speciality_description: description,
+    tags,
+    image_url: imageUrl,
+    is_active: isActive,
+    inputted_by: inputtedBy,
+  } = speciality;
+
+  const mapped = {
+    specialtyId,
+    specialtyName: he.decode(specialtyName),
+    description: he.decode(description),
+    imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
+    isActive,
+    inputtedBy,
+  };
+
+  if (!excludeTags) {
+    mapped.tags = tags;
+  }
+
+  return mapped;
 };

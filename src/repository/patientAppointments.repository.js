@@ -1,17 +1,8 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/patientAppointments.queries");
 
-exports.getAllPatientAppointments = async ({
-  patientId,
-  page = 1,
-  limit = 20,
-}) => {
-  const newPage = page < 1 ? 1 : page;
-  const newLimit = limit < 1 ? 10 : limit;
-  const offset = (newPage - 1) * newLimit;
-
-  const optimizedQuery = `${queries.GET_ALL_PATIENT_APPOINTMENTS} LIMIT ${newLimit} OFFSET ${offset}`;
-
+exports.getAllPatientAppointments = async ({ patientId, offset, limit }) => {
+  const optimizedQuery = `${queries.GET_ALL_PATIENT_APPOINTMENTS} LIMIT ${limit} OFFSET ${offset}`;
   return query(optimizedQuery, [patientId]);
 };
 

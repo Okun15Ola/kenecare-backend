@@ -37,23 +37,34 @@ describe("Patient Appointments Controllers", () => {
 
   describe("GetAppointmentsController", () => {
     it("should return patient appointments", async () => {
-      req.query = { page: "1", limit: "10" };
+      const req = {
+        user: { id: 1 },
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
+      const userId = req.user.id;
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
       services.getPatientAppointments.mockResolvedValue(mockResponse);
 
       await GetAppointmentsController(req, res, next);
 
-      expect(services.getPatientAppointments).toHaveBeenCalledWith({
-        userId: 1,
-        page: "1",
-        limit: "10",
-      });
+      expect(services.getPatientAppointments).toHaveBeenCalledWith(
+        userId,
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should handle errors", async () => {
       const error = new Error("Test error");
+      const req = {
+        user: { userId: 1 },
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       services.getPatientAppointments.mockRejectedValue(error);
 
       await GetAppointmentsController(req, res, next);

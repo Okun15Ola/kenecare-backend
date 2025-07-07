@@ -9,7 +9,11 @@ const {
 
 exports.GetTestimonialsController = async (req, res, next) => {
   try {
-    const response = await getTestimonials();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getTestimonials(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

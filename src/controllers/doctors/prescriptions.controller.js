@@ -8,8 +8,17 @@ const {
 
 const GetPrescriptionsController = async (req, res, next) => {
   try {
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
     const id = parseInt(req.user.id, 10);
-    const response = await getAppointmentPrescriptions(id);
+    const response = await getAppointmentPrescriptions(
+      id,
+      limit,
+      offset,
+      paginationInfo,
+    );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);
@@ -32,8 +41,17 @@ const GetAppointmentPrescriptionController = async (req, res, next) => {
 };
 const GetAppointmentPrescriptionsController = async (req, res, next) => {
   try {
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
     const appointmentId = parseInt(req.params.id, 10);
-    const response = await getAppointmentPrescriptions(appointmentId);
+    const response = await getAppointmentPrescriptions(
+      appointmentId,
+      limit,
+      offset,
+      paginationInfo,
+    );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

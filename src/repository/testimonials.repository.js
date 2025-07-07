@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/testimonials.queries");
 
-exports.getAllTestimonials = async () => {
-  return query(queries.GET_ALL_TESTIMONIALS);
+exports.getAllTestimonials = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_TESTIMONIALS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getTestimonialById = async (testimonialId) => {

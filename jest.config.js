@@ -5,7 +5,7 @@ module.exports = {
   // Optional: Add these for better test experience
   testPathIgnorePatterns: [
     "/node_modules/",
-    "/__mock__/", // ignore all mocks as test suites
+    "/__mocks__/", // ignore all mocks as test suites
   ],
   forceExit: true,
   detectOpenHandles: true,

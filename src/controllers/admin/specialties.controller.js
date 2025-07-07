@@ -14,7 +14,11 @@ localMediaUploader.single("image");
 
 exports.GetSpecialtiesController = async (req, res, next) => {
   try {
-    const response = await getSpecialties();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getSpecialties(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

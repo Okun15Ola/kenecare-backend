@@ -4,13 +4,17 @@ const redisClient = require("../config/redis.config");
 const { uploadFileToS3Bucket } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 const { mapCommonSymptomsRow } = require("../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../utils/caching.utils");
 
-exports.getCommonSymptoms = async () => {
+exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "common-symptoms:all";
+    const cacheKey = cacheKeyBulider("common-symptoms:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
 
     const rawData = await repo.getAllCommonSymptoms();
@@ -19,7 +23,7 @@ exports.getCommonSymptoms = async () => {
       key: cacheKey,
       value: JSON.stringify(symptoms),
     });
-    return Response.SUCCESS({ data: symptoms });
+    return Response.SUCCESS({ data: symptoms, pagination: paginationInfo });
   } catch (error) {
     console.error("GET ALL COMMON SYMPTOMS ERROR: ", error);
     throw error;

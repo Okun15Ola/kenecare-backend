@@ -8,7 +8,11 @@ const {
 
 exports.GetAllWithdrawalRequestsController = async (req, res, next) => {
   try {
-    const response = await getAllRequests();
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
+    const response = await getAllRequests(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

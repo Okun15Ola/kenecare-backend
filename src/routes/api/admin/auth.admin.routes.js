@@ -9,7 +9,9 @@ const {
   AdminLoginValidations,
   AdminRegisterValidations,
 } = require("../../../validations/auth.admin.validations");
+const { authLimiter } = require("../../../utils/rate-limit.utils");
 
+router.use(authLimiter); // Rate limiting middleware applied to all routes in this router
 router.get("/authenticate", AuthenticateController);
 router.post("/login", AdminLoginValidations, Validate, AdminLoginController);
 

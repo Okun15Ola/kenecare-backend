@@ -19,20 +19,27 @@ const { getPatientByUserId } = require("../repository/patients.repository");
 const { getFileUrlFromS3Bucket } = require("../utils/aws-s3.utils");
 const { getDoctorByUserId } = require("../repository/doctors.repository");
 const redisClient = require("../config/redis.config");
+const { cacheKeyBulider } = require("../utils/caching.utils");
 
-exports.getUsers = async () => {
+exports.getUsers = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "users:all";
+    const cacheKey = cacheKeyBulider("users:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
     const rawData = await repo.getAllUsers();
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(rawData),
     });
-    return rawData;
+    return Response.SUCCESS({
+      data: rawData,
+      pagination: paginationInfo,
+    });
   } catch (error) {
     console.error(error);
     throw error;
@@ -190,12 +197,12 @@ exports.registerNewUser = async ({
     const hashedPassword = await hashUsersPassword(password);
 
     // reate user and send OTP via SMS
-    await Promise.allSettled([
+    await Promise.all([
       repo.createNewUser({
         mobileNumber,
+        userType: type,
         email,
         password: hashedPassword,
-        userType: type,
         vToken,
         referralCode,
       }),

@@ -2,15 +2,19 @@ const dbObject = require("../../repository/adminAppointments.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 const { mapAdminAppointmentRow } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-exports.getAdminAppointments = async ({ page, limit }) => {
+exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
   try {
-    const cacheKey = "admin-appointments:all";
+    const cacheKey = cacheKeyBulider("admin-appointments:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await dbObject.getAllAppointments({ page, limit });
+    const rawData = await dbObject.getAllAppointments({ limit, offset });
 
     const appointments = rawData.map(mapAdminAppointmentRow);
 
@@ -18,20 +22,36 @@ exports.getAdminAppointments = async ({ page, limit }) => {
       key: cacheKey,
       value: JSON.stringify(appointments),
     });
-    return Response.SUCCESS({ data: appointments });
+    return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-exports.getAdminAppointmentsByDoctorId = async (doctorId) => {
+exports.getAdminAppointmentsByDoctorId = async (
+  doctorId,
+  limit,
+  offset,
+  paginationInfo,
+) => {
   try {
-    const cacheKey = `admin-appointments-by-doctor-id:${doctorId}`;
+    const cacheKey = cacheKeyBulider(
+      `admin-appointments-by-doctor-id:${doctorId}`,
+      limit,
+      offset,
+    );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await dbObject.getAppointmentsByDoctorId(doctorId);
+    const rawData = await dbObject.getAppointmentsByDoctorId(
+      limit,
+      offset,
+      doctorId,
+    );
 
     const appointments = rawData.map(mapAdminAppointmentRow);
 
@@ -40,7 +60,7 @@ exports.getAdminAppointmentsByDoctorId = async (doctorId) => {
       value: JSON.stringify(appointments),
     });
 
-    return Response.SUCCESS({ data: appointments });
+    return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;

@@ -31,22 +31,37 @@ describe("Marketers Controllers", () => {
   describe("GetAllMarketersController", () => {
     it("should return marketers with correct status", async () => {
       const res = mockRes();
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
       marketersServices.getAllMarketersService.mockResolvedValue(mockResponse);
 
-      await GetAllMarketersController({}, res, mockNext);
+      await GetAllMarketersController(req, res, mockNext);
 
-      expect(marketersServices.getAllMarketersService).toHaveBeenCalled();
+      expect(marketersServices.getAllMarketersService).toHaveBeenCalledWith(
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should call next on error", async () => {
       const res = mockRes();
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
+
       const error = new Error("fail");
       marketersServices.getAllMarketersService.mockRejectedValue(error);
 
-      await GetAllMarketersController({}, res, mockNext);
+      await GetAllMarketersController(req, res, mockNext);
 
       expect(logger.error).toHaveBeenCalledWith(error);
       expect(mockNext).toHaveBeenCalledWith(error);

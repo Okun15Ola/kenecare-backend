@@ -15,21 +15,29 @@ exports.GetDoctorAppointmentsController = async (req, res, next) => {
     const userId = parseInt(req.user.id, 10);
     const startDate = req.query.startDate ? req.query.startDate : null;
     const endDate = req.query.endDate ? req.query.endDate : null;
-    const page = req.query.page ? req.query.page : 1;
-    const limit = req.query.limit ? req.query.limit : 20;
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
 
     if (startDate && endDate) {
       const response = await getDoctorAppointmentByDateRange({
         userId,
         startDate,
         endDate,
-        page,
         limit,
+        offset,
+        paginationInfo,
       });
       return res.status(response.statusCode).json(response);
     }
 
-    const response = await getDoctorAppointments({ userId, page, limit });
+    const response = await getDoctorAppointments({
+      userId,
+      limit,
+      offset,
+      paginationInfo,
+    });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

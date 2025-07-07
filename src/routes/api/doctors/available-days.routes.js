@@ -3,9 +3,14 @@ const {
   GetDoctorWalletController,
   UpdateWalletPinController,
 } = require("../../../controllers/doctors/wallet.controller");
-const { limiter: rateLimit } = require("../../../utils/rate-limit.utils");
+const { limiter } = require("../../../utils/rate-limit.utils");
+const {
+  authenticateUser,
+  authorizeDoctor,
+} = require("../../../middlewares/auth.middleware");
 
-rateLimit(router);
+router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+
 router.get("/", GetDoctorWalletController);
 router.post("/", (req, res, next) => {
   try {

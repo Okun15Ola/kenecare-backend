@@ -2,15 +2,19 @@ const dbObject = require("../../repository/cities.repository");
 const Response = require("../../utils/response.utils");
 const redisClient = require("../../config/redis.config");
 const { mapCityRow } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-exports.getCities = async () => {
+exports.getCities = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "cities:all";
+    const cacheKey = cacheKeyBulider("cities:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const [rawData] = await dbObject.getAllCities();
+    const [rawData] = await dbObject.getAllCities(limit, offset);
     if (!rawData || rawData.length === 0) {
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
@@ -21,7 +25,7 @@ exports.getCities = async () => {
       key: cacheKey,
       value: JSON.stringify(cities),
     });
-    return Response.SUCCESS({ data: cities });
+    return Response.SUCCESS({ data: cities, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;

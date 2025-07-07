@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/doctors.queries");
 
-exports.getAllDoctors = async () => {
-  return query(queries.GET_ALL_DOCTORS);
+exports.getAllDoctors = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_DOCTORS} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery);
 };
 
 exports.getDoctorByQuery = async ({ locationId, query: search }) => {
@@ -25,16 +26,23 @@ exports.getDoctorByUserId = async (userId) => {
   return result[0];
 };
 
-exports.getDoctorsByCityId = async (cityId) => {
-  return query(queries.GET_DOCTOR_BY_CITY_ID, [cityId]);
+exports.getDoctorsByCityId = async (cityId, limit, offset) => {
+  const optimizedQuery = `${queries.GET_DOCTOR_BY_CITY_ID} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery, [cityId]);
 };
 
-exports.getDoctorsBySpecializationId = async (specializationId) => {
-  return query(queries.GET_DOCTOR_BY_SPECIALIZATION_ID, [specializationId]);
+exports.getDoctorsBySpecializationId = async (
+  specializationId,
+  limit,
+  offset,
+) => {
+  const optimizedQuery = `${queries.GET_DOCTOR_BY_SPECIALIZATION_ID} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery, [specializationId]);
 };
 
-exports.getDoctorsByHospitalId = async (hospitalId) => {
-  return query(queries.GET_DOCTOR_BY_HOSPITAL_ID, [hospitalId]);
+exports.getDoctorsByHospitalId = async (hospitalId, limit, offset) => {
+  const optimizedQuery = `${queries.GET_DOCTOR_BY_HOSPITAL_ID} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery, [hospitalId]);
 };
 
 exports.getCouncilRegistrationByDoctorId = async (doctorId) => {

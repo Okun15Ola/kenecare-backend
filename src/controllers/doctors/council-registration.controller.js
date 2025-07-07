@@ -22,6 +22,7 @@ const GetDoctorCouncilRegistrationController = async (req, res, next) => {
     return next(error);
   }
 };
+// TODO: decouple this fn
 const GetDoctorCouncilRegistrationDocumentController = async (
   req,
   res,
@@ -63,6 +64,7 @@ const GetDoctorCouncilRegistrationDocumentController = async (
     return next(error);
   }
 };
+
 const CreateDoctorCouncilRegistration = async (req, res, next) => {
   try {
     const userId = req.user.id;

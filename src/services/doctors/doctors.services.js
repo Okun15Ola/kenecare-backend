@@ -17,63 +17,16 @@ const {
   createDoctorWallet,
 } = require("../../repository/doctor-wallet.repository");
 const { hashUsersPassword } = require("../../utils/auth.utils");
+const { mapDoctorRow } = require("../../utils/db-mapper.utils");
 
-exports.getAllDoctors = async () => {
+exports.getAllDoctors = async (limit, offset, paginationInfo) => {
   try {
-    const rawData = await dbObject.getAllDoctors();
+    const rawData = await dbObject.getAllDoctors(limit, offset);
     let doctors = [];
     if (rawData) {
-      doctors = rawData.map(
-        ({
-          doctor_id: doctorId,
-          title,
-          first_name: firstName,
-          middle_name: middleName,
-          last_name: lastName,
-          gender,
-          professional_summary: professionalSummary,
-          profile_pic_url: profilePic,
-          specialization_id: specialtyId,
-          speciality_name: specialization,
-          qualifications,
-          consultation_fee: consultationFee,
-          city_name: location,
-          latitude,
-          longitude,
-          years_of_experience: yearOfExperience,
-          is_profile_approved: isProfileApproved,
-          mobile_number: mobileNumber,
-          email,
-          user_type: userType,
-          is_account_active: isAccountActive,
-        }) => ({
-          doctorId,
-          title,
-          firstName,
-          middleName,
-          lastName,
-          gender,
-          professionalSummary,
-          profilePic: profilePic
-            ? `${appBaseURL}/user-profile/${profilePic}`
-            : null,
-          specialtyId,
-          specialization,
-          qualifications,
-          consultationFee,
-          location,
-          latitude,
-          longitude,
-          yearOfExperience,
-          isProfileApproved,
-          mobileNumber,
-          email,
-          userType,
-          isAccountActive,
-        }),
-      );
+      doctors = rawData.map(mapDoctorRow);
     }
-    return Response.SUCCESS({ data: doctors });
+    return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;
@@ -84,55 +37,7 @@ exports.getDoctorByQuery = async ({ locationId, query }) => {
     const rawData = await dbObject.getDoctorByQuery({ locationId, query });
     let doctors = [];
     if (rawData) {
-      doctors = rawData.map(
-        ({
-          doctor_id: doctorId,
-          title,
-          first_name: firstName,
-          middle_name: middleName,
-          last_name: lastName,
-          gender,
-          professional_summary: professionalSummary,
-          profile_pic_url: profilePic,
-          specialization_id: specialtyId,
-          speciality_name: specialization,
-          qualifications,
-          consultation_fee: consultationFee,
-          city_name: location,
-          latitude,
-          longitude,
-          years_of_experience: yearOfExperience,
-          is_profile_approved: isProfileApproved,
-          mobile_number: mobileNumber,
-          email,
-          user_type: userType,
-          is_account_active: isAccountActive,
-        }) => ({
-          doctorId,
-          title,
-          firstName,
-          middleName,
-          lastName,
-          gender,
-          professionalSummary,
-          profilePic: profilePic
-            ? `${appBaseURL}/user-profile/${profilePic}`
-            : null,
-          specialtyId,
-          specialization,
-          qualifications,
-          consultationFee,
-          location,
-          latitude,
-          longitude,
-          yearOfExperience,
-          isProfileApproved,
-          mobileNumber,
-          email,
-          userType,
-          isAccountActive,
-        }),
-      );
+      doctors = rawData.map(mapDoctorRow);
     }
     return Response.SUCCESS({ data: doctors });
   } catch (error) {
@@ -140,63 +45,24 @@ exports.getDoctorByQuery = async ({ locationId, query }) => {
     throw error;
   }
 };
-exports.getDoctorBySpecialtyId = async (specialityId) => {
+exports.getDoctorBySpecialtyId = async (
+  specialityId,
+  limit,
+  offset,
+  paginationInfo,
+) => {
   try {
-    const rawData = await dbObject.getDoctorsBySpecializationId(specialityId);
+    const rawData = await dbObject.getDoctorsBySpecializationId(
+      specialityId,
+      limit,
+      offset,
+    );
     let doctors = [];
     if (rawData) {
-      doctors = rawData.map(
-        ({
-          doctor_id: doctorId,
-          title,
-          first_name: firstName,
-          middle_name: middleName,
-          last_name: lastName,
-          gender,
-          professional_summary: professionalSummary,
-          profile_pic_url: profilePic,
-          specialization_id: specialtyId,
-          speciality_name: specialization,
-          qualifications,
-          consultation_fee: consultationFee,
-          city_name: location,
-          latitude,
-          longitude,
-          years_of_experience: yearOfExperience,
-          is_profile_approved: isProfileApproved,
-          mobile_number: mobileNumber,
-          email,
-          user_type: userType,
-          is_account_active: isAccountActive,
-        }) => ({
-          doctorId,
-          title,
-          firstName,
-          middleName,
-          lastName,
-          gender,
-          professionalSummary,
-          profilePic: profilePic
-            ? `${appBaseURL}/user-profile/${profilePic}`
-            : null,
-          specialtyId,
-          specialization,
-          qualifications,
-          consultationFee: `SLE ${parseInt(consultationFee, 10)}`,
-          location,
-          latitude,
-          longitude,
-          yearOfExperience,
-          isProfileApproved,
-          mobileNumber,
-          email,
-          userType,
-          isAccountActive,
-        }),
-      );
+      doctors = rawData.map(mapDoctorRow);
     }
 
-    return Response.SUCCESS({ data: doctors });
+    return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;
@@ -278,51 +144,8 @@ exports.getDoctorById = async (id) => {
     if (!data) {
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
-    // destruct properties from database object
-    const {
-      doctor_id: doctorId,
-      title,
-      first_name: firstName,
-      middle_name: middleName,
-      last_name: lastName,
-      gender,
-      professional_summary: professionalSummary,
-      profile_pic_url: profilePic,
-      specialization_id: specialtyId,
-      speciality_name: specialization,
-      qualifications,
-      consultation_fee: consultationFees,
-      city_name: city,
-      years_of_experience: yearOfExperience,
-      is_profile_approved: isProfileApproved,
-      user_id: userId,
-      mobile_number: mobileNumber,
-      email,
-    } = data;
 
-    const doctor = {
-      doctorId,
-      userId,
-      title,
-      firstName,
-      middleName,
-      lastName,
-      gender,
-      mobileNumber,
-      email,
-      professionalSummary,
-      profilePic: profilePic
-        ? `${appBaseURL}/user-profile/${profilePic}`
-        : null,
-      specialtyId,
-      specialization,
-      qualifications,
-      consultationFees,
-      city,
-      yearOfExperience,
-      isProfileApproved,
-    };
-
+    const doctor = mapDoctorRow(data);
     return Response.SUCCESS({ data: doctor });
   } catch (error) {
     console.error(error);

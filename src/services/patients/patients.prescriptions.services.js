@@ -7,15 +7,33 @@ const redisClient = require("../../config/redis.config");
 const {
   mapAppointmentPrescriptionRow,
 } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-exports.getAppointmentPrescriptions = async (id) => {
+/**
+ * @description Service to handle appointment prescriptions related operations
+ * @module services/patients/patients.prescriptions.services
+ */
+
+exports.getAppointmentPrescriptions = async (
+  id,
+  limit,
+  offset,
+  paginationInfo,
+) => {
   try {
-    const cacheKey = "patient-prescriptions:all";
+    const cacheKey = cacheKeyBulider(
+      "patient-prescriptions:all",
+      limit,
+      offset,
+    );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await getAppointmentPrescriptions(id);
+    const rawData = await getAppointmentPrescriptions(limit, offset, id);
 
     const prescriptions = rawData.map(mapAppointmentPrescriptionRow);
 
@@ -24,7 +42,10 @@ exports.getAppointmentPrescriptions = async (id) => {
       value: JSON.stringify(prescriptions),
     });
 
-    return Response.SUCCESS({ data: prescriptions });
+    return Response.SUCCESS({
+      data: prescriptions,
+      pagination: paginationInfo,
+    });
   } catch (error) {
     console.error(error);
     throw error;

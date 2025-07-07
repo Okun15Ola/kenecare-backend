@@ -29,17 +29,32 @@ describe("Patient Prescriptions Controllers", () => {
   describe("GetAppointmentPrescriptionsController", () => {
     it("should return prescriptions for an appointment", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
+      const req = {
+        params: { id: 1 },
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       services.getAppointmentPrescriptions.mockResolvedValue(mockResponse);
 
       await GetAppointmentPrescriptionsController(req, res, next);
 
-      expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(2);
+      expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(
+        req.params.id,
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should handle errors", async () => {
       const error = new Error("Test error");
+      const req = {
+        params: { id: 1 },
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       services.getAppointmentPrescriptions.mockRejectedValue(error);
 
       await GetAppointmentPrescriptionsController(req, res, next);

@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/prescriptions.queries");
 
-exports.getAppointmentPrescriptions = async (appointmentId) => {
-  return query(queries.GET_PRESCRIPTIONS_BY_APPOINTMENT_ID, [appointmentId]);
+exports.getAppointmentPrescriptions = async (limit, offset, appointmentId) => {
+  const optimizedQuery = `${queries.GET_PRESCRIPTIONS_BY_APPOINTMENT_ID} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery, [appointmentId]);
 };
 
 exports.getAppointmentPrescriptionById = async (prescriptionId) => {

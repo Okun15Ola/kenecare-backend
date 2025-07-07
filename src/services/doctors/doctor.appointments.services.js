@@ -23,8 +23,14 @@ const {
   mapDoctorAppointmentRow,
   mapFollowUpsRow,
 } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-exports.getDoctorAppointments = async ({ userId, page, limit }) => {
+exports.getDoctorAppointments = async ({
+  userId,
+  limit,
+  offset,
+  paginationInfo,
+}) => {
   try {
     const doctor = await getDoctorByUserId(userId);
 
@@ -36,17 +42,24 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
     }
 
     const { doctor_id: doctorId, title } = doctor;
-    const cacheKey = `doctor-appointments-${doctorId}:all`;
+    const cacheKey = cacheKeyBulider(
+      `doctor-appointments-${doctorId}:all`,
+      limit,
+      offset,
+    );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
 
     // Get doctor's appointments
     const rawData = await dbObject.getAppointmentsByDoctorId({
       doctorId,
-      page,
       limit,
+      offset,
     });
 
     if (!rawData) {
@@ -61,7 +74,7 @@ exports.getDoctorAppointments = async ({ userId, page, limit }) => {
       key: cacheKey,
       value: JSON.stringify(appointments),
     });
-    return Response.SUCCESS({ data: appointments });
+    return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;
@@ -98,84 +111,23 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
-    const {
-      appointment_id: appointmentId,
-      appointment_uuid: appointmentUUID,
-      patient_id: patient,
-      first_name: firstName,
-      last_name: lastName,
-      doctor_first_name: doctorFirstName,
-      doctor_last_name: doctorLastName,
-      appointment_type: appointmentType,
-      appointment_date: appointmentDate,
-      appointment_time: appointmentTime,
-      patient_name_on_prescription: patientNameOnPrescription,
-      patient_mobile_number: patientMobileNumber,
-      patient_symptoms: patientSymptoms,
-      consultation_fee: consultationFees,
-      specialty_name: specialty,
-      time_slot: timeSlot,
-      meeting_id: meetingId,
-      join_url: meetingJoinUrl,
-      start_url: meetingStartUrl,
-      start_time: appointmentStartTime,
-      end_time: appointmentEndTime,
-      appointment_status: appointmentStatus,
-      cancelled_reason: cancelledReason,
-      cancelled_at: cancelledAt,
-      cancelled_by: cancelledBy,
-      postponed_reason: postponedReason,
-      postponed_date: postponeDate,
-      postponed_by: postponedBy,
-      created_at: createdAt,
-      payment_method: paymentMethod,
-      payment_status: paymentStatus,
-      transactionId: paymentTransactionId,
-    } = rawData;
+    const appointment = mapDoctorAppointmentRow(rawData, title);
 
-    const rawFollowUps = await getAppointmentFollowUps(appointmentId);
+    const rawFollowUps = await getAppointmentFollowUps(
+      appointment.appointmentId,
+    );
     const followUps = rawFollowUps.map(mapFollowUpsRow);
 
-    const appointment = {
-      appointmentId,
-      appointmentUUID,
-      patient,
-      username: `${firstName} ${lastName}`,
-      doctorId,
-      doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
-      appointmentDate,
-      appointmentTime,
-      appointmentType,
-      patientNameOnPrescription,
-      patientMobileNumber,
-      patientSymptoms,
-      consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
-      specialty,
-      timeSlot,
-      meetingId,
-      meetingJoinUrl,
-      meetingStartUrl,
-      appointmentStartTime,
-      appointmentEndTime,
-      appointmentStatus,
-      paymentMethod,
-      paymentStatus,
-      paymentTransactionId,
-      cancelledReason,
-      cancelledAt,
-      cancelledBy,
-      postponedReason,
-      postponeDate,
-      postponedBy,
-      createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    const mapDoctorAppointment = {
+      ...appointment,
       followUps,
     };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(appointment),
+      value: JSON.stringify(mapDoctorAppointment),
     });
-    return Response.SUCCESS({ data: appointment });
+    return Response.SUCCESS({ data: mapDoctorAppointment });
   } catch (error) {
     console.error(error);
     throw error;
@@ -186,14 +138,18 @@ exports.getDoctorAppointmentByDateRange = async ({
   userId,
   startDate,
   endDate,
-  page,
   limit,
+  offset,
+  paginationInfo,
 }) => {
   try {
     const cacheKey = `doctor-appointments-by-date:${startDate}-${endDate}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
     const doctor = await getDoctorByUserId(userId);
 
@@ -203,8 +159,8 @@ exports.getDoctorAppointmentByDateRange = async ({
       doctorId,
       startDate,
       endDate,
-      page,
       limit,
+      offset,
     });
     const appointments = rawData.map((row) =>
       mapDoctorAppointmentRow(row, title),
@@ -214,7 +170,7 @@ exports.getDoctorAppointmentByDateRange = async ({
       key: cacheKey,
       value: JSON.stringify(appointments),
     });
-    return Response.SUCCESS({ data: appointments });
+    return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;

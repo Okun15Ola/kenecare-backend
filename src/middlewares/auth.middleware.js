@@ -26,7 +26,7 @@ const getAuthToken = (req) => {
   return token || null;
 };
 
-const requireUserAuth = async (req, res, next) => {
+const authenticateUser = async (req, res, next) => {
   try {
     const token = getAuthToken(req);
 
@@ -67,7 +67,7 @@ const requireUserAuth = async (req, res, next) => {
         Response.UNAUTHORIZED({
           errorCode: "USER_ACCOUNT_INACTIVE",
           message:
-            "User Account InActive. Please Contact KENECARE SUPPORT for further instruction.",
+            "User Account is InActive. Please Contact KENECARE SUPPORT for further instruction.",
         }),
       );
     }
@@ -99,7 +99,7 @@ const requireUserAuth = async (req, res, next) => {
   }
 };
 
-const requireDoctorProfile = async (req, res, next) => {
+const authorizeDoctor = async (req, res, next) => {
   try {
     const { id: userId } = req.user;
     const user = await getUserById(userId);
@@ -156,7 +156,45 @@ const requireDoctorProfile = async (req, res, next) => {
   }
 };
 
-const requireAdminAuth = async (req, res, next) => {
+const authorizePatient = async (req, res, next) => {
+  try {
+    const { id: userId } = req.user;
+    const user = await getUserById(userId);
+    const {
+      user_type: userType,
+      is_account_active: isAccountActive,
+      is_verified: isVerified,
+    } = user;
+    if (
+      userType !== USERTYPE.PATIENT ||
+      isAccountActive !== STATUS.ACTIVE ||
+      isVerified !== VERIFICATIONSTATUS.VERIFIED
+    ) {
+      return res.status(403).json(
+        Response.FORBIDDEN({
+          message: "Unauthorized Action, please try again",
+        }),
+      );
+    }
+    return next();
+  } catch (error) {
+    console.log(error);
+    if (error.message === "jwt expired") {
+      return res.status(401).json(
+        Response.UNAUTHORIZED({
+          message: "Session Expired Please Login to Continue",
+        }),
+      );
+    }
+    return res.status(401).json(
+      Response.UNAUTHORIZED({
+        message: "Authentication Failed! Please Try Again",
+      }),
+    );
+  }
+};
+
+const authenticateAdmin = async (req, res, next) => {
   try {
     const token = getAuthToken(req);
 
@@ -204,7 +242,8 @@ const requireAdminAuth = async (req, res, next) => {
 };
 
 module.exports = {
-  requireUserAuth,
-  requireDoctorAuth: requireDoctorProfile,
-  requireAdminAuth,
+  authenticateUser,
+  authenticateAdmin,
+  authorizeDoctor,
+  authorizePatient,
 };

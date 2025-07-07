@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/users.queries");
 
-exports.getAllUsers = async () => {
-  return query(queries.GET_ALL_USERS);
+exports.getAllUsers = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_USERS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getUserByUsersType = async (typeId) => {

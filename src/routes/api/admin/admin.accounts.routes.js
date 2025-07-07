@@ -7,6 +7,10 @@ const {
   AdminUpdateStatusValidations,
   AdminIDValidations,
 } = require("../../../validations/auth.admin.validations");
+const { adminLimiter } = require("../../../utils/rate-limit.utils");
+const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
+
+router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
 router.get("/", (req, res, next) => {
   try {

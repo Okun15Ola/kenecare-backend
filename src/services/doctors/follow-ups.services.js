@@ -304,7 +304,7 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
       appointmentId,
     });
 
-    console.log(isDoctorsAppointment);
+    // console.log(isDoctorsAppointment);
 
     if (!isDoctorsAppointment) {
       return Response.UNAUTHORIZED({

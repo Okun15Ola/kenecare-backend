@@ -1,8 +1,9 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/specializations.queries");
 
-exports.getAllSpecialization = async () => {
-  return query(queries.GET_ALL_SPECIALIZATIONS);
+exports.getAllSpecialization = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_ALL_SPECIALIZATIONS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
 };
 
 exports.getSpecializationById = async (specializationId) => {

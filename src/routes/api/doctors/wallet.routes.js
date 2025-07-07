@@ -5,12 +5,18 @@ const {
   RequestWithdrawalController,
 } = require("../../../controllers/doctors/wallet.controller");
 const { Validate } = require("../../../validations/validate");
-// const { limiter: rateLimit } = require("../../../utils/rate-limit.utils");
 const {
   walletWithdrawalValidations,
   walletPinValidation,
 } = require("../../../validations/doctors/wallet.validations");
-// rateLimit(router);
+const { limiter } = require("../../../utils/rate-limit.utils");
+const {
+  authenticateUser,
+  authorizeDoctor,
+} = require("../../../middlewares/auth.middleware");
+
+router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+
 router.get("/", GetDoctorWalletController);
 router.post(
   "/withdrawal",

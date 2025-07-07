@@ -8,11 +8,17 @@ const { refineMobileNumber } = require("../../utils/time.utils");
 
 exports.GetAppointmentsController = async (req, res, next) => {
   try {
-    const page = req.query.page ? req.query.page : 1;
-    const limit = req.query.limit ? req.query.limit : 20;
-
+    const {
+      pagination: { limit, offset },
+      paginationInfo,
+    } = req;
     const userId = parseInt(req.user.id, 10);
-    const response = await getPatientAppointments({ userId, page, limit });
+    const response = await getPatientAppointments(
+      userId,
+      limit,
+      offset,
+      paginationInfo,
+    );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     console.error(error);

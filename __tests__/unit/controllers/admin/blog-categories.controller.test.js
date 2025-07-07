@@ -21,7 +21,13 @@ describe("Blog Categories Controllers", () => {
   let next;
 
   beforeEach(() => {
-    req = { params: {}, body: {}, query: {} };
+    req = {
+      params: {},
+      body: {},
+      query: {},
+      pagination: { limit: 10, offset: 0 },
+      paginationInfo: jest.fn(),
+    };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn(),
@@ -37,7 +43,11 @@ describe("Blog Categories Controllers", () => {
 
       await GetBlogCategoriesController(req, res, next);
 
-      expect(blogCategoriesServices.getBlogCategories).toHaveBeenCalled();
+      expect(blogCategoriesServices.getBlogCategories).toHaveBeenCalledWith(
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });

@@ -1,7 +1,7 @@
 const HttpStatus = require("http-status-codes");
 
 const Response = {};
-Response.SUCCESS = ({ message = null, data = null }) => {
+Response.SUCCESS = ({ message, data, pagination }) => {
   const timestamp = new Date();
   return {
     status: "success",
@@ -9,29 +9,30 @@ Response.SUCCESS = ({ message = null, data = null }) => {
     timestamp,
     message,
     data,
-  };
-};
-Response.NO_CONTENT = ({ message = null, data = null }) => {
-  const timestamp = new Date();
-  return {
-    status: "success",
-    statusCode: HttpStatus.StatusCodes.NO_CONTENT,
-    timestamp,
-    message,
-    data,
+    ...(pagination && { pagination }), // only include if pagination exists
   };
 };
 Response.NOT_MODIFIED = () => {
   const timestamp = new Date();
   return {
-    status: "no content",
+    status: "not modified",
     statusCode: HttpStatus.StatusCodes.NOT_MODIFIED,
     timestamp,
     message: null,
     data: null,
   };
 };
-Response.CREATED = ({ message = null, data = null }) => {
+Response.NO_CONTENT = () => {
+  const timestamp = new Date();
+  return {
+    status: "no content",
+    statusCode: HttpStatus.StatusCodes.NO_CONTENT,
+    timestamp,
+    message: null,
+    data: null,
+  };
+};
+Response.CREATED = ({ data, message }) => {
   const timestamp = new Date();
   return {
     status: "created",
@@ -42,7 +43,7 @@ Response.CREATED = ({ message = null, data = null }) => {
   };
 };
 
-Response.BAD_REQUEST = ({ message = null, error = null, errorCode = null }) => {
+Response.BAD_REQUEST = ({ message, error, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -54,11 +55,7 @@ Response.BAD_REQUEST = ({ message = null, error = null, errorCode = null }) => {
   };
 };
 
-Response.UNAUTHORIZED = ({
-  message = null,
-  error = null,
-  errorCode = null,
-}) => {
+Response.UNAUTHORIZED = ({ message, error, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -69,18 +66,7 @@ Response.UNAUTHORIZED = ({
     errors: error,
   };
 };
-Response.FORBIDDEN = ({ message = null, error = null, errorCode = null }) => {
-  const timestamp = new Date();
-  return {
-    status: "error",
-    errorCode,
-    statusCode: HttpStatus.StatusCodes.FORBIDDEN,
-    timestamp,
-    message,
-    errors: error,
-  };
-};
-Response.NOT_FOUND = ({ message = null, error = null, errorCode = null }) => {
+Response.NOT_FOUND = ({ message, error, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",
@@ -92,7 +78,7 @@ Response.NOT_FOUND = ({ message = null, error = null, errorCode = null }) => {
   };
 };
 
-Response.INTERNAL_SERVER_ERROR = ({ message = null, errorCode = null }) => {
+Response.INTERNAL_SERVER_ERROR = ({ message, errorCode }) => {
   const timestamp = new Date();
   return {
     status: "error",

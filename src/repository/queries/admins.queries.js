@@ -1,5 +1,5 @@
 module.exports = {
-  GET_ALL_ADMINS: "SELECT * FROM admins;",
+  GET_ALL_ADMINS: "SELECT * FROM admins",
   GET_ADMIN_BY_ID: "SELECT * FROM admins WHERE admin_id = ? LIMIT 1;",
   GET_ADMIN_BY_MOBILE: "SELECT * FROM admins WHERE mobile_number = ? LIMIT 1;",
   GET_ADMIN_BY_EMAIL: "SELECT * FROM admins WHERE email = ? LIMIT 1;",

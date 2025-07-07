@@ -63,4 +63,9 @@ module.exports = {
   kenecareMeetingEmail: env.KENECARE_MEETING_EMAIL,
   kenecareInfoEmail: env.KENECARE_INFO_EMAIL,
   kenecareAppointmentsEmail: env.KENECARE_APPOINTMENTS_EMAIL,
+  maxAuthRequest: parseInt(env.MAX_AUTH_REQUEST, 10),
+  maxOtpRequest: parseInt(env.MAX_OTP_REQUEST, 10),
+  maxRequest: parseInt(env.MAX_REQUEST, 10),
+  maxFileUploadRequest: parseInt(env.MAX_FILE_UPLOAD_REQUEST, 10),
+  maxAdminRequest: parseInt(env.MAX_ADMIN_REQUEST, 10),
 };

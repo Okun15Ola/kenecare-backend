@@ -79,7 +79,7 @@ module.exports = {
   GET_APPOINTMENTS_BY_DATE: (startDate, endDate) => `
     ${COMMON_SELECT}
     WHERE medical_appointments.created_at BETWEEN '${startDate}' AND '${endDate}'
-      AND medical_appointments.doctor_id = ? AND payment_status = 'success';
+      AND medical_appointments.doctor_id = ? AND payment_status = 'success'
   `,
 
   GET_APPOINTMENT_BY_DATE_AND_TIME: `

@@ -33,6 +33,7 @@ const {
   mapMarketersRow,
   mapMarketersWithDocumentRow,
 } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
 const generateReferralCode = ({ firstName, lastName }) => {
   const randomNumbers = Math.floor(100 + Math.random() * 900); // Generate 3 random numbers
@@ -42,14 +43,17 @@ const generateReferralCode = ({ firstName, lastName }) => {
   return `KC-${firstPart}${lastPart}${randomNumbers}`;
 };
 
-exports.getAllMarketersService = async () => {
+exports.getAllMarketersService = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "marketers:all";
+    const cacheKey = cacheKeyBulider("marketers:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await getAllMarketers();
+    const rawData = await getAllMarketers(limit, offset);
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
@@ -58,7 +62,7 @@ exports.getAllMarketersService = async () => {
       key: cacheKey,
       value: JSON.stringify(marketers),
     });
-    return Response.SUCCESS({ data: marketers });
+    return Response.SUCCESS({ data: marketers, pagination: paginationInfo });
   } catch (error) {
     console.error("Service Error: ", error);
     throw error;
