@@ -5,7 +5,7 @@ services:
     env_file: ./.env.db.${ENV:-development}
     hostname: mysql-db
     ports:
-      - "${DB_PORT:-3306}:${DB_PORT:-3306}"
+      - "${MYSQL_DB_PORT:-3307}:${MYSQL_DB_PORT:-3306}"
     environment:
       - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
       - MYSQL_ROOT_HOST=$MYSQL_ROOT_HOST

@@ -117,9 +117,15 @@ endif
 ifeq ($(findstring check-redis-status,$(MAKECMDGOALS)),check-redis-status)
 	ENV := development
 endif 
+
+ifeq ($(findstring run-redis,$(MAKECMDGOALS)),run-redis)
+	ENV := development
+endif 
+
 ifeq ($(findstring flush-cache,$(MAKECMDGOALS)),flush-cache)
 	ENV := development
 endif
+
 ifeq ($(findstring check-env,$(MAKECMDGOALS)),check-env)
 	ENV := development
 endif
@@ -209,7 +215,7 @@ stop-db:
 .PHONY: run-redis
 run-redis: check-env
 	@echo "Starting $(REDIS_SERVICE_NAME) service..."
-	@ENV=$(ENV) docker compose -f $(DOCKER_COMPOSE_REDIS) --env-file=$(ENV_FILE_DEV) up -d $(REDIS_SERVICE_NAME)
+	@ENV=$(ENV) docker compose -f $(DOCKER_COMPOSE_REDIS) --env-file=$(ENV_FILE_REDIS) up -d $(REDIS_SERVICE_NAME)
 	@echo "Waiting for $(REDIS_SERVICE_NAME) to be ready (5s)..."
 	@sleep 5
 
@@ -221,7 +227,7 @@ stop-redis:
 .PHONY: run-api
 run-api: check-env check-db-status check-redis-status
 	@echo "Starting $(API_SERVICE_NAME) service..."
-	@ENV=$(ENV) docker compose -f $(DOCKER_COMPOSE_API) --env-file=$(ENV_FILE_DEV) up -d --build $(API_SERVICE_NAME)
+	@ENV=$(ENV) docker compose -f $(DOCKER_COMPOSE_API) --env-file=$(ENV_FILE_DEV) up -d --build $(API_SERVICE_NAME) 
 
 .PHONY: stop-api
 stop-api:
