@@ -94,6 +94,9 @@ endif
 ifeq ($(findstring run-api,$(MAKECMDGOALS)),run-api)
 	ENV := development
 endif
+ifeq ($(findstring stop-api,$(MAKECMDGOALS)),stop-api)
+	ENV := development
+endif
 ifeq ($(findstring run-dev,$(MAKECMDGOALS)),run-dev)
 	ENV := development
 endif
