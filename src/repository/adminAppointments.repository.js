@@ -2,12 +2,19 @@ const { query } = require("./db.connection");
 const queries = require("./queries/adminAppointments.queries");
 
 exports.getAllAppointments = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_APPOINTMENTS} LIMIT ${limit} OFFSET ${offset}`;
+  const optimizedQuery =
+    limit && offset
+      ? `${queries.GET_ALL_APPOINTMENTS} LIMIT ${limit} OFFSET ${offset}`
+      : queries.GET_ALL_APPOINTMENTS;
+
   return query(optimizedQuery);
 };
 
 exports.getAppointments = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_APPOINTMENTS} LIMIT ${limit} OFFSET ${offset}`;
+  const optimizedQuery =
+    limit && offset
+      ? `${queries.GET_APPOINTMENTS} LIMIT ${limit} OFFSET ${offset}`
+      : queries.GET_APPOINTMENTS;
   return query(optimizedQuery);
 };
 

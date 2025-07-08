@@ -67,14 +67,16 @@ const calculatePaginationInfo = (tableName) => async (req, res, next) => {
     const cacheKey = `pagination:count:${tableName}`;
     let totalItems;
 
-    const cachedCount = await redisClient.get(cacheKey);
+    const cachedCount = await redisClient?.get(cacheKey);
+
     if (cachedCount) {
       totalItems = parseInt(cachedCount, 10);
     } else {
       const countResult = await query(
         `SELECT COUNT(*) as total_rows FROM ${tableName}`,
       );
-      if (!countResult || !countResult[0]) {
+
+      if (!countResult[0]) {
         logger.error("[Pagination] No count result returned", countResult);
         return res.status(500).json({ error: "Internal Server Error" });
       }
@@ -100,7 +102,7 @@ const calculatePaginationInfo = (tableName) => async (req, res, next) => {
 
     return next();
   } catch (error) {
-    logger.error("[Pagination Middleware Error]", error);
+    logger.error("[Pagination Middleware Error]", error.message);
     return next(error);
   }
 };

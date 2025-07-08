@@ -1,6 +1,6 @@
 const marketersService = require("../../../../src/services/admin/marketers.services");
 const marketersRepo = require("../../../../src/repository/marketers.repository");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 const awsS3 = require("../../../../src/utils/aws-s3.utils");
 const fileUpload = require("../../../../src/utils/file-upload.utils");
 const authUtils = require("../../../../src/utils/auth.utils");

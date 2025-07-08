@@ -1,6 +1,6 @@
 const doctorCouncilRegistrationService = require("../../../../src/services/admin/doctor-council-registration.services");
 const doctorsRepo = require("../../../../src/repository/doctors.repository");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 const emailUtils = require("../../../../src/utils/email.utils");
 // const dbMapper = require("../../../../src/utils/db-mapper.utils");
 // const Response = require("../../../../src/utils/response.utils");

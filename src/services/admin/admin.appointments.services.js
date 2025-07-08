@@ -1,6 +1,6 @@
 const dbObject = require("../../repository/adminAppointments.repository");
 const Response = require("../../utils/response.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const { mapAdminAppointmentRow } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
 

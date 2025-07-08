@@ -1,6 +1,6 @@
 const patientMedicalHistoryService = require("../../../../src/services/patients/patients.medical-history.services");
 const patientsRepo = require("../../../../src/repository/patients.repository");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 // const dbMapper = require("../../../../src/utils/db-mapper.utils");
 // const Response = require("../../../../src/utils/response.utils");
 

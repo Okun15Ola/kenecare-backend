@@ -6,7 +6,7 @@ const doctorsRepo = require("../../../../src/repository/doctors.repository");
 const paymentsRepo = require("../../../../src/repository/payments.repository");
 const doctorAppointmentsRepo = require("../../../../src/repository/doctorAppointments.repository");
 
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 const paymentUtils = require("../../../../src/utils/payment.utils");
 const caching = require("../../../../src/utils/caching.utils");
 

@@ -138,11 +138,13 @@ exports.GetDoctorsController = async (req, res, next) => {
     } = req;
     let response = null;
     if (Object.keys(req.query).length > 0) {
+      console.log(req.query);
       const {
         locationId,
         q: query,
         specialty_id: specialtyId,
       } = req.query || null;
+
       if (specialtyId) {
         response = await getDoctorBySpecialtyId(
           specialtyId,

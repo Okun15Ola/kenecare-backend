@@ -4,7 +4,7 @@ const {
 } = require("../../repository/patient-docs.repository");
 const Response = require("../../utils/response.utils");
 const { getDoctorByUserId } = require("../../repository/doctors.repository");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const { mapDoctorSharedMedicalDocs } = require("../../utils/db-mapper.utils");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {

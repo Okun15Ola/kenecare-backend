@@ -1,7 +1,7 @@
 const patientsService = require("../../../../src/services/patients/patients.services");
 const repo = require("../../../../src/repository/patients.repository");
 const Response = require("../../../../src/utils/response.utils");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 const {
   USERTYPE,
   STATUS,

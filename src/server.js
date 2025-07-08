@@ -2,6 +2,7 @@ const app = require("./app");
 const { appPort, appBaseURL } = require("./config/default.config");
 const { connectionPool } = require("./repository/db.connection");
 const { startCron: runCron } = require("./utils/cron.utils");
+require("./config/redis.config"); // Ensure Redis client is initialized
 
 connectionPool.getConnection((err, connection) => {
   if (err) {

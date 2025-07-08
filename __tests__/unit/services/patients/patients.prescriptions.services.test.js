@@ -1,6 +1,6 @@
 const patientPrescriptionsService = require("../../../../src/services/patients/patients.prescriptions.services");
 const prescriptionsRepo = require("../../../../src/repository/prescriptions.repository");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 // const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
 // const Response = require("../../../../src/utils/response.utils");

@@ -18,7 +18,7 @@ const {
 const { getPatientByUserId } = require("../repository/patients.repository");
 const { getFileUrlFromS3Bucket } = require("../utils/aws-s3.utils");
 const { getDoctorByUserId } = require("../repository/doctors.repository");
-const redisClient = require("../config/redis.config");
+const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 
 exports.getUsers = async (limit, offset, paginationInfo) => {

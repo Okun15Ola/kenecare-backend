@@ -2,11 +2,15 @@ const { query } = require("./db.connection");
 const queries = require("./queries/doctors.queries");
 
 exports.getAllDoctors = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_DOCTORS} LIMIT ${limit} OFFSET ${offset};`;
+  const optimizedQuery =
+    limit && offset
+      ? `${queries.GET_ALL_DOCTORS} LIMIT ${limit} OFFSET ${offset};`
+      : queries.GET_ALL_DOCTORS;
   return query(optimizedQuery);
 };
 
 exports.getDoctorByQuery = async ({ locationId, query: search }) => {
+  console.log(query);
   return query(queries.SEARCH_DOCTOR_BY_QUERY, [
     locationId,
     `%${search}%`,

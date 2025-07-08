@@ -23,7 +23,7 @@ const {
   doctorAppointmentBookedSms,
   appointmentBookedSms,
 } = require("../../utils/sms.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const {
   mapPatientAppointment,
   mapFollowUpsRow,

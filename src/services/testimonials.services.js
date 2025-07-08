@@ -1,6 +1,6 @@
 const repo = require("../repository/testimonials.repository");
 const Response = require("../utils/response.utils");
-const redisClient = require("../config/redis.config");
+const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapTestimonialRow } = require("../utils/db-mapper.utils");
 

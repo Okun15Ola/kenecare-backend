@@ -1,6 +1,6 @@
 const specializationsService = require("../../../../src/services/admin/specializations.services");
 const specializationsRepo = require("../../../../src/repository/specializations.repository");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 // const dbMapper = require('../../../../src/utils/db-mapper.utils');
 const caching = require("../../../../src/utils/caching.utils");
 // const Response = require('../../../../src/utils/response.utils');

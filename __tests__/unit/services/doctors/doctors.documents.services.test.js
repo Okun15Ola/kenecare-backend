@@ -1,7 +1,7 @@
 const doctorsDocumentsService = require("../../../../src/services/doctors/doctors.documents.services");
 const patientDocsRepo = require("../../../../src/repository/patient-docs.repository");
 const doctorsRepo = require("../../../../src/repository/doctors.repository");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 // const dbMapper = require("../../../../src/utils/db-mapper.utils");
 // const Response = require("../../../../src/utils/response.utils");
 

@@ -1,6 +1,6 @@
 const medicalCouncilService = require("../../../src/services/medical-councils.services");
 const medicalCouncilRepo = require("../../../src/repository/medical-councils.repository");
-const redisClient = require("../../../src/config/redis.config");
+const { redisClient } = require("../../../src/config/redis.config");
 const dbMapper = require("../../../src/utils/db-mapper.utils");
 const caching = require("../../../src/utils/caching.utils");
 // const Response = require("../../../src/utils/response.utils");

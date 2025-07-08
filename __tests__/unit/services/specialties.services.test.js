@@ -1,6 +1,6 @@
 const specialtyService = require("../../../src/services/specialties.services");
 const specialtyRepo = require("../../../src/repository/specialities.repository");
-const redisClient = require("../../../src/config/redis.config");
+const { redisClient } = require("../../../src/config/redis.config");
 const fileUpload = require("../../../src/utils/file-upload.utils");
 const dbMapper = require("../../../src/utils/db-mapper.utils");
 const caching = require("../../../src/utils/caching.utils");

@@ -15,7 +15,7 @@ const {
   getMarketersTotalRegisteredUsers,
 } = require("../../repository/marketers.repository");
 const { sendMarketerUserRegisteredSMS } = require("../../utils/sms.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
 
 exports.getAllPatients = async (limit, offset, paginationInfo) => {

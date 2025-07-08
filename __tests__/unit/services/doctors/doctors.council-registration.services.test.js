@@ -5,7 +5,7 @@ const { USERTYPE } = require("../../../../src/utils/enum.utils");
 const { getUserById } = require("../../../../src/repository/users.repository");
 const { uploadFileToS3Bucket } = require("../../../../src/utils/aws-s3.utils");
 const { generateFileName } = require("../../../../src/utils/file-upload.utils");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 const {
   mapDoctorCouncilRow,
 } = require("../../../../src/utils/db-mapper.utils");

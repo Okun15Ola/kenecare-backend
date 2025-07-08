@@ -1,6 +1,6 @@
 const commonSymptomsService = require("../../../src/services/common-symptoms.services");
 const commonSymptomsRepo = require("../../../src/repository/common-symptoms.repository");
-const redisClient = require("../../../src/config/redis.config");
+const { redisClient } = require("../../../src/config/redis.config");
 const awsS3 = require("../../../src/utils/aws-s3.utils");
 const fileUpload = require("../../../src/utils/file-upload.utils");
 const dbMapper = require("../../../src/utils/db-mapper.utils");

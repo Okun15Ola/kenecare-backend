@@ -1,6 +1,6 @@
 const repo = require("../repository/medical-councils.repository");
 const Response = require("../utils/response.utils");
-const redisClient = require("../config/redis.config");
+const { redisClient } = require("../config/redis.config");
 const { mapMedicalCouncilRow } = require("../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 

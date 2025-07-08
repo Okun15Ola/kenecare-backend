@@ -22,16 +22,16 @@ class RedisClient {
 
     RedisClient.instance = this;
 
-    if (!RedisClient.instance) {
-      this.client = new Redis({
-        host: redisHost,
-        port: redisPort,
-        password: redisPassword,
-        // tls: {}, // Required for AWS ElastiCache
-        retryStrategy: (times) => Math.min(times * 50, 2000), // Exponential backoff
-      });
-    }
-    return RedisClient.instance;
+    // if (!RedisClient.instance) {
+    //   this.client = new Redis({
+    //     host: redisHost,
+    //     port: redisPort,
+    //     password: redisPassword,
+    //     // tls: {}, // Required for AWS ElastiCache
+    //     retryStrategy: (times) => Math.min(times * 50, 2000), // Exponential backoff
+    //   });
+    // }
+    // return RedisClient.instance;
   }
 
   initializeClient() {
@@ -123,10 +123,13 @@ class RedisClient {
 }
 
 // Exporting a Singleton Instance
-const redisClient = new RedisClient();
-process.on("SIGINT", async () => {
-  await redisClient.disconnect();
-  process.exit(0);
-});
+// const { redisClient } = new RedisClient();
+// process.on("SIGINT", async () => {
+//   await redisClient.disconnect();
+//   process.exit(0);
+// });
 
-module.exports = redisClient;
+module.exports = {
+  RedisClient,
+  redisClient: Object.freeze(new RedisClient()),
+};

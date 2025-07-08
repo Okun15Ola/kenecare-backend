@@ -328,7 +328,7 @@ redis-cli: check-env
 flush-cache: check-env
 	@echo "Flushing Redis cache for $(REDIS_SERVICE_NAME)..."
 	# Assumes Redis service is running and accessible via docker compose exec
-	@docker compose --env-file=$(ENV_FILE_DEV) -f $(DOCKER_COMPOSE_API) exec $(REDIS_SERVICE_NAME) redis-cli -a "$$(grep REDIS_PASSWORD $(ENV_FILE_DEV) | cut -d '=' -f2)" FLUSHALL
+	@docker compose --env-file=$(ENV_FILE_DEV) -f $(DOCKER_COMPOSE_REDIS) exec $(REDIS_SERVICE_NAME) redis-cli -a "$$(grep REDIS_PASSWORD $(ENV_FILE_REDIS) | cut -d '=' -f2)" FLUSHALL
 	@echo "Cache flushed successfully!"
 
 .PHONY: clean

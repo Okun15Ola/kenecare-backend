@@ -1,6 +1,6 @@
 const citiesService = require("../../../../src/services/admin/cities.services");
 const citiesRepo = require("../../../../src/repository/cities.repository");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 // const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
 

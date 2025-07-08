@@ -10,3 +10,17 @@ nginx
 .vscode
 .husky
 .github
+./sql-scripts
+coverage
+test
+.lintstaged
+.prettierrc
+*.sql
+Makefile
+jest.config.js
+jsconfig.js
+nodemon.js
+sample-env.txt
+.husky
+.github
+.git

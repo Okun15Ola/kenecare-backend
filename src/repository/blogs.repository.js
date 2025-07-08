@@ -2,6 +2,7 @@ const { query } = require("./db.connection");
 const queries = require("./queries/blogs.queries");
 
 exports.getAllBlogs = async (limit, offset) => {
+  console.log("Fetching all blogs with limit:", limit, "and offset:", offset);
   const optimizedQuery = `${queries.GET_ALL_BLOG} LIMIT ${limit} OFFSET ${offset};`;
   return query(optimizedQuery);
 };

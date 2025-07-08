@@ -28,7 +28,7 @@ const {
   sendMarketerPhoneVerifiedSMS,
 } = require("../../utils/sms.utils");
 const { marketerEmailVerificationToken } = require("../../utils/email.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const {
   mapMarketersRow,
   mapMarketersWithDocumentRow,

@@ -3,7 +3,7 @@ const path = require("path");
 const repo = require("../repository/specialities.repository");
 const Response = require("../utils/response.utils");
 const { deleteFile } = require("../utils/file-upload.utils");
-const redisClient = require("../config/redis.config");
+const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapSpecialityRow } = require("../utils/db-mapper.utils");
 

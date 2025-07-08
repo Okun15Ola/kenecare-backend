@@ -8,7 +8,7 @@ const {
 } = require("../../utils/email.utils");
 const { uploadFileToS3Bucket } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const { mapDoctorCouncilRow } = require("../../utils/db-mapper.utils");
 
 // DOCTORS

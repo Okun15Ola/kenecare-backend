@@ -17,7 +17,7 @@ const {
   getAppointmentByID,
 } = require("../repository/patientAppointments.repository");
 const { getPatientById } = require("../repository/patients.repository");
-const redisClient = require("../config/redis.config");
+const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 
 /**

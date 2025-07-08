@@ -21,7 +21,7 @@ const {
 } = require("../../utils/aws-s3.utils");
 const { documentSharedWithDoctorSMS } = require("../../utils/sms.utils");
 const { getDoctorById } = require("../../repository/doctors.repository");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {

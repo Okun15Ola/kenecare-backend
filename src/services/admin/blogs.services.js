@@ -2,7 +2,7 @@ const dbObject = require("../../repository/blogs.repository");
 const { uploadFileToS3Bucket } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
 const Response = require("../../utils/response.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const { mapBlogRow } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
 

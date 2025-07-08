@@ -1,6 +1,6 @@
 const repo = require("../repository/common-symptoms.repository");
 const Response = require("../utils/response.utils");
-const redisClient = require("../config/redis.config");
+const { redisClient } = require("../config/redis.config");
 const { uploadFileToS3Bucket } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 const { mapCommonSymptomsRow } = require("../utils/db-mapper.utils");

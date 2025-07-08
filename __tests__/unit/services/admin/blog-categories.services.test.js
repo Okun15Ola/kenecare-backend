@@ -1,6 +1,6 @@
 const blogCategoriesService = require("../../../../src/services/admin/blog-categories.services");
 const blogCategoriesRepo = require("../../../../src/repository/blog-categories.repository");
-const redisClient = require("../../../../src/config/redis.config");
+const { redisClient } = require("../../../../src/config/redis.config");
 // const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
 // const Response = require("../../../../src/utils/response.utils");

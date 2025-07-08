@@ -1,6 +1,6 @@
 const repo = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const { mapPatientMedicalHistoryRow } = require("../../utils/db-mapper.utils");
 
 exports.getPatientMedicalHistory = async (userId) => {

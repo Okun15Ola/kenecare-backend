@@ -18,7 +18,7 @@ const {
 } = require("../../repository/follow-up.repository");
 const { createStreamCall } = require("../../utils/stream.utils");
 const { nodeEnv } = require("../../config/default.config");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const {
   mapDoctorAppointmentRow,
   mapFollowUpsRow,

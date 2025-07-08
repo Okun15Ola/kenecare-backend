@@ -7,7 +7,7 @@ const followUpRepo = require("../../repository/follow-up.repository");
 const { getPatientById } = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
 const { newFollowAppointmentSms } = require("../../utils/sms.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const { mapFollowUpRow } = require("../../utils/db-mapper.utils");
 
 exports.createFollowUp = async ({

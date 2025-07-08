@@ -4,7 +4,7 @@ const {
   getAppointments,
 } = require("../repository/adminAppointments.repository");
 const logger = require("../middlewares/logger.middleware");
-const redisClient = require("../config/redis.config");
+const { redisClient } = require("../config/redis.config");
 
 const sendPushNotifications = (notifications) => {
   notifications.forEach(({ appointmentDateTime, diffInMinutes }) => {
@@ -98,7 +98,7 @@ module.exports = {
         }
       },
       null, // no need for onComplete callback
-      true,
+      false,
       "UTC",
     );
     logger.info("Cron job started successfully");
