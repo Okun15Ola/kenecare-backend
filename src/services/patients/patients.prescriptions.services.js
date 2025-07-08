@@ -9,11 +9,6 @@ const {
 } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-/**
- * @description Service to handle appointment prescriptions related operations
- * @module services/patients/patients.prescriptions.services
- */
-
 exports.getAppointmentPrescriptions = async (
   id,
   limit,
@@ -34,6 +29,12 @@ exports.getAppointmentPrescriptions = async (
       });
     }
     const rawData = await getAppointmentPrescriptions(limit, offset, id);
+
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({
+        message: "Presciption Not Found",
+      });
+    }
 
     const prescriptions = rawData.map(mapAppointmentPrescriptionRow);
 
