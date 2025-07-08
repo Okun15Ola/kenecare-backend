@@ -6,9 +6,16 @@ exports.getAllDoctors = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
-exports.getDoctorByQuery = async ({ locationId, query: search }) => {
-  return query(queries.SEARCH_DOCTOR_BY_QUERY, [
+exports.getDoctorByQuery = async ({
+  locationId,
+  query: search,
+  limit,
+  offset,
+}) => {
+  const optimizedQuery = `${queries.SEARCH_DOCTOR_BY_QUERY} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery, [
     locationId,
+    `%${search}%`,
     `%${search}%`,
     `%${search}%`,
     `%${search}%`,
