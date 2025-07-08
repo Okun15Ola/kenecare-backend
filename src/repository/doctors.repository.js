@@ -53,8 +53,9 @@ exports.getCouncilRegistrationByDoctorId = async (doctorId) => {
   return result[0];
 };
 
-exports.getAllMedicalCouncilRegistration = async () => {
-  return query(queries.GET_DOCTOR_ALL_COUNCIL_REGISTRATIONS);
+exports.getAllMedicalCouncilRegistration = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_DOCTOR_ALL_COUNCIL_REGISTRATIONS} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery);
 };
 
 exports.getCouncilRegistrationById = async (registrationId) => {

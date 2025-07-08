@@ -2,8 +2,7 @@ const { query } = require("./db.connection");
 const queries = require("./queries/cities.queries");
 
 exports.getAllCities = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_CITIES} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_CITIES, [limit, offset]);
 };
 
 exports.getCityById = async (id) => {
