@@ -31,17 +31,31 @@ describe("Doctors Council Registration Controllers", () => {
   describe("GetCouncilRegistrationController", () => {
     it("should return all council registrations", async () => {
       const mockResponse = { statusCode: 200, data: [] };
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       services.getAllCouncilRegistrations.mockResolvedValue(mockResponse);
 
       await GetCouncilRegistrationController(req, res, next);
 
-      expect(services.getAllCouncilRegistrations).toHaveBeenCalled();
+      expect(services.getAllCouncilRegistrations).toHaveBeenCalledWith(
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should handle errors", async () => {
       const error = new Error("Test error");
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       services.getAllCouncilRegistrations.mockRejectedValue(error);
 
       await GetCouncilRegistrationController(req, res, next);
