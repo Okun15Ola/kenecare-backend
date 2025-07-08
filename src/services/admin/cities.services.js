@@ -15,7 +15,7 @@ exports.getCities = async (limit, offset, paginationInfo) => {
       });
     }
     const [rawData] = await dbObject.getAllCities(limit, offset);
-    if (!rawData || rawData.length === 0) {
+    if (!rawData?.length) {
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
 

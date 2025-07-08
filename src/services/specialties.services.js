@@ -7,11 +7,6 @@ const redisClient = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapSpecialityRow } = require("../utils/db-mapper.utils");
 
-/**
- * @description Service to handle specialties related operations
- * @module services/specialties.services
- */
-
 exports.getSpecialties = async (limit, offset, paginationInfo) => {
   try {
     const cacheKey = cacheKeyBulider("specialties:all", limit, offset);
@@ -20,6 +15,9 @@ exports.getSpecialties = async (limit, offset, paginationInfo) => {
       return Response.SUCCESS({ data: JSON.parse(cachedData), paginationInfo });
     }
     const rawData = await repo.getAllSpecialties(limit, offset);
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Speciality Not Found" });
+    }
     const specialties = rawData.map(mapSpecialityRow);
     await redisClient.set({
       key: cacheKey,

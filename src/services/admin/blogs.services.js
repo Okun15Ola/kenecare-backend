@@ -18,7 +18,7 @@ exports.getBlogs = async (limit, offset, paginationInfo) => {
     }
     const rawData = await dbObject.getAllBlogs(limit, offset);
 
-    if (!rawData) {
+    if (!rawData?.length) {
       return Response.NOT_FOUND({ message: "Blogs Not Found" });
     }
 

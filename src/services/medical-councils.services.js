@@ -4,11 +4,6 @@ const redisClient = require("../config/redis.config");
 const { mapMedicalCouncilRow } = require("../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 
-/**
- * @description Service to handle medical council related operations
- * @module services/medical-councils.services
- */
-
 exports.getMedicalCouncils = async (limit, offset, paginationInfo) => {
   const cacheKey = cacheKeyBulider("medical-council:all", limit, offset);
   const cachedData = await redisClient.get(cacheKey);
@@ -19,7 +14,7 @@ exports.getMedicalCouncils = async (limit, offset, paginationInfo) => {
     });
   }
   const rawData = await repo.getAllMedicalCouncils(limit, offset);
-  if (!rawData) {
+  if (!rawData?.length) {
     return Response.NOT_FOUND({
       message: "Medical Council Not Found ",
     });
