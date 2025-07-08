@@ -15,7 +15,12 @@ exports.getBlogCategories = async (limit, offset, paginationInfo) => {
       });
     }
     const rawData = await dbObject.getAllBlogCategories(limit, offset);
+    if (!rawData) return [];
     const categories = rawData.map(mapBlogCategoryRow);
+
+    if (!categories?.length) {
+      return Response.NOT_FOUND({ message: "Blog Categoyies not found" });
+    }
 
     await redisClient.set({
       key: cacheKey,
@@ -24,7 +29,7 @@ exports.getBlogCategories = async (limit, offset, paginationInfo) => {
 
     return Response.SUCCESS({
       data: categories,
-      paginationina: paginationInfo,
+      pagination: paginationInfo,
     });
   } catch (error) {
     console.error(error);
