@@ -21,6 +21,25 @@ const config = {
   },
 };
 
+const sendVerificationTokenSMS = async ({ token, mobileNumber }) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Your KENECARE Verification Token is: ${token}. \n Do not share with anyone.`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
   try {
     const data = JSON.stringify({
@@ -420,6 +439,7 @@ const withdrawalDeniedSMS = async ({ mobileNumber, doctorName, comment }) => {
 
 module.exports = {
   sendAuthTokenSMS,
+  sendVerificationTokenSMS,
   sendPrescriptionToken,
   appointmentApprovalSms,
   appointmentStartedSms,
