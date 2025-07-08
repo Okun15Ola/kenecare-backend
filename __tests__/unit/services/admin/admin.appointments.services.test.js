@@ -1,9 +1,7 @@
 const adminAppointmentsService = require("../../../../src/services/admin/admin.appointments.services");
 const adminAppointmentsRepo = require("../../../../src/repository/adminAppointments.repository");
 const redisClient = require("../../../../src/config/redis.config");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
-// const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/adminAppointments.repository");
 jest.mock("../../../../src/config/redis.config");

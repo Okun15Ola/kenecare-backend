@@ -1,3 +1,20 @@
+jest.mock("../../../../src/repository/patients.repository");
+jest.mock("../../../../src/utils/response.utils", () => ({
+  SUCCESS: jest.fn(),
+  NOT_FOUND: jest.fn(),
+  BAD_REQUEST: jest.fn(),
+  INTERNAL_SERVER_ERROR: jest.fn(),
+  CREATED: jest.fn(),
+  FORBIDDEN: jest.fn(),
+  UNAUTHORIZED: jest.fn(),
+}));
+jest.mock("../../../../src/config/redis.config");
+jest.mock("../../../../src/repository/users.repository");
+jest.mock("../../../../src/repository/testimonials.repository");
+jest.mock("../../../../src/utils/file-upload.utils");
+jest.mock("../../../../src/repository/marketers.repository");
+jest.mock("../../../../src/utils/sms.utils");
+
 const patientsService = require("../../../../src/services/patients/patients.services");
 const repo = require("../../../../src/repository/patients.repository");
 const Response = require("../../../../src/utils/response.utils");
@@ -11,22 +28,9 @@ const { getUserById } = require("../../../../src/repository/users.repository");
 const { deleteFile } = require("../../../../src/utils/file-upload.utils");
 const marketersRepo = require("../../../../src/repository/marketers.repository");
 const smsUtils = require("../../../../src/utils/sms.utils");
-
-jest.mock("../../../../src/repository/patients.repository");
-jest.mock("../../../../src/utils/response.utils", () => ({
-  SUCCESS: jest.fn(),
-  NOT_FOUND: jest.fn(),
-  BAD_REQUEST: jest.fn(),
-  INTERNAL_SERVER_ERROR: jest.fn(),
-  CREATED: jest.fn(),
-  FORBIDDEN: jest.fn(),
-  UNAUTHORIZED: jest.fn(),
-}));
-jest.mock("../../../../src/config/redis.config");
-jest.mock("../../../../src/repository/users.repository");
-jest.mock("../../../../src/utils/file-upload.utils");
-jest.mock("../../../../src/repository/marketers.repository");
-jest.mock("../../../../src/utils/sms.utils");
+const {
+  getAllTestimonials,
+} = require("../../../../src/repository/testimonials.repository");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -137,40 +141,66 @@ describe("patients.services", () => {
     it("should return cached testimonials if present", async () => {
       const cached = [{ id: 1 }];
       redisClient.get.mockResolvedValueOnce(JSON.stringify(cached));
-      Response.SUCCESS.mockImplementation((data) => data);
+      Response.SUCCESS.mockImplementation(({ data, pagination }) => ({
+        statusCode: 200,
+        message: "OK",
+        data,
+        pagination,
+      }));
 
-      const result = await patientsService.getPatientsTestimonial(1);
+      const result = await patientsService.getPatientsTestimonial(10, 0, {
+        total: 1,
+      });
+      expect(result.statusCode).toBe(200);
       expect(result.data).toEqual(cached);
     });
 
-    it("should return NOT_FOUND if patient not found", async () => {
+    it("should return NOT_FOUND if no testimonials found", async () => {
       redisClient.get.mockResolvedValueOnce(null);
-      repo.getPatientByUserId.mockResolvedValueOnce(null);
-      Response.NOT_FOUND.mockImplementation((data) => data);
+      getAllTestimonials.mockResolvedValue([]);
+      Response.NOT_FOUND.mockImplementation(({ message }) => ({
+        statusCode: 404,
+        message,
+      }));
 
-      const result = await patientsService.getPatientsTestimonial(1);
-      expect(result.message).toBe("Patient Not Found.");
+      const result = await patientsService.getPatientsTestimonial(10, 0, {
+        total: 1,
+      });
+
+      expect(result.statusCode).toBe(404);
+      expect(result.message).toBe("Patient Testimonials Not Found");
     });
 
     it("should return all patients as testimonials", async () => {
       redisClient.get.mockResolvedValueOnce(null);
-      repo.getPatientByUserId.mockResolvedValueOnce({ patient_id: 1 });
-      repo.getAllPatients.mockResolvedValueOnce([{ id: 1 }]);
-      Response.SUCCESS.mockImplementation((data) => data);
+      getAllTestimonials.mockResolvedValue([
+        { id: 1, name: "John Doe", message: "Great service!" },
+      ]);
+      redisClient.set.mockResolvedValueOnce("OK");
+      Response.SUCCESS.mockImplementation(({ data, pagination }) => ({
+        statusCode: 200,
+        message: "OK",
+        data,
+        pagination,
+      }));
 
-      const result = await patientsService.getPatientsTestimonial(1);
-      expect(result.data).toEqual([{ id: 1 }]);
+      const result = await patientsService.getPatientsTestimonial(10, 0, {
+        total: 1,
+      });
+
+      expect(result.statusCode).toBe(200);
+      expect(result.message).toBe("OK");
     });
   });
 
   describe("getPatientByUser", () => {
     it("should return cached patient if present", async () => {
-      const cached = { patientId: 1 };
-      redisClient.get.mockResolvedValueOnce(JSON.stringify(cached));
+      const cachedData = { patientId: 1 };
+      redisClient.get.mockResolvedValueOnce(JSON.stringify(cachedData));
       Response.SUCCESS.mockImplementation((data) => data);
 
       const result = await patientsService.getPatientByUser(1);
-      expect(result.data).toEqual(cached);
+      expect(result.data).toEqual(cachedData);
     });
 
     it("should return NOT_FOUND if patient does not exist", async () => {

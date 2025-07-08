@@ -90,17 +90,32 @@ describe("Patients Controller", () => {
   describe("GetPatientTestimonialsController", () => {
     it("should return testimonials with correct status", async () => {
       const mockResponse = { statusCode: 200, data: ["testimonial"] };
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
       patientsServices.getPatientsTestimonial.mockResolvedValue(mockResponse);
 
       await GetPatientTestimonialsController(req, res, next);
 
-      expect(patientsServices.getPatientsTestimonial).toHaveBeenCalled();
+      expect(patientsServices.getPatientsTestimonial).toHaveBeenCalledWith(
+        req.pagination.limit,
+        req.pagination.offset,
+        req.paginationInfo,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });
 
     it("should handle errors and call next", async () => {
       const error = new Error("Test error");
+      const req = {
+        query: {},
+        pagination: { limit: 10, offset: 0 },
+        paginationInfo: jest.fn(),
+      };
+
       patientsServices.getPatientsTestimonial.mockRejectedValue(error);
 
       await GetPatientTestimonialsController(req, res, next);

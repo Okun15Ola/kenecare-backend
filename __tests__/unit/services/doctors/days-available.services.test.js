@@ -1,4 +1,4 @@
-const daysAvailableService = require("../../../../src/services/doctors/days-availabale.services");
+const daysAvailableService = require("../../../../src/services/doctors/days-available.services");
 const dbObject = require("../../../../src/repository/doctors.repository");
 const Response = require("../../../../src/utils/response.utils");
 
@@ -15,7 +15,7 @@ describe("days-availabale.services", () => {
       dbObject.getDoctorByUserId.mockResolvedValue(null);
       Response.NOT_FOUND.mockReturnValue({
         status: 404,
-        message: "Doctor Profile Not Found",
+        message: "Doctor's Available Days Not Found",
       });
 
       const result =
@@ -23,11 +23,11 @@ describe("days-availabale.services", () => {
 
       expect(dbObject.getDoctorByUserId).toHaveBeenCalledWith("doctor-id");
       expect(Response.NOT_FOUND).toHaveBeenCalledWith({
-        message: "Doctor Profile Not Found",
+        message: "Doctor's Available Days Not Found",
       });
       expect(result).toEqual({
         status: 404,
-        message: "Doctor Profile Not Found",
+        message: "Doctor's Available Days Not Found",
       });
     });
 
