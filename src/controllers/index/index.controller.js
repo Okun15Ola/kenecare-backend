@@ -156,7 +156,7 @@ exports.GetDoctorsController = async (req, res, next) => {
       }
     } else {
       // GET ALL DOCTORS.
-      response = await getAllDoctors();
+      response = await getAllDoctors(limit, offset, paginationInfo);
     }
 
     return res.status(response.statusCode).json(response);

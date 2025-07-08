@@ -10,18 +10,20 @@ const {
   calculatePaginationInfo,
 } = require("../../middlewares/paginator.middleware");
 
-router.use(limiter); // Rate limiting middleware applied to all routes in this router
+// router.use(limiter); // Rate limiting middleware applied to all routes in this router
 
 router.get(
   "/blogs",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("blogs"),
   IndexController.GetBlogsController,
 );
-router.get("/blogs/:id", IndexController.GetBlogByIDController);
+router.get("/blogs/:id", limiter, IndexController.GetBlogByIDController);
 router.get(
   "/blog-categories",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("blog_categories"),
@@ -29,6 +31,7 @@ router.get(
 );
 router.get(
   "/cities",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("cities"),
@@ -36,6 +39,7 @@ router.get(
 );
 router.get(
   "/specialties",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("medical_specialities"),
@@ -43,6 +47,7 @@ router.get(
 );
 router.get(
   "/medical-councils",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("medical_councils"),
@@ -50,6 +55,7 @@ router.get(
 );
 router.get(
   "/doctors",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("doctors"),
@@ -57,12 +63,14 @@ router.get(
 );
 router.get(
   "/doctor/:id",
+  limiter,
   doctorIdValidation,
   Validate,
   IndexController.GetDoctorByIDController,
 );
 router.get(
   "/faqs",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("blogs"),
@@ -70,6 +78,7 @@ router.get(
 );
 router.get(
   "/testimonials",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("patients_testimonial"),
@@ -77,6 +86,7 @@ router.get(
 );
 router.get(
   "/common-symptoms",
+  limiter,
   paginationValidation,
   Validate,
   calculatePaginationInfo("common_symptoms"),

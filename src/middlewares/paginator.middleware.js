@@ -47,7 +47,7 @@
 // };
 
 const { query } = require("../repository/db.connection");
-const { redisClient } = require("../config/redis.config");
+const redisClient = require("../config/redis.config");
 const logger = require("./logger.middleware");
 
 /**
@@ -62,6 +62,7 @@ const calculatePaginationInfo = (tableName) => async (req, res, next) => {
       100,
       Math.max(1, parseInt(req.query.limit, 10) || 10),
     );
+
     const offset = (page - 1) * limit;
 
     const cacheKey = `pagination:count:${tableName}`;
@@ -74,8 +75,9 @@ const calculatePaginationInfo = (tableName) => async (req, res, next) => {
       const countResult = await query(
         `SELECT COUNT(*) as total_rows FROM ${tableName}`,
       );
+
       if (!countResult || !countResult[0]) {
-        logger.error("[Pagination] No count result returned", countResult);
+        console.error("[Pagination] No count result returned", countResult);
         return res.status(500).json({ error: "Internal Server Error" });
       }
 
