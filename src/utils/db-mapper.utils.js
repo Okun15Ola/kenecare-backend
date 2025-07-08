@@ -775,6 +775,49 @@ exports.mapDoctorRow = (doctor) => {
   };
 };
 
+exports.mapDoctorUserProfileRow = (doctor) => {
+  const {
+    doctor_id: doctorId,
+    title,
+    first_name: firstName,
+    middle_name: middleName,
+    last_name: lastName,
+    gender,
+    professional_summary: professionalSummary,
+    profile_pic_url: profilePic,
+    specialization_id: specialtyId,
+    speciality_name: specialization,
+    qualifications,
+    consultation_fee: consultationFees,
+    city_name: city,
+    years_of_experience: yearOfExperience,
+    is_profile_approved: isProfileApproved,
+    mobile_number: mobileNumber,
+    email,
+    user_id: userId,
+  } = doctor;
+  return {
+    doctorId,
+    userId,
+    title,
+    firstName,
+    middleName,
+    lastName,
+    gender,
+    mobileNumber,
+    email,
+    professionalSummary,
+    profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
+    specialtyId,
+    specialization,
+    qualifications,
+    consultationFees,
+    city,
+    yearOfExperience,
+    isProfileApproved,
+  };
+};
+
 exports.mapPatientAppointment = (appointment) => {
   const {
     appointment_id: appointmentId,
@@ -870,7 +913,7 @@ exports.mapTestimonialRow = (testimonial) => {
   };
 };
 
-exports.mapSpecialityRow = (speciality, excludeTags = false) => {
+exports.mapSpecialityRow = (speciality, includeTags = false) => {
   const {
     speciality_id: specialtyId,
     speciality_name: specialtyName,
@@ -890,7 +933,7 @@ exports.mapSpecialityRow = (speciality, excludeTags = false) => {
     inputtedBy,
   };
 
-  if (!excludeTags) {
+  if (!includeTags) {
     mapped.tags = tags;
   }
 
@@ -899,8 +942,8 @@ exports.mapSpecialityRow = (speciality, excludeTags = false) => {
 
 exports.mapUserRow = (
   user,
-  excludePassword = false,
-  excludeReferralCode = false,
+  includePassword = false,
+  includeReferralCode = false,
 ) => {
   const {
     user_id: userId,
@@ -925,12 +968,187 @@ exports.mapUserRow = (
     is2faEnabled,
     password,
   };
-  if (!excludePassword) {
+  if (!includePassword) {
     mapped.password = password;
   }
 
-  if (!excludeReferralCode) {
+  if (!includeReferralCode) {
     mapped.referralCode = referralCode;
+  }
+
+  return mapped;
+};
+
+exports.mapPatientMedicalDocumentRow = async (
+  document,
+  includeDocumentUrl = false,
+) => {
+  const {
+    sharing_id: sharingId,
+    document_id: documentId,
+    document_uuid: documentUUID,
+    document_title: documentTitle,
+    patient_id: patientId,
+    patient_first_name: patientFirstName,
+    patient_last_name: patientLastName,
+    doctor_first_name: doctorFirstName,
+    doctor_last_name: doctorLastName,
+    note,
+    created_at: createdAt,
+  } = document;
+
+  const mapped = {
+    sharingId,
+    documentId,
+    documentUUID,
+    documentTitle,
+    patientId,
+    patientName: `${patientFirstName} ${patientLastName}`,
+    doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+    note,
+    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+  };
+
+  if (!includeDocumentUrl) {
+    const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
+    mapped.documentUrl = documentUrl;
+  }
+
+  return mapped;
+};
+
+exports.mapPatientDocumentRow = async (document, includeFileUrl = false) => {
+  const {
+    medical_document_id: documentId,
+    document_uuid: documentUUID,
+    document_title: documentTitle,
+    mimetype: mimeType,
+  } = document;
+
+  const mapped = {
+    documentId,
+    documentUUID,
+    documentTitle,
+    mimeType,
+  };
+
+  if (!includeFileUrl) {
+    const fileUrl = await getFileUrlFromS3Bucket(documentUUID);
+    mapped.fileUrl = fileUrl;
+  }
+
+  return mapped;
+};
+
+exports.mapPatientRow = (patient) => {
+  const {
+    patient_id: patientId,
+    title,
+    first_name: firstName,
+    middle_name: middleName,
+    last_name: lastName,
+    gender,
+    profile_pic_url: profilePic,
+    dob,
+    mobile_number: mobileNumber,
+    email,
+    user_type: userType,
+    user_id: userId,
+    is_account_active: isAccountActive,
+    is_online: isOnline,
+  } = patient;
+  return {
+    patientId,
+    title,
+    firstName,
+    middleName,
+    lastName,
+    gender,
+    profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
+    dob: moment(dob).format("YYYY-MM-DD"),
+    mobileNumber,
+    email,
+    userType,
+    userId,
+    isAccountActive,
+    isOnline,
+  };
+};
+
+exports.mapMedicalRecordRow = (medicalRecord) => {
+  const {
+    height,
+    weight,
+    allergies,
+    is_patient_disabled: isDisabled,
+    disability_description: disabilityDesc,
+    tobacco_use: tobaccoIntake,
+    tobacco_use_frequency: tobaccoIntakeFreq,
+    alcohol_use: alcoholIntake,
+    alcohol_use_frequency: alcoholIntakeFreq,
+    caffine_use: caffineIntake,
+    caffine_use_frequency: caffineIntakeFreq,
+  } = medicalRecord;
+  return {
+    height,
+    weight,
+    allergies,
+    isDisabled: isDisabled !== 0,
+    disabilityDesc,
+    tobaccoIntake: tobaccoIntake !== null,
+    tobaccoIntakeFreq,
+    alcoholIntake: alcoholIntake !== 0,
+    alcoholIntakeFreq,
+    caffineIntake: caffineIntake !== null,
+    caffineIntakeFreq,
+  };
+};
+
+exports.mapPrescriptionRow = (
+  prescription,
+  hashedToken = null,
+  includeDiagnosis = false,
+  includeMedicines = false,
+  includeComments = false,
+) => {
+  const {
+    prescription_id: prescrtiptionId,
+    appointment_id: appointmentId,
+    diagnosis,
+    medicines,
+    doctors_comment: doctorComment,
+    created_at: dateCreated,
+    updated_at: dateUpdated,
+  } = prescription;
+  const mapped = {
+    prescrtiptionId,
+    appointmentId,
+    createdAt: moment(dateCreated).format("YYYY-MM-DD"),
+    updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
+  };
+
+  if (!includeDiagnosis) {
+    const decryptedDiagnosis = decryptText({
+      encryptedText: diagnosis,
+      key: hashedToken,
+    });
+    mapped.diagnosis = decryptedDiagnosis;
+  }
+
+  if (!includeMedicines) {
+    const decryptedMedicines = decryptText({
+      encryptedText: medicines,
+      key: hashedToken,
+    });
+    mapped.medicines = decryptedMedicines;
+  }
+
+  if (!includeComments) {
+    const decryptedComment = decryptText({
+      encryptedText: doctorComment,
+      key: hashedToken,
+    });
+    mapped.comment = decryptedComment;
   }
 
   return mapped;
