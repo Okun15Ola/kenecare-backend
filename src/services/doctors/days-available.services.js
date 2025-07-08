@@ -5,10 +5,12 @@ const Response = require("../../utils/response.utils");
 exports.getDoctorAvailableDays = async (id) => {
   try {
     // Get profile from database
-    const doctor = await dbObject.getDoctorByUserId(id);
+    const doctors = await dbObject.getDoctorByUserId(id);
 
-    if (!doctor) {
-      return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
+    if (!doctors) {
+      return Response.NOT_FOUND({
+        message: "Doctor's Available Days Not Found",
+      });
     }
 
     return Response.SUCCESS();
