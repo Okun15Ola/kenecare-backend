@@ -94,7 +94,7 @@ describe("doctors.council-registration.services", () => {
         user_type: USERTYPE.DOCTOR,
         user_id: id,
       });
-      dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue([]);
+      dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue(undefined);
       Response.NOT_FOUND.mockReturnValue({ status: 404 });
 
       const result =

@@ -6,6 +6,7 @@ module.exports = {
   testPathIgnorePatterns: [
     "/node_modules/",
     "/__mocks__/", // ignore all mocks as test suites
+    "/.history/",
   ],
   forceExit: true,
   detectOpenHandles: true,

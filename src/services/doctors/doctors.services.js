@@ -11,35 +11,87 @@ const { getUserById } = require("../../repository/users.repository");
 const {
   adminDoctorProfileRegistrationEmail,
 } = require("../../utils/email.utils");
-const { appBaseURL } = require("../../config/default.config");
 const { doctorProfileApprovalSms } = require("../../utils/sms.utils");
 const {
   createDoctorWallet,
 } = require("../../repository/doctor-wallet.repository");
 const { hashUsersPassword } = require("../../utils/auth.utils");
-const { mapDoctorRow } = require("../../utils/db-mapper.utils");
+const {
+  mapDoctorRow,
+  mapDoctorUserProfileRow,
+} = require("../../utils/db-mapper.utils");
+const redisClient = require("../../config/redis.config");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
 exports.getAllDoctors = async (limit, offset, paginationInfo) => {
   try {
-    const rawData = await dbObject.getAllDoctors(limit, offset);
-    let doctors = [];
-    if (rawData) {
-      doctors = rawData.map(mapDoctorRow);
+    const cacheKey = cacheKeyBulider("doctors:all", limit, offset);
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
+
+    const rawData = await dbObject.getAllDoctors(limit, offset);
+
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Doctors not found" });
+    }
+
+    const doctors = rawData.map(mapDoctorRow);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctors),
+    });
+
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
-exports.getDoctorByQuery = async ({ locationId, query }) => {
+exports.getDoctorByQuery = async (
+  locationId,
+  query,
+  limit,
+  offset,
+  paginationInfo,
+) => {
   try {
-    const rawData = await dbObject.getDoctorByQuery({ locationId, query });
-    let doctors = [];
-    if (rawData) {
-      doctors = rawData.map(mapDoctorRow);
+    const cacheKey = cacheKeyBulider(
+      `doctor-search${locationId ? `:location=${locationId}` : ""}${query ? `:query=${query}` : ""}`,
+      limit,
+      offset,
+    );
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    return Response.SUCCESS({ data: doctors });
+    const rawData = await dbObject.getDoctorByQuery({
+      locationId,
+      query,
+      limit,
+      offset,
+    });
+
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Doctors not found" });
+    }
+
+    const doctors = rawData.map(mapDoctorRow);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctors),
+    });
+
+    return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;
@@ -52,15 +104,34 @@ exports.getDoctorBySpecialtyId = async (
   paginationInfo,
 ) => {
   try {
+    const cacheKey = cacheKeyBulider(
+      `doctors:speciality:${specialityId}`,
+      limit,
+      offset,
+    );
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
+    }
     const rawData = await dbObject.getDoctorsBySpecializationId(
       specialityId,
       limit,
       offset,
     );
-    let doctors = [];
-    if (rawData) {
-      doctors = rawData.map(mapDoctorRow);
+
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Doctors not found" });
     }
+
+    const doctors = rawData.map(mapDoctorRow);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctors),
+    });
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
   } catch (error) {
@@ -71,63 +142,29 @@ exports.getDoctorBySpecialtyId = async (
 
 exports.getDoctorByUser = async (id) => {
   try {
-    // Get profile from database
+    const cacheKey = `doctor:user:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+      });
+    }
     const rawData = await dbObject.getDoctorByUserId(id);
 
     if (!rawData) {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
-    // destruct properties from database object
-    const {
-      doctor_id: doctorId,
-      title,
-      first_name: firstName,
-      middle_name: middleName,
-      last_name: lastName,
-      gender,
-      professional_summary: professionalSummary,
-      profile_pic_url: profilePic,
-      specialization_id: specialtyId,
-      speciality_name: specialization,
-      qualifications,
-      consultation_fee: consultationFees,
-      city_name: city,
-      years_of_experience: yearOfExperience,
-      is_profile_approved: isProfileApproved,
-      user_id: userId,
-      mobile_number: mobileNumber,
-      email,
-      user_type: userType,
-    } = rawData;
+    const doctor = mapDoctorUserProfileRow(rawData);
 
-    // TODO Check if the profile requested belongs to the requesting user
-    if (id !== userId || userType !== USERTYPE.DOCTOR) {
+    if (id !== doctor.userId || doctor.userType !== USERTYPE.DOCTOR) {
       return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
     }
 
-    const doctor = {
-      doctorId,
-      userId,
-      title,
-      firstName,
-      middleName,
-      lastName,
-      gender,
-      mobileNumber,
-      email,
-      professionalSummary,
-      profilePic: profilePic
-        ? `${appBaseURL}/user-profile/${profilePic}`
-        : null,
-      specialtyId,
-      specialization,
-      qualifications,
-      consultationFees,
-      city,
-      yearOfExperience,
-      isProfileApproved,
-    };
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctor),
+    });
 
     return Response.SUCCESS({ data: doctor });
   } catch (error) {
@@ -138,7 +175,13 @@ exports.getDoctorByUser = async (id) => {
 
 exports.getDoctorById = async (id) => {
   try {
-    // Get profile from database
+    const cacheKey = `doctor:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+      });
+    }
     const data = await dbObject.getDoctorById(id);
 
     if (!data) {
@@ -146,6 +189,12 @@ exports.getDoctorById = async (id) => {
     }
 
     const doctor = mapDoctorRow(data);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctor),
+    });
+
     return Response.SUCCESS({ data: doctor });
   } catch (error) {
     console.error(error);
@@ -268,7 +317,6 @@ exports.updateDoctorProfile = async ({
       });
     }
 
-    // TODO Check if the profile has been verified
     if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
       return Response.UNAUTHORIZED({
         message:

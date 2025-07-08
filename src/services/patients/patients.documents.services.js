@@ -1,5 +1,4 @@
 const { v4: uuidv4 } = require("uuid");
-const moment = require("moment");
 const {
   getPatientMedicalDocumentByDocumentId,
   getMedicalDocumentsByPatientId,
@@ -17,11 +16,14 @@ const Response = require("../../utils/response.utils");
 const {
   uploadFileToS3Bucket,
   deleteFileFromS3Bucket,
-  getFileUrlFromS3Bucket,
 } = require("../../utils/aws-s3.utils");
 const { documentSharedWithDoctorSMS } = require("../../utils/sms.utils");
 const { getDoctorById } = require("../../repository/doctors.repository");
 const { redisClient } = require("../../config/redis.config");
+const {
+  mapPatientMedicalDocumentRow,
+  mapPatientDocumentRow,
+} = require("../../utils/db-mapper.utils");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {
@@ -39,19 +41,13 @@ exports.getPatientMedicalDocuments = async (userId) => {
     }
     const rawData = await getMedicalDocumentsByPatientId(patientId);
 
-    const documents = rawData.map(
-      ({
-        medical_document_id: documentId,
-        document_uuid: documentUUID,
-        document_title: documentTitle,
-      }) => {
-        return {
-          documentId,
-          documentUUID,
-          documentTitle,
-        };
-      },
-    );
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({
+        message: "Patient Medical Document Not Found",
+      });
+    }
+
+    const documents = rawData.map(mapPatientDocumentRow);
 
     await redisClient.set({
       key: cacheKey,
@@ -80,26 +76,13 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
       patientId,
     });
 
-    const {
-      medical_document_id: documentId,
-      document_uuid: documentUUID,
-      document_title: documentTitle,
-      mimetype: mimeType,
-    } = rawData;
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Patient Medical Document Not Found",
+      });
+    }
 
-    // const buffer = await getObjectFromS3Bucket(documentUUID);
-
-    // const decryptedBuffer = decryptFile({ buffer, password });
-
-    const fileUrl = await getFileUrlFromS3Bucket(documentUUID);
-
-    const document = {
-      documentId,
-      documentUUID,
-      documentTitle,
-      mimeType,
-      fileUrl,
-    };
+    const document = mapPatientDocumentRow(rawData, true);
 
     await redisClient.set({
       key: cacheKey,
@@ -118,8 +101,6 @@ exports.createPatientMedicalDocument = async ({
   documentTitle,
 }) => {
   try {
-    // const user = await getUserById(userId);
-    // const { password } = user;
     const patient = await getPatientByUserId(userId);
     if (!patient) {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
@@ -133,8 +114,6 @@ exports.createPatientMedicalDocument = async ({
     const { patient_id: patientId } = patient;
 
     const documentUuid = uuidv4();
-
-    // const encryptedFileBuffer = encryptFile({ buffer: file.buffer, password });
 
     const uploaded = await uploadFileToS3Bucket({
       fileName: documentUuid,
@@ -331,36 +310,13 @@ exports.getPatientSharedMedicalDocuments = async (userId) => {
     const { patient_id: patientId } = patient;
     const rawData = await getPatientSharedMedicalDocuments(patientId);
 
-    const dataPromises = rawData.map(
-      async ({
-        sharing_id: sharingId,
-        document_id: documentId,
-        document_uuid: documentUUID,
-        document_title: documentTitle,
-        patient_id: patientId,
-        patient_first_name: patientFirstName,
-        patient_last_name: patientLastName,
-        doctor_first_name: doctorFirstName,
-        doctor_last_name: doctorLastName,
-        note,
-        created_at: createdAt,
-      }) => {
-        const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
-        return {
-          sharingId,
-          documentId,
-          documentUUID,
-          documentTitle,
-          patientId,
-          documentUrl,
-          patientName: `${patientFirstName} ${patientLastName}`,
-          doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
-          note,
-          createdAt: moment(createdAt).format("YYYY-MM-DD"),
-        };
-      },
-    );
-    const data = await Promise.all(dataPromises);
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({
+        message: "Patient Shared Medical Documents Not Found",
+      });
+    }
+
+    const data = await Promise.all(rawData.map(mapPatientMedicalDocumentRow));
     return Response.SUCCESS({ data });
   } catch (error) {
     console.error(error);
@@ -388,34 +344,7 @@ exports.getPatientSharedMedicalDocument = async ({ userId, documentId }) => {
       });
     }
 
-    const {
-      sharing_id: sharingId,
-      document_uuid: documentUUID,
-      document_title: documentTitle,
-      patient_first_name: patientFirstName,
-      patient_last_name: patientLastName,
-      doctor_first_name: doctorFirstName,
-      doctor_last_name: doctorLastName,
-      note,
-      created_at: createdAt,
-    } = rawData;
-
-    const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
-
-    const data = {
-      sharingId,
-      documentId,
-      documentUUID,
-      documentUrl,
-      documentTitle,
-      patientId,
-      patientFirstName,
-      patientLastName,
-      doctorFirstName,
-      doctorLastName,
-      note,
-      createdAt: moment(createdAt).format("YYYY-MM-DD"),
-    };
+    const data = mapPatientMedicalDocumentRow(rawData, true);
 
     return Response.SUCCESS({ data });
   } catch (error) {

@@ -11,14 +11,12 @@ jest.mock("../../../src/utils/caching.utils");
 const userService = require("../../../src/services/users.service");
 const userRepo = require("../../../src/repository/users.repository");
 const patientRepo = require("../../../src/repository/patients.repository");
-// const doctorRepo = require("../../../src/repository/doctors.repository");
 const { redisClient } = require("../../../src/config/redis.config");
 const authUtils = require("../../../src/utils/auth.utils");
 const smsUtils = require("../../../src/utils/sms.utils");
 const streamUtils = require("../../../src/utils/stream.utils");
 const awsS3 = require("../../../src/utils/aws-s3.utils");
 const caching = require("../../../src/utils/caching.utils");
-// const Response = require("../../../src/utils/response.utils");
 
 describe("User Service", () => {
   afterEach(() => {
@@ -48,13 +46,14 @@ describe("User Service", () => {
       authUtils.generateVerificationToken.mockReturnValue("token");
       authUtils.hashUsersPassword.mockResolvedValue("hashed_password");
       userRepo.createNewUser.mockResolvedValue({});
-      smsUtils.sendAuthTokenSMS.mockResolvedValue({});
+      smsUtils.sendVerificationTokenSMS.mockResolvedValue({});
 
       const result = await userService.registerNewUser({
         mobileNumber: "123",
         password: "pass",
         userType: "patient",
       });
+
       expect(result.statusCode).toBe(201);
     });
 

@@ -25,7 +25,7 @@ exports.getSpecializations = async (limit, offset, paginationInfo) => {
       pagination: paginationInfo,
     });
   }
-  const rawData = await dbObject.getAllSpecialization();
+  const rawData = await dbObject.getAllSpecialization(limit, offset);
 
   if (!rawData) {
     return Response.NOT_FOUND({ message: "Specialization Not Found" });

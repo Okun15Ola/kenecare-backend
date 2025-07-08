@@ -81,8 +81,9 @@ exports.getDoctorAppointByDate = async ({
   limit,
   offset,
 }) => {
-  const optimizedQuery = `${queries.GET_APPOINTMENTS_BY_DATE} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery, [doctorId, startDate, endDate]);
+  const baseQuery = queries.GET_APPOINTMENTS_BY_DATE(startDate, endDate);
+  const optimizedQuery = `${baseQuery} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery, [doctorId]);
 };
 
 exports.getDoctorAppointByDateAndTime = async ({ doctorId, date, time }) => {

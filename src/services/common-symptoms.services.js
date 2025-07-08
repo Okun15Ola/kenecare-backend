@@ -17,12 +17,19 @@ exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
       });
     }
 
-    const rawData = await repo.getAllCommonSymptoms();
+    const rawData = await repo.getAllCommonSymptoms(limit, offset);
+
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
+    }
+
     const [symptoms] = await Promise.all(rawData.map(mapCommonSymptomsRow));
+
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(symptoms),
     });
+
     return Response.SUCCESS({ data: symptoms, pagination: paginationInfo });
   } catch (error) {
     console.error("GET ALL COMMON SYMPTOMS ERROR: ", error);

@@ -4,11 +4,6 @@ const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapTestimonialRow } = require("../utils/db-mapper.utils");
 
-/**
- * @description Service to handle testimonials related operations
- * @module services/testimonials.services
- */
-
 exports.getTestimonials = async (limit, offset, paginationInfo) => {
   try {
     const cacheKey = cacheKeyBulider("testimonials:all", limit, offset);
@@ -20,7 +15,8 @@ exports.getTestimonials = async (limit, offset, paginationInfo) => {
       });
     }
     const rawData = await repo.getAllTestimonials(limit, offset);
-    if (!rawData) return null;
+    if (!rawData?.length)
+      return Response.NOT_FOUND({ message: "Testimonials Not Found" });
 
     const testimonials = rawData
       .filter((t) => t.is_approved && t.is_active)

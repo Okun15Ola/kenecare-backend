@@ -8,6 +8,7 @@ const { USERTYPE, VERIFICATIONSTATUS, STATUS } = require("../utils/enum.utils");
 const { hashUsersPassword } = require("../utils/auth.utils");
 const {
   sendAuthTokenSMS,
+  sendVerificationTokenSMS,
   sendPasswordResetSMS,
 } = require("../utils/sms.utils");
 const Response = require("../utils/response.utils");
@@ -20,6 +21,8 @@ const { getFileUrlFromS3Bucket } = require("../utils/aws-s3.utils");
 const { getDoctorByUserId } = require("../repository/doctors.repository");
 const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
+const { mapUserRow } = require("../utils/db-mapper.utils");
+const logger = require("../middlewares/logger.middleware");
 
 exports.getUsers = async (limit, offset, paginationInfo) => {
   try {
@@ -31,13 +34,19 @@ exports.getUsers = async (limit, offset, paginationInfo) => {
         pagination: paginationInfo,
       });
     }
-    const rawData = await repo.getAllUsers();
+    const rawData = await repo.getAllUsers(limit, offset);
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Users not found" });
+    }
+
+    const users = rawData.map(mapUserRow);
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(rawData),
+      value: JSON.stringify(users),
     });
     return Response.SUCCESS({
-      data: rawData,
+      data: users,
       pagination: paginationInfo,
     });
   } catch (error) {
@@ -48,32 +57,27 @@ exports.getUsers = async (limit, offset, paginationInfo) => {
 
 exports.getUserById = async (id) => {
   try {
+    const cacheKey = `users:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
     const rawData = await repo.getUserById(id);
     if (!rawData) {
       return null;
     }
-    const {
-      user_id: userId,
-      mobile_number: mobileNumber,
-      email,
-      user_type: userType,
-      is_verified: accountVerified,
-      is_account_active: accountActive,
-      is_online: isOnline,
-      is_2fa_enabled: is2faEnabled,
-      password,
-    } = rawData;
-    return {
-      userId,
-      mobileNumber,
-      email,
-      userType,
-      accountVerified,
-      accountActive,
-      isOnline,
-      is2faEnabled,
-      password,
-    };
+
+    const user = mapUserRow(rawData, true);
+
+    if (!user) {
+      return Response.NOT_FOUND({ message: "User not found" });
+    }
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(user),
+    });
+    return user;
   } catch (error) {
     console.error(error);
     throw error;
@@ -81,32 +85,26 @@ exports.getUserById = async (id) => {
 };
 exports.getUserByMobileNumber = async (number) => {
   try {
+    const cacheKey = `users:${number}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
     const rawData = await repo.getUserByMobileNumber(number);
     if (!rawData) {
       return null;
     }
-    const {
-      user_id: userId,
-      mobile_number: mobileNumber,
-      email,
-      user_type: userType,
-      is_verified: accountVerified,
-      is_account_active: accountActive,
-      is_online: isOnline,
-      is_2fa_enabled: is2faEnabled,
-      password,
-    } = rawData;
-    return {
-      userId,
-      mobileNumber,
-      email,
-      userType,
-      accountVerified,
-      accountActive,
-      isOnline,
-      is2faEnabled,
-      password,
-    };
+    const user = mapUserRow(rawData, true);
+
+    if (!user) {
+      return Response.NOT_FOUND({ message: "User not found" });
+    }
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(user),
+    });
+    return user;
   } catch (error) {
     console.error(error);
     throw error;
@@ -114,32 +112,26 @@ exports.getUserByMobileNumber = async (number) => {
 };
 exports.getUserByEmail = async (userEmail) => {
   try {
+    const cacheKey = `users:${userEmail}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
     const rawData = await repo.getUserByEmail(userEmail);
     if (!rawData) {
       return null;
     }
-    const {
-      user_id: userId,
-      mobile_number: mobileNumber,
-      email,
-      user_type: userType,
-      is_verified: accountVerified,
-      is_account_active: accountActive,
-      is_online: isOnline,
-      is_2fa_enabled: is2faEnabled,
-      password,
-    } = rawData;
-    return {
-      userId,
-      mobileNumber,
-      email,
-      userType,
-      accountVerified,
-      accountActive,
-      isOnline,
-      is2faEnabled,
-      password,
-    };
+    const user = mapUserRow(rawData, true);
+
+    if (!user) {
+      return Response.NOT_FOUND({ message: "User not found" });
+    }
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(user),
+    });
+    return user;
   } catch (error) {
     console.error(error);
     throw error;
@@ -147,32 +139,26 @@ exports.getUserByEmail = async (userEmail) => {
 };
 exports.getUserByToken = async (token) => {
   try {
+    const cacheKey = `users:${token}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
     const rawData = await repo.getUserByVerificationToken(token);
     if (!rawData) {
       return null;
     }
-    const {
-      user_id: userId,
-      mobile_number: mobileNumber,
-      email,
-      user_type: userType,
-      is_verified: accountVerified,
-      is_account_active: accountActive,
-      is_online: isOnline,
-      is_2fa_enabled: is2faEnabled,
-      referral_code: referralCode,
-    } = rawData;
-    return {
-      userId,
-      mobileNumber,
-      email,
-      userType,
-      accountVerified,
-      accountActive,
-      isOnline,
-      is2faEnabled,
-      referralCode,
-    };
+    const user = mapUserRow(rawData, false, true);
+
+    if (!user) {
+      return Response.NOT_FOUND({ message: "User not found" });
+    }
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(user),
+    });
+    return user;
   } catch (error) {
     console.error(error);
     throw error;
@@ -196,8 +182,8 @@ exports.registerNewUser = async ({
     // has plain text password
     const hashedPassword = await hashUsersPassword(password);
 
-    // reate user and send OTP via SMS
-    await Promise.all([
+    // create user and send OTP via SMS
+    const [userResult, smsResult] = await Promise.all([
       repo.createNewUser({
         mobileNumber,
         userType: type,
@@ -206,8 +192,15 @@ exports.registerNewUser = async ({
         vToken,
         referralCode,
       }),
-      sendAuthTokenSMS({ token: vToken, mobileNumber }),
+      sendVerificationTokenSMS({ token: vToken, mobileNumber }),
     ]);
+
+    if (!userResult || !smsResult) {
+      logger.error("Failed to create user:", userResult, smsResult);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Failed to create user account.",
+      });
+    }
 
     return Response.CREATED({
       message: "Account Created Successfully. Please Proceed to verification",

@@ -64,6 +64,10 @@ exports.getPatientAppointments = async (
       limit,
     });
 
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Patients appointments not found" });
+    }
+
     const appointments = rawData.map(mapPatientAppointment);
 
     await redisClient.set({
@@ -101,7 +105,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
     const rawFollowUps = await getAppointmentFollowUps(
       appointment.appointmentId,
     );
-    const followUps = rawFollowUps.map(mapFollowUpsRow);
+    const followUps = rawFollowUps.map(mapFollowUpsRow) || null;
 
     const appointmentWithFollowUp = {
       ...appointment,

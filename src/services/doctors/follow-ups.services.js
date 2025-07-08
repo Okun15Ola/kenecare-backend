@@ -164,18 +164,6 @@ exports.updateAppointmentFollowUpService = async ({
           "You have a follow-up for the selected date and time, please choose another date or time.",
       });
     }
-
-    // const appointment = await getDoctorAppointmentById({
-    //   doctorId,
-    //   appointmentId,
-    // });
-
-    // const {
-    //   patient_id: patientId,
-    //   patient_name_on_prescription: patientNameOnPrescription,
-    // } = appointment;
-    // const { mobile_number: mobileNumber } = await getPatientById(patientId);
-
     // Save follow-up to database
     await followUpRepo.updateAppointmentFollowUp({
       followUpId,
@@ -231,7 +219,11 @@ exports.getAllAppointmentFollowupService = async ({
 
     const rawData = await followUpRepo.getAppointmentFollowUps(appointmentId);
 
-    const followUps = rawData?.map(mapFollowUpRow) || [];
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Appointment Follow Up Not Found" });
+    }
+
+    const followUps = rawData.map(mapFollowUpRow);
 
     await redisClient.set({
       key: cacheKey,
@@ -303,8 +295,6 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
       doctorId,
       appointmentId,
     });
-
-    // console.log(isDoctorsAppointment);
 
     if (!isDoctorsAppointment) {
       return Response.UNAUTHORIZED({

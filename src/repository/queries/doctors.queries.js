@@ -7,13 +7,32 @@ module.exports = {
     INNER JOIN cities ON doctors.city_id = cities.city_id
   `,
   SEARCH_DOCTOR_BY_QUERY: `
-    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, latitude, longitude, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
-    FROM doctors
-    INNER JOIN users ON doctors.user_id = users.user_id
-    INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
-    INNER JOIN cities ON doctors.city_id = cities.city_id
-    WHERE doctors.city_id = ? AND (doctors.first_name LIKE ? OR doctors.middle_name LIKE ? OR doctors.last_name LIKE ? OR doctors.specialization_id,speciality_name LIKE ?)
-  `,
+  SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url,
+         doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, latitude, longitude,
+         years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
+  FROM doctors
+  INNER JOIN users ON doctors.user_id = users.user_id
+  INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
+  INNER JOIN cities ON doctors.city_id = cities.city_id
+  WHERE doctors.city_id = ?
+    AND (
+      doctors.first_name LIKE ?
+      OR doctors.middle_name LIKE ?
+      OR doctors.last_name LIKE ?
+      OR doctors.specialization_id LIKE ?
+      OR speciality_name LIKE ?
+    )
+`,
+
+  // SEARCH_DOCTOR_BY_QUERY: `
+  //   SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, latitude, longitude, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
+  //   FROM doctors
+  //   INNER JOIN users ON doctors.user_id = users.user_id
+  //   INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
+  //   INNER JOIN cities ON doctors.city_id = cities.city_id
+  //   WHERE doctors.city_id = ? AND (doctors.first_name LIKE ? OR doctors.middle_name LIKE ? OR doctors.last_name
+  //   LIKE ? OR doctors.specialization_id,speciality_name LIKE ?)
+  // `,
   GET_DOCTOR_BY_ID: `
     SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
     FROM doctors
@@ -54,7 +73,7 @@ module.exports = {
     FROM doctors_council_registration
     INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id
     INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id
-    INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id;
+    INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id
   `,
   GET_DOCTOR_COUNCIL_REGISTRATION_BY_ID: `
     SELECT council_registration_id, doctors_council_registration.doctor_id, first_name, last_name, doctors.specialization_id, speciality_name, profile_pic_url, council_name, years_of_experience, is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, verified_by, doctors_council_registration.created_at

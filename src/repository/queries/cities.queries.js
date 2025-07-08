@@ -1,5 +1,5 @@
 module.exports = {
-  GET_ALL_CITIES: "CALL Sp_GetCities()",
+  GET_ALL_CITIES: "CALL Sp_GetCities(?, ?)",
   GET_CITY_BY_ID: "CALL Sp_GetCityById(?)",
   GET_CITY_BY_NAME: "SELECT * FROM cities WHERE city_name = ? LIMIT 1",
   CREATE_CITY:

@@ -136,29 +136,27 @@ exports.GetDoctorsController = async (req, res, next) => {
       pagination: { limit, offset },
       paginationInfo,
     } = req;
-    let response = null;
-    if (Object.keys(req.query).length > 0) {
-      console.log(req.query);
-      const {
-        locationId,
-        q: query,
-        specialty_id: specialtyId,
-      } = req.query || null;
+    const { locationId, q: query, specialty_id: specialtyId } = req.query;
 
-      if (specialtyId) {
-        response = await getDoctorBySpecialtyId(
-          specialtyId,
-          limit,
-          offset,
-          paginationInfo,
-        );
-      } else {
-        // GET DOCTORS BY LOCATION
-        response = await getDoctorByQuery({ locationId, query });
-      }
+    let response;
+
+    if (specialtyId) {
+      response = await getDoctorBySpecialtyId(
+        specialtyId,
+        limit,
+        offset,
+        paginationInfo,
+      );
+    } else if (locationId || query) {
+      response = await getDoctorByQuery(
+        locationId,
+        query,
+        limit,
+        offset,
+        paginationInfo,
+      );
     } else {
-      // GET ALL DOCTORS.
-      response = await getAllDoctors();
+      response = await getAllDoctors(limit, offset, paginationInfo);
     }
 
     return res.status(response.statusCode).json(response);

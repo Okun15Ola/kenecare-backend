@@ -14,7 +14,11 @@ exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
         pagination: paginationInfo,
       });
     }
-    const rawData = await dbObject.getAllAppointments({ limit, offset });
+    const rawData = await dbObject.getAllAppointments(limit, offset);
+
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Appointments Not Found" });
+    }
 
     const appointments = rawData.map(mapAdminAppointmentRow);
 
@@ -54,6 +58,10 @@ exports.getAdminAppointmentsByDoctorId = async (
     );
 
     const appointments = rawData.map(mapAdminAppointmentRow);
+
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Appointments Not Found" });
+    }
 
     await redisClient.set({
       key: cacheKey,
@@ -101,6 +109,10 @@ exports.getAdminAppointmentByUUID = async (uuid) => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
     const rawData = await dbObject.getAppointmentByUUID(uuid);
+
+    if (!rawData) {
+      return Response.NOT_FOUND({ message: "Appointment Not Found" });
+    }
 
     const appointment = mapAdminAppointmentRow(rawData);
 

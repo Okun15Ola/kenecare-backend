@@ -23,7 +23,9 @@ const getAllAppointments = async () => {
     if (cachedData) {
       appointments = JSON.parse(cachedData);
     } else {
-      appointments = await getAppointments();
+      const limit = 1;
+      const offset = 30;
+      appointments = await getAppointments(limit, offset);
       await redisClient.set({
         key: cacheKey,
         expiry: 600,

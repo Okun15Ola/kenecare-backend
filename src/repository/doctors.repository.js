@@ -9,10 +9,16 @@ exports.getAllDoctors = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
-exports.getDoctorByQuery = async ({ locationId, query: search }) => {
-  console.log(query);
-  return query(queries.SEARCH_DOCTOR_BY_QUERY, [
+exports.getDoctorByQuery = async ({
+  locationId,
+  query: search,
+  limit,
+  offset,
+}) => {
+  const optimizedQuery = `${queries.SEARCH_DOCTOR_BY_QUERY} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery, [
     locationId,
+    `%${search}%`,
     `%${search}%`,
     `%${search}%`,
     `%${search}%`,
@@ -57,8 +63,9 @@ exports.getCouncilRegistrationByDoctorId = async (doctorId) => {
   return result[0];
 };
 
-exports.getAllMedicalCouncilRegistration = async () => {
-  return query(queries.GET_DOCTOR_ALL_COUNCIL_REGISTRATIONS);
+exports.getAllMedicalCouncilRegistration = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_DOCTOR_ALL_COUNCIL_REGISTRATIONS} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery);
 };
 
 exports.getCouncilRegistrationById = async (registrationId) => {

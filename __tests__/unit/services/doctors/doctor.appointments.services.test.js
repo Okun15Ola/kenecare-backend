@@ -1,15 +1,12 @@
 const doctorAppointmentsService = require("../../../../src/services/doctors/doctor.appointments.services");
 const doctorAppointmentsRepo = require("../../../../src/repository/doctorAppointments.repository");
 const doctorsRepo = require("../../../../src/repository/doctors.repository");
-// const usersRepo = require("../../../../src/repository/users.repository");
 const patientsRepo = require("../../../../src/repository/patients.repository");
 // const followUpRepo = require("../../../../src/repository/follow-up.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
 const smsUtils = require("../../../../src/utils/sms.utils");
 const streamUtils = require("../../../../src/utils/stream.utils");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
-// const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/doctorAppointments.repository");
 jest.mock("../../../../src/repository/doctors.repository");
