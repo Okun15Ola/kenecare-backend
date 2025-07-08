@@ -14,7 +14,7 @@ exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
         pagination: paginationInfo,
       });
     }
-    const rawData = await dbObject.getAllAppointments({ limit, offset });
+    const rawData = await dbObject.getAllAppointments(limit, offset);
 
     const appointments = rawData.map(mapAdminAppointmentRow);
 

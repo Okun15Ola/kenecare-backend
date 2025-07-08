@@ -18,7 +18,7 @@ exports.getMedicalCouncils = async (limit, offset, paginationInfo) => {
       pagination: paginationInfo,
     });
   }
-  const rawData = await repo.getAllMedicalCouncils();
+  const rawData = await repo.getAllMedicalCouncils(limit, offset);
   if (!rawData) {
     return Response.NOT_FOUND({
       message: "Medical Council Not Found ",

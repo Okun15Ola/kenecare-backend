@@ -39,7 +39,7 @@ exports.getDoctorCouncilRegistration = async (id) => {
       return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
     }
 
-    const [rawData] = await dbObject.getCouncilRegistrationByDoctorId(doctorId);
+    const rawData = await dbObject.getCouncilRegistrationByDoctorId(doctorId);
     if (!rawData) {
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",

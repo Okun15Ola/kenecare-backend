@@ -6,15 +6,26 @@ const {
 } = require("../../utils/email.utils");
 const redisClient = require("../../config/redis.config");
 const { mapCouncilRegistrationRow } = require("../../utils/db-mapper.utils");
+const { cacheKeyBulider } = require("../../utils/caching.utils");
 
-exports.getAllCouncilRegistrations = async () => {
+exports.getAllCouncilRegistrations = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "admin-doctors-council-registrations:all";
+    const cacheKey = cacheKeyBulider(
+      "admin-doctors-council-registrations:all",
+      limit,
+      offset,
+    );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await dbObject.getAllMedicalCouncilRegistration();
+    const rawData = await dbObject.getAllMedicalCouncilRegistration(
+      limit,
+      offset,
+    );
     if (!rawData) {
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
@@ -27,7 +38,10 @@ exports.getAllCouncilRegistrations = async () => {
       key: cacheKey,
       value: JSON.stringify(registrations),
     });
-    return Response.SUCCESS({ data: registrations });
+    return Response.SUCCESS({
+      data: registrations,
+      pagination: paginationInfo,
+    });
   } catch (error) {
     console.error(error);
     throw error;

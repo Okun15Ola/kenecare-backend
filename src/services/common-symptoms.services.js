@@ -17,7 +17,7 @@ exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
       });
     }
 
-    const rawData = await repo.getAllCommonSymptoms();
+    const rawData = await repo.getAllCommonSymptoms(limit, offset);
     const [symptoms] = await Promise.all(rawData.map(mapCommonSymptomsRow));
     await redisClient.set({
       key: cacheKey,
