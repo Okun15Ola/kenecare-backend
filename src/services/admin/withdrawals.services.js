@@ -19,7 +19,7 @@ const { mapWithdawalRow } = require("../../utils/db-mapper.utils");
 exports.getAllRequests = async (limit, offset, paginationInfo) => {
   try {
     const rawData = await getAllWithdrawalRequests(limit, offset);
-    if (!rawData) {
+    if (!rawData?.length) {
       return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
     const data = rawData.map(mapWithdawalRow);

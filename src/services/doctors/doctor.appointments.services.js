@@ -5,11 +5,9 @@ const { getUserById } = require("../../repository/users.repository");
 const { USERTYPE, VERIFICATIONSTATUS } = require("../../utils/enum.utils");
 const Response = require("../../utils/response.utils");
 const { getPatientById } = require("../../repository/patients.repository");
-// const { createZoomMeeting } = require("../../utils/zoom.utils");
 const {
   appointmentApprovalSms,
   appointmentPostponedSms,
-  // appointmentStartedSms,
   appointmentEndedSms,
 } = require("../../utils/sms.utils");
 const logger = require("../../middlewares/logger.middleware");
@@ -62,7 +60,7 @@ exports.getDoctorAppointments = async ({
       offset,
     });
 
-    if (!rawData) {
+    if (!rawData?.length) {
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
@@ -162,6 +160,11 @@ exports.getDoctorAppointmentByDateRange = async ({
       limit,
       offset,
     });
+
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Appointment Not Found" });
+    }
+
     const appointments = rawData.map((row) =>
       mapDoctorAppointmentRow(row, title),
     );
@@ -305,50 +308,13 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
 
     await createStreamCall(call);
 
-    // const {
-    //   zoomMeetingID,
-    //   zoomMeetingUUID,
-    //   zoomMeetingTopic,
-    //   zoomMeetingJoinURL,
-    //   zoomMeetingStartURL,
-    //   zoomMeetingEncPassword,
-    // } = await createZoomMeeting({
-    //   patientName: patientNameOnPrescription,
-    //   appointmentDate,
-    //   appointmentStartTime: appointmentTime,
-    //   doctorName: `${doctorFirstName} ${doctorLastName}`,
-    // });
-
-    // const { insertId } = await dbObject.createNewZoomMeeting({
-    //   meetingId: zoomMeetingID.toString(),
-    //   meetingUUID: zoomMeetingUUID,
-    //   meetingTopic: zoomMeetingTopic,
-    //   joinUrl: zoomMeetingJoinURL,
-    //   startUrl: zoomMeetingStartURL,
-    //   encryptedPassword: zoomMeetingEncPassword,
-    // });
-
     await Promise.allSettled([
       getPatientById(patientId),
-      // dbObject.updateDoctorAppointmentMeetingId({
-      //   doctorId,
-      //   appointmentId,
-      //   meetingId: appointmentUUID,
-      // }),
       dbObject.updateDoctorAppointmentStartTime({
         appointmentId,
         startTime: moment().format("HH:mm:ss"),
       }),
     ]);
-
-    //  Send a notification(sms) to the user
-    // const { mobile_number: mobileNumber } = patient.value;
-    // await appointmentStartedSms({
-    //   doctorName: `${doctorFirstName} ${doctorLastName}`,
-    //   patientName: `${firstName} ${lastName}`,
-    //   mobileNumber,
-    //   meetingJoinUrl: appointmentUUID,
-    // });
 
     return Response.SUCCESS({
       message: "Appointment Started Successfully",

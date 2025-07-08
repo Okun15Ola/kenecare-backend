@@ -54,7 +54,7 @@ exports.getAllMarketersService = async (limit, offset, paginationInfo) => {
       });
     }
     const rawData = await getAllMarketers(limit, offset);
-    if (!rawData) {
+    if (!rawData?.length) {
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const marketers = rawData.map(mapMarketersRow);

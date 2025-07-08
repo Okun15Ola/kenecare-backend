@@ -26,7 +26,7 @@ exports.getAllCouncilRegistrations = async (limit, offset, paginationInfo) => {
       limit,
       offset,
     );
-    if (!rawData) {
+    if (!rawData?.length) {
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
       });

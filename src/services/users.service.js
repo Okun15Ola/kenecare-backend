@@ -35,13 +35,11 @@ exports.getUsers = async (limit, offset, paginationInfo) => {
       });
     }
     const rawData = await repo.getAllUsers(limit, offset);
-    if (!rawData) return [];
-
-    const users = rawData.map(mapUserRow);
-
-    if (!users?.length) {
+    if (!rawData?.length) {
       return Response.NOT_FOUND({ message: "Users not found" });
     }
+
+    const users = rawData.map(mapUserRow);
 
     await redisClient.set({
       key: cacheKey,
