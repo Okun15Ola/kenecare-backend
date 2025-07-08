@@ -896,3 +896,42 @@ exports.mapSpecialityRow = (speciality, excludeTags = false) => {
 
   return mapped;
 };
+
+exports.mapUserRow = (
+  user,
+  excludePassword = false,
+  excludeReferralCode = false,
+) => {
+  const {
+    user_id: userId,
+    mobile_number: mobileNumber,
+    email,
+    user_type: userType,
+    is_verified: accountVerified,
+    is_account_active: accountActive,
+    is_online: isOnline,
+    is_2fa_enabled: is2faEnabled,
+    password,
+    referral_code: referralCode,
+  } = user;
+  const mapped = {
+    userId,
+    mobileNumber,
+    email,
+    userType,
+    accountVerified,
+    accountActive,
+    isOnline,
+    is2faEnabled,
+    password,
+  };
+  if (!excludePassword) {
+    mapped.password = password;
+  }
+
+  if (!excludeReferralCode) {
+    mapped.referralCode = referralCode;
+  }
+
+  return mapped;
+};
