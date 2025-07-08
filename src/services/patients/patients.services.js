@@ -8,20 +8,25 @@ const {
   VERIFICATIONSTATUS,
 } = require("../../utils/enum.utils");
 const { getUserById } = require("../../repository/users.repository");
-const { appBaseURL } = require("../../config/default.config");
 const { deleteFile } = require("../../utils/file-upload.utils");
 const {
   getMarketerByReferralCode,
   getMarketersTotalRegisteredUsers,
 } = require("../../repository/marketers.repository");
+const {
+  getAllTestimonials,
+} = require("../../repository/testimonials.repository");
 const { sendMarketerUserRegisteredSMS } = require("../../utils/sms.utils");
 const redisClient = require("../../config/redis.config");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  mapPatientRow,
+  mapMedicalRecordRow,
+} = require("../../utils/db-mapper.utils");
 
 exports.getAllPatients = async (limit, offset, paginationInfo) => {
   try {
     const cacheKey = cacheKeyBulider("patients:all", limit, offset);
-    // Check if data is cached
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
@@ -31,39 +36,11 @@ exports.getAllPatients = async (limit, offset, paginationInfo) => {
     }
     const rawData = await repo.getAllPatients(limit, offset);
 
-    const patients = rawData.map(
-      ({
-        patient_id: patientId,
-        title,
-        first_name: firstName,
-        middle_name: middleName,
-        last_name: lastName,
-        gender,
-        profile_pic_url: profilePic,
-        dob,
-        mobile_number: mobileNumber,
-        email,
-        user_type: userType,
-        is_account_active: isAccountActive,
-        is_online: isOnline,
-      }) => ({
-        patientId,
-        title,
-        firstName,
-        middleName,
-        lastName,
-        gender,
-        profilePic: profilePic
-          ? `${appBaseURL}/user-profile/${profilePic}`
-          : null,
-        dob: moment(dob).format("YYYY-MM-DD"),
-        mobileNumber,
-        email,
-        userType,
-        isAccountActive,
-        isOnline,
-      }),
-    );
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({ message: "Patient Not Found" });
+    }
+
+    const patients = rawData.map(mapPatientRow);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(patients),
@@ -89,103 +66,58 @@ exports.getPatientById = async (id) => {
           "Patient Profile Not Found. Please Create a profile to continue",
       });
     }
-    const {
-      patient_id: patientId,
-      title,
-      first_name: firstName,
-      middle_name: middleName,
-      last_name: lastName,
-      gender,
-      profile_pic_url: profilePic,
-      dob,
-      mobile_number: mobileNumber,
-      email,
-      user_type: userType,
-      is_account_active: isAccountActive,
-      is_online: isOnline,
-    } = rawData;
+    const patient = mapPatientRow(rawData);
 
-    //  Get medical Record details
-    const medicalRecord =
-      await repo.getPatientMedicalInfoByPatientId(patientId);
+    const medicalRecord = await repo.getPatientMedicalInfoByPatientId(
+      patient.patientId,
+    );
 
-    let medicalInfo = null;
-    if (medicalRecord) {
-      const {
-        height,
-        weight,
-        allergies,
-        is_patient_disabled: isDisabled,
-        disability_description: disabilityDesc,
-        tobacco_use: tobaccoIntake,
-        tobacco_use_frequency: tobaccoIntakeFreq,
-        alcohol_use: alcoholIntake,
-        alcohol_use_frequency: alcoholIntakeFreq,
-        caffine_use: caffineIntake,
-        caffine_use_frequency: caffineIntakeFreq,
-      } = medicalRecord;
-      medicalInfo = {
-        height,
-        weight,
-        allergies,
-        isDisabled: isDisabled !== 0,
-        disabilityDesc,
-        tobaccoIntake: tobaccoIntake !== null,
-        tobaccoIntakeFreq,
-        alcoholIntake: alcoholIntake !== 0,
-        alcoholIntakeFreq,
-        caffineIntake: caffineIntake !== null,
-        caffineIntakeFreq,
-      };
-    }
+    const medicalInfo = medicalRecord
+      ? mapMedicalRecordRow(medicalRecord)
+      : null;
 
-    const patient = {
-      patientId,
-      title,
-      firstName,
-      middleName,
-      lastName,
-      gender,
-      profilePic: profilePic
-        ? `${appBaseURL}/user-profile/${profilePic}`
-        : null,
-      dob: moment(dob).format("YYYY-MM-DD"),
-      mobileNumber,
-      email,
-      userType,
+    const patientWithMedicalRecord = {
+      ...patient,
       medicalInfo: medicalInfo || null,
-      isAccountActive,
-      isOnline,
     };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(patient),
+      value: JSON.stringify(patientWithMedicalRecord),
     });
 
-    return Response.SUCCESS({ data: patient });
+    return Response.SUCCESS({ data: patientWithMedicalRecord });
   } catch (error) {
     console.error(error);
     throw error;
   }
 };
 
-exports.getPatientsTestimonial = async (userId) => {
+exports.getPatientsTestimonial = async (limit, offset, paginationInfo) => {
   try {
-    const cacheKey = "patient-testimonials:all";
+    const cacheKey = cacheKeyBulider("patient-testimonials:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
-    const patient = await repo.getPatientByUserId(userId);
-    if (!patient) {
-      return Response.NOT_FOUND({
-        message: "Patient Not Found.",
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
       });
     }
-    const rawData = await repo.getAllPatients();
+    const rawData = await getAllTestimonials(limit, offset);
+    if (!rawData?.length) {
+      return Response.NOT_FOUND({
+        message: "Patient Testimonials Not Found",
+      });
+    }
 
-    return Response.SUCCESS({ data: rawData });
+    const patients = rawData.map(mapPatientRow);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(patients),
+    });
+
+    return Response.SUCCESS({ data: patients, pagination: paginationInfo });
   } catch (error) {
     console.error(error);
     throw error;
@@ -210,88 +142,30 @@ exports.getPatientByUser = async (id) => {
       });
     }
 
-    // destruct properties from database object
-    const {
-      patient_id: patientId,
-      title,
-      first_name: firstName,
-      middle_name: middleName,
-      last_name: lastName,
-      gender,
-      profile_pic_url: profilePic,
-      dob,
-      mobile_number: mobileNumber,
-      email,
-      user_id: userId,
-      user_type: userType,
-      is_account_active: isAccountActive,
-      is_online: isOnline,
-    } = rawData;
+    const patient = mapPatientRow(rawData);
 
-    //  Check if the profile requested belongs to the requesting user
-    if (id !== userId || userType !== USERTYPE.PATIENT) {
+    if (id !== patient.userId || patient.userType !== USERTYPE.PATIENT) {
       return Response.FORBIDDEN({ message: "Unauthorized account access." });
     }
 
-    //  Get medical Record details
-    const medicalRecord =
-      await repo.getPatientMedicalInfoByPatientId(patientId);
+    const medicalRecord = await repo.getPatientMedicalInfoByPatientId(
+      patient.patientId,
+    );
 
-    let medicalInfo = null;
-    if (medicalRecord) {
-      const {
-        height,
-        weight,
-        allergies,
-        is_patient_disabled: isDisabled,
-        disability_description: disabilityDesc,
-        tobacco_use: tobaccoIntake,
-        tobacco_use_frequency: tobaccoIntakeFreq,
-        alcohol_use: alcoholIntake,
-        alcohol_use_frequency: alcoholIntakeFreq,
-        caffine_use: caffineIntake,
-        caffine_use_frequency: caffineIntakeFreq,
-      } = medicalRecord;
-      medicalInfo = {
-        height,
-        weight,
-        allergies,
-        isDisabled: isDisabled !== 0,
-        disabilityDesc,
-        tobaccoIntake: tobaccoIntake !== null,
-        tobaccoIntakeFreq,
-        alcoholIntake: alcoholIntake !== 0,
-        alcoholIntakeFreq,
-        caffineIntake: caffineIntake !== null,
-        caffineIntakeFreq,
-      };
-    }
+    const medicalInfo = medicalRecord
+      ? mapMedicalRecordRow(medicalRecord)
+      : null;
 
-    const patient = {
-      userId,
-      patientId,
-      title,
-      firstName,
-      middleName,
-      lastName,
-      gender,
-      profilePic: profilePic
-        ? `${appBaseURL}/user-profile/${profilePic}`
-        : null,
-      dob: moment(dob).format("YYYY-MM-DD"),
-      mobileNumber,
-      email,
-      userType,
+    const patientWithMedicalRecord = {
+      ...patient,
       medicalInfo: medicalInfo || null,
-      isAccountActive,
-      isOnline,
     };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(patient),
+      value: JSON.stringify(patientWithMedicalRecord),
     });
-    return Response.SUCCESS({ data: patient });
+    return Response.SUCCESS({ data: patientWithMedicalRecord });
   } catch (error) {
     console.error(error);
     throw error;
