@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+    # 👇 Target a specific branch for PRs instead of the default branch
+    target-branch: "development"
+
+    # 👇 Add custom labels to Dependabot PRs
+    labels:
+      - "dependencies"
+      - "autoupdate"
+
+    # # 👇 Ignore specific dependencies (e.g., lodash & react)
+    # ignore:
+    #   - dependency-name: "lodash"
+    #     versions: ["*"]            # ignore all versions
+    #   - dependency-name: "react"
+    #     versions: [">=18.0.0"]     # ignore react 18 and above
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+    labels:
+      - "actions"
+      - "dependencies"
