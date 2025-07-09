@@ -1,10 +1,11 @@
 name: build-and-push-images
 
 on:
-  push:
-    branches: ["deployment"]
-  pull_request:
-    branches: ["deployment"]
+  workflow_dispatch:
+  # push:
+  #   branches: ["deployment"]
+  # pull_request:
+  #   branches: ["deployment"]
 
 env:
   DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
