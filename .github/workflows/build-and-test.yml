@@ -76,7 +76,7 @@ jobs:
 
       - name: Extract Docker Metadata
         id: docker-metadata
-        uses: docker/metadata-action@v4.4.0
+        uses: docker/metadata-action@v5.7.0
         with:
           images: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}
           labels: |
