@@ -174,7 +174,7 @@ jobs:
 
       - name: Notify Deployment Success on Slack
         if: ${{ success() && github.event_name != 'pull_request' }}
-        uses: slackapi/slack-github-action@v1.22.0
+        uses: slackapi/slack-github-action@v2.1.0
         with:
           payload: |
             {
