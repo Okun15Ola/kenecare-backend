@@ -180,8 +180,6 @@ exports.getUserByToken = async (token) => {
 
     const user = mapUserRow(rawData, false, true, true);
 
-    console.log("User by token ", user);
-
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(user),
@@ -446,23 +444,12 @@ exports.logoutUser = async ({ userId, token, tokenExpiry }) => {
  */
 exports.logoutAllDevices = async ({ userId, token, tokenExpiry }) => {
   try {
-    const [notificationResult, onlineStatus] = await Promise.allSettled([
-      repo.updateUserNotificationToken({
-        userId,
-        notifToken: null,
-        deviceNotifToken: null,
-      }),
+    const { affectedRows } = await repo.updateUserOnlineStatus({
+      userId,
+      status: STATUS.NOT_ACTIVE,
+    });
 
-      repo.updateUserOnlineStatus({
-        userId,
-        status: STATUS.NOT_ACTIVE,
-      }),
-    ]);
-
-    if (
-      notificationResult.affectedRows <= 0 ||
-      onlineStatus.affectedRows <= 0
-    ) {
+    if (affectedRows <= 0) {
       return Response.INTERNAL_SERVER_ERROR({
         message: "Logout failed. Please try again.",
       });
@@ -471,7 +458,7 @@ exports.logoutAllDevices = async ({ userId, token, tokenExpiry }) => {
     await Promise.all([
       blacklistToken(token, tokenExpiry), // Blacklist current token
       blacklistAllUserTokens(userId),
-      redisClient.delete(`user:${userId}`),
+      // redisClient.delete(`user:${userId}`),
     ]);
 
     return Response.SUCCESS({
