@@ -1,7 +1,10 @@
 const router = require("express").Router();
 const IndexController = require("../../controllers/index/index.controller");
 const { Validate } = require("../../validations/validate");
-const { doctorIdValidation } = require("../../validations/index.validations");
+const {
+  doctorIdValidation,
+  doctorPaginationValidation,
+} = require("../../validations/index.validations");
 const { limiter } = require("../../utils/rate-limit.utils");
 const {
   paginationValidation,
@@ -9,8 +12,6 @@ const {
 const {
   calculatePaginationInfo,
 } = require("../../middlewares/paginator.middleware");
-
-// router.use(limiter); // Rate limiting middleware applied to all routes in this router
 
 router.get(
   "/blogs",
@@ -56,7 +57,7 @@ router.get(
 router.get(
   "/doctors",
   limiter,
-  paginationValidation,
+  doctorPaginationValidation,
   Validate,
   calculatePaginationInfo("doctors"),
   IndexController.GetDoctorsController,

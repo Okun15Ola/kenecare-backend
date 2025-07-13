@@ -5,35 +5,48 @@ const {
   generateAndSendVerificationOTP,
 } = require("../utils/auth.utils");
 const { USERTYPE, VERIFICATIONSTATUS, STATUS } = require("../utils/enum.utils");
-const { hashUsersPassword } = require("../utils/auth.utils");
+const {
+  hashUsersPassword,
+  blacklistAllUserTokens,
+  blacklistToken,
+} = require("../utils/auth.utils");
 const {
   sendAuthTokenSMS,
   sendVerificationTokenSMS,
   sendPasswordResetSMS,
 } = require("../utils/sms.utils");
 const Response = require("../utils/response.utils");
-const {
-  createOrUpdateStreamUser,
-  generateStreamUserToken,
-} = require("../utils/stream.utils");
-const { getPatientByUserId } = require("../repository/patients.repository");
-const { getFileUrlFromS3Bucket } = require("../utils/aws-s3.utils");
-const { getDoctorByUserId } = require("../repository/doctors.repository");
+const { generateStreamUserToken } = require("../utils/stream.utils");
 const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapUserRow } = require("../utils/db-mapper.utils");
 const logger = require("../middlewares/logger.middleware");
+const { refineMobileNumber } = require("../utils/auth.utils");
+const { createStreamUserProfile } = require("../utils/helpers.utils");
+const {
+  generateTokenExpiryTime,
+  verifyTokenExpiry,
+} = require("../utils/time.utils");
 
+/**
+ * Retrieves all users with pagination
+ * @param {number} limit - Number of users to retrieve
+ * @param {number} offset - Number of users to skip
+ * @param {Object} paginationInfo - Pagination metadata
+ * @returns {Promise<Object>} Response object with users data and pagination info
+ */
 exports.getUsers = async (limit, offset, paginationInfo) => {
   try {
     const cacheKey = cacheKeyBulider("users:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
+
     if (cachedData) {
       return Response.SUCCESS({
         data: JSON.parse(cachedData),
         pagination: paginationInfo,
       });
     }
+
     const rawData = await repo.getAllUsers(limit, offset);
     if (!rawData?.length) {
       return Response.NOT_FOUND({ message: "Users not found" });
@@ -50,28 +63,30 @@ exports.getUsers = async (limit, offset, paginationInfo) => {
       pagination: paginationInfo,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("getUsers: ", error);
     throw error;
   }
 };
 
+/**
+ * Retrieves a user by their ID
+ * @param {string|number} id - User ID
+ * @returns {Promise<Object>} User object or not found response
+ */
 exports.getUserById = async (id) => {
   try {
-    const cacheKey = `users:${id}`;
+    const cacheKey = `user:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return JSON.parse(cachedData);
     }
     const rawData = await repo.getUserById(id);
+
     if (!rawData) {
-      return null;
+      return Response.NOT_FOUND({ message: "User not found" });
     }
 
     const user = mapUserRow(rawData, true);
-
-    if (!user) {
-      return Response.NOT_FOUND({ message: "User not found" });
-    }
 
     await redisClient.set({
       key: cacheKey,
@@ -79,26 +94,29 @@ exports.getUserById = async (id) => {
     });
     return user;
   } catch (error) {
-    console.error(error);
+    logger.error("getUserById: ", error);
     throw error;
   }
 };
+
+/**
+ * Retrieves a user by their mobile number
+ * @param {string} number - Mobile number
+ * @returns {Promise<Object>} User object or not found response
+ */
 exports.getUserByMobileNumber = async (number) => {
   try {
-    const cacheKey = `users:${number}`;
+    const cacheKey = `user:mobile:${number}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return JSON.parse(cachedData);
     }
     const rawData = await repo.getUserByMobileNumber(number);
     if (!rawData) {
-      return null;
-    }
-    const user = mapUserRow(rawData, true);
-
-    if (!user) {
       return Response.NOT_FOUND({ message: "User not found" });
     }
+
+    const user = mapUserRow(rawData, true);
 
     await redisClient.set({
       key: cacheKey,
@@ -106,26 +124,30 @@ exports.getUserByMobileNumber = async (number) => {
     });
     return user;
   } catch (error) {
-    console.error(error);
+    logger.error("getUserByMobileNumber: ", error);
     throw error;
   }
 };
+
+/**
+ * Retrieves a user by their email
+ * @param {string} userEmail - User email address
+ * @returns {Promise<Object>} User object or not found response
+ */
 exports.getUserByEmail = async (userEmail) => {
   try {
-    const cacheKey = `users:${userEmail}`;
+    const cacheKey = `user:email:${userEmail}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return JSON.parse(cachedData);
     }
     const rawData = await repo.getUserByEmail(userEmail);
-    if (!rawData) {
-      return null;
-    }
-    const user = mapUserRow(rawData, true);
 
-    if (!user) {
+    if (!rawData) {
       return Response.NOT_FOUND({ message: "User not found" });
     }
+
+    const user = mapUserRow(rawData, true);
 
     await redisClient.set({
       key: cacheKey,
@@ -133,26 +155,30 @@ exports.getUserByEmail = async (userEmail) => {
     });
     return user;
   } catch (error) {
-    console.error(error);
+    logger.error("getUserByEmail: ", error);
     throw error;
   }
 };
+
+/**
+ * Retrieves a user by their verification token
+ * @param {string} token - Verification token
+ * @returns {Promise<Object>} User object or not found response
+ */
 exports.getUserByToken = async (token) => {
   try {
-    const cacheKey = `users:${token}`;
+    const cacheKey = `user:token:${token}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return JSON.parse(cachedData);
     }
     const rawData = await repo.getUserByVerificationToken(token);
-    if (!rawData) {
-      return null;
-    }
-    const user = mapUserRow(rawData, false, true);
 
-    if (!user) {
+    if (!rawData) {
       return Response.NOT_FOUND({ message: "User not found" });
     }
+
+    const user = mapUserRow(rawData, false, true, true);
 
     await redisClient.set({
       key: cacheKey,
@@ -160,104 +186,120 @@ exports.getUserByToken = async (token) => {
     });
     return user;
   } catch (error) {
-    console.error(error);
+    logger.error("getUserByToken: ", error);
     throw error;
   }
 };
 
+/**
+ * Registers a new user
+ * @param {Object} userData - User registration data
+ * @param {string} userData.mobileNumber - User's mobile number
+ * @param {string} [userData.email=""] - Optional User's email address
+ * @param {string} userData.password - User's password
+ * @param {string} userData.userType - User type (patient/doctor)
+ * @param {string} [userData.referralCode] - Optional referral code
+ * @returns {Promise<Object>} Success response or error
+ */
 exports.registerNewUser = async ({
   mobileNumber,
-  email = "",
+  email = null,
   password,
   userType,
-  referralCode,
+  referralCode = null,
 }) => {
   try {
-    // DONE Check user type and match with expected values
+    const phoneNumber = refineMobileNumber(mobileNumber);
     const type = userType === "patient" ? USERTYPE.PATIENT : USERTYPE.DOCTOR;
-
-    // GENERATE VERIFICATION TOKEN
     const vToken = generateVerificationToken();
-
-    // has plain text password
     const hashedPassword = await hashUsersPassword(password);
+    const expiryTime = generateTokenExpiryTime(15);
 
-    // create user and send OTP via SMS
-    const [userResult, smsResult] = await Promise.all([
+    // eslint-disable-next-line no-unused-vars
+    const [userResult, _smsResult] = await Promise.all([
       repo.createNewUser({
-        mobileNumber,
+        mobileNumber: phoneNumber,
         userType: type,
         email,
         password: hashedPassword,
         vToken,
         referralCode,
+        expiryTime,
       }),
-      sendVerificationTokenSMS({ token: vToken, mobileNumber }),
+      sendVerificationTokenSMS({ token: vToken, mobileNumber: phoneNumber }),
     ]);
 
-    if (!userResult || !smsResult) {
-      logger.error("Failed to create user:", userResult, smsResult);
+    if (!userResult.insertId) {
+      logger.error("Failed to create user:", userResult);
       return Response.INTERNAL_SERVER_ERROR({
         message: "Failed to create user account.",
       });
     }
 
     return Response.CREATED({
-      message: "Account Created Successfully. Please Proceed to verification",
+      message: "Account Created Successfully. Please Proceed to Verification",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("registerNewUser: ", error);
     throw error;
   }
 };
 
-exports.verifyRegistrationOTP = async (token) => {
+/**
+ * Verifies user registration OTP and completes account setup.
+ * @param {number} params.token - Verification token
+ * @param {Object} params.user - User object (must include userId, userType, accountActive)
+ * @returns {Promise<Object>} Success response with tokens or error
+ */
+exports.verifyRegistrationOTP = async ({ token, user }) => {
   try {
-    const user = await repo.getUserByVerificationToken(token);
+    if (!token || !user) {
+      logger.error("verifyRegistrationOTP: Missing token or user");
+      return Response.BAD_REQUEST({ message: "Invalid request parameters." });
+    }
 
     const {
-      user_id: userId,
-      user_type: userType,
-      account_active: accountActive,
+      userId,
+      userType,
+      accountActive,
+      accountVerified,
+      verificationTokenExpiry,
     } = user;
 
-    repo.updateUserVerificationStatusByToken({
+    if (accountVerified === VERIFICATIONSTATUS.VERIFIED) {
+      return Response.NOT_MODIFIED({ message: "Account is already verified" });
+    }
+
+    if (verifyTokenExpiry(verificationTokenExpiry)) {
+      return Response.BAD_REQUEST({
+        message:
+          "Verification Code Expired. Please Request a New Verification Code",
+      });
+    }
+
+    const { affectedRows } = await repo.updateUserVerificationStatusByToken({
       token,
       verificationStatus: VERIFICATIONSTATUS.VERIFIED,
     });
 
-    if ([USERTYPE.PATIENT, USERTYPE.DOCTOR].includes(userType)) {
-      const fetchUserDetails =
-        userType === USERTYPE.PATIENT ? getPatientByUserId : getDoctorByUserId;
-      const userDetails = await fetchUserDetails(userId);
-
-      if (userDetails) {
-        const {
-          first_name: firstName,
-          last_name: lastName,
-          profile_pic_url: profilePicUrl,
-          mobile_number: mobileNumber,
-        } = userDetails;
-        const imageUrl = await getFileUrlFromS3Bucket(profilePicUrl);
-
-        await createOrUpdateStreamUser({
-          userId: userId.toString(),
-          mobileNumber,
-          userType,
-          username: `${firstName} ${lastName}`,
-          image: imageUrl,
-        });
-      }
+    if (!affectedRows || affectedRows <= 0) {
+      logger.error("verifyRegistrationOTP: No rows updated for token", {
+        token,
+        userId,
+      });
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Verification Failed. Please Try Again",
+      });
     }
 
-    // Generate access token
+    await createStreamUserProfile(userType, userId);
+
     const accessToken = generateUsersJwtAccessToken({
       sub: userId,
     });
+    const streamToken = await generateStreamUserToken(String(userId));
+    await redisClient.delete(`user:token:${token}`);
 
-    const streamToken = await generateStreamUserToken(userId.toString());
-
-    //
     return Response.SUCCESS({
       message: "Account Verified Successfully",
       data: {
@@ -269,77 +311,44 @@ exports.verifyRegistrationOTP = async (token) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    logger.error("verifyRegistrationOTP: ", error);
     throw error;
   }
 };
 
-exports.loginUser = async (user) => {
+/**
+ * Handles user login with 2FA support
+ * @param {Object} user - User object from authentication
+ * @returns {Promise<Object>} Login response with tokens or 2FA requirement
+ */
+exports.loginUser = async ({
+  is2faEnabled,
+  userId,
+  userType,
+  accountVerified,
+  accountActive,
+  mobileNumber,
+}) => {
   try {
-    const {
-      is2faEnabled,
-      userId,
-      userType,
-      accountVerified,
-      accountActive,
-      mobileNumber,
-    } = user;
-
-    //  Check if the account is verified
-    if (accountVerified !== STATUS.ACTIVE) {
-      return Response.UNAUTHORIZED({
-        message:
-          "Account has not been verified. Please Verify account and try again",
-        errorCode: "ACCOUNT_UNVERIFIED",
-      });
-    }
-
-    //  check if the account has not been deactivated by admin
-    if (accountActive !== STATUS.ACTIVE) {
-      return Response.UNAUTHORIZED({
-        message:
-          "Account has been been disabled by system administrator. Please Contact for further instructions",
-        errorCode: "ACCOUNT_INACTIVE",
-      });
-    }
-
-    // Check if 2FA is enabled on the user's account
     if (is2faEnabled === STATUS.ACTIVE) {
-      const token = generateVerificationToken();
-
-      await Promise.allSettled([
-        repo.updateUserVerificationTokenById({
-          userId,
-          token,
-        }),
-        sendAuthTokenSMS({ token, mobileNumber }),
-      ]);
-
-      return Response.SUCCESS({ message: "2FA Token Sent successfully" });
+      const response = await generateAndSendVerificationOTP({
+        userId,
+        mobileNumber,
+      });
+      return response;
     }
 
-    if ([USERTYPE.PATIENT, USERTYPE.DOCTOR].includes(userType)) {
-      const fetchUserDetails =
-        userType === USERTYPE.PATIENT ? getPatientByUserId : getDoctorByUserId;
-      const userDetails = await fetchUserDetails(userId);
+    await createStreamUserProfile(userType, userId);
 
-      if (userDetails) {
-        const {
-          first_name: firstName,
-          last_name: lastName,
-          profile_pic_url: profilePicUrl,
-        } = userDetails;
+    const { affectedRows } = await repo.updateUserAccountStatusById({
+      userId,
+      status: STATUS.ACTIVE,
+    });
 
-        const imageUrl = await getFileUrlFromS3Bucket(profilePicUrl);
-
-        await createOrUpdateStreamUser({
-          userId: userId.toString(),
-          mobileNumber,
-          userType,
-          username: `${firstName} ${lastName}`,
-          image: imageUrl,
-        });
-      }
+    if (affectedRows <= 0) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Login Failed. Please Try Again",
+      });
     }
 
     const accessToken = generateUsersJwtAccessToken({
@@ -348,11 +357,6 @@ exports.loginUser = async (user) => {
 
     const streamToken = await generateStreamUserToken(userId.toString());
 
-    // update user's active status in the database
-    await repo.updateUserAccountStatusById({
-      userId,
-      status: STATUS.ACTIVE,
-    });
     // Return access token
     return Response.SUCCESS({
       message: "Logged In Successfully",
@@ -365,65 +369,158 @@ exports.loginUser = async (user) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    logger.error("loginUser: ", error);
     throw error;
   }
 };
-exports.requestUserLoginOtp = async (user) => {
+
+/**
+ * Logout a user and blacklist their access token
+ * @param {Object} params - Parameters object
+ * @param {string|number} params.userId - User ID from user object
+ * @param {string} params.token - JWT access token to blacklist
+ * @param {string} params.tokenExpiry - JWT access token expiry time
+ * @returns {Promise<Object>} Success response or error
+ */
+exports.logoutUser = async ({ userId, token, tokenExpiry }) => {
   try {
-    const { userId, accountVerified, accountActive, mobileNumber } = user;
-
-    //  Check if the account is verified
-    //  Check if the account is verified
-    if (accountVerified !== STATUS.ACTIVE) {
-      return Response.UNAUTHORIZED({
-        message:
-          "Account has not been verified. Please Verify account and try again",
-        errorCode: "ACCOUNT_UNVERIFIED",
-      });
-    }
-
-    //  check if the account has not been deactivated by admin
-    if (accountActive !== STATUS.ACTIVE) {
-      return Response.UNAUTHORIZED({
-        message:
-          "Account has been been disabled by system administrator. Please Contact for further instructions",
-        errorCode: "ACCOUNT_INACTIVE",
-      });
-    }
-    // Generate Login OTP
-    const token = generateVerificationToken();
-
-    // Update user's OTP in database
-    await repo.updateUserVerificationTokenById({
+    const { affectedRows } = await repo.updateUserOnlineStatus({
       userId,
-      token,
+      status: STATUS.NOT_ACTIVE,
     });
 
-    // send sms with generated token
-    await sendAuthTokenSMS({ token, mobileNumber });
+    if (affectedRows <= 0) {
+      logger.error("[LOGOUT_SERVICE] Failed to update user online status");
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Logout failed. Please try again.",
+      });
+    }
 
-    // return response to user
-    return Response.SUCCESS({ message: "Login OTP Sent successfully" });
+    const [blacklistResult, cacheResult, notifResult] =
+      await Promise.allSettled([
+        blacklistToken(token, tokenExpiry),
+        redisClient.delete(`user:${userId}`),
+        repo.updateUserNotificationToken({
+          userId,
+          notifToken: null,
+        }),
+      ]);
+
+    // Log any secondary operation failures
+    if (blacklistResult.status === "rejected") {
+      logger.warn(
+        "[LOGOUT_SERVICE] Token blacklisting failed:",
+        blacklistResult.reason,
+      );
+    }
+
+    if (cacheResult.status === "rejected") {
+      logger.warn(
+        "[LOGOUT_SERVICE] Cache deletion failed:",
+        cacheResult.reason,
+      );
+    }
+
+    if (notifResult.status === "rejected") {
+      logger.warn(
+        "[LOGOUT_SERVICE] Notification token update failed:",
+        notifResult.reason,
+      );
+    }
+    return Response.SUCCESS({ message: "Logged out successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("logoutUser:", error);
     throw error;
   }
 };
-exports.verifyUserLoginOtp = async (user) => {
-  try {
-    const {
-      is2faEnabled,
-      userId,
-      email,
-      userType,
-      accountVerified,
-      accountActive,
-      mobileNumber,
-    } = user;
 
-    // Delete login OTP token from users account
+/**
+ * Logout a user on all devices and blacklist all their tokens
+ * @param {Object} params - Parameters object
+ * @param {string|number} params.userId - User ID from user object
+ * @param {string} params.token - Current JWT access token to blacklist
+ * @param {string} params.tokenExpiry - JWT access token expiry time
+ * @returns {Promise<Object>} Success response or error
+ */
+exports.logoutAllDevices = async ({ userId, token, tokenExpiry }) => {
+  try {
+    const { affectedRows } = await repo.updateUserOnlineStatus({
+      userId,
+      status: STATUS.NOT_ACTIVE,
+    });
+
+    if (affectedRows <= 0) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Logout failed. Please try again.",
+      });
+    }
+
     await Promise.all([
+      blacklistToken(token, tokenExpiry), // Blacklist current token
+      blacklistAllUserTokens(userId),
+      // redisClient.delete(`user:${userId}`),
+    ]);
+
+    return Response.SUCCESS({
+      message: "Logged out from all devices successfully",
+    });
+  } catch (error) {
+    logger.error("logoutAllDevices:", error);
+    throw error;
+  }
+};
+
+/**
+ * Requests OTP for user login
+ * @param {Object} user - User object
+ * @returns {Promise<Object>} Success response or error
+ */
+exports.requestUserLoginOtp = async ({ userId, mobileNumber }) => {
+  try {
+    const token = generateVerificationToken();
+    const [updateResult, smsResult] = await Promise.allSettled([
+      repo.updateUserVerificationTokenById({ userId, token }),
+      sendAuthTokenSMS({ token, mobileNumber }),
+    ]);
+
+    if (!updateResult && !smsResult) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Failed to send login OTP. Please Try Again.",
+      });
+    }
+
+    return Response.SUCCESS({ message: "Login OTP Sent successfully" });
+  } catch (error) {
+    logger.error("requestUserLoginOtp: ", error);
+    throw error;
+  }
+};
+
+/**
+ * Verifies user login OTP
+ * @param {Object} user - User object with verification token
+ * @returns {Promise<Object>} Success response with access token or 2FA requirement
+ */
+exports.verifyUserLoginOtp = async ({
+  is2faEnabled,
+  userId,
+  userType,
+  mobileNumber,
+  accountActive,
+  accountVerified,
+}) => {
+  try {
+    if (is2faEnabled === STATUS.ACTIVE) {
+      const response = await generateAndSendVerificationOTP({
+        userId,
+        mobileNumber,
+      });
+      return response;
+    }
+
+    await createStreamUserProfile(userType, userId);
+
+    const [tokenResult, statusResult] = await Promise.allSettled([
       repo.updateUserVerificationTokenById({
         userId,
         token: null,
@@ -434,33 +531,36 @@ exports.verifyUserLoginOtp = async (user) => {
       }),
     ]);
 
-    if (is2faEnabled === STATUS.ACTIVE) {
-      // generate token for 2-factor authentication
-
-      const response = await generateAndSendVerificationOTP({
-        userId,
-        mobileNumber,
-      });
-      return response;
+    if (!tokenResult && !statusResult) {
+      return Response.NOT_MODIFIED({ message: "Not modified" });
     }
 
     const accessToken = generateUsersJwtAccessToken({
-      is2faEnabled,
-      userId,
-      email,
-      userType,
-      accountVerified,
-      isOnline: STATUS.ACTIVE,
-      accountActive,
+      sub: userId,
     });
+    const streamToken = await generateStreamUserToken(userId.toString());
 
-    return Response.SUCCESS({ message: "Login Successful", data: accessToken });
+    return Response.SUCCESS({
+      message: "Logged In Successfully",
+      data: {
+        token: accessToken,
+        streamToken,
+        type: userType,
+        isVerified: accountVerified,
+        isActive: accountActive,
+      },
+    });
   } catch (error) {
-    console.error(error);
+    logger.error("verifyUserLoginOtp: ", error);
     throw error;
   }
 };
 
+/**
+ * Resends verification OTP to user
+ * @param {Object} user - User object
+ * @returns {Promise<Object>} Success response or error
+ */
 exports.resendVerificationOTP = async (user) => {
   try {
     if (!user) {
@@ -482,32 +582,29 @@ exports.resendVerificationOTP = async (user) => {
     }
     return Response.NOT_MODIFIED();
   } catch (error) {
-    console.error(error);
+    logger.error("resendVerificationOTP: ", error);
     throw error;
   }
 };
 
-exports.sendVerificationOTP = async (user) => {
+/**
+ * Sends Forget Password OTP to verified user
+ * @param {Object} user - User object
+ * @returns {Promise<Object>} Success response or error
+ */
+exports.sendForgetPasswordOTP = async ({
+  userId,
+  mobileNumber,
+  accountActive,
+  accountVerified,
+}) => {
   try {
-    if (!user) {
-      return Response.BAD_REQUEST({
-        message: "Error Sending OTP. Please try again",
-      });
-    }
-
-    const {
-      user_id: userId,
-      is_verified: isVerified,
-      is_account_active: isAccountActive,
-      mobile_number: mobileNumber,
-    } = user;
-
-    if (!isVerified) {
+    if (!accountVerified) {
       return Response.BAD_REQUEST({
         message: "Error Sending OTP. Unverified User Account",
       });
     }
-    if (!isAccountActive) {
+    if (!accountActive) {
       return Response.BAD_REQUEST({
         message: "Error Sending OTP. User Account Inactive",
       });
@@ -519,20 +616,19 @@ exports.sendVerificationOTP = async (user) => {
 
     return response;
   } catch (error) {
-    console.error(error);
+    logger.error("sendForgetPasswordOTP: ", error);
     throw error;
   }
 };
-exports.verifyRequestedOTP = async (user) => {
-  try {
-    if (!user) {
-      return Response.BAD_REQUEST({
-        message: "Error verifying token, please try again with a valid token.",
-      });
-    }
-    const { verification_token: token, is_verified: isVerified } = user;
 
-    if (!token || isVerified !== STATUS.ACTIVE) {
+/**
+ * Verifies requested OTP
+ * @param {Object} user - User object with verification token
+ * @returns {Promise<Object>} Success response or error
+ */
+exports.verifyRequestedOTP = async ({ verificationToken, accountVerified }) => {
+  try {
+    if (!verificationToken || accountVerified !== STATUS.ACTIVE) {
       return Response.BAD_REQUEST({
         message: "Error verifying token, please try again.",
       });
@@ -541,35 +637,162 @@ exports.verifyRequestedOTP = async (user) => {
       message: "OTP Verified Successfully.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("verifyRequestedOTP: ", error);
     throw error;
   }
 };
 
-exports.updateUserPassword = async ({ newPassword, user }) => {
+/**
+ * Sends Email Verification
+ * @param {number} params.userId - User ID
+ * @param {string} params.email - User Email
+ * @returns {Promise<Object>} Success response or error
+ */
+// exports.sendEmailVerification = async ({ userId, email }) => {
+//   try {
+//     if (!userId || !email) {
+//       return Response.BAD_REQUEST({
+//         message: "User ID and email are required",
+//       });
+//     }
+
+//     const emailToken = generateVerificationToken();
+
+//     // Save email verification token
+//     const { affectedRows } = await repo.updateUserEmailVerificationToken({
+//       userId,
+//       emailVerificationToken: emailToken,
+//     });
+
+//     if (affectedRows <= 0) {
+//       return Response.INTERNAL_SERVER_ERROR({
+//         message: "Failed to send email verification. Please try again.",
+//       });
+//     }
+
+//     // Send email with verification token
+//     // await sendEmailVerificationEmail({ email, token: emailToken });
+
+//     return Response.SUCCESS({
+//       message: "Email verification sent successfully",
+//     });
+//   } catch (error) {
+//     logger.error("sendEmailVerification:", error);
+//     throw error;
+//   }
+// };
+
+/**
+ * Sends Email Verification
+ * @param {number} params.token - Verification Token
+ * @param {Object}  user - User Object
+ * @returns {Promise<Object>} Success response or error
+ */
+// exports.verifyEmailToken = async ({ token, user }) => {
+//   try {
+//     if (!token || !user) {
+//       return Response.BAD_REQUEST({ message: "Token and user are required" });
+//     }
+
+//     const { userId } = user;
+
+//     const { affectedRows } = await repo.updateUserEmailVerificationStatus({
+//       userId,
+//       token,
+//       isEmailVerified: 1,
+//     });
+
+//     if (affectedRows <= 0) {
+//       return Response.INTERNAL_SERVER_ERROR({
+//         message: "Email verification failed. Please try again.",
+//       });
+//     }
+
+//     return Response.SUCCESS({
+//       message: "Email verified successfully",
+//     });
+//   } catch (error) {
+//     logger.error("verifyEmailToken:", error);
+//     throw error;
+//   }
+// };
+
+/**
+ * Update User's Email
+ * @param {number} params.userId - User ID
+ * @param {string} params.email - New email address
+ * @returns {Promise<Object>} Success response or error
+ */
+// exports.updateUserEmail = async ({ userId, email }) => {
+//   try {
+//     if (!userId || !email) {
+//       return Response.BAD_REQUEST({
+//         message: "User ID and email are required",
+//       });
+//     }
+
+//     const { affectedRows } = await repo.updateUserEmailById({
+//       userId,
+//       email,
+//       isEmailVerified: 0, // Reset verification status
+//     });
+
+//     if (affectedRows <= 0) {
+//       return Response.INTERNAL_SERVER_ERROR({
+//         message: "Email update failed. Please try again.",
+//       });
+//     }
+
+//     // Clear cache
+//     await redisClient.delete(`user:${userId}`);
+
+//     return Response.SUCCESS({ message: "Email updated successfully" });
+//   } catch (error) {
+//     logger.error("updateUserEmail:", error);
+//     throw error;
+//   }
+// };
+
+/**
+ * Updates user's account status by ID
+ * @param {Object} params
+ * @param {number} params.userId - User ID
+ * @param {number} params.status
+ * @returns {Promise<Object>} Success response or error
+ */
+exports.updateUserAccountStatus = async ({ userId, status }) => {
   try {
-    if (!user) {
-      return Response.BAD_REQUEST({
-        message: "Error updating password, please try again.",
+    const { affectedRows } = await repo.updateUserAccountStatusById({
+      userId,
+      status: status === STATUS.ACTIVE ? STATUS.INACTIVE : STATUS.ACTIVE,
+    });
+
+    if (affectedRows <= 0) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Failed to update account status. Please try again.",
       });
     }
 
-    const {
-      user_id: userId,
-      is_verified: isVerified,
-      mobile_number: mobileNumber,
-    } = user;
+    return Response.SUCCESS({
+      message: "Account status updated successfully.",
+    });
+  } catch (error) {
+    logger.error("updateUserAccountStatusById: ", error);
+    throw error;
+  }
+};
 
-    if (isVerified !== STATUS.ACTIVE) {
-      return Response.BAD_REQUEST({
-        message:
-          "Unverified account, please verify account before performing this action",
-      });
-    }
-
+/**
+ * Updates user password
+ * @param {Object} params - Parameters object
+ * @param {string} params.newPassword - New password
+ * @param {Object} params.user - User object
+ * @returns {Promise<Object>} Success response or error
+ */
+exports.updateUserPassword = async ({ newPassword, userId, mobileNumber }) => {
+  try {
     const hashedPassword = await hashUsersPassword(newPassword);
-
-    await Promise.all([
+    const [updateResult, smsResult] = await Promise.all([
       repo.updateUserPasswordById({
         userId,
         password: hashedPassword,
@@ -578,30 +801,45 @@ exports.updateUserPassword = async ({ newPassword, user }) => {
       sendPasswordResetSMS(mobileNumber),
     ]);
 
+    if (!updateResult && !smsResult) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Internal Server Error. Please Try Again",
+      });
+    }
+
     return Response.SUCCESS({
       message:
         "Password Reset Successfully. Please login with your new password.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateUserPassword: ", error);
     throw error;
   }
 };
 
-exports.updatePushNotificationToken = async ({ token, user }) => {
+/**
+ * Updates user's push notification token
+ * @param {Object} params - Parameters object
+ * @param {string} params.token - Push notification token
+ * @param {String} params.user.id- User Id
+ * @returns {Promise<Object>} Success response or error
+ */
+exports.updatePushNotificationToken = async ({ token, id }) => {
   try {
-    if (!user) {
-      return Response.BAD_REQUEST({
-        message: "User Not Found. Error Updating token",
+    const { affectedRows } = await repo.updateUserNotificationToken({
+      userId: id,
+      notifToken: token,
+    });
+
+    if (affectedRows <= 0) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Internal Server Error. Please Try Again",
       });
     }
 
-    const { id: userId } = user;
-    await repo.updateUserNotificationToken({ userId, notifToken: token });
-
     return Response.SUCCESS({ message: "Token Updated Successfully" });
   } catch (error) {
-    console.log(error);
+    logger.error("UPDATE_PUSH_NOTIFICATION_TOKEN_SERVICE: ", error);
     throw error;
   }
 };

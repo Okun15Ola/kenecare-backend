@@ -78,6 +78,18 @@ Response.NOT_FOUND = ({ message, error, errorCode }) => {
   };
 };
 
+Response.FORBIDDEN = ({ message, error, errorCode }) => {
+  const timestamp = new Date();
+  return {
+    status: "error",
+    errorCode,
+    statusCode: HttpStatus.StatusCodes.FORBIDDEN,
+    timestamp,
+    message,
+    errors: error,
+  };
+};
+
 Response.INTERNAL_SERVER_ERROR = ({ message, errorCode }) => {
   const timestamp = new Date();
   return {

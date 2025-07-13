@@ -795,10 +795,12 @@ exports.mapDoctorUserProfileRow = (doctor) => {
     mobile_number: mobileNumber,
     email,
     user_id: userId,
+    user_type: userType,
   } = doctor;
   return {
     doctorId,
     userId,
+    userType,
     title,
     firstName,
     middleName,
@@ -944,6 +946,8 @@ exports.mapUserRow = (
   user,
   includePassword = false,
   includeReferralCode = false,
+  includeVerificationToken = false,
+  includeExpiryTime = false,
 ) => {
   const {
     user_id: userId,
@@ -956,6 +960,8 @@ exports.mapUserRow = (
     is_2fa_enabled: is2faEnabled,
     password,
     referral_code: referralCode,
+    verification_token: verificationToken,
+    expiry_time: verificationExpiry,
   } = user;
   const mapped = {
     userId,
@@ -974,6 +980,14 @@ exports.mapUserRow = (
 
   if (!includeReferralCode) {
     mapped.referralCode = referralCode;
+  }
+
+  if (!includeVerificationToken) {
+    mapped.verificationToken = verificationToken;
+  }
+
+  if (!includeExpiryTime) {
+    mapped.verificationExpiry = verificationExpiry;
   }
 
   return mapped;

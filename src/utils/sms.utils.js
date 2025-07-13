@@ -1,5 +1,5 @@
 const axios = require("axios");
-
+const logger = require("../middlewares/logger.middleware");
 const {
   smsHiveClientId,
   smsHiveClientSecret,
@@ -27,15 +27,16 @@ const sendVerificationTokenSMS = async ({ token, mobileNumber }) => {
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Your KENECARE Verification Token is: ${token}. \n Do not share with anyone.`,
+      content: `Your KENECARE Verification Code is: ${token}. \n Do not share this with anyone. It expires in 15 minutes.`,
     });
 
     config.data = data;
     await axios.request(config).catch((error) => {
       throw error;
     });
+    logger.info("SMS sent successfully:");
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -46,7 +47,7 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Your KENECARE AUTHToken is: ${token}. \n Do not share with anyone.`,
+      content: `Your KENECARE AUTHToken is: ${token}. \n Do not share this with anyone. It expires in 15 minutes.`,
     });
 
     config.data = data;
@@ -54,7 +55,7 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -76,7 +77,7 @@ const sendMarketerVerificationTokenSMS = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -98,7 +99,7 @@ const sendMarketerPhoneVerifiedSMS = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -121,7 +122,7 @@ const sendMarketerUserRegisteredSMS = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -139,7 +140,7 @@ const sendForgotPasswordRequestTokenSMS = async ({ token, mobileNumber }) => {
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -157,7 +158,7 @@ const sendPasswordResetSMS = async (mobileNumber) => {
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -175,7 +176,7 @@ const sendPrescriptionToken = async ({ doctorName, mobileNumber }) => {
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -201,7 +202,7 @@ const appointmentApprovalSms = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error.response);
+    logger.error(error.response);
     throw error;
   }
 };
@@ -226,7 +227,7 @@ const newFollowAppointmentSms = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -249,7 +250,7 @@ const appointmentStartedSms = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -271,7 +272,7 @@ const appointmentEndedSms = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -297,7 +298,7 @@ const appointmentPostponedSms = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -323,7 +324,7 @@ const appointmentBookedSms = async ({
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -350,7 +351,7 @@ const doctorAppointmentBookedSms = async ({
       });
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -371,7 +372,7 @@ const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
       });
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -396,7 +397,7 @@ const documentSharedWithDoctorSMS = async ({
       });
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -414,7 +415,7 @@ const withdrawalApprovedSMS = async ({ mobileNumber, doctorName }) => {
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -432,7 +433,7 @@ const withdrawalDeniedSMS = async ({ mobileNumber, doctorName, comment }) => {
       throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };

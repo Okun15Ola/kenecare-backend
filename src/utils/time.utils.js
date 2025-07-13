@@ -133,6 +133,26 @@ const validateDateTime = ({ date, time }) => {
   }
 };
 
+/**
+ * Generates a token expiry time by adding the specified number of minutes to the current time.
+ *
+ * @param {number} value - The number of minutes to add to the current time.
+ * @returns {Date} The resulting expiry time as a JavaScript Date object.
+ */
+const generateTokenExpiryTime = (value) => {
+  return moment().add(value, "minutes").toDate();
+};
+
+/**
+ * Checks if the current date and time is after the provided date value, indicating token expiry.
+ *
+ * @param {string|Date} value - The date or date string to compare against the current time.
+ * @returns {boolean} Returns true if the current date is after the provided value (token is expired), otherwise false.
+ */
+const verifyTokenExpiry = (value) => {
+  return new Date() > new Date(value);
+};
+
 module.exports = {
   validateNewAppointmentDate,
   validateAppointmentTime,
@@ -140,4 +160,6 @@ module.exports = {
   refineMobileNumber,
   validateDate,
   validateDateTime,
+  generateTokenExpiryTime,
+  verifyTokenExpiry,
 };
