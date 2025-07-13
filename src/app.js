@@ -166,6 +166,18 @@ app.use((err, req, res, next) => {
   let statusCode = 500;
   let errorMessage = "Internal Server Error";
 
+  logger.error("[ERROR_HANDLER] Error caught:", {
+    message: err.message,
+    stack: err.stack,
+    statusCode: err.statusCode,
+    code: err.code,
+    name: err.name,
+    path: req.path,
+    method: req.method,
+    userId: req.user?.id,
+    authComplete: req.authorizationComplete,
+  });
+
   if (err.response) {
     return res
       .status(err.response.status)
@@ -189,6 +201,14 @@ app.use((err, req, res, next) => {
   }
   if (err.statusCode === 401) {
     statusCode = 401;
+    logger.log("UNAUTHORIZED response called", {
+      error: err,
+      message: err.message,
+      stack: err.stack,
+      path: req.path,
+      method: req.method,
+      userId: req.user?.id,
+    });
     return res.status(statusCode).json(UNAUTHORIZED({ message: err.message }));
   }
   if (err.code === 404) {
