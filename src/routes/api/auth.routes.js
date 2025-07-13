@@ -8,12 +8,14 @@ const {
   VerifyLoginOTPController,
   RequestForgotPasswordOTPController,
   ResendVerificationOTPController,
-  SendVerificationOTPController,
+  // SendVerificationOTPController,
   VerifyRequestedOTPController,
   UpdatePasswordController,
   UpdatePushNotificationTokenController,
   VerifyForgotPasswordOTPController,
   AuthenticateController,
+  LogoutController,
+  LogoutAllDevicesController,
 } = require("../../controllers/auth.controller");
 const {
   LoginValidations,
@@ -32,6 +34,14 @@ const { authenticateUser } = require("../../middlewares/auth.middleware");
 router.get("/authenticate", authenticateUser, AuthenticateController);
 
 router.post("/login", authLimiter, LoginValidations, Validate, LoginController);
+
+router.post("/logout", authenticateUser, LogoutController);
+
+router.post(
+  "/logout-all-devices",
+  authenticateUser,
+  LogoutAllDevicesController,
+);
 
 router.post(
   "/login/otp",
@@ -106,12 +116,12 @@ router.put(
   UpdatePasswordController,
 );
 
-router.post(
-  "/otp-request",
-  otpLimiter,
-  authenticateUser,
-  SendVerificationOTPController,
-);
+// router.post(
+//   "/otp-request",
+//   otpLimiter,
+//   authenticateUser,
+//   SendVerificationOTPController,
+// );
 
 router.post(
   "/otp-request",
