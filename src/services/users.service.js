@@ -628,7 +628,6 @@ exports.sendForgetPasswordOTP = async ({
  */
 exports.verifyRequestedOTP = async ({ verificationToken, accountVerified }) => {
   try {
-    console.log("verifyRequestedOTP: ", verificationToken, accountVerified);
     if (!verificationToken || accountVerified !== STATUS.ACTIVE) {
       return Response.BAD_REQUEST({
         message: "Error verifying token, please try again.",
