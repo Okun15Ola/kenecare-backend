@@ -1,5 +1,7 @@
-const { param } = require("express-validator");
+const { param, query } = require("express-validator");
 const { getDoctorById } = require("../repository/doctors.repository");
+const { getSpecialtiyById } = require("../repository/specialities.repository");
+const { getCityById } = require("../repository/cities.repository");
 
 exports.doctorIdValidation = [
   param("id")
@@ -21,4 +23,63 @@ exports.doctorIdValidation = [
       }
       return true;
     }),
+];
+
+exports.doctorPaginationValidation = [
+  query("specialty_id")
+    .optional()
+    .isInt({ min: 1, allow_leading_zeroes: false })
+    .withMessage("Specialty ID must be a number greater than 0")
+    .bail()
+    .toInt()
+    .custom(async (value) => {
+      const data = await getSpecialtiyById(value);
+      if (!data) {
+        throw new Error("Specialty Not Found");
+      }
+      return true;
+    }),
+
+  query("locationId")
+    .optional()
+    .isInt({ min: 1, allow_leading_zeroes: false })
+    .withMessage("Location ID must be a number greater than 0")
+    .bail()
+    .toInt()
+    .custom(async (value) => {
+      const data = await getCityById(value);
+      if (!data) {
+        throw new Error("Location Not Found");
+      }
+      return true;
+    }),
+
+  query("q")
+    .optional()
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Search query must be between 2 and 100 characters")
+    .bail()
+    .trim()
+    .escape()
+    .matches(/^[a-zA-Z0-9\s\-.]+$/)
+    .withMessage("Search query contains invalid characters"),
+
+  query("page")
+    .optional()
+    .default(1)
+    .isInt({ min: 1 })
+    .withMessage("Page must be a positive integer")
+    .toInt(),
+  query("page")
+    .optional()
+    .default(1)
+    .isInt({ min: 1, max: 1000 })
+    .withMessage("Page must be between 1 and 1000")
+    .toInt(),
+  query("limit")
+    .optional()
+    .default(20)
+    .isInt({ min: 1, max: 100 })
+    .withMessage("Limit must be a between 1 and 100")
+    .toInt(),
 ];
