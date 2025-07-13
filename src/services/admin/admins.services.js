@@ -2,6 +2,7 @@ const dbObject = require("../../repository/admins.repository");
 const { generateAdminJwtAccessToken } = require("../../utils/auth.utils");
 const { STATUS } = require("../../utils/enum.utils");
 const { hashUsersPassword } = require("../../utils/auth.utils");
+const { blacklistToken } = require("../../utils/auth.utils");
 
 exports.getAdmins = async () => {
   try {
@@ -132,6 +133,16 @@ exports.loginAdmin = async (admin) => {
     });
 
     return { message: "Admin Login Successful", data: accessToken };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+exports.logoutAdmin = async ({ token, tokenExpiry }) => {
+  try {
+    blacklistToken(token, tokenExpiry);
+    return { message: "Admin Logout Successful" };
   } catch (error) {
     console.error(error);
     throw error;

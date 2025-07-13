@@ -2,6 +2,7 @@ const Response = require("../../utils/response.utils");
 const {
   createAdmin,
   loginAdmin,
+  logoutAdmin,
 } = require("../../services/admin/admins.services");
 const logger = require("../../middlewares/logger.middleware");
 
@@ -18,6 +19,18 @@ exports.AdminLoginController = async (req, res, next) => {
   try {
     const admin = req.user;
     const { message, data } = await loginAdmin(admin);
+    return res.status(200).json(Response.SUCCESS({ message, data }));
+  } catch (error) {
+    console.error(error);
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.AdminLogoutController = async (req, res, next) => {
+  try {
+    const { token, tokenExpiry } = req;
+    const { message, data } = await logoutAdmin({ token, tokenExpiry });
     return res.status(200).json(Response.SUCCESS({ message, data }));
   } catch (error) {
     console.error(error);
