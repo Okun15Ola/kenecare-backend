@@ -795,10 +795,12 @@ exports.mapDoctorUserProfileRow = (doctor) => {
     mobile_number: mobileNumber,
     email,
     user_id: userId,
+    user_type: userType,
   } = doctor;
   return {
     doctorId,
     userId,
+    userType,
     title,
     firstName,
     middleName,
