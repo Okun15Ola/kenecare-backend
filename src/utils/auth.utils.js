@@ -12,12 +12,40 @@ const {
 const {
   updateUserVerificationTokenById,
 } = require("../repository/users.repository");
+const logger = require("../middlewares/logger.middleware");
+const { redisClient } = require("../config/redis.config");
 
 const { sendAuthTokenSMS } = require("./sms.utils");
 const Response = require("./response.utils");
 
 const SL_COUNTRY_CODE = "+232";
+const MOBILE_NETWORK_CODES = [
+  "25",
+  "30",
+  "31",
+  "32",
+  "33",
+  "34",
+  "66",
+  "72",
+  "73",
+  "74",
+  "75",
+  "76",
+  "77",
+  "78",
+  "79",
+  "88",
+  "90",
+  "99",
+];
 
+/**
+ * Hashes a user's password using bcryptjs.
+ * @async
+ * @param {string} password - The plain text password to hash.
+ * @returns {Promise<string>} The hashed password.
+ */
 const hashUsersPassword = async (password) => {
   try {
     return await bcryptjs.hash(password, 10);
@@ -27,6 +55,12 @@ const hashUsersPassword = async (password) => {
   }
 };
 
+/**
+ * Encrypts a given text using AES-256-CBC.
+ * @param {string} text - The text to encrypt.
+ * @param {Buffer|string} key - The encryption key.
+ * @returns {string} The encrypted text in hexadecimal format.
+ */
 const encryptText = (text, key) => {
   const cipher = crypto.createCipheriv("aes-256-cbc", key);
   // changed from createCipher to createCipheriv due to the previous pagackage been expired
@@ -35,6 +69,13 @@ const encryptText = (text, key) => {
   return encryptedText;
 };
 
+/**
+ * Decrypts an encrypted text using AES-256-CBC.
+ * @param {Object} params
+ * @param {string} params.encryptedText - The encrypted text in hexadecimal format.
+ * @param {Buffer|string} params.key - The decryption key.
+ * @returns {string} The decrypted plain text.
+ */
 const decryptText = ({ encryptedText, key }) => {
   const decipher = crypto.createDecipheriv("aes-256-cbc", key);
   // changed from createDecipher to createDecipheriv due to the previous pagackage been expired
@@ -43,6 +84,14 @@ const decryptText = ({ encryptedText, key }) => {
   return decryptedText;
 };
 
+/**
+ * Compares a plain password with a hashed password.
+ * @async
+ * @param {Object} params
+ * @param {string} params.plainPassword - The plain text password.
+ * @param {string} params.hashedPassword - The hashed password.
+ * @returns {Promise<boolean>} True if passwords match, false otherwise.
+ */
 const comparePassword = async ({ plainPassword, hashedPassword }) => {
   try {
     return await bcryptjs.compare(plainPassword, hashedPassword);
@@ -52,6 +101,90 @@ const comparePassword = async ({ plainPassword, hashedPassword }) => {
   }
 };
 
+/**
+ * Blacklist a JWT token until its natural expiration
+ * @param {string} token - JWT token to blacklist
+ * @param {number} expiryTime - Token expiry time (Unix timestamp)
+ */
+const blacklistToken = async (token, expiryTime) => {
+  try {
+    const currentTime = Math.floor(Date.now() / 1000);
+    const ttl = expiryTime - currentTime;
+
+    // Only blacklist if token hasn't expired
+    if (ttl > 0) {
+      await redisClient.set({
+        key: `blacklist:${token}`,
+        value: "true",
+        expiry: ttl, // TTL in seconds
+      });
+    }
+  } catch (error) {
+    logger.error("blacklistToken:", error);
+  }
+};
+
+/**
+ * Blacklists all tokens for a user by setting an invalidation flag.
+ * @async
+ * @param {number} userId - User ID.
+ * @returns {Promise<void>}
+ */
+const blacklistAllUserTokens = async (userId) => {
+  try {
+    // Set a flag to invalidate all tokens issued before this time
+    await redisClient.set({
+      key: `user:${userId}:token_invalidate_time`,
+      value: Math.floor(Date.now() / 1000).toString(),
+      ttl: 86400 * 7, // 7 days
+    });
+  } catch (error) {
+    logger.error("blacklistAllUserTokens:", error);
+  }
+};
+
+/**
+ * Checks if a token is blacklisted.
+ * @async
+ * @param {string} token - JWT token to check.
+ * @returns {Promise<boolean>} True if blacklisted, false otherwise.
+ */
+const isTokenBlacklisted = async (token) => {
+  try {
+    const blacklisted = await redisClient.get(`blacklist:${token}`);
+    return !!blacklisted;
+  } catch (error) {
+    logger.error("isTokenBlacklisted:", error);
+    return false;
+  }
+};
+
+/**
+ * Checks if user tokens are invalidated based on issued time.
+ * @async
+ * @param {number} userId - User ID.
+ * @param {number} tokenIssuedAt - Token issued at timestamp.
+ * @returns {Promise<boolean>} True if invalidated, false otherwise.
+ */
+const areUserTokensInvalidated = async (userId, tokenIssuedAt) => {
+  try {
+    const invalidateTime = await redisClient.get(
+      `user:${userId}:token_invalidate_time`,
+    );
+    if (!invalidateTime) return false;
+
+    return parseInt(invalidateTime, 10) > tokenIssuedAt;
+  } catch (error) {
+    logger.error("areUserTokensInvalidated:", error);
+    return false;
+  }
+};
+
+/**
+ * Generates a JWT access token for a user.
+ * @param {Object} user - The user payload to encode in the token.
+ * @returns {string} The signed JWT token.
+ */
 const generateUsersJwtAccessToken = (user) => {
   try {
     return jwt.sign(user, patientJwtSecret, {
@@ -64,6 +197,12 @@ const generateUsersJwtAccessToken = (user) => {
     throw error;
   }
 };
+
+/**
+ * Generates a JWT access token for an admin.
+ * @param {Object} admin - The admin payload to encode in the token.
+ * @returns {string} The signed JWT token.
+ */
 const generateAdminJwtAccessToken = (admin) => {
   try {
     return jwt.sign(admin, adminJwtSecret, {
@@ -77,6 +216,11 @@ const generateAdminJwtAccessToken = (admin) => {
   }
 };
 
+/**
+ * Generates a JWT verification token for a marketer.
+ * @param {Object} marketer - The marketer payload to encode in the token.
+ * @returns {string} The signed JWT token.
+ */
 const generateMarketerVerificaitonJwt = (marketer) => {
   try {
     return jwt.sign(marketer, adminJwtSecret, {
@@ -90,6 +234,12 @@ const generateMarketerVerificaitonJwt = (marketer) => {
   }
 };
 
+/**
+ * Verifies a marketer email JWT token.
+ * @param {string} token - The JWT token to verify.
+ * @returns {Object} The decoded token payload.
+ * @throws {Error} If verification fails.
+ */
 const verifyMarketerEmailJwt = (token) => {
   try {
     return jwt.verify(token, adminJwtSecret, {
@@ -102,6 +252,10 @@ const verifyMarketerEmailJwt = (token) => {
   }
 };
 
+/**
+ * Generates a random 6-digit verification token.
+ * @returns {string} A 6-digit verification token as a string.
+ */
 const generateVerificationToken = () => {
   // Generate a random 3-byte (6-digit) hexadecimal number
   const randomBytes = crypto.randomBytes(3);
@@ -119,9 +273,17 @@ const generateVerificationToken = () => {
   return formattedSixDigitNumber;
 };
 
+/**
+ * Generates and sends a verification OTP to a user's mobile number.
+ * @async
+ * @param {Object} params
+ * @param {number} params.userId - The user's ID.
+ * @param {string} params.mobileNumber - The user's mobile number.
+ * @returns {Promise<Object>} Response object indicating success or failure.
+ */
 const generateAndSendVerificationOTP = async ({ userId, mobileNumber }) => {
   const token = generateVerificationToken();
-  await Promise.all([
+  const [updateResult, smsResult] = await Promise.allSettled([
     updateUserVerificationTokenById({
       userId,
       token,
@@ -132,17 +294,39 @@ const generateAndSendVerificationOTP = async ({ userId, mobileNumber }) => {
     }),
   ]);
 
+  if (!updateResult && !smsResult) {
+    return Response.INTERNAL_SERVER_ERROR({
+      message: "Internal Server Error. Please Try Again",
+    });
+  }
+
   return Response.SUCCESS({ message: "Verification OTP sent succesfully" });
 };
 
+/**
+ * Validates if a token is a valid Expo push token.
+ * @param {string} token - The Expo push token to validate.
+ * @returns {boolean} True if valid, false otherwise.
+ */
 const validateExpoToken = (token) => {
   return Expo.isExpoPushToken(token);
 };
 
+/**
+ * Refines and validates a Sierra Leone mobile number.
+ * @param {string} mobileNumber - The mobile number to refine.
+ * @returns {string} The normalized mobile number with country code.
+ * @throws {Error} If the mobile number is invalid.
+ */
 const refineMobileNumber = (mobileNumber) => {
-  if (!mobileNumber) return null;
-  const slicedMobileNumber = mobileNumber.slice(-8);
-  return `${SL_COUNTRY_CODE}${slicedMobileNumber}`;
+  if (!mobileNumber) throw new Error("Mobile Number is required");
+  const normalized = mobileNumber.replace(/^(\+232|00232|0|232)/, "");
+  if (!/^\d{8}$/.test(normalized))
+    throw new Error("Invalid Sierra Leone Phone Number");
+  const prefix = normalized.slice(0, 2);
+  if (!MOBILE_NETWORK_CODES.includes(prefix))
+    throw new Error("Invalid Sierra Leone Mobile Network Code");
+  return `${SL_COUNTRY_CODE}${normalized}`;
 };
 
 module.exports = {
@@ -158,4 +342,8 @@ module.exports = {
   verifyMarketerEmailJwt,
   refineMobileNumber,
   generateAndSendVerificationOTP,
+  blacklistToken,
+  blacklistAllUserTokens,
+  isTokenBlacklisted,
+  areUserTokensInvalidated,
 };
