@@ -20,7 +20,7 @@ const {
   mapDoctorRow,
   mapDoctorUserProfileRow,
 } = require("../../utils/db-mapper.utils");
-const redisClient = require("../../config/redis.config");
+const { redisClient } = require("../../config/redis.config");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
 
 exports.getAllDoctors = async (limit, offset, paginationInfo) => {
