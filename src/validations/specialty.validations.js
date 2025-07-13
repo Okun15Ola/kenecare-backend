@@ -8,6 +8,7 @@ exports.CreateSpecialtyValidation = [
   body("name")
     .notEmpty()
     .withMessage("Name is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape()
@@ -29,6 +30,9 @@ exports.UpdateSpecialtyValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specialty ID is required")
+    .isInt({ allow_leading_zeroes: false })
+    .withMessage("Speciality Id should be a numeric value")
+    .bail()
     .trim()
     .escape()
     .custom(async (value) => {

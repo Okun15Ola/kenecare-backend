@@ -19,12 +19,18 @@ exports.CreateAppointmentValidation = [
   body("patientName")
     .notEmpty()
     .withMessage("Patient Name is required")
+    .bail()
+    .isString()
     .toUpperCase()
     .trim()
     .escape(),
   body("patientNumber")
     .notEmpty()
     .withMessage("Patient Mobile Number is required")
+    .bail()
+    .isMobilePhone()
+    .withMessage("Invalid Mobile Number")
+    .bail()
     .trim()
     .escape()
     .bail(),
@@ -33,7 +39,7 @@ exports.CreateAppointmentValidation = [
     .withMessage("Doctor ID is required")
     .isInt({ allow_leading_zeroes: false, gt: 0 })
     .withMessage("Invalid Doctor Id")
-    .trim()
+    .toInt()
     .escape()
     .custom(async (doctorId) => {
       const data = await getDoctorById(doctorId);
@@ -46,8 +52,10 @@ exports.CreateAppointmentValidation = [
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty is required")
+    .bail()
     .isInt({ allow_leading_zeroes: false, gt: 0 })
     .withMessage("Invalid Specialty Id")
+    .bail()
     .trim()
     .escape()
     .custom(async (id) => {
