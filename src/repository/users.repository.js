@@ -37,15 +37,16 @@ exports.createNewUser = async ({
   password,
   referralCode,
   email,
+  expiryTime,
 }) => {
-  const userEmail = email || null;
   return query(queries.CREATE_USER, [
     mobileNumber,
-    userEmail,
+    email,
     userType,
     password,
     vToken,
     referralCode,
+    expiryTime,
   ]);
 };
 
@@ -59,6 +60,18 @@ exports.updateUserVerificationTokenById = async ({ userId, token }) => {
 
 exports.updateUserNotificationToken = async ({ userId, notifToken }) => {
   return query(queries.UPDATE_USER_NOTIFICATION_TOKEN, [notifToken, userId]);
+};
+
+exports.updateUserDeviceAndNotificationToken = async ({
+  userId,
+  deviceToken,
+  notificationToken,
+}) => {
+  return query(queries.UPDATE_USER_DEVICE_AND_NOTIFICATION_TOKEN, [
+    deviceToken,
+    notificationToken,
+    userId,
+  ]);
 };
 
 exports.updateUserMobileNumberById = async ({ userId, mobileNumber }) => {
@@ -89,6 +102,6 @@ exports.updateUserOnlineStatus = async ({ userId, status }) => {
   return query(queries.UPDATE_USER_ONLINE_STATUS, [status, userId]);
 };
 
-exports.deleteUserById = async (userId) => {
-  return query(queries.DELETE_USER_BY_ID, [userId]);
+exports.deleteUserById = async (deletedAt, userId) => {
+  return query(queries.SOFT_DELETE_USER_BY_ID, [deletedAt, userId]);
 };
