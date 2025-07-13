@@ -2,194 +2,226 @@ const {
   registerNewUser,
   verifyRegistrationOTP,
   loginUser,
+  logoutUser,
+  logoutAllDevices,
   requestUserLoginOtp,
   verifyUserLoginOtp,
   resendVerificationOTP,
-  sendVerificationOTP,
+  sendForgetPasswordOTP,
   updateUserPassword,
   verifyRequestedOTP,
   updatePushNotificationToken,
+  // updateUserAccountStatus,
 } = require("../services/users.service");
-
-const Response = require("../utils/response.utils");
 const logger = require("../middlewares/logger.middleware");
-const { refineMobileNumber } = require("../utils/auth.utils");
 
 exports.AuthenticateController = async (req, res, next) => {
   try {
     return res.sendStatus(200);
   } catch (error) {
-    console.error(error);
-    logger.error(error);
+    logger.error("AuthenticateController ", error);
     return next(error);
   }
 };
+
 exports.LoginController = async (req, res, next) => {
   try {
     const response = await loginUser(req.user);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error("Controller Error: ", error);
-    console.error("Controller Error: ", error);
+    logger.error("LoginController", error);
     return next(error);
   }
 };
+
 exports.RequestLoginOTPController = async (req, res, next) => {
   try {
     const response = await requestUserLoginOtp(req.user);
-    return res.status(response.statusCode).json(Response.SUCCESS(response));
+    return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
+    logger.error("RequestLoginOTPController", error);
     return next(error);
   }
 };
+
 exports.VerifyLoginOTPController = async (req, res, next) => {
   try {
     const response = await verifyUserLoginOtp(req.user);
-    return res.status(response.statusCode).json(Response.SUCCESS(response));
+    return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
+    logger.error("VerifyLoginOTPController", error);
     return next(error);
   }
 };
+
+exports.LogoutController = async (req, res, next) => {
+  try {
+    const { id: userId } = req.user;
+    const { token, tokenExpiry } = req;
+    const response = await logoutUser({ userId, token, tokenExpiry });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("LogoutController", error);
+    return next(error);
+  }
+};
+
+exports.LogoutAllDevicesController = async (req, res, next) => {
+  try {
+    const { id: userId } = req.user;
+    const { token, tokenExpiry } = req;
+    const response = await logoutAllDevices({ userId, token, tokenExpiry });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("LogoutAllDevicesController", error);
+    return next(error);
+  }
+};
+
+// exports.SendEmailVerificationController = async (req, res, next) => {
+//   try {
+//     const { userId, email } = req.user;
+//     const response = await sendEmailVerification({ userId, email });
+//     return res.status(response.statusCode).json(response);
+//   } catch (error) {
+//     logger.error("SendEmailVerificationController", error);
+//     return next(error);
+//   }
+// };
+
+// exports.VerifyEmailTokenController = async (req, res, next) => {
+//   try {
+//     const { token } = req.params;
+//     const { user } = req;
+//     const response = await verifyEmailToken({ token, user });
+//     return res.status(response.statusCode).json(response);
+//   } catch (error) {
+//     logger.error("VerifyEmailTokenController", error);
+//     return next(error);
+//   }
+// };
+
+// exports.UpdateUserEmailController = async (req, res, next) => {
+//   try {
+//     const { userId } = req.user;
+//     const { email } = req.body;
+//     const response = await updateUserEmail({ userId, email });
+//     return res.status(response.statusCode).json(response);
+//   } catch (error) {
+//     logger.error("UpdateUserEmailController", error);
+//     return next(error);
+//   }
+// };
 
 exports.RegisterController = async (req, res, next) => {
   try {
-    const email = req.body.email || "";
-    const { mobileNumber, userType, password, referralCode } = req.body;
-
-    const refinedMobileNumber = refineMobileNumber(mobileNumber);
-    const response = await registerNewUser({
-      mobileNumber: refinedMobileNumber,
-      password,
-      email,
-      userType,
-      referralCode: referralCode || null,
-    });
-
+    const response = await registerNewUser(req.body);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
+    logger.error("RegisterController", error);
     return next(error);
   }
 };
+
 exports.VerifyRegisterOTPController = async (req, res, next) => {
   try {
-    // Extract token FROM REQUEST
     const { token } = req.params;
-
-    const response = await verifyRegistrationOTP(token);
+    const { user } = req;
+    const response = await verifyRegistrationOTP({ token, user });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
+    logger.error("VerifyRegisterOTPController", error);
     return next(error);
   }
 };
 
 exports.RequestForgotPasswordOTPController = async (req, res, next) => {
   try {
-    const response = await sendVerificationOTP(req.user);
-
+    const response = await sendForgetPasswordOTP(req.user);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
+    logger.error("RequestForgotPasswordOTPController", error);
     return next(error);
   }
 };
+
 exports.VerifyForgotPasswordOTPController = async (req, res, next) => {
   try {
-    // Forgot Password Controller
-    // const { token } = req.body;
     const response = await verifyRequestedOTP(req.user);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
+    logger.error("VerifyForgotPasswordOTPController", error);
     return next(error);
   }
 };
+
 exports.UpdatePasswordController = async (req, res, next) => {
   try {
     const { newPassword } = req.body;
-    const { user } = req;
-    const response = await updateUserPassword({ newPassword, user });
+    const { userId, mobileNumber } = req.user;
+    const response = await updateUserPassword({
+      newPassword,
+      userId,
+      mobileNumber,
+    });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
-    return next(error);
-  }
-};
-exports.ResetPasswordController = async (req, res, next) => {
-  try {
-    const { newPassword } = req.body;
-    const { user } = req;
-    const response = await updateUserPassword({ newPassword, user });
-    return res.status(response.statusCode).json(response);
-  } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
+    logger.error("UpdatePasswordController", error);
     return next(error);
   }
 };
 
-// resend signup OTP
 exports.ResendVerificationOTPController = async (req, res, next) => {
   try {
-    // const { phoneNumber } = req.body;
-    const { user } = req;
-
-    const response = await resendVerificationOTP(user);
+    const response = await resendVerificationOTP(req.user);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    logger.error(error);
-    console.error("Controller Error: ", error);
+    logger.error("ResendVerificationOTPController", error);
     return next(error);
   }
 };
 
-// send verification OTP
-exports.SendVerificationOTPController = async (req, res, next) => {
-  try {
-    const { user } = req;
+// exports.SendVerificationOTPController = async (req, res, next) => {
+//   try {
+//     const response = await sendVerificationOTP(req.user);
+//     return res.status(response.statusCode).json(response);
+//   } catch (error) {
+//     logger.error("SendVerificationOTPController", error);
+//     return next(error);
+//   }
+// };
 
-    const response = await sendVerificationOTP(user);
-    return res.status(response.statusCode).json(response);
-  } catch (error) {
-    console.error(error);
-    logger.error(error);
-    return next(error);
-  }
-};
-// VERIFY verification OTP
 exports.VerifyRequestedOTPController = async (req, res, next) => {
   try {
     const { phoneNumber } = req.body;
     const { user } = req;
-
     const response = await resendVerificationOTP({ phoneNumber, user });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
-    logger.error(error);
+    logger.error("VerifyRequestedOTPController", error);
     return next(error);
   }
 };
+
+// exports.UpdateAccountStatusController = async (req, res, next) => {
+//   try {
+//     const { userId } = req.user;
+//     const response = await updateUserAccountStatus({ token, userId });
+//     return res.status(response.statusCode).json(response);
+//   } catch (error) {
+//     logger.error("UpdatePushNotificationTokenController", error);
+//     return next(error);
+//   }
+// };
 
 exports.UpdatePushNotificationTokenController = async (req, res, next) => {
   try {
     const { user } = req;
     const { notification_token: token } = req.body;
-    const response = await updatePushNotificationToken({ user, token });
+    const response = await updatePushNotificationToken({ token, user });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
-    logger.error(error);
+    logger.error("UpdatePushNotificationTokenController", error);
     return next(error);
   }
 };
