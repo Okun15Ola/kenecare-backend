@@ -71,7 +71,7 @@ exports.AdminRegisterValidations = [
     .notEmpty()
     .withMessage("Mobile Number is required")
     .toLowerCase()
-    .matches(/^\+(?:[0-9]?){1,3}[0-9]{6,14}$/)
+    .matches(/^\+\d{1,3}\d{6,14}$/)
     .withMessage("Mobile Number must be in international format(e.g +XXX)")
     .isLength({ min: 9, max: 20 })
     .trim()
@@ -132,8 +132,7 @@ exports.UpdatePasswordValidations = [
     .notEmpty()
     .withMessage("Confirm Password is required")
     .custom((value, { req }) => {
-      if (value !== req.body.newPassword) return false;
-      return true;
+      return value === req.body.newPassword;
     })
     .withMessage("Passwords do not match"),
 ];
