@@ -10,15 +10,16 @@ nginx
 .vscode
 .husky
 .github
+.history
 ./sql-scripts
 coverage
 test
 .lintstaged
 .prettierrc
-*.sql
 Makefile
 jest.config.js
 jsconfig.js
+*.sql
 nodemon.js
 sample-env.txt
 .husky
