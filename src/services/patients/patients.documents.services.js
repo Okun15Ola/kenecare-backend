@@ -24,13 +24,14 @@ const {
   mapPatientMedicalDocumentRow,
   mapPatientDocumentRow,
 } = require("../../utils/db-mapper.utils");
+const logger = require("../../middlewares/logger.middleware");
+const { generateVerificationToken } = require("../../utils/auth.utils");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {
-    const patient = await getPatientByUserId(userId).catch((error) => {
-      throw error;
-    });
+    const patient = await getPatientByUserId(userId);
     if (!patient) {
+      logger.warn(`Patient Record Not Found for user ${userId}`);
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
     const { patient_id: patientId } = patient;
@@ -42,6 +43,7 @@ exports.getPatientMedicalDocuments = async (userId) => {
     const rawData = await getMedicalDocumentsByPatientId(patientId);
 
     if (!rawData?.length) {
+      logger.warn(`Patient Medical Document Not Found for user ${userId}`);
       return Response.NOT_FOUND({
         message: "Patient Medical Document Not Found",
       });
@@ -55,7 +57,7 @@ exports.getPatientMedicalDocuments = async (userId) => {
     });
     return Response.SUCCESS({ data: documents });
   } catch (error) {
-    console.error(error);
+    logger.error("getPatientMedicalDocuments: ", error);
     throw error;
   }
 };
@@ -70,6 +72,11 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
 
     const patient = await getPatientByUserId(userId);
 
+    if (!patient) {
+      logger.warn(`Patient Record Not Found for user ${userId}`);
+      return Response.NOT_FOUND({ message: "Patient Record Not Found" });
+    }
+
     const { patient_id: patientId } = patient;
     const rawData = await getPatientMedicalDocumentByDocumentId({
       documentId: docId,
@@ -77,6 +84,9 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
     });
 
     if (!rawData) {
+      logger.warn(
+        `Patient Medical Document ${docId} Not Found for user ${userId}`,
+      );
       return Response.NOT_FOUND({
         message: "Patient Medical Document Not Found",
       });
@@ -90,7 +100,7 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
     });
     return Response.SUCCESS({ data: document });
   } catch (error) {
-    console.error(error);
+    logger.error("getPatientMedicalDocument: ", error);
     throw error;
   }
 };
@@ -103,10 +113,12 @@ exports.createPatientMedicalDocument = async ({
   try {
     const patient = await getPatientByUserId(userId);
     if (!patient) {
+      logger.warn(`Patient Record Not Found for user ${userId}`);
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
 
     if (!file) {
+      logger.warn("No medical document file provided for upload");
       return Response.BAD_REQUEST({
         message: "Please upload medical document file",
       });
@@ -122,24 +134,43 @@ exports.createPatientMedicalDocument = async ({
     });
 
     if (uploaded.$metadata.httpStatusCode !== 200) {
+      logger.error("Error uploading medical document to S3", {
+        userId,
+        documentTitle,
+        fileName: documentUuid,
+      });
       return Response.INTERNAL_SERVER_ERROR({
         message: "Error Uploading Medical Document, please try again",
       });
     }
 
-    await createPatientMedicalDocument({
+    const { insertId } = await createPatientMedicalDocument({
       documentUuid,
       documentTitle,
       patientId,
       mimeType: file.mimetype,
     });
 
+    if (!insertId) {
+      logger.error("Error saving medical document to database", {
+        userId,
+        documentTitle,
+        fileName: documentUuid,
+      });
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Saving Medical Document, please try again",
+      });
+    }
+
+    // clear cache
+    await redisClient.delete(`patient-documents-${patientId}:all`);
+
     // send response to user
     return Response.CREATED({
       message: "Medical Document Saved Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createPatientMedicalDocument: ", error);
     throw error;
   }
 };
@@ -153,6 +184,7 @@ exports.updatePatientMedicalDocument = async ({
   try {
     const patient = await getPatientByUserId(userId);
     if (!patient) {
+      logger.warn(`Patient Record Not Found for user ${userId}`);
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
 
@@ -162,12 +194,16 @@ exports.updatePatientMedicalDocument = async ({
       documentId: docId,
     });
     if (!document) {
+      logger.warn(
+        `Patient Medical Document ${docId} Not Found for user ${userId}`,
+      );
       return Response.NOT_FOUND({
         message: "Specified Medical Document Not Found!",
       });
     }
 
     if (!file) {
+      logger.warn("No medical document file provided for update");
       return Response.BAD_REQUEST({
         message: "Please upload a medical document.",
       });
@@ -181,25 +217,42 @@ exports.updatePatientMedicalDocument = async ({
       mimetype: file.mimetype,
     });
     if (uploaded.$metadata.httpStatusCode !== 200) {
+      logger.error("Error uploading medical document to S3", {
+        userId,
+        documentTitle,
+        fileName: documentUUID,
+      });
       return Response.INTERNAL_SERVER_ERROR({
         message: "Error Uploading Medical Document, please try again",
       });
     }
 
-    // save to database
-
-    await updatePatientMedicalDocumentById({
+    const { affectedRows } = await updatePatientMedicalDocumentById({
       patientId,
       documentTitle,
       documentId: docId,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error("Error updating medical document in database", {
+        userId,
+        documentTitle,
+        fileName: documentUUID,
+      });
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Updating Medical Document, please try again",
+      });
+    }
+
+    await redisClient.delete(`patient-documents-${patientId}:all`);
+    await redisClient.delete(`patient-documents:${docId}`);
 
     // send response to user
     return Response.CREATED({
       message: "Medical Document Updated Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updatePatientMedicalDocument: ", error);
     throw error;
   }
 };
@@ -218,16 +271,29 @@ exports.deletePatientMedicalDocument = async ({ userId, documentId }) => {
       return Response.NOT_FOUND({ message: "Medical Document Not Found" });
     }
     const { document_uuid: documentUUID } = document;
-    await Promise.all([
+    const [s3Delete, dbDelete] = await Promise.allSettled([
       deleteFileFromS3Bucket(documentUUID),
       deletePatientDocById({ documentId, patientId }),
     ]);
+
+    if (s3Delete.status === "rejected" || dbDelete.status === "rejected") {
+      logger.error("Error deleting medical document from S3 & DB", {
+        userId,
+        documentId,
+        documentUUID,
+      });
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Deleting Medical Document, please try again",
+      });
+    }
+
+    await redisClient.delete(`patient-documents:${documentId}`);
 
     return Response.SUCCESS({
       message: "Medical Document Deleted Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("deletePatientMedicalDocument: ", error);
     throw error;
   }
 };
@@ -245,11 +311,12 @@ exports.createPatientSharedMedicalDocument = async ({
       getDoctorById(doctorId),
     ]);
 
-    // TODO move to a middle ware function requirePatientProfile()
     if (!patient) {
+      logger.warn(`Patient Record Not Found for user ${userId}`);
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
     if (!doctor) {
+      logger.warn(`Doctor Record Not Found for ID ${doctorId}`);
       return Response.NOT_FOUND({ message: "Selected Doctor Not Found" });
     }
 
@@ -263,25 +330,38 @@ exports.createPatientSharedMedicalDocument = async ({
       first_name: doctorFirstName,
       last_name: doctorLastName,
     } = doctor;
+
     // check if the document was previously shared with the doctor
     const alreadyShared = await getSharedMedicalDocumentByIdAndDoctorId({
       documentId,
       doctorId,
     });
+
     if (alreadyShared) {
-      return Response.NOT_MODIFIED();
+      logger.warn(
+        `Medical Document ${documentId} already shared with Doctor ${doctorId}`,
+      );
+      return Response.NOT_MODIFIED({
+        message: "Medical Document already shared with this doctor",
+      });
     }
 
-    // TODO generate OTP
+    const docOtp = generateVerificationToken();
 
-    // create new sharing record in the database
-    await createPatientDocumentSharing({
+    const { insertId } = await createPatientDocumentSharing({
       documentId,
       patientId,
       doctorId,
-      otp: 123455,
+      otp: docOtp, // changed from 123455 to generated otp
       note,
     });
+
+    if (!insertId) {
+      logger.error("Failed to create Patient Document Sharing Record");
+      return Response.BAD_REQUEST({
+        message: "Failed to share Medical Document. Try again",
+      });
+    }
 
     //  send sms alert to doctor
     await documentSharedWithDoctorSMS({
@@ -294,7 +374,7 @@ exports.createPatientSharedMedicalDocument = async ({
       message: "Medical Document Shared Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createPatientSharedMedicalDocument: ", error);
     throw error;
   }
 };
@@ -304,6 +384,7 @@ exports.getPatientSharedMedicalDocuments = async (userId) => {
     const patient = await getPatientByUserId(userId);
 
     if (!patient) {
+      logger.warn(`Patient Record Not Found for user ${userId}`);
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
 
@@ -311,6 +392,9 @@ exports.getPatientSharedMedicalDocuments = async (userId) => {
     const rawData = await getPatientSharedMedicalDocuments(patientId);
 
     if (!rawData?.length) {
+      logger.warn(
+        `Patient Shared Medical Documents Not Found for user ${userId}`,
+      );
       return Response.NOT_FOUND({
         message: "Patient Shared Medical Documents Not Found",
       });
@@ -319,7 +403,7 @@ exports.getPatientSharedMedicalDocuments = async (userId) => {
     const data = await Promise.all(rawData.map(mapPatientMedicalDocumentRow));
     return Response.SUCCESS({ data });
   } catch (error) {
-    console.error(error);
+    logger.error("getPatientSharedMedicalDocuments: ", error);
     throw error;
   }
 };
@@ -328,17 +412,20 @@ exports.getPatientSharedMedicalDocument = async ({ userId, documentId }) => {
     const patient = await getPatientByUserId(userId);
 
     if (!patient) {
+      logger.warn(`Patient Record Not Found for user ${userId}`);
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
 
     const { patient_id: patientId } = patient;
 
-    // create new sharing record in the database
     const rawData = await getPatientSharedMedicalDocument({
       patientId,
       documentId,
     });
     if (!rawData) {
+      logger.warn(
+        `Shared Medical Document ${documentId} Not Found for user ${userId}`,
+      );
       return Response.NOT_FOUND({
         message: "Shared Medical Document Not Found",
       });
@@ -348,7 +435,7 @@ exports.getPatientSharedMedicalDocument = async ({ userId, documentId }) => {
 
     return Response.SUCCESS({ data });
   } catch (error) {
-    console.error(error);
+    logger.error("getPatientSharedMedicalDocument: ", error);
     throw error;
   }
 };
@@ -356,22 +443,33 @@ exports.deletePatientSharedMedicalDocument = async ({ userId, documentId }) => {
   try {
     const patient = await getPatientByUserId(userId);
     if (!patient) {
+      logger.warn(`Patient Record Not Found for user ${userId}`);
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
 
     const { patient_id: patientId } = patient;
 
-    // create new sharing record in the database
-    await deletePatientSharedMedicalDocument({
+    const { affectedRows } = await deletePatientSharedMedicalDocument({
       patientId,
       documentId,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(
+        `Shared Medical Document ${documentId} Not Found for user ${userId}`,
+      );
+      return Response.NOT_FOUND({
+        message: "Shared Medical Document Not Found",
+      });
+    }
+
+    await redisClient.delete(`patient-shared-documents:${documentId}`);
 
     return Response.SUCCESS({
       message: "Shared Medical Document Deleted Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("deletePatientSharedMedicalDocument: ", error);
     throw error;
   }
 };

@@ -2,6 +2,7 @@ const repo = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapPatientMedicalHistoryRow } = require("../../utils/db-mapper.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getPatientMedicalHistory = async (userId) => {
   try {
@@ -12,6 +13,9 @@ exports.getPatientMedicalHistory = async (userId) => {
     }
     const patient = await repo.getPatientByUserId(userId);
     if (!patient) {
+      logger.warn(
+        `Patient Profile Does not exist for the logged in user ${userId}`,
+      );
       return Response.BAD_REQUEST({
         message:
           "Patient Profile Does not exist for the logged in user. Please create a patient profile",
@@ -21,6 +25,7 @@ exports.getPatientMedicalHistory = async (userId) => {
 
     const data = await repo.getPatientMedicalInfoByPatientId(patientID);
     if (!data) {
+      logger.warn(`Medical History Not Found ${userId}`);
       return Response.NOT_FOUND({
         message: "Medical History Not Found.",
       });
@@ -32,7 +37,7 @@ exports.getPatientMedicalHistory = async (userId) => {
     });
     return Response.SUCCESS({ data: medicalHistory });
   } catch (error) {
-    console.error("GET PATIENT MEDICAL HISTORY ERROR: ", error);
+    logger.error("getPatientMedicalHistory: ", error);
     throw error;
   }
 };
@@ -54,6 +59,9 @@ exports.createPatientMedicalHistory = async ({
   try {
     const patient = await repo.getPatientByUserId(userId);
     if (!patient) {
+      logger.warn(
+        `Patient Profile Does not exist for the logged in use ${userId}`,
+      );
       return Response.BAD_REQUEST({
         message:
           "Patient Profile Does not exist for the logged in user. Please create a patient profile",
@@ -69,7 +77,7 @@ exports.createPatientMedicalHistory = async ({
           "Medical Information Already Exist for the current user. Please update",
       });
     }
-    await repo.createPatientMedicalInfo({
+    const { insertId } = await repo.createPatientMedicalInfo({
       patientId,
       height,
       weight,
@@ -84,11 +92,21 @@ exports.createPatientMedicalHistory = async ({
       caffineIntakeFreq,
     });
 
+    if (!insertId) {
+      logger.error("Failed to create Patient Medical Info");
+      return Response.BAD_REQUEST({
+        message: "Failed to create Patient Medical Info. Try again",
+      });
+    }
+
+    const cacheKey = "patient-medicalHistory:all";
+    await redisClient.delete(cacheKey);
+
     return Response.CREATED({
       message: "Patient Medical Info Created Successfully.",
     });
   } catch (error) {
-    console.error("CREATE PATIENT MEDICAL HISTORY ERROR: ", error);
+    logger.error("createPatientMedicalHistory: ", error);
     throw error;
   }
 };
@@ -124,7 +142,7 @@ exports.updatePatientMedicalHistory = async ({
           "Medical History Not Found. Create one before trying to update",
       });
     }
-    await repo.updatePatientMedicalHistory({
+    const { affectedRows } = await repo.updatePatientMedicalHistory({
       patientId,
       height,
       weight,
@@ -139,11 +157,20 @@ exports.updatePatientMedicalHistory = async ({
       caffineIntakeFreq,
     });
 
+    if (affectedRows <= 0) {
+      return Response.BAD_REQUEST({
+        message: "Failed to update Patient Medical Info. Try again",
+      });
+    }
+
+    const cacheKey = "patient-medicalHistory:all";
+    await redisClient.delete(cacheKey);
+
     return Response.CREATED({
       message: "Patient Medical Info Updated Successfully.",
     });
   } catch (error) {
-    console.error("UPDATE PATIENT MEDICAL HISTORY ERROR: ", error);
+    logger.error("updatePatientMedicalHistory: ", error);
     throw error;
   }
 };

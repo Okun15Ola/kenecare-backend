@@ -8,6 +8,7 @@ const {
   mapAppointmentPrescriptionRow,
 } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getAppointmentPrescriptions = async (
   id,
@@ -31,6 +32,7 @@ exports.getAppointmentPrescriptions = async (
     const rawData = await getAppointmentPrescriptions(limit, offset, id);
 
     if (!rawData?.length) {
+      logger.warn(`Prescription Not Found ${id}`);
       return Response.NOT_FOUND({
         message: "Presciption Not Found",
       });
@@ -48,7 +50,7 @@ exports.getAppointmentPrescriptions = async (
       pagination: paginationInfo,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("getAppointmentPrescriptions: ", error);
     throw error;
   }
 };
@@ -63,6 +65,7 @@ exports.getAppointmentPrescriptionById = async (presId) => {
     const rawData = await getAppointmentPrescriptionById(presId);
 
     if (!rawData) {
+      logger.warn(`Prescription Not Found for ID ${presId} `);
       return Response.NOT_FOUND({
         message: "Prescription Not Found. Try again",
       });
@@ -76,7 +79,7 @@ exports.getAppointmentPrescriptionById = async (presId) => {
 
     return Response.SUCCESS({ data: prescription });
   } catch (error) {
-    console.error(error);
+    logger.error("getAppointmentPrescriptionById: ", error);
     throw error;
   }
 };

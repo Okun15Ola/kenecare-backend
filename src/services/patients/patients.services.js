@@ -23,6 +23,7 @@ const {
   mapPatientRow,
   mapMedicalRecordRow,
 } = require("../../utils/db-mapper.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getAllPatients = async (limit, offset, paginationInfo) => {
   try {
@@ -37,6 +38,7 @@ exports.getAllPatients = async (limit, offset, paginationInfo) => {
     const rawData = await repo.getAllPatients(limit, offset);
 
     if (!rawData?.length) {
+      logger.warn("No Patients Found");
       return Response.NOT_FOUND({ message: "Patient Not Found" });
     }
 
@@ -47,7 +49,7 @@ exports.getAllPatients = async (limit, offset, paginationInfo) => {
     });
     return Response.SUCCESS({ data: patients, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getAllPatients: ", error);
     throw error;
   }
 };
@@ -60,6 +62,7 @@ exports.getPatientById = async (id) => {
     }
     const rawData = await repo.getPatientById(id);
     if (!rawData) {
+      logger.warn(`Patient Profile Not Found for ID: ${id}`);
       return Response.NOT_FOUND({
         errorCode: "PROFILE_NOT_FOUND",
         message:
@@ -88,7 +91,7 @@ exports.getPatientById = async (id) => {
 
     return Response.SUCCESS({ data: patientWithMedicalRecord });
   } catch (error) {
-    console.error(error);
+    logger.error("getPatientById: ", error);
     throw error;
   }
 };
@@ -105,6 +108,7 @@ exports.getPatientsTestimonial = async (limit, offset, paginationInfo) => {
     }
     const rawData = await getAllTestimonials(limit, offset);
     if (!rawData?.length) {
+      logger.warn("Patient Testimonials Not Found");
       return Response.NOT_FOUND({
         message: "Patient Testimonials Not Found",
       });
@@ -119,7 +123,7 @@ exports.getPatientsTestimonial = async (limit, offset, paginationInfo) => {
 
     return Response.SUCCESS({ data: patients, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getPatientsTestimonial: ", error);
     throw error;
   }
 };
@@ -132,9 +136,9 @@ exports.getPatientByUser = async (id) => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
-    // Get profile from database
     const rawData = await repo.getPatientByUserId(id);
     if (!rawData) {
+      logger.warn(`Patient Profile Not Found for User ID: ${id}`);
       return Response.NOT_FOUND({
         errorCode: "PROFILE_NOT_FOUND",
         message:
@@ -145,6 +149,9 @@ exports.getPatientByUser = async (id) => {
     const patient = mapPatientRow(rawData);
 
     if (id !== patient.userId || patient.userType !== USERTYPE.PATIENT) {
+      logger.warn(
+        `Unauthorized access attempt for user ID: ${id} on patient profile ID: ${patient.patientId}`,
+      );
       return Response.FORBIDDEN({ message: "Unauthorized account access." });
     }
 
@@ -167,7 +174,7 @@ exports.getPatientByUser = async (id) => {
     });
     return Response.SUCCESS({ data: patientWithMedicalRecord });
   } catch (error) {
-    console.error(error);
+    logger.error("getPatientByUser: ", error);
     throw error;
   }
 };
@@ -183,6 +190,7 @@ exports.createPatientProfile = async ({
     const user = await getUserById(userId);
 
     if (!user) {
+      logger.warn(`User Not Found for ID: ${userId}`);
       return Response.NOT_FOUND({
         message: "Error Creating Patient Profile, please try again!",
       });
@@ -200,6 +208,9 @@ exports.createPatientProfile = async ({
       isVerified !== VERIFICATIONSTATUS.VERIFIED ||
       isAccountActive !== STATUS.ACTIVE
     ) {
+      logger.warn(
+        `Unauthorized action for user ID: ${userId}. User Type: ${userType}, Verification Status: ${isVerified}, Account Status: ${isAccountActive}`,
+      );
       return Response.FORBIDDEN({
         message: "Unauthorized Action. Please Try again",
       });
@@ -207,6 +218,9 @@ exports.createPatientProfile = async ({
     const patient = await repo.getPatientByUserId(userId);
 
     if (patient) {
+      logger.warn(
+        `Patient Profile already exists for user ID: ${userId}. Patient ID: ${patient.patientId}`,
+      );
       return Response.BAD_REQUEST({
         message: "Patient Profile already exist for logged in user.",
       });
@@ -225,7 +239,10 @@ exports.createPatientProfile = async ({
       dateOfBirth: formattedDate,
     });
 
-    if (affectedRows <= 0) {
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        `Failed to create patient profile for user ID: ${userId}. Affected Rows: ${affectedRows}`,
+      );
       return Response.INTERNAL_SERVER_ERROR({
         message: "Error Creating Patient Profile. Please Try again",
       });
@@ -258,7 +275,7 @@ exports.createPatientProfile = async ({
       message: "Patient profile created successfully.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createPatientProfile: ", error);
     throw error;
   }
 };
@@ -279,6 +296,9 @@ exports.createPatientMedicalInfo = async ({
   try {
     const { patient_id: patientId } = await repo.getPatientByUserId(userId);
     if (!patientId) {
+      logger.warn(
+        `Patient Profile Does not exist for User ID: ${userId}. Patient ID: ${patientId}`,
+      );
       return Response.BAD_REQUEST({
         message: "Patient Profile Does not exist for the logged in user",
       });
@@ -287,12 +307,16 @@ exports.createPatientMedicalInfo = async ({
     const medicalInfoExist =
       await repo.getPatientMedicalInfoByPatientId(patientId);
     if (medicalInfoExist) {
+      logger.warn(
+        `Medical Information already exists for Patient ID: ${patientId}. User ID: ${userId}`,
+      );
       return Response.BAD_REQUEST({
         message:
           "Medical Information Already Exist for the current user. Please update",
       });
     }
-    await repo.createPatientMedicalInfo({
+
+    const { insertId } = await repo.createPatientMedicalInfo({
       patientId,
       height,
       weight,
@@ -307,11 +331,20 @@ exports.createPatientMedicalInfo = async ({
       caffineIntakeFreq,
     });
 
+    if (!insertId) {
+      logger.error(
+        `Failed to create Patient Medical Info for Patient ID: ${patientId}. Insert ID: ${insertId}`,
+      );
+      return Response.BAD_REQUEST({
+        message: "Failed to create Patient Medical Info. Try again",
+      });
+    }
+
     return Response.CREATED({
       message: "Patient Medical Info Created Successfully.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createPatientMedicalInfo: ", error);
     throw error;
   }
 };
@@ -329,6 +362,9 @@ exports.updatePatientProfile = async ({
     const { patient_id: patientId } = await repo.getPatientByUserId(userId);
 
     if (userType !== USERTYPE.PATIENT) {
+      logger.warn(
+        `Unauthorized action for user ID: ${userId}. User Type: ${userType}`,
+      );
       return Response.UNAUTHORIZED({
         message:
           "Unauthorized action, you must register as a pateint to update a pateient profile",
@@ -337,7 +373,7 @@ exports.updatePatientProfile = async ({
 
     const formattedDate = moment(dateOfBirth).format("YYYY-MM-DD");
 
-    await repo.updatePatientById({
+    const { affectedRows } = await repo.updatePatientById({
       patientId,
       firstName,
       middleName,
@@ -346,11 +382,20 @@ exports.updatePatientProfile = async ({
       dateOfBirth: formattedDate,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        `Failed to update patient profile for Patient ID: ${patientId}. Affected Rows: ${affectedRows}`,
+      );
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Updating Patient Profile. Please Try again",
+      });
+    }
+
     return Response.SUCCESS({
       message: "Patient profile updated successfully.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updatePatientProfile: ", error);
     throw error;
   }
 };
@@ -369,16 +414,25 @@ exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
       await deleteFile(file);
     }
 
-    await repo.updatePatientProfilePictureByUserId({
+    const { affectedRows } = await repo.updatePatientProfilePictureByUserId({
       userId,
       imageUrl,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        `Failed to update patient profile picture for User ID: ${userId}. Affected Rows: ${affectedRows}`,
+      );
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Updating Patient Profile Picture. Please Try again",
+      });
+    }
 
     return Response.SUCCESS({
       message: "Patient's profile picture updated successfully.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updatePatientProfilePicture: ", error);
     throw error;
   }
 };

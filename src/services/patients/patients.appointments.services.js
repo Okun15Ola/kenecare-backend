@@ -40,6 +40,7 @@ exports.getPatientAppointments = async (
     const patient = await getPatientByUserId(userId);
 
     if (!patient) {
+      logger.warn(`Patient Profile Not Found for user ${userId}`);
       return Response.NOT_FOUND({
         message:
           "Patient profile not found please, create profile before proceeding",
@@ -65,6 +66,7 @@ exports.getPatientAppointments = async (
     });
 
     if (!rawData?.length) {
+      logger.warn(`Patients appointments not found for user ${userId}`);
       return Response.NOT_FOUND({ message: "Patients appointments not found" });
     }
 
@@ -77,14 +79,23 @@ exports.getPatientAppointments = async (
 
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
-    logger.error(error);
+    logger.error("getPatientAppointments: ", error);
     throw error;
   }
 };
 
 exports.getPatientAppointment = async ({ userId, id }) => {
   try {
-    const { patient_id: patientId } = await getPatientByUserId(userId);
+    const patient = await getPatientByUserId(userId);
+
+    if (!patient) {
+      logger.warn(`Patient Profile Not Found for user ${userId}`);
+      return Response.NOT_FOUND({
+        message:
+          "Patient profile not found please, create profile before proceeding",
+      });
+    }
+    const { patient_id: patientId } = patient;
     const cacheKey = `patient-appointments-${patientId}:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -98,6 +109,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
 
     //  Check if the requesting user is the owner of the appointment
     if (!rawData) {
+      logger.warn(`Appointment Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
     const appointment = mapPatientAppointment(rawData);
@@ -119,15 +131,24 @@ exports.getPatientAppointment = async ({ userId, id }) => {
 
     return Response.SUCCESS({ data: appointmentWithFollowUp });
   } catch (error) {
-    logger.error(error);
-    console.error(error);
+    logger.error("getPatientAppointment: ", error);
     throw error;
   }
 };
 
 exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
   try {
-    const { patient_id: patientId } = await getPatientByUserId(userId);
+    const patient = await getPatientByUserId(userId);
+
+    if (!patient) {
+      logger.warn(`Patient Profile Not Found for user ${userId}`);
+      return Response.NOT_FOUND({
+        message:
+          "Patient profile not found please, create profile before proceeding",
+      });
+    }
+
+    const { patient_id: patientId } = patient;
     const cacheKey = `patient-appointments-by-uuid:${uuId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -140,6 +161,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
     });
 
     if (!rawData) {
+      logger.warn(`Appointment Not Found for UUID ${uuId}`);
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
@@ -151,8 +173,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
     });
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
-    console.error(error);
-    logger.error(error);
+    logger.error("getPatientAppointmentByUUID: ", error);
     throw error;
   }
 };
@@ -168,27 +189,45 @@ exports.createPatientAppointment = async ({
   symptoms,
   specialtyId,
 }) => {
+  let appointmentId = null;
   try {
-    // DONE Get patient Id from logged in user
-    const [patient, doctor] = await Promise.all([
+    // Parallel validation - Get patient, doctor, and check availability
+    const [patient, doctor, timeBooked] = await Promise.allSettled([
       getPatientByUserId(userId),
       getDoctorById(doctorId),
+      getDoctorAppointByDateAndTime({
+        doctorId,
+        date: appointmentDate,
+        time: appointmentTime,
+      }),
     ]);
 
-    //  check if patient profile exist for the user booking appointment
-    if (!patient) {
+    //  validate patient
+    if (patient.status === "rejected" || !patient.value) {
+      logger.warn(`Patient Profile Not Found for user ${userId}`);
       return Response.BAD_REQUEST({
         message:
           "Please create a patient profile before booking an appointment",
       });
     }
 
-    // check if the specified doctor exist
-    // if (!doctor) {
-    //   return Response.BAD_REQUEST({
-    //     message: "Specified Doctor does not exist. Please try again",
-    //   });
-    // }
+    // validate doctor
+    if (doctor.status === "rejected" || !doctor.value) {
+      logger.warn(`Doctor Not Found for ID ${doctorId}`);
+      return Response.BAD_REQUEST({
+        message: "Specified Doctor does not exist. Please try again",
+      });
+    }
+
+    if (timeBooked.status === "fulfilled" && timeBooked.value) {
+      logger.warn(
+        `Appointment already booked for Doctor ${doctorId} on ${appointmentDate} at ${appointmentTime}`,
+      );
+      return Response.BAD_REQUEST({
+        message:
+          "An appointment has already been booked for the specified time. Please choose a new appointment time",
+      });
+    }
 
     const {
       patient_id: patientId,
@@ -196,32 +235,18 @@ exports.createPatientAppointment = async ({
       last_name: userLastName,
       booked_first_appointment: hasBookedFirstAppointment,
       mobile_number: mobileNumber,
-    } = patient;
+    } = patient.value;
 
     const {
       consultation_fee: consultationFee,
       first_name: doctorFirstName,
       last_name: doctorLastName,
       mobile_number: doctorMobileNumber,
-    } = doctor;
+    } = doctor.value;
 
-    // Check if the selected doctor's timeslot is available,
-    const timeBooked = await getDoctorAppointByDateAndTime({
-      doctorId,
-      date: appointmentDate,
-      time: appointmentTime,
-    });
-
-    if (timeBooked) {
-      return Response.BAD_REQUEST({
-        message:
-          "An appointment has already been booked for the specified time. Please choose a new appointment time",
-      });
-    }
-    // Generate a unique ID for each appointment
     const generatedOrderId = uuidv4();
 
-    const { insertId: appointmentId } = await repo.createNewPatientAppointment({
+    const appointmentResult = await repo.createNewPatientAppointment({
       uuid: generatedOrderId,
       patientId,
       doctorId,
@@ -235,35 +260,68 @@ exports.createPatientAppointment = async ({
       appointmentTime,
     });
 
+    appointmentId = appointmentResult.insertId;
+
+    if (!appointmentId) {
+      logger.error("Failed to create new patient appointment");
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "An Error Occured on our side, please try again",
+      });
+    }
+
     if (!hasBookedFirstAppointment) {
-      await createFirstAppointmentPayment({
-        appointmentId,
-        amountPaid: consultationFee,
-        orderId: generatedOrderId,
-        paymentMethod: "FIRST_FREE_APPOINTMENT",
-        transactionId: "FIRST_FREE_APPOINTMENT",
-        paymentToken: "FIRST_FREE_APPOINTMENT",
-        notificationToken: "FIRST_FREE_APPOINTMENT",
-        status: "success",
-      });
+      const [
+        appointmentResult,
+        updateAppointmentResult,
+        appointmentSms,
+        doctorAppointmentSms,
+      ] = await Promise.allSettled([
+        createFirstAppointmentPayment({
+          appointmentId,
+          amountPaid: consultationFee,
+          orderId: generatedOrderId,
+          paymentMethod: "FIRST_FREE_APPOINTMENT",
+          transactionId: "FIRST_FREE_APPOINTMENT",
+          paymentToken: "FIRST_FREE_APPOINTMENT",
+          notificationToken: "FIRST_FREE_APPOINTMENT",
+          status: "success",
+        }),
+        updatePatientFirstAppointmentStatus(patientId),
+        appointmentBookedSms({
+          mobileNumber,
+          patientName: `${userFirstName} ${userLastName}`,
+          doctorName: `${doctorFirstName} ${doctorLastName}`,
+          patientNameOnPrescription: patientName,
+          appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+          appointmentTime,
+        }),
+        doctorAppointmentBookedSms({
+          mobileNumber: doctorMobileNumber,
+          doctorName: `${doctorLastName}`,
+          patientNameOnPrescription: patientName,
+          appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
+          appointmentTime,
+        }),
+      ]);
 
-      await updatePatientFirstAppointmentStatus(patientId);
-
-      appointmentBookedSms({
-        mobileNumber,
-        patientName: `${userFirstName} ${userLastName}`,
-        doctorName: `${doctorFirstName} ${doctorLastName}`,
-        patientNameOnPrescription: patientName,
-        appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
-        appointmentTime,
-      });
-      doctorAppointmentBookedSms({
-        mobileNumber: doctorMobileNumber,
-        doctorName: `${doctorLastName}`,
-        patientNameOnPrescription: patientName,
-        appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
-        appointmentTime,
-      });
+      if (
+        appointmentResult.status === "rejected" ||
+        updateAppointmentResult.status === "rejected" ||
+        appointmentSms.status === "rejected" ||
+        doctorAppointmentSms.status === "rejected"
+      ) {
+        logger.error(
+          `Error processing first appointment booking for appointment ID ${appointmentId}: `,
+          appointmentResult.reason ||
+            updateAppointmentResult.reason ||
+            appointmentSms.reason ||
+            doctorAppointmentSms.reason,
+        );
+        await repo.deleteAppointmentById({ appointmentId });
+        return Response.INTERNAL_SERVER_ERROR({
+          message: "An Error Occured on our side, please try again",
+        });
+      }
 
       return Response.CREATED({
         message:
@@ -279,10 +337,17 @@ exports.createPatientAppointment = async ({
       orderId: generatedOrderId,
       amount: consultationFee,
     }).catch((error) => {
+      logger.error(
+        `Error getting payment URL for appointment ID ${appointmentId}: `,
+        error,
+      );
       throw error;
     });
 
     if (!response) {
+      logger.error(
+        `Failed to get payment URL for appointment ID ${appointmentId}`,
+      );
       await repo.deleteAppointmentById({ appointmentId });
       return Response.INTERNAL_SERVER_ERROR({
         message: "An Error Occured on our side, please try again",
@@ -292,17 +357,8 @@ exports.createPatientAppointment = async ({
     const { ussdCode, paymentCodeId, idempotencyKey, expiresAt, cancelUrl } =
       response;
 
-    // const { paymentUrl, notificationToken, paymentToken } = await getPaymentURL(
-    //   {
-    //     orderId: genUUID,
-    //     amount: consultationFee,
-    //   },
-    // ).catch((error) => {
-    //   throw error;
-    // });
-
     // create new appointment payments record
-    await createAppointmentPayment({
+    const { insertId } = await createAppointmentPayment({
       appointmentId,
       amountPaid: consultationFee,
       orderId: generatedOrderId,
@@ -311,6 +367,16 @@ exports.createPatientAppointment = async ({
       notificationToken: idempotencyKey,
       transactionId: paymentCodeId,
     });
+
+    if (!insertId) {
+      logger.error(
+        `Failed to create appointment payment record for appointment ID ${appointmentId}`,
+      );
+      await repo.deleteAppointmentById({ appointmentId });
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "An Error Occured on our side, please try again",
+      });
+    }
 
     return Response.CREATED({
       message: "Appointment Booked Successfully. Proceed to payment.",
@@ -321,7 +387,7 @@ exports.createPatientAppointment = async ({
       },
     });
   } catch (error) {
-    logger.error("Create Appointment Error", error);
+    logger.error("createPatientAppointment", error);
     throw error;
   }
 };
