@@ -3,6 +3,7 @@ const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapAdminAppointmentRow } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
   try {
@@ -17,6 +18,7 @@ exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
     const rawData = await dbObject.getAllAppointments(limit, offset);
 
     if (!rawData?.length) {
+      logger.warn("Admin Appointments Not Found");
       return Response.NOT_FOUND({ message: "Appointments Not Found" });
     }
 
@@ -28,7 +30,7 @@ exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
     });
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getAdminAppointments: ", error);
     throw error;
   }
 };
@@ -60,6 +62,7 @@ exports.getAdminAppointmentsByDoctorId = async (
     const appointments = rawData.map(mapAdminAppointmentRow);
 
     if (!rawData?.length) {
+      logger.warn(`Admin Appointments Not Found for Doctor ID ${doctorId}`);
       return Response.NOT_FOUND({ message: "Appointments Not Found" });
     }
 
@@ -70,7 +73,7 @@ exports.getAdminAppointmentsByDoctorId = async (
 
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getAdminAppointmentsByDoctorId: ", error);
     throw error;
   }
 };
@@ -85,6 +88,7 @@ exports.getAdminAppointmentById = async (id) => {
     const rawData = await dbObject.getAppointmentById(id);
 
     if (!rawData) {
+      logger.warn(`Admin Appointment Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
@@ -96,7 +100,7 @@ exports.getAdminAppointmentById = async (id) => {
     });
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
-    console.error(error);
+    logger.error("getAdminAppointmentById: ", error);
     throw error;
   }
 };
@@ -111,6 +115,7 @@ exports.getAdminAppointmentByUUID = async (uuid) => {
     const rawData = await dbObject.getAppointmentByUUID(uuid);
 
     if (!rawData) {
+      logger.warn(`Admin Appointment Not Found for UUID ${uuid}`);
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
@@ -122,7 +127,7 @@ exports.getAdminAppointmentByUUID = async (uuid) => {
     });
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
-    console.error(error);
+    logger.error("getAdminAppointmentByUUID: ", error);
     throw error;
   }
 };

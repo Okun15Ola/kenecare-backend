@@ -10,6 +10,7 @@ const { uploadFileToS3Bucket } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapDoctorCouncilRow } = require("../../utils/db-mapper.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 // DOCTORS
 exports.getDoctorCouncilRegistration = async (id) => {
@@ -23,6 +24,7 @@ exports.getDoctorCouncilRegistration = async (id) => {
     const doctor = await dbObject.getDoctorByUserId(id);
 
     if (!doctor) {
+      logger.error(`Doctor profile not found for userId: ${id}`);
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
@@ -36,11 +38,17 @@ exports.getDoctorCouncilRegistration = async (id) => {
     // Check if the profile requested belongs to the requesting user
     // Check if the user type is a doctor
     if (id !== userId || userType !== USERTYPE.DOCTOR) {
+      logger.error(
+        `Unauthorized access attempt by userId: ${id} for doctorId: ${doctorId}`,
+      );
       return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
     }
 
     const rawData = await dbObject.getCouncilRegistrationByDoctorId(doctorId);
     if (!rawData) {
+      logger.error(
+        `Medical Council Registration not found for doctorId: ${doctorId}`,
+      );
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
       });
@@ -53,7 +61,7 @@ exports.getDoctorCouncilRegistration = async (id) => {
     });
     return Response.SUCCESS({ data: registration });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorCouncilRegistration: ", error);
     throw error;
   }
 };
@@ -69,12 +77,14 @@ exports.createDoctorCouncilRegistration = async ({
 }) => {
   try {
     if (!file) {
+      logger.error("No file provided for council registration.");
       return Response.BAD_REQUEST({
         message: "Please upload medical council registration certificate.",
       });
     }
     const user = await getUserById(userId);
     if (!user) {
+      logger.error(`User not found for userId: ${userId}`);
       return Response.NOT_FOUND({
         message: "Error Creating Doctor Profile, please try again!",
       });
@@ -82,12 +92,18 @@ exports.createDoctorCouncilRegistration = async ({
     const { user_type: userType } = user;
 
     if (userType !== USERTYPE.DOCTOR) {
+      logger.error(
+        `Unauthorized action by userId: ${userId}. User type: ${userType}`,
+      );
       return Response.UNAUTHORIZED({
         message: "Unauthorized Action.",
       });
     }
     const doctor = await dbObject.getDoctorByUserId(userId);
     if (!doctor) {
+      logger.error(
+        `Doctor profile not found for userId: ${userId} while creating council registration`,
+      );
       return Response.BAD_REQUEST({
         message: "Doctor Profile does not exist please create a profile. ",
       });
@@ -110,18 +126,27 @@ exports.createDoctorCouncilRegistration = async ({
 
       //  check if it has been approved
       if (registrationStatus === "pending") {
+        logger.warn(
+          `Doctor with ID ${doctorId} has a pending council registration.`,
+        );
         return Response.BAD_REQUEST({
           message:
             "Medical Council Registration PENDING. Approval takes up to 48 hours, if you're experiencing any delays please contact the admin for further instructions.",
         });
       }
       if (registrationStatus === "rejected") {
+        logger.warn(
+          `Doctor with ID ${doctorId} has a rejected council registration.`,
+        );
         return Response.BAD_REQUEST({
           message: `Medical Council Registration was rejected by admin. Reason: ${rejectReason}`,
         });
       }
 
       if (registrationStatus === "approved") {
+        logger.warn(
+          `Doctor with ID ${doctorId} already has an approved council registration.`,
+        );
         return Response.NOT_MODIFIED();
       }
     }
@@ -162,7 +187,7 @@ exports.createDoctorCouncilRegistration = async ({
         "Medical Council Registration Successfully Submitted. Your information is awaiting approval. You will be notified by email when once your documents are approved.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createDoctorCouncilRegistration: ", error);
     throw error;
   }
 };
@@ -178,6 +203,7 @@ exports.updateDoctorCouncilRegistration = async ({
 }) => {
   try {
     if (!file) {
+      logger.error("No file provided for council registration.");
       return Response.BAD_REQUEST({
         message: "Please upload medical council registration document.",
       });
@@ -185,6 +211,9 @@ exports.updateDoctorCouncilRegistration = async ({
     const { user_type: userType } = await getUserById(userId);
 
     if (userType !== USERTYPE.DOCTOR) {
+      logger.error(
+        `Unauthorized action by userId: ${userId}. User type: ${userType}`,
+      );
       return Response.UNAUTHORIZED({
         message: "Unauthorized Action.",
       });
@@ -197,6 +226,9 @@ exports.updateDoctorCouncilRegistration = async ({
     } = await dbObject.getDoctorByUserId(userId);
 
     if (!doctorId) {
+      logger.error(
+        `Doctor profile not found for userId: ${userId} while updating council registration`,
+      );
       return Response.BAD_REQUEST({
         message: "Doctor Profile does not exist please create a profile. ",
       });
@@ -205,6 +237,9 @@ exports.updateDoctorCouncilRegistration = async ({
     const registration =
       await dbObject.getCouncilRegistrationByDoctorId(doctorId);
     if (!registration) {
+      logger.error(
+        `Medical Council Registration not found for doctorId: ${doctorId}`,
+      );
       return Response.NOT_FOUND({ message: "Council registration not found" });
     }
 
@@ -251,7 +286,7 @@ exports.updateDoctorCouncilRegistration = async ({
         "Medical Council Registration Successfully Updated. Your account will be temporarily disabled until after verification has been completed. You will be notified by email when once your documents are approved.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateDoctorCouncilRegistration: ", error);
     throw error;
   }
 };

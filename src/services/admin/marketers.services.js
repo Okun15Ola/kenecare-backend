@@ -34,6 +34,7 @@ const {
   mapMarketersWithDocumentRow,
 } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 const generateReferralCode = ({ firstName, lastName }) => {
   const randomNumbers = Math.floor(100 + Math.random() * 900); // Generate 3 random numbers
@@ -55,6 +56,7 @@ exports.getAllMarketersService = async (limit, offset, paginationInfo) => {
     }
     const rawData = await getAllMarketers(limit, offset);
     if (!rawData?.length) {
+      logger.warn("Marketers Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const marketers = rawData.map(mapMarketersRow);
@@ -64,7 +66,7 @@ exports.getAllMarketersService = async (limit, offset, paginationInfo) => {
     });
     return Response.SUCCESS({ data: marketers, pagination: paginationInfo });
   } catch (error) {
-    console.error("Service Error: ", error);
+    logger.error("getAllMarketersService: ", error);
     throw error;
   }
 };
@@ -78,6 +80,7 @@ exports.getMarketerByIdService = async (id) => {
     }
     const rawData = await getMarketerById(id);
     if (!rawData) {
+      logger.warn(`Marketer Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const marketer = await mapMarketersWithDocumentRow(rawData);
@@ -88,7 +91,7 @@ exports.getMarketerByIdService = async (id) => {
     });
     return Response.SUCCESS({ data: marketer });
   } catch (error) {
-    console.error("Service Error: ", error);
+    logger.error("getMarketerByIdService: ", error);
     throw error;
   }
 };
@@ -116,6 +119,7 @@ exports.createMarketerService = async ({
   try {
     // Check if ID document file was uploaded
     if (!idDocumentFile) {
+      logger.warn("ID Document File Not Provided");
       return Response.BAD_REQUEST({
         message:
           "Please Upload Identification Document File. Expected Document Format (*.pdf, *.jpg, *.jpeg, *.png)",
@@ -137,7 +141,7 @@ exports.createMarketerService = async ({
     // generate email verificaiton token
     const emailToken = generateMarketerVerificaitonJwt({ sub: referralCode });
 
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       // upload id document to cloud storage
       uploadFileToS3Bucket({
         fileName,
@@ -145,7 +149,7 @@ exports.createMarketerService = async ({
         mimetype: idDocumentFile?.mimetype,
       }),
       // create record in database
-      await createNewMarketer({
+      createNewMarketer({
         uuid,
         referralCode,
         firstName,
@@ -184,12 +188,17 @@ exports.createMarketerService = async ({
       }),
     ]);
 
+    if (results.some((result) => result.status === "rejected")) {
+      logger.error("Error creating marketer: ", results);
+      return Response.NOT_MODIFIED({});
+    }
+
     return Response.CREATED({
       message:
         "Marketer Created Successfully. Please provide further verificaiton instructions to marketer. ",
     });
   } catch (error) {
-    console.error("Service Error: ", error);
+    logger.error("createMarketerService: ", error);
     throw error;
   }
 };
@@ -197,6 +206,11 @@ exports.createMarketerService = async ({
 exports.verifyMarketerPhoneNumberService = async (token) => {
   try {
     const marketer = await getMarketerByVerficationToken(token);
+
+    if (!marketer) {
+      logger.warn("Marketer Not Found");
+      return Response.NOT_FOUND({ message: "Marketer Not Found" });
+    }
     const {
       marketer_id: marketerId,
       referral_code: referralCode,
@@ -204,7 +218,7 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
       phone_number: mobileNumber,
     } = marketer;
     const verifiedAt = new Date();
-    await Promise.all([
+    const results = await Promise.all([
       verifyMarketerPhoneById({
         marketerId,
         phoneNumber: mobileNumber,
@@ -217,11 +231,16 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
       }),
     ]);
 
+    if (results.some((result) => result.status === "rejected")) {
+      logger.error("Error Verifying Marketer Phone Number: ", results);
+      return Response.NOT_MODIFIED({});
+    }
+
     return Response.SUCCESS({
       message: "Marketer's Phone Number Verified Successfully",
     });
   } catch (error) {
-    console.error("Service Error: ", error);
+    logger.error("verifyMarketerPhoneNumberService: ", error);
     throw error;
   }
 };
@@ -234,17 +253,23 @@ exports.verifyMarketerEmailService = async (token) => {
     const { sub } = verifyMarketerEmailJwt(token);
 
     if (!sub) {
+      logger.warn("Invalid token");
       return Response.BAD_REQUEST({
         message: "Corrupted Email Verification Token",
       });
     }
 
     const verifiedAt = new Date();
-    await verifyMarketerEmailById({
+    const { affectedRows } = await verifyMarketerEmailById({
       marketerId,
       verifiedAt,
       email,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn("Fail to verify marketer email");
+      return Response.NOT_MODIFIED({});
+    }
 
     //  TODO Send Email to marketer
 
@@ -253,11 +278,9 @@ exports.verifyMarketerEmailService = async (token) => {
       message: "Email Verified Successfully",
     });
   } catch (error) {
-    console.error("Service Error: ", error);
+    logger.error("verifyMarketerEmailService: ", error);
     if (error.message === "jwt expired") {
-      throw Response.BAD_REQUEST({
-        message: "Email Verification Token Expired",
-      });
+      throw new Error("Email Verification Token Expired");
     }
     throw error;
   }
@@ -287,13 +310,14 @@ exports.updateMarketerByIdService = async ({
   try {
     const marketer = await getMarketerById(marketerId);
     if (!marketer) {
+      logger.warn("Marketer Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
 
     // delete old file if a new file is sent with the update request
-    if (idDocument) {
-      console.log("Id document was sent ");
-    }
+    // if (idDocument) {
+    //   console.log("Id document was sent ");
+    // }
     await updateMarketerById({
       marketerId,
       firstName,
@@ -317,7 +341,7 @@ exports.updateMarketerByIdService = async ({
     });
     return Response.SUCCESS({ message: "Successful" });
   } catch (error) {
-    console.error("Service Error: ", error);
+    logger.error("updateMarketerByIdService: ", error);
     throw error;
   }
 };
@@ -326,17 +350,26 @@ exports.deleteMarketerByIdService = async (id) => {
   try {
     const marketer = await getMarketerById(id);
     if (!marketer) {
+      logger.warn("Marketer Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const { id_document_uuid: idDocumentUuid } = marketer;
 
-    await Promise.all([
+    const results = await Promise.all([
       deleteFileFromS3Bucket(idDocumentUuid),
       deleteMarketerById(id),
     ]);
+
+    if (results.some((result) => result.status === "rejected")) {
+      logger.error(
+        "Failed to delete marketer:",
+        results.filter((r) => r.status === "rejected"),
+      );
+      return Response.NOT_MODIFIED({});
+    }
     return Response.SUCCESS({ message: "Marketer Deleted Successfully" });
   } catch (error) {
-    console.error("Service Error: ", error);
+    logger.error("deleteMarketerByIdService: ", error);
     throw error;
   }
 };

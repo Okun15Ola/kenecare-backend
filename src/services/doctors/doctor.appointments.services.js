@@ -33,6 +33,7 @@ exports.getDoctorAppointments = async ({
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error("Doctor profile not found for userId:", userId);
       return Response.NOT_FOUND({
         message:
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
@@ -61,6 +62,7 @@ exports.getDoctorAppointments = async ({
     });
 
     if (!rawData?.length) {
+      logger.warn("No appointments found for doctorId:", doctorId);
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
@@ -74,7 +76,7 @@ exports.getDoctorAppointments = async ({
     });
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorAppointments: ", error);
     throw error;
   }
 };
@@ -83,6 +85,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
+      logger.error("Doctor profile not found for userId:", userId);
       return Response.NOT_FOUND({
         message:
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
@@ -92,6 +95,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
     const { user_type: userType, doctor_id: doctorId, title } = doctor;
 
     if (userType !== USERTYPE.DOCTOR) {
+      logger.error("Unauthorized access attempt by userId:", userId);
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
@@ -107,6 +111,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
     });
 
     if (!rawData) {
+      logger.warn("Appointment not found for appointmentId:", id);
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
     const appointment = mapDoctorAppointmentRow(rawData, title);
@@ -127,7 +132,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
     });
     return Response.SUCCESS({ data: mapDoctorAppointment });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorAppointment: ", error);
     throw error;
   }
 };
@@ -162,6 +167,7 @@ exports.getDoctorAppointmentByDateRange = async ({
     });
 
     if (!rawData?.length) {
+      logger.warn("No appointments found for doctorId:", doctorId);
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
@@ -175,7 +181,7 @@ exports.getDoctorAppointmentByDateRange = async ({
     });
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorAppointmentByDateRange: ", error);
     throw error;
   }
 };
@@ -183,6 +189,14 @@ exports.getDoctorAppointmentByDateRange = async ({
 exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
+
+    if (!doctor) {
+      logger.error("Doctor profile not found for userId:", userId);
+      return Response.NOT_FOUND({
+        message:
+          "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
+      });
+    }
 
     const {
       doctor_id: doctorId,
@@ -194,6 +208,13 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       doctorId,
       appointmentId,
     });
+
+    if (!appointment) {
+      logger.warn("Appointment not found for appointmentId:", appointmentId);
+      return Response.NOT_FOUND({
+        message: "Appointment Not Found! Please Try Again!",
+      });
+    }
 
     // Extract patient id from appointment to get patient email
     const {
@@ -207,11 +228,19 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     } = appointment;
 
     if (appointmentStatus === "approved") {
+      logger.warn(
+        "Appointment already approved for appointmentId:",
+        appointmentId,
+      );
       return Response.SUCCESS({
         message: "Appointment has already been approved",
       });
     }
     if (appointmentStatus === "started") {
+      logger.warn(
+        "Appointment already started for appointmentId:",
+        appointmentId,
+      );
       return Response.SUCCESS({
         message: "Appointment meeting has already started",
       });
@@ -240,7 +269,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       message: "Medical Appointment Approved Successfully",
     });
   } catch (error) {
-    console.log(error);
+    logger.error("approveDoctorAppointment: ", error);
     throw error;
   }
 };
@@ -250,6 +279,7 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error("Doctor profile not found for userId:", userId);
       return Response.BAD_REQUEST({
         message: "Error Starting Appointment, please try again",
       });
@@ -266,25 +296,19 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
     });
 
     if (!appointment) {
+      logger.error("Appointment not found for appointmentId:", appointmentId);
       return Response.BAD_REQUEST({
         message: "Error Starting Appointment, please try again",
       });
     }
 
     // Extract patient id from appointment to get patient email
-    const {
-      appointment_uuid: appointmentUUID,
-      patient_id: patientId,
-      // first_name: firstName,
-      // last_name: lastName,
-      // patient_name_on_prescription: patientNameOnPrescription,
-      // appointment_date: appointmentDate,
-      // appointment_time: appointmentTime,
-      // appointment_status: appointmentStatus,
-    } = appointment;
+    const { appointment_uuid: appointmentUUID, patient_id: patientId } =
+      appointment;
 
     const ptnt = await getPatientById(patientId);
     if (!ptnt) {
+      logger.error("Patient not found for patientId:", patientId);
       return Response.BAD_REQUEST({
         message: "Error Starting Appointment, please try again",
       });
@@ -323,7 +347,7 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    logger.error("startDoctorAppointment: ", error);
     throw error;
   }
 };
@@ -332,6 +356,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
+      logger.error("Doctor profile not found for userId:", userId);
       return Response.UNAUTHORIZED({
         message: "Action can only be performed by a doctor",
       });
@@ -349,6 +374,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
 
     // Check if the appointment exists
     if (!appointment) {
+      logger.warn("Appointment not found for appointmentId:", appointmentId);
       return Response.NOT_FOUND({
         message: "Appointment Not Found! Please Try Again!",
       });
@@ -363,6 +389,10 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
     } = appointment;
 
     if (appointmentStatus === "completed") {
+      logger.warn(
+        "Appointment already completed for appointmentId:",
+        appointmentId,
+      );
       return Response.NOT_MODIFIED();
     }
 
@@ -387,8 +417,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       message: "Appointment Ended Successfully",
     });
   } catch (error) {
-    console.log(error);
-    logger.error("APPOINTMENT END ERROR:", error);
+    logger.error("endDoctorAppointment: ", error);
     throw error;
   }
 };
@@ -402,18 +431,21 @@ exports.cancelDoctorAppointment = async ({
     const user = await getUserById(userId);
 
     if (!user) {
+      logger.error("User not found for userId:", userId);
       return Response.NOT_FOUND({ message: "User Not Found" });
     }
 
     const { user_type: userType } = user;
 
     if (userType !== USERTYPE.DOCTOR) {
+      logger.error("Unauthorized access attempt by userId:", userId);
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error("Doctor profile not found for userId:", userId);
       return Response.NOT_FOUND({
         message:
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
@@ -423,6 +455,7 @@ exports.cancelDoctorAppointment = async ({
       doctor;
 
     if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
+      logger.error("Doctor's profile not approved for userId:", userId);
       return Response.UNAUTHORIZED({
         message:
           "Doctor's Profile has not been approved by admin. Please contact admin for profile approval and try again",
@@ -435,15 +468,20 @@ exports.cancelDoctorAppointment = async ({
       appointmentId,
     });
     if (!rawData) {
+      logger.warn("Appointment not found for appointmentId:", appointmentId);
       return Response.NOT_FOUND({ message: "Appointment Not Found" });
     }
 
     // Extract patient id from appointment to get patient email
-    const { patient_id: patientId, appointment_status: appointmentStatus } =
-      rawData;
+    const { appointment_status: appointmentStatus } = rawData;
 
-    console.log(patientId);
+    // patient_id: patientId,
+    // console.log(patientId);
     if (appointmentStatus === "canceled") {
+      logger.warn(
+        "Appointment already canceled for appointmentId:",
+        appointmentId,
+      );
       return Response.NOT_MODIFIED();
     }
 
@@ -451,11 +489,21 @@ exports.cancelDoctorAppointment = async ({
     // TODO Appointment's can only be cancelled 24 hours before the appointment date
 
     // UPDATE appointment status to 'approved'
-    await dbObject.cancelDoctorAppointmentById({
+    const { affectedRows } = await dbObject.cancelDoctorAppointmentById({
       appointmentId,
       doctorId,
       cancelReason,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        "Failed to cancel appointment for appointmentId:",
+        appointmentId,
+      );
+      return Response.BAD_REQUEST({
+        message: "Failed to cancel appointment. Please try again later.",
+      });
+    }
 
     // TODO Send a notification(email,sms) to the user
 
@@ -464,7 +512,7 @@ exports.cancelDoctorAppointment = async ({
         "Appointment Canceled Successfully. An email has been sent to the patient",
     });
   } catch (error) {
-    console.log(error);
+    logger.error("cancelDoctorAppointment: ", error);
     throw error;
   }
 };
@@ -479,18 +527,21 @@ exports.postponeDoctorAppointment = async ({
     const user = await getUserById(userId);
 
     if (!user) {
+      logger.error("User not found for userId:", userId);
       return Response.NOT_FOUND({ message: "User Not Found" });
     }
 
     const { user_type: userType } = user;
 
     if (userType !== USERTYPE.DOCTOR) {
+      logger.error("Unauthorized access attempt by userId:", userId);
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error("Doctor profile not found for userId:", userId);
       return Response.UNAUTHORIZED({
         message:
           "Unauthorized Access. This action can only be performed by a doctor",
@@ -504,6 +555,7 @@ exports.postponeDoctorAppointment = async ({
       appointmentId,
     });
     if (!rawData) {
+      logger.warn("Appointment not found for appointmentId:", appointmentId);
       return Response.NOT_FOUND({
         message: "Appointment Not Found",
       });
@@ -519,6 +571,10 @@ exports.postponeDoctorAppointment = async ({
     } = rawData;
 
     if (appointmentStatus === "postponed") {
+      logger.warn(
+        "Appointment already postponed for appointmentId:",
+        appointmentId,
+      );
       return Response.NOT_MODIFIED();
     }
 
@@ -530,6 +586,12 @@ exports.postponeDoctorAppointment = async ({
     });
 
     if (timeSlotBooked) {
+      logger.warn(
+        "Time slot already booked for date:",
+        postponedDate,
+        "and time:",
+        postponedTime,
+      );
       return Response.BAD_REQUEST({
         message:
           "An appointment has already been booked for the specified time on that date. Please choose another time.",
@@ -537,13 +599,23 @@ exports.postponeDoctorAppointment = async ({
     }
     const { mobile_number: mobileNumber } = await getPatientById(patientId);
     // UPDATE appointment status to 'approved'
-    await dbObject.postponeDoctorAppointmentById({
+    const { affectedRows } = await dbObject.postponeDoctorAppointmentById({
       postponedReason,
       postponedDate,
       postponedTime,
       appointmentId,
       doctorId,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        "Failed to postpone appointment for appointmentId:",
+        appointmentId,
+      );
+      return Response.BAD_REQUEST({
+        message: "Failed to postpone appointment. Please try again later.",
+      });
+    }
 
     // Send a notification(email,sms) to the user
     await appointmentPostponedSms({
@@ -560,7 +632,7 @@ exports.postponeDoctorAppointment = async ({
         "Appointment has been postponed successfully and user has been notified. Please ensure to complete appointment on the rescheduled date.",
     });
   } catch (error) {
-    console.log(error);
+    logger.error("postponeDoctorAppointment: ", error);
     throw error;
   }
 };

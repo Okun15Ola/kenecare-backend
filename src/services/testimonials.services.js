@@ -3,6 +3,7 @@ const Response = require("../utils/response.utils");
 const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapTestimonialRow } = require("../utils/db-mapper.utils");
+const logger = require("../middlewares/logger.middleware");
 
 exports.getTestimonials = async (limit, offset, paginationInfo) => {
   try {
@@ -15,8 +16,10 @@ exports.getTestimonials = async (limit, offset, paginationInfo) => {
       });
     }
     const rawData = await repo.getAllTestimonials(limit, offset);
-    if (!rawData?.length)
+    if (!rawData?.length) {
+      logger.warn("Testimonials Not Found");
       return Response.NOT_FOUND({ message: "Testimonials Not Found" });
+    }
 
     const testimonials = rawData
       .filter((t) => t.is_approved && t.is_active)
@@ -27,7 +30,7 @@ exports.getTestimonials = async (limit, offset, paginationInfo) => {
     });
     return Response.SUCCESS({ data: testimonials, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getTestimonials: ", error);
     return error;
   }
 };
@@ -42,6 +45,7 @@ exports.getTestimonialById = async (id) => {
     const rawData = await repo.getTestimonialById(id);
 
     if (!rawData) {
+      logger.warn(`Testimonial Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
 
@@ -52,23 +56,29 @@ exports.getTestimonialById = async (id) => {
     });
     return Response.SUCCESS({ data: testimonial });
   } catch (error) {
-    console.error(error);
+    logger.error("getTestimonialById: ", error);
     throw error;
   }
 };
 
 exports.createTestimonial = async ({ userId, patientId, content }) => {
   try {
-    // save to database
-    await repo.createNewTestimonial({
+    const { insertId } = await repo.createNewTestimonial({
       patientId,
       content,
       inputtedBy: userId,
     });
 
+    if (!insertId) {
+      logger.warn("Failed to create testimonial");
+      return Response.NOT_MODIFIED({ message: "Testimonial Not Created" });
+    }
+
+    await redisClient.clearCacheByPattern("testimonials:*");
+
     return Response.CREATED({ message: "Testimonial Created Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("createTestimonial: ", error);
     throw error;
   }
 };
@@ -78,16 +88,22 @@ exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
     const rawData = await repo.getTestimonialById(testimonialId);
 
     if (!rawData) {
+      logger.warn(`Testimonial Not Found for ID ${testimonialId}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
-    await repo.approveTestimonialById({
+    const { affectedRows } = await repo.approveTestimonialById({
       testimonialId,
       approvedBy,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to approve testimonial for ID ${testimonialId}`);
+      return Response.NOT_MODIFIED({});
+    }
+
     return Response.SUCCESS({ message: "Testimonial Approved Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("approveTestimonialById: ", error);
     throw error;
   }
 };
@@ -96,16 +112,22 @@ exports.denyTestimonialById = async ({ testimonialId, approvedBy }) => {
     const rawData = await repo.getTestimonialById(testimonialId);
 
     if (!rawData) {
+      logger.warn(`Testimonial Not Found for ID ${testimonialId}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
-    await repo.denyTestimonialById({
+    const { affectedRows } = await repo.denyTestimonialById({
       testimonialId,
       approvedBy,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to deny testimonial for ID ${testimonialId}`);
+      return Response.NOT_MODIFIED({});
+    }
+
     return Response.SUCCESS({ message: "Testimonial Denied Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("denyTestimonialById: ", error);
     throw error;
   }
 };
@@ -115,14 +137,21 @@ exports.deleteSpecialization = async (specializationId) => {
     const rawData = await repo.getSpecializationById(specializationId);
 
     if (!rawData) {
+      logger.warn(`Specialization Not Found for ID ${specializationId}`);
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
-    await repo.deleteSpecializationById(specializationId);
+    const { affectedRows } =
+      await repo.deleteSpecializationById(specializationId);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to delete Specialization for ID ${specializationId}`);
+      return Response.NOT_MODIFIED({});
+    }
 
     return Response.SUCCESS({ message: "Specialization Deleted Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("deleteSpecialization: ", error);
     throw error;
   }
 };

@@ -13,11 +13,13 @@ const {
 } = require("../../repository/doctor-wallet.repository");
 const { hashUsersPassword } = require("../../utils/auth.utils");
 const { adminWithdrawalRequestEmail } = require("../../utils/email.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getDoctorsWallet = async (userId) => {
   try {
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
+      logger.error(`Doctor not found for userId: ${userId}`);
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
 
@@ -48,7 +50,7 @@ exports.getDoctorsWallet = async (userId) => {
     };
     return Response.SUCCESS({ data });
   } catch (error) {
-    console.error("GET DOCTORS WALLET ERROR: ", error);
+    logger.error("getDoctorsWallet: ", error);
     throw error;
   }
 };
@@ -56,6 +58,7 @@ exports.updateDoctorWalletPin = async ({ userId, newPin }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
+      logger.error(`Doctor not found for userId: ${userId}`);
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
     const { doctor_id: doctorId } = doctor;
@@ -70,7 +73,7 @@ exports.updateDoctorWalletPin = async ({ userId, newPin }) => {
 
     return Response.SUCCESS({ message: "Wallet Pin Updated Successfully" });
   } catch (error) {
-    console.error("UPDATE WALLET PIN ERROR: ", error);
+    logger.error("updateDoctorWalletPin: ", error);
 
     throw error;
   }
@@ -87,6 +90,7 @@ exports.requestWithdrawal = async ({
   try {
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
+      logger.error(`Doctor not found for userId: ${userId}`);
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
     const {
@@ -96,6 +100,7 @@ exports.requestWithdrawal = async ({
     } = doctor;
     const wallet = await getWalletByDoctorId(doctorId);
     if (!wallet) {
+      logger.error(`Doctor's wallet not found for doctorId: ${doctorId}`);
       return Response.BAD_REQUEST({ message: "Doctor's Wallet Not Found" });
     }
     const { balance } = wallet;
@@ -104,6 +109,9 @@ exports.requestWithdrawal = async ({
     const currentBalance = parseFloat(balance);
 
     if (requestedWithdrawalAmount > currentBalance) {
+      logger.error(
+        `Insufficient balance for doctorId: ${doctorId}. Requested: ${requestedWithdrawalAmount}, Available: ${currentBalance}`,
+      );
       return Response.BAD_REQUEST({
         message: "Insufficient Wallet Balance. Withdrawal Request Failed",
       });
@@ -113,6 +121,9 @@ exports.requestWithdrawal = async ({
     const pendingRequest = await getWithdrawalRequestByDoctorId(doctorId);
 
     if (pendingRequest) {
+      logger.error(
+        `Pending withdrawal request found for doctorId: ${doctorId}. Cannot request another withdrawal.`,
+      );
       return Response.BAD_REQUEST({
         message:
           "Cannot Request Withdrawal at this moment, you have a pending request that needs approval before you can request another withdrawal",
@@ -127,6 +138,9 @@ exports.requestWithdrawal = async ({
     });
     //  check maximum request per day
     if (requestsForToday.length >= 3) {
+      logger.error(
+        `Exceeded daily maximum withdrawal requests for doctorId: ${doctorId}. Requests today: ${requestsForToday.length}`,
+      );
       return Response.BAD_REQUEST({
         message:
           "Exceeded Daily Maximum Withdrawal Request. Please Try Again Tomorrow",
@@ -158,7 +172,7 @@ exports.requestWithdrawal = async ({
       message: "Withdrawal Requested Successfully, Awaiting Approval",
     });
   } catch (error) {
-    console.error("REQUEST WITHDRAWAL ERROR: ", error);
+    logger.error("requestWithdrawal: ", error);
     throw error;
   }
 };

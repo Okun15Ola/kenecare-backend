@@ -5,6 +5,7 @@ const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapBlogRow } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getBlogs = async (limit, offset, paginationInfo) => {
   try {
@@ -19,6 +20,7 @@ exports.getBlogs = async (limit, offset, paginationInfo) => {
     const rawData = await dbObject.getAllBlogs(limit, offset);
 
     if (!rawData?.length) {
+      logger.warn("Blogs Not Found");
       return Response.NOT_FOUND({ message: "Blogs Not Found" });
     }
 
@@ -31,7 +33,7 @@ exports.getBlogs = async (limit, offset, paginationInfo) => {
 
     return Response.SUCCESS({ data: blogs, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getBlogs: ", error);
     throw error;
   }
 };
@@ -45,6 +47,7 @@ exports.getBlog = async (id) => {
     }
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
+      logger.warn(`Blog Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     const blog = await mapBlogRow(rawData);
@@ -55,7 +58,7 @@ exports.getBlog = async (id) => {
     });
     return Response.SUCCESS({ data: blog });
   } catch (error) {
-    console.error(error);
+    logger.error("getBlog: ", error);
     throw error;
   }
 };
@@ -70,6 +73,7 @@ exports.createBlog = async ({
 }) => {
   try {
     if (!file) {
+      logger.error("Blog image is required");
       return Response.BAD_REQUEST({ message: "Please upload a blog image" });
     }
 
@@ -81,12 +85,13 @@ exports.createBlog = async ({
       mimetype: file.mimetype,
     });
     if ($metadata.httpStatusCode !== 200) {
+      logger.error("Error uploading blog image to S3");
       return Response.INTERNAL_SERVER_ERROR({
         message: "Error Creating New Blog. Please try again",
       });
     }
 
-    await dbObject.createNewBlog({
+    const { insertId } = await dbObject.createNewBlog({
       category,
       title,
       content,
@@ -95,9 +100,17 @@ exports.createBlog = async ({
       featured,
       inputtedBy,
     });
+
+    if (!insertId) {
+      logger.warn("Failed to create blog");
+      return Response.NOT_MODIFIED({ message: "Blog Not Created" });
+    }
+
+    // clear cache
+    await redisClient.clearCacheByPattern("blogs:*");
     return Response.CREATED({ message: "Blog Created Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("createBlog: ", error);
     throw error;
   }
 };
@@ -113,6 +126,7 @@ exports.updateBlog = async ({
   try {
     const blog = await dbObject.getBlogById(id);
     if (!blog) {
+      logger.warn(`Blog Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
 
@@ -129,7 +143,7 @@ exports.updateBlog = async ({
       }
     }
 
-    await dbObject.updateBlogById({
+    const { affectedRows } = await dbObject.updateBlogById({
       id,
       category,
       title,
@@ -138,9 +152,18 @@ exports.updateBlog = async ({
       file: fileName,
       featured,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update blog for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    // clear cache
+    await redisClient.clearCacheByPattern("blogs:*");
+
     return Response.SUCCESS({ message: "Blog Updated Succcessfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("updateBlog: ", error);
     throw error;
   }
 };
@@ -148,12 +171,25 @@ exports.updateBlogStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
+      logger.warn("Blog Not Found");
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
-    await dbObject.updateBlogStatusById({ id, status });
+    const { affectedRows } = await dbObject.updateBlogStatusById({
+      id,
+      status,
+    });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update blog status for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    // clear cache
+    await redisClient.clearCacheByPattern("blogs:*");
+
     return Response.SUCCESS({ message: "Blog Status Updated Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("updateBlogStatus: ", error);
     throw error;
   }
 };
@@ -161,14 +197,26 @@ exports.updateBlogFeaturedStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
+      logger.warn("Blog Not Found");
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
-    await dbObject.updateBlogFeaturedById({ id, status });
+    const { affectedRows } = await dbObject.updateBlogFeaturedById({
+      id,
+      status,
+    });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update blog featured status for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    // clear cache
+    await redisClient.delete(`blogs:${id}`);
     return Response.SUCCESS({
       message: "Blog Featured Status Updated Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateBlogFeaturedStatus: ", error);
     throw error;
   }
 };
@@ -176,12 +224,22 @@ exports.deleteBlog = async (id) => {
   try {
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
+      logger.warn(`Blog Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
-    await dbObject.deleteBlogById(id);
+    const { affectedRows } = await dbObject.deleteBlogById(id);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to delete blog for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    // clear cache
+    await redisClient.clearCacheByPattern("blogs:*");
+    await redisClient.delete(`blogs:${id}`);
     return Response.SUCCESS({ message: "Blog Deleted Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("deleteBlog: ", error);
     throw error;
   }
 };

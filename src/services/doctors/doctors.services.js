@@ -22,6 +22,7 @@ const {
 } = require("../../utils/db-mapper.utils");
 const { redisClient } = require("../../config/redis.config");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getAllDoctors = async (limit, offset, paginationInfo) => {
   try {
@@ -37,6 +38,7 @@ exports.getAllDoctors = async (limit, offset, paginationInfo) => {
     const rawData = await dbObject.getAllDoctors(limit, offset);
 
     if (!rawData?.length) {
+      logger.error("No doctors found in the database.");
       return Response.NOT_FOUND({ message: "Doctors not found" });
     }
 
@@ -49,7 +51,7 @@ exports.getAllDoctors = async (limit, offset, paginationInfo) => {
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getAllDoctors: ", error);
     throw error;
   }
 };
@@ -81,6 +83,7 @@ exports.getDoctorByQuery = async (
     });
 
     if (!rawData?.length) {
+      logger.error("No doctors found for the given query.");
       return Response.NOT_FOUND({ message: "Doctors not found" });
     }
 
@@ -93,7 +96,7 @@ exports.getDoctorByQuery = async (
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorByQuery: ", error);
     throw error;
   }
 };
@@ -123,6 +126,7 @@ exports.getDoctorBySpecialtyId = async (
     );
 
     if (!rawData?.length) {
+      logger.error("No doctors found for the given specialty ID.");
       return Response.NOT_FOUND({ message: "Doctors not found" });
     }
 
@@ -135,7 +139,7 @@ exports.getDoctorBySpecialtyId = async (
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorBySpecialtyId: ", error);
     throw error;
   }
 };
@@ -152,12 +156,16 @@ exports.getDoctorByUser = async (id) => {
     const rawData = await dbObject.getDoctorByUserId(id);
 
     if (!rawData) {
+      logger.error(`Doctor profile not found for userId: ${id}`);
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
     const doctor = mapDoctorUserProfileRow(rawData);
 
     if (id !== doctor.userId || doctor.userType !== USERTYPE.DOCTOR) {
+      logger.error(
+        `Unauthorized access attempt by userId: ${id} for doctorId: ${doctor.doctorId}`,
+      );
       return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
     }
 
@@ -168,7 +176,7 @@ exports.getDoctorByUser = async (id) => {
 
     return Response.SUCCESS({ data: doctor });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorByUser: ", error);
     throw error;
   }
 };
@@ -185,6 +193,7 @@ exports.getDoctorById = async (id) => {
     const data = await dbObject.getDoctorById(id);
 
     if (!data) {
+      logger.error(`Doctor not found for ID: ${id}`);
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
 
@@ -197,7 +206,7 @@ exports.getDoctorById = async (id) => {
 
     return Response.SUCCESS({ data: doctor });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorById: ", error);
     throw error;
   }
 };
@@ -219,6 +228,7 @@ exports.createDoctorProfile = async ({
   try {
     const user = await getUserById(userId);
     if (!user) {
+      logger.error(`User not found for ID: ${userId}`);
       return Response.NOT_FOUND({
         message: "Error Creating Doctor Profile, please try again!",
       });
@@ -226,6 +236,9 @@ exports.createDoctorProfile = async ({
     const { user_type: userType } = user;
 
     if (userType !== USERTYPE.DOCTOR) {
+      logger.error(
+        `Unauthorized action by userId: ${userId}. User type: ${userType}`,
+      );
       return Response.UNAUTHORIZED({
         message:
           "Unauthorized action, you must register as a doctor to create a doctor profile",
@@ -233,12 +246,15 @@ exports.createDoctorProfile = async ({
     }
     const doctorExist = await dbObject.getDoctorByUserId(userId);
     if (doctorExist) {
+      logger.error(
+        `Doctor profile already exists for userId: ${userId}. Cannot create a new profile.`,
+      );
       return Response.BAD_REQUEST({
         message: "Doctor Profile already exist for this user",
       });
     }
 
-    const profileCreated = await dbObject.createDoctor({
+    const { insertId } = await dbObject.createDoctor({
       userId,
       title,
       firstName,
@@ -253,6 +269,13 @@ exports.createDoctorProfile = async ({
       yearOfExperience,
     });
 
+    if (!insertId) {
+      logger.error(`Failed to create doctor profile for userId: ${userId}`);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Creating Doctor Profile, please try again!",
+      });
+    }
+
     // Send Email to admins
     await adminDoctorProfileRegistrationEmail({
       doctorName: `${firstName} ${middleName} ${lastName}`,
@@ -260,16 +283,18 @@ exports.createDoctorProfile = async ({
 
     const hashedPin = await hashUsersPassword("1234");
     await createDoctorWallet({
-      doctorId: profileCreated.insertId,
+      doctorId: insertId,
       pin: hashedPin,
     });
+
+    await redisClient.clearCacheByPattern("doctors:*");
 
     return Response.CREATED({
       message:
         "Doctor profile created successfully. Please proceed to submitting Medical Council Registration Information.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createDoctorProfile: ", error);
     throw error;
   }
 };
@@ -292,6 +317,7 @@ exports.updateDoctorProfile = async ({
     const doctor = await dbObject.getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error(`Doctor profile not found for userId: ${userId}`);
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
@@ -304,6 +330,9 @@ exports.updateDoctorProfile = async ({
 
     // check if the logged in user is of type 'doctor'
     if (userType !== USERTYPE.DOCTOR) {
+      logger.error(
+        `Unauthorized action by userId: ${userId}. User type: ${userType}`,
+      );
       return Response.UNAUTHORIZED({
         message:
           "Unauthorized action, you must register as a doctor to create a doctor profile",
@@ -312,19 +341,25 @@ exports.updateDoctorProfile = async ({
 
     // Check if the profile is active
     if (isAccountActive !== STATUS.ACTIVE) {
+      logger.error(
+        `Doctor profile is not active for userId: ${userId}. Status: ${isAccountActive}`,
+      );
       return Response.UNAUTHORIZED({
         message: "Doctor Profile has been deactivated. Please Contact Admin",
       });
     }
 
     if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
+      logger.error(
+        `Doctor profile is not approved for userId: ${userId}. Status: ${isProfileApproved}`,
+      );
       return Response.UNAUTHORIZED({
         message:
           "Requested Doctor Profile has not been approved. Please contact admin for further information",
       });
     }
 
-    await dbObject.updateDoctorById({
+    const { affectedRows } = await dbObject.updateDoctorById({
       doctorId,
       title,
       firstName,
@@ -339,11 +374,18 @@ exports.updateDoctorProfile = async ({
       yearOfExperience,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(`Failed to update doctor profile for userId: ${userId}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.clearCacheByPattern("doctors:*");
+
     return Response.SUCCESS({
       message: "Doctor profile updated successfully.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateDoctorProfile: ", error);
     throw error;
   }
 };
@@ -351,6 +393,7 @@ exports.updateDoctorProfilePicture = async ({ userId, imageUrl }) => {
   try {
     const doctor = await dbObject.getDoctorByUserId(userId);
     if (!doctor) {
+      logger.error(`Doctor profile not found for userId: ${userId}`);
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
     const { doctor_id: doctorId, profile_pic_url: profilePicUrl } = doctor;
@@ -367,16 +410,24 @@ exports.updateDoctorProfilePicture = async ({ userId, imageUrl }) => {
       }
     }
 
-    await dbObject.updateDoctorProfilePictureById({
+    const { affectedRows } = await dbObject.updateDoctorProfilePictureById({
       doctorId,
       imageUrl,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        `Failed to update profile picture for doctorId: ${doctorId}`,
+      );
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.clearCacheByPattern("doctors:*");
     return Response.SUCCESS({
       message: "Doctor's profile picture updated successfully.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateDoctorProfilePicture: ", error);
     throw error;
   }
 };
@@ -385,6 +436,7 @@ exports.approveDoctorProfile = async ({ doctorId, approvedBy }) => {
   try {
     const doctor = await dbObject.getDoctorById(doctorId);
     if (!doctor) {
+      logger.error(`Doctor not found for ID: ${doctorId}`);
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
 
@@ -396,6 +448,7 @@ exports.approveDoctorProfile = async ({ doctorId, approvedBy }) => {
     } = doctor;
 
     if (isProfileApproved) {
+      logger.warn(`Doctor profile with ID ${doctorId} is already approved.`);
       return Response.NOT_MODIFIED();
     }
 
@@ -411,7 +464,7 @@ exports.approveDoctorProfile = async ({ doctorId, approvedBy }) => {
       message: "Doctor profile approved successfully.",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("approveDoctorProfile: ", error);
     throw error;
   }
 };

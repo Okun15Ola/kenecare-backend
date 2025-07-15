@@ -6,6 +6,7 @@ const Response = require("../../utils/response.utils");
 const { getDoctorByUserId } = require("../../repository/doctors.repository");
 const { redisClient } = require("../../config/redis.config");
 const { mapDoctorSharedMedicalDocs } = require("../../utils/db-mapper.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {
   try {
@@ -18,6 +19,7 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error(`Doctor profile not found for userId: ${userId}`);
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
@@ -26,6 +28,9 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
     const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
 
     if (!rawData?.length) {
+      logger.error(
+        `No shared medical documents found for doctorId: ${doctorId}`,
+      );
       return Response.NOT_FOUND({
         message: "Shared Medical Document Not Found.",
       });
@@ -40,7 +45,7 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
     });
     return Response.SUCCESS({ data: sharedMedicalDocuments });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorSharedMedicalDocuments: ", error);
     throw error;
   }
 };
@@ -55,6 +60,7 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error(`Doctor profile not found for userId: ${userId}`);
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
     const { doctor_id: doctorId, title } = doctor;
@@ -65,6 +71,9 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
     });
 
     if (!document) {
+      logger.error(
+        `Shared Medical Document not found for doctorId: ${doctorId} and sharedDocId: ${sharedDocId}`,
+      );
       return Response.NOT_FOUND({
         message: "Shared Medical Document Not Found.",
       });
@@ -82,7 +91,7 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
 
     return Response.SUCCESS({ data: sharedMedicalDocument });
   } catch (error) {
-    console.error(error);
+    logger.error("getDoctorSharedMedicalDocument: ", error);
     throw error;
   }
 };

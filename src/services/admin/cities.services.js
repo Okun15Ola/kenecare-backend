@@ -3,6 +3,7 @@ const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapCityRow } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getCities = async (limit, offset, paginationInfo) => {
   try {
@@ -16,6 +17,7 @@ exports.getCities = async (limit, offset, paginationInfo) => {
     }
     const [rawData] = await dbObject.getAllCities(limit, offset);
     if (!rawData?.length) {
+      logger.warn("Cities Not Found");
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
 
@@ -27,7 +29,7 @@ exports.getCities = async (limit, offset, paginationInfo) => {
     });
     return Response.SUCCESS({ data: cities, pagination: paginationInfo });
   } catch (error) {
-    console.error(error);
+    logger.error("getCities: ", error);
     throw error;
   }
 };
@@ -41,6 +43,7 @@ exports.getCity = async (id) => {
     }
     const [rawData] = await dbObject.getCityById(id);
     if (!rawData) {
+      logger.warn(`City Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
     const city = mapCityRow(rawData);
@@ -51,7 +54,7 @@ exports.getCity = async (id) => {
     });
     return Response.SUCCESS({ data: city });
   } catch (error) {
-    console.error(error);
+    logger.error("getCity: ", error);
     throw error;
   }
 };
@@ -65,6 +68,7 @@ exports.getCityByName = async (name) => {
     }
     const rawData = await dbObject.getCityByName(name);
     if (!rawData) {
+      logger.warn(`City Not Found for Name ${name}`);
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
     const city = mapCityRow(rawData);
@@ -75,23 +79,31 @@ exports.getCityByName = async (name) => {
     });
     return Response.SUCCESS({ data: city });
   } catch (error) {
-    console.error(error);
+    logger.error("getCityByName: ", error);
     throw error;
   }
 };
 
 exports.createCity = async ({ name, latitude, longitude, inputtedBy }) => {
   try {
-    await dbObject.createNewCity({
+    const { insertId } = await dbObject.createNewCity({
       name,
       latitude,
       longitude,
       inputtedBy,
     });
 
+    if (!insertId) {
+      logger.warn("Failed to create city");
+      return Response.NOT_MODIFIED({ message: "City Not Created" });
+    }
+
+    // clear cache
+    await redisClient.clearCacheByPattern("cities:*");
+
     return Response.CREATED({ message: "City Created Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("createCity: ", error);
     throw error;
   }
 };
@@ -100,17 +112,23 @@ exports.updateCity = async ({ id, name, latitude, longitude }) => {
   try {
     const rawData = await dbObject.getCityById(id);
     if (!rawData) {
+      logger.warn(`City Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
-    await dbObject.updateCityById({
+    const { affectedRows } = await dbObject.updateCityById({
       id,
       name,
       latitude,
       longitude,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn("Failed to update city");
+      return Response.NOT_MODIFIED({});
+    }
     return Response.SUCCESS({ message: "City Updated Succcessfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("updateCity: ", error);
     throw error;
   }
 };
@@ -119,12 +137,24 @@ exports.updateCityStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getCityById(id);
     if (!rawData) {
+      logger.warn(`City Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
-    await dbObject.updateCityStatusById({ id, status });
+    const { affectedRows } = await dbObject.updateCityStatusById({
+      id,
+      status,
+    });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update city status for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    // clear cache
+    await redisClient.clearCacheByPattern("cities:*");
     return Response.SUCCESS({ message: "City Status Updated Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("updateCityStatus: ", error);
     throw error;
   }
 };
@@ -133,12 +163,20 @@ exports.deleteCity = async (id) => {
   try {
     const rawData = await dbObject.getCityById(id);
     if (!rawData) {
+      logger.warn(`City Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
-    await dbObject.deleteCityById(id);
+    const { affectedRows } = await dbObject.deleteCityById(id);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to delete city for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+    // clear cache
+    await redisClient.clearCacheByPattern("cities:*");
     return Response.SUCCESS({ message: "City Deleted Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("deleteCity: ", error);
     throw error;
   }
 };

@@ -3,58 +3,40 @@ const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapSpecializationRow } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
-/**
- * Retrieve a list of specializations from the database and transform the data.
- *
- * @async
- * @function getSpecializations
- * @returns {Promise<Array>} An array of objects, each representing a specialization.
- * @throws {Error} If there's an issue retrieving the data from the database.
- *
- * @example
- * const specializations = await getSpecializations();
- * // Returns an array of specialization objects.
- */
 exports.getSpecializations = async (limit, offset, paginationInfo) => {
-  const cacheKey = cacheKeyBulider("specializations:all", limit, offset);
-  const cachedData = await redisClient.get(cacheKey);
-  if (cachedData) {
+  try {
+    const cacheKey = cacheKeyBulider("specializations:all", limit, offset);
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
+    }
+    const rawData = await dbObject.getAllSpecialization(limit, offset);
+
+    if (!rawData) {
+      logger.warn("Specialization Not Found");
+      return Response.NOT_FOUND({ message: "Specialization Not Found" });
+    }
+
+    const specializations = rawData.map(mapSpecializationRow);
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(specializations),
+    });
     return Response.SUCCESS({
-      data: JSON.parse(cachedData),
+      data: specializations,
       pagination: paginationInfo,
     });
+  } catch (error) {
+    logger.error("getSpecializations: ", error);
+    throw error;
   }
-  const rawData = await dbObject.getAllSpecialization(limit, offset);
-
-  if (!rawData) {
-    return Response.NOT_FOUND({ message: "Specialization Not Found" });
-  }
-
-  const specializations = rawData.map(mapSpecializationRow);
-  await redisClient.set({
-    key: cacheKey,
-    value: JSON.stringify(specializations),
-  });
-  return Response.SUCCESS({
-    data: specializations,
-    pagination: paginationInfo,
-  });
 };
 
-/**
- * Retrieve a specialization by its unique name from the database and transform the data.
- *
- * @async
- * @function getSpecializationByName
- * @param {string} name - The unique name of the specialization to retrieve.
- * @returns {Promise<object>} An object representing the specialization with the provided Name.
- * @throws {Error} If there's an issue retrieving the data from the database.
- *
- * @example
- * const specialization = await getSpecializationByName("dermatologist");
- * // Returns an object representing the specialization with Name "dermatologist".
- */
 exports.getSpecializationByName = async (name) => {
   try {
     const cacheKey = `specializations:${name}`;
@@ -65,6 +47,7 @@ exports.getSpecializationByName = async (name) => {
     const rawData = await dbObject.getSpecializationByName(name);
 
     if (!rawData) {
+      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
@@ -76,24 +59,11 @@ exports.getSpecializationByName = async (name) => {
     });
     return Response.SUCCESS({ data: specialization });
   } catch (error) {
-    console.error(error);
+    logger.error("getSpecializationByName: ", error);
     throw error;
   }
 };
 
-/**
- * Retrieve a specialization by its unique identifier from the database and transform the data.
- *
- * @async
- * @function getSpecializationById
- * @param {number} id - The unique identifier of the specialization to retrieve.
- * @returns {Promise<object>} An object representing the specialization with the provided ID.
- * @throws {Error} If there's an issue retrieving the data from the database.
- *
- * @example
- * const specialization = await getSpecializationById(123);
- * // Returns an object representing the specialization with ID 123.
- */
 exports.getSpecializationById = async (id) => {
   try {
     const cacheKey = `specializations:${id}`;
@@ -104,6 +74,7 @@ exports.getSpecializationById = async (id) => {
     const rawData = await dbObject.getSpecializationById(id);
 
     if (!rawData) {
+      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
     const specialization = mapSpecializationRow(rawData);
@@ -114,40 +85,16 @@ exports.getSpecializationById = async (id) => {
     });
     return Response.SUCCESS({ data: specialization });
   } catch (error) {
-    console.error(error);
+    logger.error("getSpecializationById: ", error);
     throw error;
   }
 };
 
-/**
- * Create a new specialization in the database.
- *
- * @async
- * @function createSpecialization
- * @param {Object} specializationData - The data for the new specialization.
- * @param {string} specializationData.name - The name of the specialization.
- * @param {string} [specializationData.description=""] - Optional description for the specialization.
- * @param {string} specializationData.image_url - The URL of the image associated with the specialization.
- * @returns {Promise<void>} A promise that resolves when the specialization is successfully created.
- * @throws {Error} If there's an issue with the database operation.
- *
- * @example
- * const specializationData = {
- *   name: "Cardiology",
- *   description: "Dealing with heart-related issues",
- *   image_url: "https://example.com/cardiology.jpg"
- * };
- *
- * try {
- *   await createSpecialization(specializationData);
- * } catch (error) {
- *   console.error("Error creating specialization:", error);
- * }
- */
 exports.createSpecialization = async ({ name, description, imageUrl }) => {
   try {
     const rawData = await dbObject.getSpecializationByName(name);
     if (rawData) {
+      logger.warn("Specialization Name already exists");
       return Response.BAD_REQUEST({
         message: "Specialization Name already exists",
       });
@@ -161,11 +108,16 @@ exports.createSpecialization = async ({ name, description, imageUrl }) => {
     };
 
     // save to database
-    await dbObject.createNewSpecialization(specialization);
+    const { insertId } = await dbObject.createNewSpecialization(specialization);
+
+    if (!insertId) {
+      logger.warn("Fail to create specialization");
+      return Response.NO_CONTENT({});
+    }
 
     return Response.CREATED({ message: "Specialization Created Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("createSpecialization: ", error);
     throw error;
   }
 };
@@ -175,16 +127,22 @@ exports.updateSpecialization = async ({ specializationId, specialization }) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
+      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
-    await dbObject.updateSpecializationById({
+    const { affectedRows } = await dbObject.updateSpecializationById({
       id: specializationId,
       specialization,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.error("No rows affected during update for ID:", specializationId);
+      return Response.NOT_MODIFIED({});
+    }
+
     return Response.SUCCESS({ message: "Specialization Updated Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("updateSpecialization: ", error);
     throw error;
   }
 };
@@ -193,6 +151,7 @@ exports.updateSpecializationStatus = async ({ specializationId, status }) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
+      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
@@ -200,16 +159,21 @@ exports.updateSpecializationStatus = async ({ specializationId, status }) => {
       return Response.BAD_REQUEST({ message: "Invalid Status Code" });
     }
 
-    await dbObject.updateSpecializationStatusById({
+    const { affectedRows } = await dbObject.updateSpecializationStatusById({
       specializationId,
       status,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error("No rows affected during update for ID:", specializationId);
+      return Response.NOT_MODIFIED({});
+    }
 
     return Response.SUCCESS({
       message: "Specialization Status Updated Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateSpecializationStatus: ", error);
     throw error;
   }
 };
@@ -219,14 +183,24 @@ exports.deleteSpecialization = async (specializationId) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
+      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
-    await dbObject.deleteSpecializationById(specializationId);
+    const { affectedRows } =
+      await dbObject.deleteSpecializationById(specializationId);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        "No rows affected during deletion for ID:",
+        specializationId,
+      );
+      return Response.NOT_MODIFIED({});
+    }
 
     return Response.SUCCESS({ message: "Specialization Deleted Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("deleteSpecialization: ", error);
     throw error;
   }
 };

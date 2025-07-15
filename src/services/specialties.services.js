@@ -6,6 +6,7 @@ const { deleteFile } = require("../utils/file-upload.utils");
 const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapSpecialityRow } = require("../utils/db-mapper.utils");
+const logger = require("../middlewares/logger.middleware");
 
 exports.getSpecialties = async (limit, offset, paginationInfo) => {
   try {
@@ -16,6 +17,7 @@ exports.getSpecialties = async (limit, offset, paginationInfo) => {
     }
     const rawData = await repo.getAllSpecialties(limit, offset);
     if (!rawData?.length) {
+      logger.warn("Specialties Not Found");
       return Response.NOT_FOUND({ message: "Speciality Not Found" });
     }
     const specialties = rawData.map(mapSpecialityRow);
@@ -25,7 +27,7 @@ exports.getSpecialties = async (limit, offset, paginationInfo) => {
     });
     return Response.SUCCESS({ data: specialties, pagination: paginationInfo });
   } catch (error) {
-    console.error("GET ALL SPECIALTIES ERROR: ", error);
+    logger.error("getSpecialties: ", error);
     throw error;
   }
 };
@@ -40,6 +42,7 @@ exports.getSpecialtyByName = async (name) => {
     const rawData = await repo.getSpecialtyByName(name);
 
     if (!rawData) {
+      logger.warn(`Specialty Not Found for Name ${name}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
@@ -50,7 +53,7 @@ exports.getSpecialtyByName = async (name) => {
     });
     return Response.SUCCESS({ data: specialty });
   } catch (error) {
-    console.error(error);
+    logger.error("getSpecialtyByName: ", error);
     throw error;
   }
 };
@@ -65,6 +68,7 @@ exports.getSpecialtyById = async (id) => {
     const rawData = await repo.getSpecialtiyById(id);
 
     if (!rawData) {
+      logger.warn(`Specialty Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
@@ -75,24 +79,30 @@ exports.getSpecialtyById = async (id) => {
     });
     return Response.SUCCESS({ data: specialty });
   } catch (error) {
-    console.error(error);
+    logger.error("getSpecialtyById: ", error);
     throw error;
   }
 };
 
 exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
   try {
-    // save to database
-    await repo.createNewSpecialty({
+    const { insertId } = await repo.createNewSpecialty({
       name,
       description,
       image,
       inputtedBy,
     });
 
+    if (!insertId) {
+      logger.warn("Failed to create specialty");
+      return Response.BAD_REQUEST({ message: "Failed to create specialty" });
+    }
+
+    await redisClient.clearCacheByPattern("specialties:*");
+
     return Response.CREATED({ message: "Specialty Created Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("createSpecialty: ", error);
     throw error;
   }
 };
@@ -100,7 +110,10 @@ exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
 exports.updateSpecialty = async ({ id, name, image, description }) => {
   try {
     const rawData = await repo.getSpecialtiyById(id);
-    if (!rawData) return null;
+    if (!rawData) {
+      logger.warn(`Specialty Not Found for ID ${id}`);
+      return Response.NOT_FOUND({ message: "Specialty Not Found" });
+    }
 
     const { image_url: imageUrl } = rawData;
 
@@ -108,35 +121,52 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
       const file = path.join(__dirname, "../public/upload/media/", imageUrl);
       await deleteFile(file);
     }
-    await repo.updateSpecialtiyById({
+    const { affectedRows } = await repo.updateSpecialtiyById({
       id,
       name,
       image,
       description,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update specialty for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    const cacheKey = `specialties:${id}`;
+    await redisClient.delete(cacheKey);
+
     return Response.SUCCESS({ message: "Specialty Updated Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("updateSpecialty: ", error);
     throw error;
   }
 };
 exports.updateSpecialtyStatus = async ({ id, status }) => {
   try {
     if (!Number.isInteger(status) || status < 0 || status > 1) {
+      logger.warn(`Invalid Status Code: ${status}`);
       return Response.BAD_REQUEST({ message: "Invalid Status Code" });
     }
 
-    await repo.updateSpecialtiyStatusById({
+    const { affectedRows } = await repo.updateSpecialtiyStatusById({
       id,
       status,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update specialty status for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    const cacheKey = `specialties:${id}`;
+    await redisClient.delete(cacheKey);
 
     return Response.SUCCESS({
       message: "Specialty Status Updated Successfully",
     });
   } catch (error) {
-    console.error("Error updating specialty status: ", error);
+    logger.error("updateSpecialtyStatus: ", error);
     throw error;
   }
 };
@@ -149,11 +179,16 @@ exports.deleteSpecialty = async (id) => {
       fs.unlinkSync(file);
     }
 
-    await repo.deleteSpecialtieById(id);
+    const { affectedRows } = await repo.deleteSpecialtieById(id);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to delete specialty for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
 
     return Response.SUCCESS({ message: "Specialty Deleted Successfully" });
   } catch (error) {
-    console.error("Error deleting specialty: ", error);
+    logger.error("deleteSpecialty: ", error);
     throw error;
   }
 };

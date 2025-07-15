@@ -18,6 +18,7 @@ const { getPatientById } = require("../repository/patients.repository");
 const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapPrescriptionRow } = require("../utils/db-mapper.utils");
+const logger = require("../middlewares/logger.middleware");
 
 exports.getAppointmentPrescriptions = async (
   id,
@@ -41,6 +42,7 @@ exports.getAppointmentPrescriptions = async (
     const rawData = await getAppointmentPrescriptions(limit, offset, id);
 
     if (!rawData?.length) {
+      logger.warn(`Prescription Not Found for Appointment ID ${id}`);
       return Response.NOT_FOUND({ message: "Presciption Not Found" });
     }
 
@@ -55,7 +57,7 @@ exports.getAppointmentPrescriptions = async (
       pagination: paginationInfo,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("getAppointmentPrescriptions: ", error);
     throw error;
   }
 };
@@ -70,17 +72,14 @@ exports.getAppointmentPrescriptionById = async (id) => {
     const prescriptionExist = await getAppointmentPrescriptionById(id);
 
     if (!prescriptionExist) {
+      logger.warn(`Prescription Not Found for ID ${id}`);
       return Response.NOT_FOUND({
         message: "Prescription Not Found. Try again",
       });
     }
     const { access_jwt: hashedToken } = prescriptionExist;
 
-    // //TODO Check accesstoken
-    // const isTokenMatch = await comparePassword({
-    //   plainPassword: accessToken,
-    //   hashedPassword: hashedToken,
-    // });
+    // Check accesstoken
 
     const prescription = mapPrescriptionRow(
       prescriptionExist,
@@ -96,7 +95,7 @@ exports.getAppointmentPrescriptionById = async (id) => {
 
     return Response.SUCCESS({ data: prescription });
   } catch (error) {
-    console.error(error);
+    logger.error("getAppointmentPrescriptionById: ", error);
     throw error;
   }
 };
@@ -113,6 +112,7 @@ exports.createPrescription = async ({
     const appointment = await getAppointmentByID(appointmentId);
 
     if (!appointment) {
+      logger.warn(`Appointment Not Found for ID ${appointmentId}`);
       return Response.NOT_FOUND({
         message: "Appointment Not Found! Please Try again",
       });
@@ -134,7 +134,7 @@ exports.createPrescription = async ({
     const encComment = encryptText(comment, hashedToken);
 
     // Save encrypted prescription with access token in database
-    await createAppointmentPrescriptions({
+    const { insertId } = await createAppointmentPrescriptions({
       appointmentId,
       diagnosis: encDiagnosis,
       medicines: encMedicines,
@@ -142,17 +142,28 @@ exports.createPrescription = async ({
       accessToken: hashedToken,
     });
 
+    if (!insertId) {
+      logger.warn(
+        `Failed to create prescription for Appointment ID ${appointmentId}`,
+      );
+      return Response.BAD_REQUEST({
+        message: "Failed to create prescription. Try again",
+      });
+    }
+
     // send access token to user for later use
     await sendPrescriptionToken({
       mobileNumber,
       doctorName,
     });
 
+    await redisClient.clearCacheByPattern("appointment-prescriptions:*");
+
     return Response.CREATED({
       message: "Prescription Created Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createPrescription: ", error);
     throw error;
   }
 };
@@ -167,18 +178,29 @@ exports.updatePrescriptions = async ({
   try {
     const stringifiedMedicines = JSON.stringify(medicines);
 
-    await updateAppointmentPrescriptions({
+    const { affectedRows } = await updateAppointmentPrescriptions({
       appointmentId,
       prescriptionId,
       diagnosis,
       medicines: stringifiedMedicines,
       comment,
     });
-    return Response.CREATED({
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(
+        `Failed to update prescription for Appointment ID ${appointmentId}`,
+      );
+      return Response.NOT_MODIFIED({});
+    }
+
+    const cacheKey = `appointment-prescriptions:${prescriptionId}`;
+    await redisClient.delete(cacheKey);
+
+    return Response.SUCCESS({
       message: "Prescription Updated Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updatePrescriptions: ", error);
     throw error;
   }
 };

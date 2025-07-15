@@ -157,10 +157,8 @@ exports.updatePatientMedicalHistory = async ({
       caffineIntakeFreq,
     });
 
-    if (affectedRows <= 0) {
-      return Response.BAD_REQUEST({
-        message: "Failed to update Patient Medical Info. Try again",
-      });
+    if (!affectedRows || affectedRows < 1) {
+      return Response.NOT_MODIFIED({});
     }
 
     const cacheKey = "patient-medicalHistory:all";

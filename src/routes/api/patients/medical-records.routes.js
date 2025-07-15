@@ -27,6 +27,7 @@ router.get(
   Validate,
   GetMedicalRecordByIDController,
 );
+// router.post("/verify-document-password");
 
 router.post(
   "/",

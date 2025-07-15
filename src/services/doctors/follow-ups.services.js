@@ -9,6 +9,7 @@ const Response = require("../../utils/response.utils");
 const { newFollowAppointmentSms } = require("../../utils/sms.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapFollowUpRow } = require("../../utils/db-mapper.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.createFollowUp = async ({
   appointmentId,
@@ -22,6 +23,7 @@ exports.createFollowUp = async ({
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error(`Doctor not found for userId: ${userId}`);
       return Response.UNAUTHORIZED({
         message:
           "UnAuthorized Action. Please Login as a doctor before proceeding",
@@ -44,6 +46,9 @@ exports.createFollowUp = async ({
       });
 
     if (appointmentBookedOnFollowUpDateAndTime) {
+      logger.error(
+        `Appointment already booked for doctorId: ${doctorId} on date: ${followUpDate} at time: ${followUpTime}`,
+      );
       return Response.BAD_REQUEST({
         message:
           "An Appointment Has Already Been Booked for the Specified Date/Time slot. Please Select Another Date or Time",
@@ -58,6 +63,9 @@ exports.createFollowUp = async ({
       });
 
     if (followUpDateAndTimeSlotBooked) {
+      logger.error(
+        `Follow-up already exists for doctorId: ${doctorId} on date: ${followUpDate} at time: ${followUpTime}`,
+      );
       return Response.BAD_REQUEST({
         message:
           "You have a follow-up for the selected date and time, please choose another date or time.",
@@ -75,8 +83,7 @@ exports.createFollowUp = async ({
     } = appointment;
     const { mobile_number: mobileNumber } = await getPatientById(patientId);
 
-    // Save follow-up to database
-    await followUpRepo.createNewFollowUp({
+    const { insertId } = await followUpRepo.createNewFollowUp({
       appointmentId,
       followUpDate,
       followUpTime,
@@ -84,6 +91,15 @@ exports.createFollowUp = async ({
       followUpType,
       doctorId,
     });
+
+    if (!insertId) {
+      logger.error(
+        `Failed to create follow-up for appointmentId: ${appointmentId} by doctorId: ${doctorId}`,
+      );
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Failed to create follow-up. Please try again later.",
+      });
+    }
 
     //  Send notfication to user for new follow-up
     await newFollowAppointmentSms({
@@ -94,11 +110,13 @@ exports.createFollowUp = async ({
       followUpTime,
     });
 
+    await redisClient.clearCacheByPattern("doctor-appointment-follow-up:*");
+
     return Response.CREATED({
       message: "Appointment Follow-up created successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createFollowUp: ", error);
     throw error;
   }
 };
@@ -116,6 +134,7 @@ exports.updateAppointmentFollowUpService = async ({
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error(`Doctor not found for userId: ${userId}`);
       return Response.UNAUTHORIZED({
         message:
           "UnAuthorized Action. Please Login as a doctor before proceeding",
@@ -131,6 +150,9 @@ exports.updateAppointmentFollowUpService = async ({
     });
 
     if (!isDoctorsAppointment) {
+      logger.error(
+        `Unauthorized action: Appointment with id ${appointmentId} does not belong to doctorId: ${doctorId}`,
+      );
       return Response.UNAUTHORIZED({
         message: "UnAuthorized Action.",
       });
@@ -145,6 +167,9 @@ exports.updateAppointmentFollowUpService = async ({
       });
 
     if (appointmentBookedOnFollowUpDateAndTime) {
+      logger.error(
+        `Appointment already booked for doctorId: ${doctorId} on date: ${followUpDate} at time: ${followUpTime}`,
+      );
       return Response.BAD_REQUEST({
         message:
           "An Appointment Has Already Been Booked for the Specified Date/Time slot. Please Select Another Date or Time",
@@ -159,13 +184,16 @@ exports.updateAppointmentFollowUpService = async ({
       });
 
     if (followUpDateAndTimeSlotBooked) {
+      logger.error(
+        `Follow-up already exists for doctorId: ${doctorId} on date: ${followUpDate} at time: ${followUpTime}`,
+      );
       return Response.BAD_REQUEST({
         message:
           "You have a follow-up for the selected date and time, please choose another date or time.",
       });
     }
-    // Save follow-up to database
-    await followUpRepo.updateAppointmentFollowUp({
+
+    const { affectedRows } = await followUpRepo.updateAppointmentFollowUp({
       followUpId,
       appointmentId,
       followUpDate,
@@ -175,11 +203,22 @@ exports.updateAppointmentFollowUpService = async ({
       doctorId,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        `Failed to update follow-up with id: ${followUpId} for appointmentId: ${appointmentId} by doctorId: ${doctorId}`,
+      );
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.delete(
+      `doctor-appointment-follow-up-by-id:${followUpId}`,
+    );
+
     return Response.SUCCESS({
       message: "Appointment Follow-up updated successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateAppointmentFollowUpService: ", error);
     throw error;
   }
 };
@@ -198,6 +237,7 @@ exports.getAllAppointmentFollowupService = async ({
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
+      logger.error(`Doctor not found for userId: ${userId}`);
       return Response.UNAUTHORIZED({
         message:
           "UnAuthorized Action. Please Login as a doctor before proceeding",
@@ -212,6 +252,9 @@ exports.getAllAppointmentFollowupService = async ({
     });
 
     if (!isDoctorsAppointment) {
+      logger.error(
+        `Unauthorized action: Appointment with id ${appointmentId} does not belong to doctorId: ${doctorId}`,
+      );
       return Response.UNAUTHORIZED({
         message: "UnAuthorized Action.",
       });
@@ -220,7 +263,10 @@ exports.getAllAppointmentFollowupService = async ({
     const rawData = await followUpRepo.getAppointmentFollowUps(appointmentId);
 
     if (!rawData?.length) {
-      return Response.NOT_FOUND({ message: "Appointment Follow Up Not Found" });
+      logger.error(
+        `No follow-ups found for appointmentId: ${appointmentId} by doctorId: ${doctorId}`,
+      );
+      return Response.NOT_FOUND({ message: "No Follow-ups Found" });
     }
 
     const followUps = rawData.map(mapFollowUpRow);
@@ -233,7 +279,7 @@ exports.getAllAppointmentFollowupService = async ({
       data: followUps,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("getAllAppointmentFollowupService: ", error);
     throw error;
   }
 };
@@ -248,6 +294,7 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
 
     const { doctor_id: doctorId } = await getDoctorByUserId(userId);
     if (!doctorId) {
+      logger.error(`Doctor not found for userId: ${userId}`);
       return Response.UNAUTHORIZED({
         message: "UnAuthorized Action.",
       });
@@ -259,6 +306,9 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
     });
 
     if (!rawData) {
+      logger.error(
+        `Follow-up not found for id: ${id} by doctorId: ${doctorId}`,
+      );
       return Response.NOT_FOUND({ message: "Follow up not found" });
     }
 
@@ -268,7 +318,7 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
       data: followUp,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("getFollowUpByIdService: ", error);
     throw error;
   }
 };
@@ -276,11 +326,13 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
   try {
     const followUp = await followUpRepo.getFollowUpById(followUpId);
     if (!followUp) {
+      logger.error(`Follow-up not found for followUpId: ${followUpId}`);
       return Response.NOT_FOUND({ message: "Follow-up not found" });
     }
-    // TODO move to middleware function
+
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
+      logger.error(`Doctor not found for userId: ${userId}`);
       return Response.UNAUTHORIZED({
         message:
           "UnAuthorized Action. Please Login as a doctor before proceeding",
@@ -297,19 +349,35 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
     });
 
     if (!isDoctorsAppointment) {
+      logger.error(
+        `Unauthorized action: Appointment with id ${appointmentId} does not belong to doctorId: ${doctorId}`,
+      );
       return Response.UNAUTHORIZED({
         message: "UnAuthorized Action.",
       });
     }
 
     // Save follow-up to database
-    await followUpRepo.deleteAppointmentFollowUp(followUpId);
+    const { affectedRows } =
+      await followUpRepo.deleteAppointmentFollowUp(followUpId);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        `Failed to delete follow-up with id: ${followUpId} for appointmentId: ${appointmentId} by doctorId: ${doctorId}`,
+      );
+      return Response.NOT_MODIFIED({});
+    }
+
+    // Invalidate cache
+    await redisClient.delete(
+      `doctor-appointment-follow-up-by-id:${followUpId}`,
+    );
 
     return Response.SUCCESS({
       message: "Appointment Follow-up Deleted Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("deleteAppointmentFollowUpService: ", error);
     throw error;
   }
 };

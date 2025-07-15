@@ -386,9 +386,7 @@ exports.updatePatientProfile = async ({
       logger.error(
         `Failed to update patient profile for Patient ID: ${patientId}. Affected Rows: ${affectedRows}`,
       );
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "Error Updating Patient Profile. Please Try again",
-      });
+      return Response.NOT_MODIFIED({});
     }
 
     return Response.SUCCESS({
@@ -423,9 +421,7 @@ exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
       logger.error(
         `Failed to update patient profile picture for User ID: ${userId}. Affected Rows: ${affectedRows}`,
       );
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "Error Updating Patient Profile Picture. Please Try again",
-      });
+      return Response.NOT_MODIFIED({});
     }
 
     return Response.SUCCESS({

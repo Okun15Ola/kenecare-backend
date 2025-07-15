@@ -5,6 +5,7 @@ const { uploadFileToS3Bucket } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 const { mapCommonSymptomsRow } = require("../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../utils/caching.utils");
+const logger = require("../middlewares/logger.middleware");
 
 exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
   try {
@@ -20,6 +21,7 @@ exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
     const rawData = await repo.getAllCommonSymptoms(limit, offset);
 
     if (!rawData?.length) {
+      logger.warn("Common Symptoms Not Found");
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
 
@@ -32,7 +34,7 @@ exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
 
     return Response.SUCCESS({ data: symptoms, pagination: paginationInfo });
   } catch (error) {
-    console.error("GET ALL COMMON SYMPTOMS ERROR: ", error);
+    logger.error("getCommonSymptoms: ", error);
     throw error;
   }
 };
@@ -46,6 +48,7 @@ exports.getCommonSymptom = async (id) => {
     }
     const rawData = await repo.getCommonSymptomById(id);
     if (!rawData) {
+      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
 
@@ -57,7 +60,7 @@ exports.getCommonSymptom = async (id) => {
     });
     return Response.SUCCESS({ data: symptom });
   } catch (error) {
-    console.error("GET COMMON SYMPTOMS BY ID ERROR: ", error);
+    logger.error("getCommonSymptom: ", error);
     throw error;
   }
 };
@@ -73,12 +76,13 @@ exports.createCommonSymptom = async ({
 }) => {
   try {
     if (!file) {
+      logger.warn("Symptom image is required");
       return Response.BAD_REQUEST({ message: "Please upload symptom image" });
     }
     const fileName = `symptom_${generateFileName(file)}`;
     const { buffer, mimetype } = file;
 
-    await Promise.all([
+    const [uploadResult, createSymptom] = await Promise.allSettled([
       uploadFileToS3Bucket({
         buffer,
         fileName,
@@ -94,11 +98,28 @@ exports.createCommonSymptom = async ({
         inputtedBy,
       }),
     ]);
+
+    if (uploadResult.status === "rejected") {
+      logger.error("File upload failed: ", uploadResult.reason);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "File upload failed. Please try again.",
+      });
+    }
+    if (createSymptom.status === "rejected") {
+      logger.error("Common Symptom creation failed: ", createSymptom.reason);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Common Symptom creation failed. Please try again.",
+      });
+    }
+
+    const cacheKey = cacheKeyBulider("common-symptoms:*");
+    await redisClient.clearCacheByPattern(cacheKey);
+
     return Response.CREATED({
       message: "Common Symptom Created Successfully",
     });
   } catch (error) {
-    console.error("CREATE COMMON SYMPTOMS ERROR: ", error);
+    logger.error("createCommonSymptom: ", error);
     throw error;
   }
 };
@@ -114,6 +135,7 @@ exports.updateCommonSymptom = async ({
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
+      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
@@ -127,7 +149,7 @@ exports.updateCommonSymptom = async ({
         mimetype: file.mimetype,
       });
     }
-    await repo.updateCommonSymptomById({
+    const { affectedRows } = await repo.updateCommonSymptomById({
       id,
       name,
       description,
@@ -136,11 +158,20 @@ exports.updateCommonSymptom = async ({
       consultationFee,
       tags,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update Common Symptom for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    const cacheKey = `common-symptoms:${id}`;
+    await redisClient.delete(cacheKey);
+
     return Response.SUCCESS({
       message: "Common Symptom Updated Succcessfully",
     });
   } catch (error) {
-    console.error("UPDATE COMMON SYMPTOMS ERROR: ", error);
+    logger.error("updateCommonSymptom: ", error);
     throw error;
   }
 };
@@ -148,6 +179,7 @@ exports.updateCommonSymptomStatus = async ({ id, status }) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
+      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
@@ -156,7 +188,7 @@ exports.updateCommonSymptomStatus = async ({ id, status }) => {
       message: "Common Symptom Status Updated Successfully",
     });
   } catch (error) {
-    console.error("UPDATE COMMON SYMPTOM STATUS ERROR: ", error);
+    logger.error("updateCommonSymptomStatus: ", error);
     throw error;
   }
 };
@@ -164,13 +196,23 @@ exports.deleteCommonSymptom = async (id) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
+      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
-    await repo.deleteCommonSymptomById(id);
+    const { affectedRows } = await repo.deleteCommonSymptomById(id);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to delete Common Symptom for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    const cacheKey = `common-symptoms:${id}`;
+    await redisClient.delete(cacheKey);
+
     return Response.SUCCESS({ message: "Common Symptom Deleted Successfully" });
   } catch (error) {
-    console.error("DELETE COMMON SYMPTOMS ERROR: ", error);
+    logger.error("deleteCommonSymptom: ", error);
     throw error;
   }
 };

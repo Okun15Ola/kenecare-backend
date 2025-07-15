@@ -7,6 +7,7 @@ const {
 const { redisClient } = require("../../config/redis.config");
 const { mapCouncilRegistrationRow } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getAllCouncilRegistrations = async (limit, offset, paginationInfo) => {
   try {
@@ -27,6 +28,7 @@ exports.getAllCouncilRegistrations = async (limit, offset, paginationInfo) => {
       offset,
     );
     if (!rawData?.length) {
+      logger.warn("Medical Council Registrations Not Found");
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
       });
@@ -43,7 +45,7 @@ exports.getAllCouncilRegistrations = async (limit, offset, paginationInfo) => {
       pagination: paginationInfo,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("getAllCouncilRegistrations: ", error);
     throw error;
   }
 };
@@ -58,6 +60,7 @@ exports.getCouncilRegistration = async (id) => {
     const rawData = await dbObject.getCouncilRegistrationById(id);
 
     if (!rawData) {
+      logger.warn(`Medical Council Registration Not Found for ID ${id}`);
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
       });
@@ -70,7 +73,7 @@ exports.getCouncilRegistration = async (id) => {
     });
     return Response.SUCCESS({ data: registration });
   } catch (error) {
-    console.error(error);
+    logger.error("getCouncilRegistration: ", error);
     throw error;
   }
 };
@@ -79,6 +82,7 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
   try {
     const rawData = await dbObject.getCouncilRegistrationById(regId);
     if (!rawData) {
+      logger.warn(`Medical Council Registration Not Found for ID ${regId}`);
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
       });
@@ -92,6 +96,7 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
     } = rawData;
 
     if (registrationStats === "approved") {
+      logger.warn("Medical Council Registration Already Approved");
       return Response.NOT_MODIFIED();
     }
 
@@ -102,7 +107,7 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
         approvedBy: userId,
       }),
     ]).catch((error) => {
-      console.error(error);
+      logger.error("approveCouncilRegistration: ", error);
       throw error;
     });
 
@@ -117,7 +122,7 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
       message: "Doctor's Medical Council Registration Approved Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("approveCouncilRegistration: ", error);
     throw error;
   }
 };
@@ -130,6 +135,7 @@ exports.rejectCouncilRegistration = async ({
   try {
     const rawData = await dbObject.getCouncilRegistrationById(regId);
     if (!rawData) {
+      logger.warn(`Medical Council Registration Not Found for ID ${regId}`);
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
       });
@@ -143,6 +149,7 @@ exports.rejectCouncilRegistration = async ({
     } = rawData;
 
     if (registrationStatus === "rejected") {
+      logger.warn("Medical Council Registration Already Rejected");
       return Response.NOT_MODIFIED();
     }
 
@@ -154,7 +161,7 @@ exports.rejectCouncilRegistration = async ({
         approvedBy: userId,
       }),
     ]).catch((error) => {
-      console.error(error);
+      logger.error("rejectCouncilRegistration: ", error);
       throw error;
     });
 
@@ -169,7 +176,7 @@ exports.rejectCouncilRegistration = async ({
       message: "Doctor's Medical Council Registration Rejected Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("rejectCouncilRegistration: ", error);
     throw error;
   }
 };

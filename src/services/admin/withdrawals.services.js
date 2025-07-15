@@ -15,17 +15,19 @@ const {
   withdrawalDeniedSMS,
 } = require("../../utils/sms.utils");
 const { mapWithdawalRow } = require("../../utils/db-mapper.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getAllRequests = async (limit, offset, paginationInfo) => {
   try {
     const rawData = await getAllWithdrawalRequests(limit, offset);
     if (!rawData?.length) {
+      logger.warn("Withdrawal Request Not Found");
       return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
     const data = rawData.map(mapWithdawalRow);
     return Response.SUCCESS({ data, pagination: paginationInfo });
   } catch (error) {
-    console.error("GET ALL WITHDRAWAL REQUESTS  ERROR: ", error);
+    logger.error("getAllRequests: ", error);
     throw error;
   }
 };
@@ -33,12 +35,13 @@ exports.getRequestById = async (id) => {
   try {
     const rawData = await getWithdrawalRequestById(id);
     if (!rawData) {
+      logger.warn(`Withdrawal Request Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
     const data = mapWithdawalRow(rawData);
     return Response.SUCCESS({ data });
   } catch (error) {
-    console.error("GET WITHFRAWAL REQUEST BY ID ERROR: ", error);
+    logger.error("getRequestById: ", error);
     throw error;
   }
 };
@@ -47,6 +50,7 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
   try {
     const rawData = await getWithdrawalRequestById(requestId);
     if (!rawData) {
+      logger.warn(`Withdrawal Request Not Found for ID ${requestId}`);
       return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
 
@@ -67,6 +71,7 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
     const parsedRequestedAmount = parseFloat(requestedAmount);
 
     if (currentWalletBalance <= parsedRequestedAmount) {
+      logger.warn("Insufficient Wallet Balance. Cannot Approve Withdrawal");
       return Response.BAD_REQUEST({
         message: "Insufficient Wallet Balance. Cannot Approve Withdrawal",
       });
@@ -82,7 +87,7 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
     const newBalance =
       parseFloat(currentWalletBalance) - parseFloat(requestedAmount);
 
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       updateDoctorWalletBalance({
         doctorId,
         amount: parseFloat(newBalance),
@@ -98,12 +103,20 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
       }),
     ]);
 
+    if (results.some((result) => result.status === "rejected")) {
+      logger.error(
+        "Failed to approve docter withdrawal:",
+        results.filter((r) => r.status === "rejected"),
+      );
+      return Response.NOT_MODIFIED({});
+    }
+
     //  send sms to doctor about approved request
     return Response.SUCCESS({
       message: "Withdrawal Request Approved Successfully",
     });
   } catch (error) {
-    console.error("REQUEST WITHDRAWAL ERROR: ", error);
+    logger.error("approveRequest: ", error);
     throw error;
   }
 };
@@ -111,6 +124,7 @@ exports.denyRequest = async ({ userId, requestId, comment }) => {
   try {
     const rawData = await getWithdrawalRequestById(requestId);
     if (!rawData) {
+      logger.warn(`Withdrawal Request Not Found for ID ${requestId}`);
       return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
 
@@ -138,7 +152,7 @@ exports.denyRequest = async ({ userId, requestId, comment }) => {
       message: "Withdrawal Request Declined Successfully",
     });
   } catch (error) {
-    console.error("REQUEST WITHDRAWAL ERROR: ", error);
+    logger.error("denyRequest: ", error);
     throw error;
   }
 };

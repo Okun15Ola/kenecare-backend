@@ -41,7 +41,6 @@ exports.getPatientMedicalDocuments = async (userId) => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
     const rawData = await getMedicalDocumentsByPatientId(patientId);
-
     if (!rawData?.length) {
       logger.warn(`Patient Medical Document Not Found for user ${userId}`);
       return Response.NOT_FOUND({
@@ -49,7 +48,9 @@ exports.getPatientMedicalDocuments = async (userId) => {
       });
     }
 
-    const documents = rawData.map(mapPatientDocumentRow);
+    const documents = await Promise.all(
+      rawData.map((document) => mapPatientDocumentRow(document)),
+    );
 
     await redisClient.set({
       key: cacheKey,
@@ -92,7 +93,7 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
       });
     }
 
-    const document = mapPatientDocumentRow(rawData, true);
+    const document = await mapPatientDocumentRow(rawData, true);
 
     await redisClient.set({
       key: cacheKey,
@@ -163,7 +164,7 @@ exports.createPatientMedicalDocument = async ({
     }
 
     // clear cache
-    await redisClient.delete(`patient-documents-${patientId}:all`);
+    await redisClient.clearCacheByPattern(`patient-documents-${patientId}:*`);
 
     // send response to user
     return Response.CREATED({
@@ -239,12 +240,10 @@ exports.updatePatientMedicalDocument = async ({
         documentTitle,
         fileName: documentUUID,
       });
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "Error Updating Medical Document, please try again",
-      });
+      return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.delete(`patient-documents-${patientId}:all`);
+    await redisClient.clearCacheByPattern(`patient-documents-${patientId}:*`);
     await redisClient.delete(`patient-documents:${docId}`);
 
     // send response to user
@@ -282,9 +281,7 @@ exports.deletePatientMedicalDocument = async ({ userId, documentId }) => {
         documentId,
         documentUUID,
       });
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "Error Deleting Medical Document, please try again",
-      });
+      return Response.NOT_MODIFIED({});
     }
 
     await redisClient.delete(`patient-documents:${documentId}`);

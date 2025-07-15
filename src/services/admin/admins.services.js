@@ -3,13 +3,14 @@ const { generateAdminJwtAccessToken } = require("../../utils/auth.utils");
 const { STATUS } = require("../../utils/enum.utils");
 const { hashUsersPassword } = require("../../utils/auth.utils");
 const { blacklistToken } = require("../../utils/auth.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getAdmins = async () => {
   try {
     const rawData = await dbObject.getAllAdmins();
     return rawData;
   } catch (error) {
-    console.error(error);
+    logger.error("getAdmins: ", error);
     throw error;
   }
 };
@@ -37,7 +38,7 @@ exports.getAdminById = async (id) => {
       password,
     };
   } catch (error) {
-    console.error(error);
+    logger.error("getAdminById: ", error);
     throw error;
   }
 };
@@ -64,7 +65,7 @@ exports.getAdminByMobileNumber = async (adminMobileNumber) => {
       password,
     };
   } catch (error) {
-    console.error(error);
+    logger.error("getAdminByMobileNumber: ", error);
     throw error;
   }
 };
@@ -90,7 +91,7 @@ exports.getAdminByEmail = async (adminEmail) => {
       password,
     };
   } catch (error) {
-    console.error(error);
+    logger.error("getAdminByEmail: ", error);
     throw error;
   }
 };
@@ -109,11 +110,16 @@ exports.createAdmin = async ({ fullname, email, mobileNumber, password }) => {
     };
 
     // SAVE TO DATABASE
-    await dbObject.createNewAdmin(admin);
+    const { insertId } = await dbObject.createNewAdmin(admin);
+
+    if (!insertId) {
+      logger.warn("Failed to create admin");
+      return Response.BAD_REQUEST({ message: "Failed to create admin" });
+    }
 
     return { message: "Admin Created Successfully", data: null };
   } catch (error) {
-    console.error(error);
+    logger.error("createAdmin: ", error);
     throw error;
   }
 };
@@ -122,10 +128,15 @@ exports.loginAdmin = async (admin) => {
   try {
     const { adminId, accountActive } = admin;
 
-    dbObject.updateAdminAccountStatusById({
+    const { affectecRows } = await dbObject.updateAdminAccountStatusById({
       id: adminId,
       status: STATUS.ACTIVE,
     });
+
+    if (!affectecRows || affectecRows < 1) {
+      logger.warn(`Failed to update admin account status for ID ${adminId}`);
+      return Response.NOT_MODIFIED({});
+    }
 
     const accessToken = generateAdminJwtAccessToken({
       sub: adminId,
@@ -134,17 +145,17 @@ exports.loginAdmin = async (admin) => {
 
     return { message: "Admin Login Successful", data: accessToken };
   } catch (error) {
-    console.error(error);
+    logger.error("loginAdmin: ", error);
     throw error;
   }
 };
 
 exports.logoutAdmin = async ({ token, tokenExpiry }) => {
   try {
-    blacklistToken(token, tokenExpiry);
+    await blacklistToken(token, tokenExpiry);
     return { message: "Admin Logout Successful" };
   } catch (error) {
-    console.error(error);
+    logger.error("logoutAdmin: ", error);
     throw error;
   }
 };

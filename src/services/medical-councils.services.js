@@ -3,29 +3,36 @@ const Response = require("../utils/response.utils");
 const { redisClient } = require("../config/redis.config");
 const { mapMedicalCouncilRow } = require("../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../utils/caching.utils");
+const logger = require("../middlewares/logger.middleware");
 
 exports.getMedicalCouncils = async (limit, offset, paginationInfo) => {
-  const cacheKey = cacheKeyBulider("medical-council:all", limit, offset);
-  const cachedData = await redisClient.get(cacheKey);
-  if (cachedData) {
-    return Response.SUCCESS({
-      data: JSON.parse(cachedData),
-      pagination: paginationInfo,
-    });
-  }
-  const rawData = await repo.getAllMedicalCouncils(limit, offset);
-  if (!rawData?.length) {
-    return Response.NOT_FOUND({
-      message: "Medical Council Not Found ",
-    });
-  }
+  try {
+    const cacheKey = cacheKeyBulider("medical-council:all", limit, offset);
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
+    }
+    const rawData = await repo.getAllMedicalCouncils(limit, offset);
+    if (!rawData?.length) {
+      logger.warn("Medical Councils Not Found");
+      return Response.NOT_FOUND({
+        message: "Medical Council Not Found ",
+      });
+    }
 
-  const councils = rawData.map(mapMedicalCouncilRow);
-  await redisClient.set({
-    key: cacheKey,
-    value: JSON.stringify(councils),
-  });
-  return Response.SUCCESS({ data: councils, pagination: paginationInfo });
+    const councils = rawData.map(mapMedicalCouncilRow);
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(councils),
+    });
+    return Response.SUCCESS({ data: councils, pagination: paginationInfo });
+  } catch (error) {
+    logger.error("getMedicalCouncils: ", error);
+    throw error;
+  }
 };
 
 exports.getMedicalCouncilByEmail = async (councilEmail) => {
@@ -38,6 +45,7 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
     const rawData = await repo.getMedicalCouncilById(councilEmail);
 
     if (!rawData) {
+      logger.warn(`Medical Council Not Found for Email ${councilEmail}`);
       return Response.NOT_FOUND({
         message: "Medical Council Not Found ",
       });
@@ -49,7 +57,7 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
     });
     return Response.SUCCESS({ data: council });
   } catch (error) {
-    console.error(error);
+    logger.error("getMedicalCouncilByEmail: ", error);
     throw error;
   }
 };
@@ -63,6 +71,7 @@ exports.getMedicalCouncilByMobileNumber = async (number) => {
     const rawData = await repo.getMedicalCouncilByMobileNumber(number);
 
     if (!rawData) {
+      logger.warn(`Medical Council Not Found for Mobile Number ${number}`);
       return Response.NOT_FOUND({
         message: "Medical Council Not Found ",
       });
@@ -74,7 +83,7 @@ exports.getMedicalCouncilByMobileNumber = async (number) => {
     });
     return Response.SUCCESS({ data: council });
   } catch (error) {
-    console.error(error);
+    logger.error("getMedicalCouncilByMobileNumber: ", error);
     throw error;
   }
 };
@@ -89,6 +98,7 @@ exports.getMedicalCouncil = async (id) => {
     const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
+      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
     const council = mapMedicalCouncilRow(rawData);
@@ -98,7 +108,7 @@ exports.getMedicalCouncil = async (id) => {
     });
     return Response.SUCCESS({ data: council });
   } catch (error) {
-    console.error(error);
+    logger.error("getMedicalCouncil: ", error);
     throw error;
   }
 };
@@ -111,7 +121,7 @@ exports.createMedicalCouncil = async ({
   inputtedBy,
 }) => {
   try {
-    await repo.createNewMedicalCouncil({
+    const { insertId } = await repo.createNewMedicalCouncil({
       name,
       email,
       mobileNumber,
@@ -119,11 +129,22 @@ exports.createMedicalCouncil = async ({
       inputtedBy,
     });
 
+    if (!insertId) {
+      logger.warn("Failed to create medical council");
+      return Response.BAD_REQUEST({
+        message: "Failed to create medical council",
+      });
+    }
+
+    const cacheKey = cacheKeyBulider("medical-council:all");
+
+    await redisClient.clearCacheByPattern(cacheKey);
+
     return Response.CREATED({
       message: "Medical Council Created Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("createMedicalCouncil: ", error);
     throw error;
   }
 };
@@ -139,9 +160,10 @@ exports.updateMedicalCouncil = async ({
     const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
+      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
-    await repo.updateMedicalCouncilById({
+    const { affectedRows } = await repo.updateMedicalCouncilById({
       id,
       name,
       email,
@@ -149,11 +171,19 @@ exports.updateMedicalCouncil = async ({
       address,
     });
 
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update Medical Council for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    const cacheKey = `medical-council:${id}`;
+    await redisClient.delete(cacheKey);
+
     return Response.SUCCESS({
       message: "Medical Council Updated Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateMedicalCouncil: ", error);
     throw error;
   }
 };
@@ -162,23 +192,33 @@ exports.updateMedicalCouncilStatus = async ({ id, status }) => {
     const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
+      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
 
     if (!Number.isInteger(status) || status < 0 || status > 1) {
+      logger.warn(`Invalid Status Code: ${status}`);
       return Response.BAD_REQUEST({ message: "Invalid Status Code" });
     }
 
-    await repo.updateMedicalCouncilStatusById({
+    const { affectedRows } = await repo.updateMedicalCouncilStatusById({
       id,
       status,
     });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update Medical Council Status for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    const cacheKey = `medical-council:${id}`;
+    await redisClient.delete(cacheKey);
 
     return Response.SUCCESS({
       message: "Medical Council Status Updated Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateMedicalCouncilStatus: ", error);
     throw error;
   }
 };
@@ -187,16 +227,25 @@ exports.deleteMedicalCouncil = async (id) => {
   try {
     const rawData = await repo.getMedicalCouncilById(id);
     if (!rawData) {
+      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
 
-    await repo.deleteMedicalCouncilById(id);
+    const { affectedRows } = await repo.deleteMedicalCouncilById(id);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to delete Medical Council for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    const cacheKey = `medical-council:${id}`;
+    await redisClient.delete(cacheKey);
 
     return Response.SUCCESS({
       message: "Medical Council Deleted Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("deleteMedicalCouncil: ", error);
     throw error;
   }
 };

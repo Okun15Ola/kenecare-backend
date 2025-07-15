@@ -3,6 +3,7 @@ const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapBlogCategoryRow } = require("../../utils/db-mapper.utils");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 exports.getBlogCategories = async (limit, offset, paginationInfo) => {
   try {
@@ -17,6 +18,7 @@ exports.getBlogCategories = async (limit, offset, paginationInfo) => {
     const rawData = await dbObject.getAllBlogCategories(limit, offset);
 
     if (!rawData?.length) {
+      logger.warn("Blog Categories Not Found");
       return Response.NOT_FOUND({ message: "Blog Category Not Found" });
     }
 
@@ -32,14 +34,14 @@ exports.getBlogCategories = async (limit, offset, paginationInfo) => {
       pagination: paginationInfo,
     });
   } catch (error) {
-    console.error(error);
+    logger.error("getBlogCategories: ", error);
     throw error;
   }
 };
 
 exports.getBlogCategory = async (id) => {
   try {
-    const cacheKey = `blog-categories:${id}`;
+    const cacheKey = `blog-category:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -47,6 +49,7 @@ exports.getBlogCategory = async (id) => {
     const rawData = await dbObject.getBlogCategoryById(id);
 
     if (!rawData) {
+      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Categrory Not Found" });
     }
     const category = mapBlogCategoryRow(rawData);
@@ -57,7 +60,7 @@ exports.getBlogCategory = async (id) => {
     });
     return Response.SUCCESS({ data: category });
   } catch (error) {
-    console.error(error);
+    logger.error("getBlogCategory: ", error);
     throw error;
   }
 };
@@ -66,6 +69,7 @@ exports.createBlogCategory = async (name) => {
   try {
     const rawData = await dbObject.getBlogCategoryByName(name);
     if (rawData) {
+      logger.warn(`Blog Category Already Exists: ${name}`);
       return Response.BAD_REQUEST({
         message: "Blog Category Name Already Exists",
       });
@@ -75,10 +79,20 @@ exports.createBlogCategory = async (name) => {
       name,
       inputtedBy: 1,
     };
-    await dbObject.createNewBlogCategory(category);
+    const { insertId } = await dbObject.createNewBlogCategory(category);
+
+    if (!insertId) {
+      logger.warn("Failed to create blog category");
+      return Response.BAD_REQUEST({
+        message: "Failed to create blog category",
+      });
+    }
+
+    await redisClient.clearCacheByPattern("blog-categories:*");
+
     return Response.SUCCESS({ message: "Blog Category Created Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("createBlogCategory: ", error);
     throw error;
   }
 };
@@ -87,15 +101,26 @@ exports.updateBlogCategory = async ({ id, name }) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);
     if (!rawData) {
+      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.BAD_REQUEST({
         message: "Blog Category Not Found",
       });
     }
 
-    await dbObject.updateBlogCategoryById({ id, name });
+    const { affectedRows } = await dbObject.updateBlogCategoryById({
+      id,
+      name,
+    });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update blog category for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.clearCacheByPattern("blog-category:*");
     return Response.SUCCESS({ message: "Blog Category Updated Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("updateBlogCategory: ", error);
     throw error;
   }
 };
@@ -103,20 +128,33 @@ exports.updateBlogCategoryStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);
     if (!rawData) {
+      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.BAD_REQUEST({
         message: "Blog Category Not Found",
       });
     }
     if (status < 0 || status > 1) {
+      logger.warn("Invalid Category Status");
       return Response.BAD_REQUEST({ message: "Invalid Category Status" });
     }
 
-    await dbObject.updateBlogCategoryStatusById({ id, status });
+    const { affectedRows } = await dbObject.updateBlogCategoryStatusById({
+      id,
+      status,
+    });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to update blog category status for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.clearCacheByPattern("blog-category:*");
+
     return Response.SUCCESS({
       message: "Blog Category Status Updated Successfully",
     });
   } catch (error) {
-    console.error(error);
+    logger.error("updateBlogCategoryStatus: ", error);
     throw error;
   }
 };
@@ -125,15 +163,24 @@ exports.deleteBlogCategory = async (id) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);
     if (!rawData) {
+      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.BAD_REQUEST({
         message: "Blog Category Not Found",
       });
     }
 
-    await dbObject.deleteBlogCategoryById(id);
+    const { affectedRows } = await dbObject.deleteBlogCategoryById(id);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn(`Failed to delete blog category for ID ${id}`);
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.clearCacheByPattern("blog-category:*");
+
     return Response.SUCCESS({ message: "Blog Category Deleted Successfully" });
   } catch (error) {
-    console.error(error);
+    logger.error("deleteBlogCategory: ", error);
     throw error;
   }
 };

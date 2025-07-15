@@ -1,5 +1,6 @@
 const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
+const logger = require("../../middlewares/logger.middleware");
 
 // DOCTORS
 exports.getDoctorAvailableDays = async (id) => {
@@ -15,7 +16,7 @@ exports.getDoctorAvailableDays = async (id) => {
 
     return Response.SUCCESS();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -24,7 +25,7 @@ exports.createDoctorAvailableDays = async () => {
   try {
     return Response.SUCCESS();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -33,7 +34,7 @@ exports.updateDoctorAvailableDays = async () => {
   try {
     return Response.SUCCESS();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -42,7 +43,7 @@ exports.getDoctorTimeSlots = async () => {
   try {
     return Response.SUCCESS();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
