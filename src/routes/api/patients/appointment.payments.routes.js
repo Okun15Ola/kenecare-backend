@@ -6,11 +6,27 @@ const {
   authorizePatient,
 } = require("../../../middlewares/auth.middleware");
 
-router.use(authenticateUser, limiter, authorizePatient); // Authentication middleware & Rate limiting middleware applied to all routes in this router
-
-router.get("/om/return", paymentController.returnHandler);
-router.get("/om/cancel", paymentController.cancelHandler);
-router.post("/om/notification", paymentController.notificationHandler);
+router.get(
+  "/om/return",
+  authenticateUser,
+  limiter,
+  authorizePatient,
+  paymentController.returnHandler,
+);
+router.get(
+  "/om/cancel",
+  authenticateUser,
+  limiter,
+  authorizePatient,
+  paymentController.cancelHandler,
+);
+router.post(
+  "/om/notification",
+  authenticateUser,
+  limiter,
+  authorizePatient,
+  paymentController.notificationHandler,
+);
 router.post("/monimee/webhook/return", paymentController.webhookHandler);
 
 module.exports = router;
