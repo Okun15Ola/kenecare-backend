@@ -8,7 +8,7 @@ const { redisClient } = require("../config/redis.config");
 
 const sendPushNotifications = (notifications) => {
   notifications.forEach(({ appointmentDateTime, diffInMinutes }) => {
-    console.log(
+    logger.info(
       `Sending push notification for appointment at ${appointmentDateTime}, ${diffInMinutes} minutes remaining.`,
     );
     // Implement push notification logic here
@@ -71,7 +71,7 @@ const getAllAppointments = async () => {
       sendPushNotifications(notifications);
     }
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     logger.error("CRON ERROR: ", error);
     throw error;
   }

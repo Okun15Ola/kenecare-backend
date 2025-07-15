@@ -1046,7 +1046,7 @@ exports.mapPatientDocumentRow = async (document, includeFileUrl = false) => {
     mimeType,
   };
 
-  if (!includeFileUrl) {
+  if (includeFileUrl) {
     const fileUrl = await getFileUrlFromS3Bucket(documentUUID);
     mapped.fileUrl = fileUrl;
   }

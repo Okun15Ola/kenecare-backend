@@ -4,6 +4,7 @@ const process = require("process");
 const { authenticate } = require("@google-cloud/local-auth");
 const { SpacesServiceClient } = require("@google-apps/meet").v2;
 const { auth } = require("google-auth-library");
+const logger = require("../middlewares/logger.middleware");
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ["https://www.googleapis.com/auth/meetings.space.created"];
@@ -25,7 +26,7 @@ async function loadSavedCredentialsIfExist() {
     const credentials = JSON.parse(content);
     return auth.fromJSON(credentials);
   } catch (err) {
-    console.log(err);
+    logger.info(err);
     return null;
   }
 }
@@ -86,8 +87,8 @@ async function createSpace(authClient) {
 
   // Run request
   const response = await meetClient.createSpace({ name: "space/kenecare" });
-  console.log(response);
-  console.log(`Meet URL: ${response[0].meetingUri}`);
+  logger.info(response);
+  logger.info(`Meet URL: ${response[0].meetingUri}`);
 }
 
-authorize().then(createSpace).catch(console.error);
+authorize().then(createSpace).catch(logger.error);

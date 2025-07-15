@@ -1,4 +1,5 @@
 const sendGrid = require("@sendgrid/mail");
+const logger = require("../middlewares/logger.middleware");
 
 const {
   sendGridApiKey,
@@ -46,7 +47,7 @@ const newPatientAppointmentEmail = async ({
       throw err;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -83,7 +84,7 @@ const newDoctorAppointmentEmail = async ({
       throw err;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -105,7 +106,7 @@ const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
       if (error) throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -126,7 +127,7 @@ const adminDoctorProfileRegistrationEmail = async ({ doctorName }) => {
       if (error) throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -170,7 +171,7 @@ const adminWithdrawalRequestEmail = async ({
       if (error) throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -202,7 +203,7 @@ const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
       throw err;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -235,7 +236,7 @@ const doctorCouncilRegistrationApprovedEmail = async ({
       throw err;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -271,7 +272,7 @@ const doctorCouncilRegistrationRejectedEmail = async ({
       if (error) throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -317,7 +318,7 @@ const patientAppointmentApprovalEmail = async ({
       if (error) throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -341,7 +342,7 @@ const paymentCanceledPatientAppointmentEmail = async ({
       if (error) throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -366,7 +367,7 @@ const marketerEmailVerificationToken = async ({
       if (error) throw error;
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };

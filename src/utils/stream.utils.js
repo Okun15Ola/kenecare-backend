@@ -1,4 +1,5 @@
 const { StreamClient } = require("@stream-io/node-sdk");
+const logger = require("../middlewares/logger.middleware");
 
 const {
   streamSdkApiKey,
@@ -15,7 +16,7 @@ const generateStreamUserToken = async (userId) => {
       validity_in_seconds: tokenValidity,
     });
   } catch (error) {
-    console.log("Stream Error: ", error);
+    logger.error("Stream Error: ", error);
     throw error;
   }
 };
@@ -39,7 +40,7 @@ const createOrUpdateStreamUser = async ({
     };
     await client.upsertUsers([user]);
   } catch (error) {
-    console.log("Stream Error: ", error);
+    logger.error("Stream Error: ", error);
     throw error;
   }
 };

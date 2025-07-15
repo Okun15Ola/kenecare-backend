@@ -50,7 +50,7 @@ const hashUsersPassword = async (password) => {
   try {
     return await bcryptjs.hash(password, 10);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -96,7 +96,7 @@ const comparePassword = async ({ plainPassword, hashedPassword }) => {
   try {
     return await bcryptjs.compare(plainPassword, hashedPassword);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -193,7 +193,7 @@ const generateUsersJwtAccessToken = (user) => {
       expiresIn: "1d",
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -211,7 +211,7 @@ const generateAdminJwtAccessToken = (admin) => {
       expiresIn: "1d",
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -229,7 +229,7 @@ const generateMarketerVerificaitonJwt = (marketer) => {
       expiresIn: "1h",
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -247,7 +247,7 @@ const verifyMarketerEmailJwt = (token) => {
       audience: jwtAdminAudience,
     });
   } catch (error) {
-    console.error(error.message);
+    logger.error(error.message);
     throw new Error(error.message);
   }
 };

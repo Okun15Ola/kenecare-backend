@@ -108,7 +108,7 @@ const deleteFile = async (filePath) => {
   try {
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      console.log("File deleted Successfully");
+      logger.info("File deleted Successfully");
     }
   } catch (error) {
     logger.error("FILE_DELETE_ERROR", error);

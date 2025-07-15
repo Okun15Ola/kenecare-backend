@@ -35,7 +35,7 @@ const sendPushNotifications = async ({ tokens, data }) => {
         try {
           return await expo.sendPushNotificationsAsync(chunk);
         } catch (error) {
-          console.error(error);
+          logger.error(error);
           throw error;
         }
       });
@@ -50,20 +50,20 @@ const sendPushNotifications = async ({ tokens, data }) => {
     const processReceipts = async (chunk) => {
       try {
         const receipts = await expo.getPushNotificationReceiptsAsync(chunk);
-        console.log(receipts);
+        logger.info(receipts);
         receipts
           .filter((receipt) => receipt.status !== "ok")
           .forEach((receipt) => {
             if (receipt.staus === "error") {
-              console.error("ERROR");
-              if (receipt.details && receipt.details.error) {
-                console.error(`The error code is ${receipt.details.error}`);
+              logger.error("ERROR");
+              if (receipt.details?.error) {
+                logger.error(`The error code is ${receipt.details.error}`);
               }
             }
           });
         // Iterate over the entries of the receipts object
       } catch (error) {
-        console.error(error);
+        logger.error(error);
         throw error;
       }
     };
@@ -72,11 +72,11 @@ const sendPushNotifications = async ({ tokens, data }) => {
         const promises = receiptIdChunks.map((chunk) => processReceipts(chunk));
         await Promise.all(promises);
       } catch (error) {
-        console.error(error);
+        logger.error(error);
       }
     })();
   } catch (error) {
-    console.log(error);
+    logger.info(error);
   }
 };
 
@@ -94,7 +94,7 @@ const sendPushNotification = async (notification) => {
 
     return await expo.sendPushNotificationsAsync([message]);
   } catch (error) {
-    console.log("Error Sending Push Notification: ", error);
+    logger.info("Error Sending Push Notification: ", error);
     logger.error(error);
     throw error;
   }
@@ -112,7 +112,7 @@ const sendPushNotification = async (notification) => {
 //     },
 //   };
 //   // const response = await sendPushNotification(notification);
-//   // console.log(response);
+//   // logger.info(response);
 // })();
 
 module.exports = {

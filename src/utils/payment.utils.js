@@ -21,6 +21,7 @@ const {
   monimeeSpaceId,
   monimeeApiUrl,
 } = require("../config/default.config");
+const logger = require("../middlewares/logger.middleware");
 
 let baseUrl = apiBaseURL;
 if (nodeEnv === "development") {
@@ -43,13 +44,14 @@ const getAccessToken = async () => {
         },
       )
       .catch((err) => {
+        logger.error("Error fetching access token: ", err);
         throw err;
       });
     const { token_type: tokenType, access_token: accessToken } = data;
 
     return `${tokenType} ${accessToken}`;
   } catch (error) {
-    console.error("GET PAYMENT ACCESS TOKEN ERROR: ", error);
+    logger.error("GET PAYMENT ACCESS TOKEN ERROR: ", error);
     throw error;
   }
 };
@@ -80,6 +82,7 @@ const getPaymentURL = async ({ orderId, amount }) => {
         },
       )
       .catch((error) => {
+        logger.error("Error fetching payment URL: ", error);
         throw error;
       });
 
@@ -90,7 +93,7 @@ const getPaymentURL = async ({ orderId, amount }) => {
     } = data;
     return { paymentUrl, notificationToken, paymentToken };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -113,6 +116,7 @@ const checkTransactionStatus = async ({ orderId, amount, payToken }) => {
       },
     )
     .catch((err) => {
+      logger.error("Error checking transaction status: ", err);
       throw err;
     });
 
@@ -148,6 +152,7 @@ const getPaymentUSSD = async ({ orderId, amount }) => {
     const response = await axios
       .post(`${monimeeApiUrl}/payment-codes`, body, options)
       .catch((error) => {
+        logger.error("Error creating payment code: ", error);
         throw error;
       });
 
@@ -173,8 +178,8 @@ const getPaymentUSSD = async ({ orderId, amount }) => {
         }
       : null;
   } catch (error) {
-    console.error(error);
-    console.error("Error: ", error.response.data.error);
+    logger.error(error);
+    logger.error("Error: ", error.response.data.error);
     throw error.response.data.error;
   }
 };
@@ -204,10 +209,11 @@ const cancelPaymentUSSD = async (paymentId) => {
     await axios
       .patch(`${monimeeApiUrl}/payment-codes/${paymentId}`, body, options)
       .catch((error) => {
+        logger.error("Error cancelling payment code: ", error);
         throw error;
       });
   } catch (error) {
-    console.error("Error: ", error.response.data.error);
+    logger.error("Error: ", error.response.data.error);
     throw error.response.data.error;
   }
 };

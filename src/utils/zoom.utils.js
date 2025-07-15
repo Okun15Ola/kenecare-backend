@@ -8,21 +8,21 @@ const logger = require("../middlewares/logger.middleware");
 const client = new WebSocketClient();
 
 client.on("connect", (connection) => {
-  console.log("WebSocket Client Connected");
+  logger.info("WebSocket Client Connected");
   connection.on("error", (error) => {
     logger.error(error);
   });
   connection.on("close", () => {
-    console.log("echo-protocol Connection Closed");
+    logger.info("echo-protocol Connection Closed");
   });
   connection.on("message", (message) => {
     if (message.type === "utf8") {
-      console.log(`Received: '${message.utf8Data}'`);
+      logger.info(`Received: '${message.utf8Data}'`);
     }
   });
 
   if (connection.connected) {
-    console.log("Connected");
+    logger.info("Connected");
   }
 });
 

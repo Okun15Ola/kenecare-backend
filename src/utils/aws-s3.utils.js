@@ -5,6 +5,7 @@ const {
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const logger = require("../middlewares/logger.middleware");
 
 const {
   awsAccessSecretKey,
@@ -36,7 +37,7 @@ const uploadFileToS3Bucket = async ({ fileName, buffer, mimetype }) => {
     }
     return null;
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -53,7 +54,7 @@ const getFileUrlFromS3Bucket = async (fileName) => {
       expiresIn: 3600,
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -68,7 +69,7 @@ const getObjectFromS3Bucket = async (fileName) => {
 
     return await response.Body.transformToByteArray();
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -81,7 +82,8 @@ const deleteFileFromS3Bucket = async (fileName) => {
     const command = new DeleteObjectCommand(params);
     return await s3Client.send(command);
   } catch (error) {
-    return error;
+    logger.error(error);
+    throw error;
   }
 };
 

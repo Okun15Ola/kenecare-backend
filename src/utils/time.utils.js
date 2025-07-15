@@ -1,4 +1,5 @@
 const moment = require("moment");
+const logger = require("../middlewares/logger.middleware");
 
 const SL_COUNTRY_CODE = "+232";
 
@@ -18,7 +19,7 @@ const validateNewAppointmentDate = ({ date }) => {
 
     return null;
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     throw error;
   }
 };
@@ -45,7 +46,7 @@ const validateAppointmentPostponedDate = (date) => {
 
     return null;
   } catch (error) {
-    console.log(error.message);
+    logger.error(error.message);
     throw error;
   }
 };
@@ -63,7 +64,7 @@ const validateAppointmentTime = (time) => {
 
     return null;
   } catch (error) {
-    console.log(error.message);
+    logger.error(error.message);
     throw error;
   }
 };
@@ -109,7 +110,7 @@ const validateDateTime = ({ date, time }) => {
   const now = moment();
   const userDateTime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm", true);
   const today = moment().format("YYYY-MM-DD");
-  console.log("Date: ", date, "Time: ", time);
+  logger.error("Date: ", date, "Time: ", time);
   if (!userDateTime.isValid()) {
     throw new Error(
       "Appointment date and time must be valid (YYYY-MM-DD HH:mm)",

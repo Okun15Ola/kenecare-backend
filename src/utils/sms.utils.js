@@ -320,9 +320,10 @@ const appointmentBookedSms = async ({
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
+    const response = await axios.request(config).catch((error) => {
       throw error;
     });
+    logger.info("Patient SMS Response: ", response);
   } catch (error) {
     logger.error(error);
     throw error;
@@ -346,9 +347,10 @@ const doctorAppointmentBookedSms = async ({
       });
 
       config.data = data;
-      await axios.request(config).catch((error) => {
+      const response = await axios.request(config).catch((error) => {
         throw error;
       });
+      logger.info("Doctor SMS Response: ", response);
     }
   } catch (error) {
     logger.error(error);
