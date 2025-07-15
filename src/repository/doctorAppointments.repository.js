@@ -87,7 +87,12 @@ exports.getDoctorAppointByDate = async ({
 };
 
 exports.getDoctorAppointByDateAndTime = async ({ doctorId, date, time }) => {
-  return query(queries.GET_APPOINTMENTS_BY_DATE, [doctorId, date, time]);
+  const row = await query(queries.GET_APPOINTMENT_BY_DATE_AND_TIME, [
+    date,
+    time,
+    doctorId,
+  ]);
+  return row[0];
 };
 
 exports.createNewZoomMeeting = async ({
