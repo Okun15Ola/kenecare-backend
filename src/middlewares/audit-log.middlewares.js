@@ -17,7 +17,7 @@ const logUserInteraction = async (req, res, next) => {
     logger.info("AUDIT LOG: ", logData);
     next();
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     next(error);
   }
 };

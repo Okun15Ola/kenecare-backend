@@ -28,7 +28,7 @@ const getAuthToken = (req) => {
   const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader?.startsWith("Bearer ")) {
-    console.log("Authorization header is missing or invalid");
+    logger.info("Authorization header is missing or invalid");
     return null;
   }
 
