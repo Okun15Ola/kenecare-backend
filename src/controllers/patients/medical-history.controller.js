@@ -11,7 +11,6 @@ exports.GetPatientMedicalHistoryController = async (req, res, next) => {
     const response = await getPatientMedicalHistory(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -57,7 +56,6 @@ exports.CreatePatientMedicalInfoController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -102,7 +100,6 @@ exports.UpdatePatientMedicalHistoryController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

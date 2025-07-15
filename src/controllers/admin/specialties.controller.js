@@ -21,7 +21,6 @@ exports.GetSpecialtiesController = async (req, res, next) => {
     const response = await getSpecialties(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -34,7 +33,6 @@ exports.GetSpecialtyByIDController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -52,7 +50,6 @@ exports.CreateSpecialtyController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -72,7 +69,6 @@ exports.UpdateSpecialtyByIdController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -88,7 +84,6 @@ exports.UpdateSpecialtyStatusController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -101,7 +96,6 @@ exports.DeleteSpecialtyByIdController = async (req, res, next) => {
     const response = await deleteSpecialty(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

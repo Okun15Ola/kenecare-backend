@@ -17,28 +17,28 @@ exports.GetAllMedicalRecordsController = async (req, res, next) => {
     const response = await getPatientMedicalDocuments(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
 };
+// exports.VerifyDocumentPasswordController = async (req, res, next) => {
+//   try {
+//     const userId = parseInt(req.user.id, 10);
+//     const response = await verifyDocumentPassword(userId, documentPassword);
+//     return res.status(response.statusCode).json(response);
+//   } catch (error) {
+//
+//     logger.error(error);
+//     return next(error);
+//   }
+// };
 exports.GetMedicalRecordByIDController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
     const docId = parseInt(req.params.id, 10);
     const response = await getPatientMedicalDocument({ docId, userId });
-
-    // const { documentTitle, mimeType, documentBuffer } = response.data;
-    // if (documentBuffer) {
-    //   res.set({
-    //     "Content-Type": `${mimeType}`,
-    //     "Content-Disposition": `attachment; filename=${documentTitle}`,
-    //   });
-    //   return res.status(response.statusCode).send(documentBuffer);
-    // }
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -56,7 +56,6 @@ exports.CreateMedicalRecordController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -78,7 +77,6 @@ exports.UpdateMedicalRecordByIdController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -94,7 +92,6 @@ exports.DeletemedicaRecordByIdController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -115,7 +112,6 @@ exports.ShareMedicalDocumentController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -128,7 +124,6 @@ exports.GetAllSharedMedicalDocumentsController = async (req, res, next) => {
     const response = await getPatientSharedMedicalDocuments(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -146,7 +141,6 @@ exports.GetSharedMedicalDocumentByIDController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -166,7 +160,6 @@ exports.UpdateSharedMedicalDocumentByIdController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -185,7 +178,6 @@ exports.DeleteSharedMedicalDocumentByIdController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

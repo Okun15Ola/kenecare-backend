@@ -40,7 +40,6 @@ exports.GetDoctorAppointmentsController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -52,7 +51,6 @@ exports.GetDoctorAppointmentsByIDController = async (req, res, next) => {
     const response = await getDoctorAppointment({ userId, id: appointmentId });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -65,7 +63,7 @@ exports.ApproveDoctorAppointmentController = async (req, res, next) => {
     const response = await approveDoctorAppointment({ userId, appointmentId });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    // console.error(error);
+    //
     logger.error(error);
     return next(error);
   }
@@ -83,7 +81,6 @@ exports.CancelDoctorAppointmentController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -104,7 +101,6 @@ exports.PostponeDoctorAppointmentController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -120,7 +116,6 @@ exports.StartDoctorAppointmentController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -136,7 +131,6 @@ exports.EndDoctorAppointmentController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

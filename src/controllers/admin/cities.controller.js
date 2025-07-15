@@ -17,7 +17,6 @@ exports.GetCitiesController = async (req, res, next) => {
     const response = await getCities(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -28,7 +27,6 @@ exports.GetCityByIDController = async (req, res, next) => {
     const response = await getCity(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -46,7 +44,6 @@ exports.CreateCityController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -66,7 +63,6 @@ exports.UpdateCityByIdController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -80,7 +76,6 @@ exports.UpdateCityStatusController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -94,7 +89,6 @@ exports.DeleteCityByIdController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

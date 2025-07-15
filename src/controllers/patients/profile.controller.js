@@ -12,7 +12,6 @@ exports.GetPatientProfileController = async (req, res, next) => {
     const response = await getPatientByUser(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -32,7 +31,6 @@ exports.CreatePatientProfileController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -52,7 +50,6 @@ exports.UpdatePatientProfileController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -68,7 +65,6 @@ exports.UpdatePatientProfilePictureController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

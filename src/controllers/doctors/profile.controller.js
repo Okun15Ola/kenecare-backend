@@ -14,7 +14,6 @@ const GetDoctorProfileController = async (req, res, next) => {
     const response = await getDoctorByUser(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -25,7 +24,6 @@ const GetDoctorCouncilRegistrationController = async (req, res, next) => {
     const response = await getDoctorCouncilRegistration(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -63,7 +61,6 @@ const CreateDoctorProfileController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -87,7 +84,6 @@ const CreateDoctorCouncilRegistration = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -113,7 +109,6 @@ const UpdateCouncilRegistrationController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -154,7 +149,6 @@ const UpdateDoctorProfileByIdController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -169,7 +163,6 @@ const UpdateDoctorProfilePictureController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

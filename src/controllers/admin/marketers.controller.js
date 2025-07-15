@@ -23,7 +23,6 @@ exports.GetAllMarketersController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -34,7 +33,6 @@ exports.GetMarketerByIdController = async (req, res, next) => {
     const response = await getMarketerByIdService(marketerId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -85,7 +83,6 @@ exports.CreateMarketerController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -97,7 +94,6 @@ exports.VerifyMarketerPhoneNumberController = async (req, res, next) => {
     const response = await verifyMarketerPhoneNumberService(token);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -109,7 +105,6 @@ exports.VerifyMarketerEmailController = async (req, res, next) => {
     const response = await verifyMarketerEmailService(token);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -160,7 +155,6 @@ exports.UpdateMarketerController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -171,7 +165,6 @@ exports.DeleteMarketerController = async (req, res, next) => {
     const response = await deleteMarketerByIdService(marketerId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

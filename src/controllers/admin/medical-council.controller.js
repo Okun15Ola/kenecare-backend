@@ -19,7 +19,6 @@ exports.GetMedicalCouncilsController = async (req, res, next) => {
     const response = await getMedicalCouncils(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -30,7 +29,6 @@ exports.GetMedicalCouncilByIDController = async (req, res, next) => {
     const response = await getMedicalCouncil(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -48,7 +46,6 @@ exports.CreateMedicalCouncilController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -67,7 +64,6 @@ exports.UpdateMedicalCouncilByIdController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -79,7 +75,6 @@ exports.UpdateMedicalCouncilStatusController = async (req, res, next) => {
     const response = await updateMedicalCouncilStatus({ id, status });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -91,7 +86,6 @@ exports.DeleteMedicalCouncilByIdController = async (req, res, next) => {
     const response = await deleteMedicalCouncil(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

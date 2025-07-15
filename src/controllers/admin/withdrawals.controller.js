@@ -15,7 +15,6 @@ exports.GetAllWithdrawalRequestsController = async (req, res, next) => {
     const response = await getAllRequests(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -26,7 +25,6 @@ exports.GetWithdrawalRequestByIdController = async (req, res, next) => {
     const response = await getRequestById(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -39,7 +37,6 @@ exports.ApproveWithdrawalRequestController = async (req, res, next) => {
     const response = await approveRequest({ requestId, userId, comment });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -53,7 +50,6 @@ exports.DenyWithdrawalRequestController = async (req, res, next) => {
     const response = await denyRequest({ userId, requestId, comment });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

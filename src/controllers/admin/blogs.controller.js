@@ -17,7 +17,6 @@ exports.GetBlogsController = async (req, res, next) => {
     const response = await getBlogs(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -28,7 +27,6 @@ exports.GetBlogByIDController = async (req, res, next) => {
     const response = await getBlog(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -50,7 +48,6 @@ exports.CreateBlogController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -75,7 +72,6 @@ exports.UpdateBlogByIdController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -88,7 +84,6 @@ exports.UpdateBlogStatusController = async (req, res, next) => {
     const response = await updateBlogStatus({ id, status });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -101,7 +96,6 @@ exports.DeleteBlogByIdController = async (req, res, next) => {
     const response = await deleteBlog(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

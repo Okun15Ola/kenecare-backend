@@ -20,7 +20,6 @@ exports.GetCouncilRegistrationController = async (req, res, next) => {
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -32,7 +31,6 @@ exports.GetCouncilRegistrationByIdController = async (req, res, next) => {
     const response = await getCouncilRegistration(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -47,7 +45,6 @@ exports.ApproveCouncilRegistrationController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -66,7 +63,6 @@ exports.RejectCouncilRegistrationController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

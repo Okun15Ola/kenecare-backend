@@ -14,7 +14,6 @@ exports.GetPatientsController = async (req, res, next) => {
     const response = await getAllPatients(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -25,7 +24,6 @@ exports.GetPatientByIdController = async (req, res, next) => {
     const response = await getPatientById(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -43,7 +41,6 @@ exports.GetPatientTestimonialsController = async (req, res, next) => {
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

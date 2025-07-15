@@ -64,9 +64,8 @@ exports.notificationHandler = async (req, res, next) => {
 
 exports.webhookHandler = async (req, res, next) => {
   try {
-    const { event, data } = req.body || {};
-    const { name: eventName } = event || {};
-    console.log("Payment Webhook Event:", eventName);
+    const { data } = req.body || {}; // event
+    // const { name: eventName } = event || {};
 
     const {
       status,

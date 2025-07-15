@@ -10,7 +10,6 @@ exports.AuthenticateController = async (req, res, next) => {
   try {
     return res.sendStatus(200);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -21,7 +20,6 @@ exports.AdminLoginController = async (req, res, next) => {
     const { message, data } = await loginAdmin(admin);
     return res.status(200).json(Response.SUCCESS({ message, data }));
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -33,7 +31,6 @@ exports.AdminLogoutController = async (req, res, next) => {
     const { message, data } = await logoutAdmin({ token, tokenExpiry });
     return res.status(200).json(Response.SUCCESS({ message, data }));
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -52,7 +49,6 @@ exports.AdminRegisterController = async (req, res, next) => {
 
     return res.status(201).json(Response.CREATED({ message, data }));
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -64,7 +60,6 @@ exports.AdminUpdatePasswordController = (req, res, next) => {
     // const { otp } = req.params;
     // console.log()
   } catch (error) {
-    console.error(error);
     logger.error(error);
     next(error);
   }
@@ -72,11 +67,9 @@ exports.AdminUpdatePasswordController = (req, res, next) => {
 exports.AdminUpdateAccountStatusController = (req, res, next) => {
   try {
     // Update Password Controller
-    console.log("update account status");
-    console.log(req.params);
-    console.log(req.query);
+    // console.log(req.params);
+    // console.log(req.query);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     next(error);
   }

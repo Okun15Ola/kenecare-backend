@@ -21,7 +21,6 @@ const GetPrescriptionsController = async (req, res, next) => {
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -34,7 +33,6 @@ const GetAppointmentPrescriptionController = async (req, res, next) => {
     const response = await getAppointmentPrescriptionById(prescriptionId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -54,7 +52,6 @@ const GetAppointmentPrescriptionsController = async (req, res, next) => {
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -75,7 +72,6 @@ const CreatePrescriptionController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -95,7 +91,6 @@ const UpdatePrescriptionController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

@@ -17,7 +17,6 @@ exports.GetSpecializationsController = async (req, res, next) => {
     const response = await getSpecializations(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -30,7 +29,6 @@ exports.GetSpecializationByIDController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -39,9 +37,9 @@ exports.CreateSpecializationController = async (req, res, next) => {
   try {
     const { name, description } = req.body;
     const imageUrl = "https://example.com/cardiology.jpg";
-    if (req.file) {
-      console.log("File exist");
-    }
+    // if (req.file) {
+    //   console.log("File exist");
+    // }
     const response = await createSpecialization({
       name,
       description,
@@ -49,7 +47,6 @@ exports.CreateSpecializationController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -62,9 +59,9 @@ exports.UpdateSpecializationByIdController = async (req, res, next) => {
     const transformedId = parseInt(id, 10);
 
     const imageUrl = "https://example.com/cardiology.jpg";
-    if (req.file) {
-      console.log("File exist");
-    }
+    // if (req.file) {
+    //   console.log("File exist");
+    // }
     const specialization = {
       name,
       description,
@@ -76,7 +73,6 @@ exports.UpdateSpecializationByIdController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -95,7 +91,6 @@ exports.UpdateSpecializationStatusController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -110,7 +105,6 @@ exports.DeleteSpecializationByIdController = async (req, res, next) => {
     const response = await deleteSpecialization(transformedId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

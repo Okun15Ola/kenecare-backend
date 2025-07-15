@@ -15,7 +15,6 @@ exports.GetCommonSymptomsController = async (req, res, next) => {
     const response = await getCommonSymptoms(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -26,7 +25,6 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
     const response = await getCommonSymptom(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -47,7 +45,6 @@ exports.CreateCommonSymptomController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -71,7 +68,6 @@ exports.UpdateCommonSymptomByIdController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -94,7 +90,6 @@ exports.UpdateCommonSymptomStatusController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -118,7 +113,6 @@ exports.DeleteCommonSymptomByIdController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

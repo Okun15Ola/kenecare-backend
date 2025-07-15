@@ -21,7 +21,6 @@ exports.GetAppointmentsController = async (req, res, next) => {
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -34,7 +33,6 @@ exports.GetAppointmentsByIDController = async (req, res, next) => {
     const response = await getPatientAppointment({ userId, id: appointmentId });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -70,7 +68,6 @@ exports.CreateAppointmentController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -83,7 +80,6 @@ exports.UpdatePatientMedicalAppointmentByIdController = async (
   try {
     return res.sendStatus(200);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -96,7 +92,6 @@ exports.UpdatePatientMedicalAppointmentStatusController = async (
   try {
     return res.sendStatus(200);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

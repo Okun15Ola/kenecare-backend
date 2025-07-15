@@ -17,7 +17,6 @@ const GetDoctorCouncilRegistrationController = async (req, res, next) => {
     const response = await getDoctorCouncilRegistration(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -59,7 +58,6 @@ const GetDoctorCouncilRegistrationDocumentController = async (
       path.join(__dirname, `../../public/upload/media/${req.params.filename}`),
     );
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -83,7 +81,6 @@ const CreateDoctorCouncilRegistration = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -107,7 +104,6 @@ const UpdateCouncilRegistrationController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

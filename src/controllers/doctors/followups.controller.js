@@ -27,7 +27,6 @@ exports.CreateAppointmentFollowUpController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -54,7 +53,6 @@ exports.UpdateAppointmentFollowUpController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -70,7 +68,6 @@ exports.DeleteAppointmentFollowUpController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -86,7 +83,6 @@ exports.GetAppointmentFollowUpsController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -99,7 +95,6 @@ exports.GetFollowUpByIdController = async (req, res, next) => {
 
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -116,7 +111,7 @@ exports.GetFollowUpByIdController = async (req, res, next) => {
 //     });
 //     return res.status(response.statusCode).json(response);
 //   } catch (error) {
-//     console.error(error);
+//
 //     logger.error(error);
 //     return next(error);
 //   }
@@ -132,7 +127,7 @@ exports.GetFollowUpByIdController = async (req, res, next) => {
 //     });
 //     return res.status(response.statusCode).json(response);
 //   } catch (error) {
-//     console.error(error);
+//
 //     logger.error(error);
 //     return next(error);
 //   }

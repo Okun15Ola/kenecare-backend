@@ -17,7 +17,6 @@ exports.GetBlogCategoriesController = async (req, res, next) => {
     const response = await getBlogCategories(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -29,7 +28,6 @@ exports.GetBlogCategoryByIDController = async (req, res, next) => {
     const response = await getBlogCategory(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -40,7 +38,6 @@ exports.CreateBlogCategoryController = async (req, res, next) => {
     const response = await createBlogCategory(name);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -53,7 +50,6 @@ exports.UpdateBlogCategoryByIdController = async (req, res, next) => {
     const response = await updateBlogCategory({ id, name });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -65,7 +61,6 @@ exports.UpdateBlogCategoryStatusController = async (req, res, next) => {
     const response = await updateBlogCategoryStatus({ id, status });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -77,7 +72,6 @@ exports.DeleteBlogCategoryByIdController = async (req, res, next) => {
     const response = await deleteBlog(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

@@ -18,7 +18,6 @@ exports.GetAdminAppointmentsController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -30,7 +29,6 @@ exports.GetAdminAppointmentByIdController = async (req, res, next) => {
     const response = await getAdminAppointmentById(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -50,7 +48,6 @@ exports.GetAdminAppointmentsByDoctorIdController = async (req, res, next) => {
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

@@ -11,7 +11,6 @@ const GetDoctorWalletController = async (req, res, next) => {
     const response = await getDoctorsWallet(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -26,7 +25,6 @@ const UpdateWalletPinController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -55,7 +53,6 @@ const RequestWithdrawalController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

@@ -10,7 +10,6 @@ exports.GetAllSharedMedicalRecordsController = async (req, res, next) => {
     const response = await getDoctorSharedMedicalDocuments(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -26,7 +25,6 @@ exports.GetSharedMedicalRecordByIDController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }

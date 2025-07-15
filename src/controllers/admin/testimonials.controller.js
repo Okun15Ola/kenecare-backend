@@ -16,7 +16,6 @@ exports.GetTestimonialsController = async (req, res, next) => {
     const response = await getTestimonials(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -27,7 +26,6 @@ exports.GetTestimonialByIDController = async (req, res, next) => {
     const response = await getTestimonialById(testimonialId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -43,7 +41,6 @@ exports.ApproveTestimonialController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -58,7 +55,6 @@ exports.DenyTestimonialController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -74,7 +70,6 @@ exports.CreateTestimonialController = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -84,7 +79,6 @@ exports.UpdateTestimonialByIdController = async (req, res, next) => {
   try {
     return res.sendStatus(200);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
@@ -94,7 +88,6 @@ exports.DeleteTestimonialByIdController = async (req, res, next) => {
   try {
     return res.sendStatus(200);
   } catch (error) {
-    console.error(error);
     logger.error(error);
     return next(error);
   }
