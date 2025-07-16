@@ -16,8 +16,8 @@ class RedisClient {
   constructor() {
     if (RedisClient.instance) return RedisClient.instance;
     this.client = this.initializeClient();
-    this.client.on("connect", () => logger.info("✅ Connected to Redis"));
-    this.client.on("error", (err) => logger.error("❌ Redis Error:", err));
+    this.client.on("connect", () => console.info("✅ Connected to Redis"));
+    this.client.on("error", (err) => console.error("❌ Redis Error:", err));
     this.client.on("reconnecting", () =>
       logger.info("♻️ Reconnecting to Redis..."),
     );
