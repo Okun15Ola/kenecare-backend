@@ -41,6 +41,7 @@ module.exports = {
   omNotificationURL: env.OM_NOTIFICATION_URL,
   redisHost: env.REDIS_HOST,
   redisPort: env.REDIS_PORT,
+  redisUsername: env.REDIS_USERNAME,
   redisPassword: env.REDIS_PASSWORD,
   sendGridApiKey: env.SENDGRID_API_KEY,
   sendGridSenderEmail: env.SENDGRID_EMAIL,
