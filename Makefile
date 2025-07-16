@@ -287,7 +287,7 @@ rollback: check-env
 test-deploy: check-env
 	@echo "Running health check for newly deployed image: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
 	@sleep 10 # Give the service some time to start up and initialize
-	@curl -f http://localhost:9500/api/v1/health-check || ( \
+	@curl -f http://localhost:8000/api/v1/health-check || ( \
 		echo "Health check failed for $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG). Attempting rollback..."; \
 		$(MAKE) rollback; \
 		exit 1; \
