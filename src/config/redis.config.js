@@ -38,7 +38,9 @@ class RedisClient {
           redisOptions: {
             tls: {},
             username: "imotechsl", // store in env in production
-            password: redisPassword,
+            password: "",
+            retryStrategy: (times) => Math.min(times * 100, 2000),
+            connectTimeout: 10000, // 10 seconds
           },
         },
       );
