@@ -34,6 +34,7 @@ class RedisClient {
           },
         ],
         {
+          scaleReads: "all",
           dnsLookup: (address, callback) => callback(null, address),
           redisOptions: {
             tls: {},
