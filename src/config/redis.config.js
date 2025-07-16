@@ -29,18 +29,15 @@ class RedisClient {
       return new Redis.Cluster(
         [
           {
-            host: redisHost,
-            port: redisPort,
+            host: "clustercfg.imo-redis-cluster.ybsy2m.use1.cache.amazonaws.com",
+            port: 6379,
           },
         ],
         {
-          scaleReads: "all",
           dnsLookup: (address, callback) => callback(null, address),
           redisOptions: {
             tls: {},
-            username: "imotechsl", // store in env in production
-            retryStrategy: (times) => Math.min(times * 100, 2000),
-            connectTimeout: 10000, // 10 seconds
+            username: "imotechsl",
           },
         },
       );
