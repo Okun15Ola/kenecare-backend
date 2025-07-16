@@ -4,7 +4,6 @@ const Redis = require("ioredis");
 const {
   redisHost,
   redisPort,
-  redisUsername,
   redisPassword,
   nodeEnv,
 } = require("./default.config");
@@ -38,7 +37,7 @@ class RedisClient {
           dnsLookup: (address, callback) => callback(null, address),
           redisOptions: {
             tls: {},
-            username: redisUsername || "imotechsl", // store in env in production
+            username: "imotechsl", // store in env in production
             password: redisPassword,
           },
         },
