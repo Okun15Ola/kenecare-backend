@@ -72,6 +72,12 @@ describe("Payment Service", () => {
         transaction_id: null,
         payment_status: "pending",
       });
+      paymentsRepo.deleteAppointmentPaymentByAppointmentId.mockResolvedValue({
+        affectedRows: 1,
+      });
+      patientAppointmentsRepo.deleteAppointmentById.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await paymentService.cancelAppointmentPayment({
         consultationId: "uuid",

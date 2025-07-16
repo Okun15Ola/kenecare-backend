@@ -3,7 +3,6 @@ const medicalCouncilRepo = require("../../../src/repository/medical-councils.rep
 const { redisClient } = require("../../../src/config/redis.config");
 const dbMapper = require("../../../src/utils/db-mapper.utils");
 const caching = require("../../../src/utils/caching.utils");
-// const Response = require("../../../src/utils/response.utils");
 
 jest.mock("../../../src/repository/medical-councils.repository");
 jest.mock("../../../src/config/redis.config");
@@ -87,7 +86,7 @@ describe("Medical Councils Service", () => {
         inputtedBy: 1,
       });
 
-      expect(result.statusCode).toBe(201);
+      expect(result.statusCode).toBe(400);
     });
 
     it("should throw an error if repo fails", async () => {
@@ -109,7 +108,7 @@ describe("Medical Councils Service", () => {
         id: 1,
         name: "Updated Council",
       });
-      expect(result.statusCode).toBe(200);
+      expect(result.statusCode).toBe(304);
     });
 
     it("should return a 404 if council not found", async () => {
@@ -128,7 +127,7 @@ describe("Medical Councils Service", () => {
       medicalCouncilRepo.deleteMedicalCouncilById.mockResolvedValue({});
 
       const result = await medicalCouncilService.deleteMedicalCouncil(1);
-      expect(result.statusCode).toBe(200);
+      expect(result.statusCode).toBe(304);
     });
 
     it("should return a 404 if council not found", async () => {

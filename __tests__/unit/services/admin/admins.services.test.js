@@ -44,7 +44,7 @@ describe("Admins Service", () => {
   describe("createAdmin", () => {
     it("should create a new admin", async () => {
       authUtils.hashUsersPassword.mockResolvedValue("hashed_password");
-      adminRepo.createNewAdmin.mockResolvedValue({});
+      adminRepo.createNewAdmin.mockResolvedValue({ insertId: 1 });
 
       const result = await adminService.createAdmin({ password: "password" });
       expect(result.message).toBe("Admin Created Successfully");
@@ -62,6 +62,9 @@ describe("Admins Service", () => {
   describe("loginAdmin", () => {
     it("should login an admin and return an access token", async () => {
       const admin = { adminId: 1, accountActive: 1 };
+      adminRepo.updateAdminAccountStatusById.mockResolvedValue({
+        affectedRows: 1,
+      });
       authUtils.generateAdminJwtAccessToken.mockReturnValue("access_token");
 
       const result = await adminService.loginAdmin(admin);

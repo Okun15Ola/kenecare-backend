@@ -3,9 +3,7 @@ const blogsRepo = require("../../../../src/repository/blogs.repository");
 const awsS3 = require("../../../../src/utils/aws-s3.utils");
 const fileUpload = require("../../../../src/utils/file-upload.utils");
 const { redisClient } = require("../../../../src/config/redis.config");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
-// const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/blogs.repository");
 jest.mock("../../../../src/utils/aws-s3.utils");
@@ -65,7 +63,7 @@ describe("Blogs Service", () => {
       awsS3.uploadFileToS3Bucket.mockResolvedValue({
         $metadata: { httpStatusCode: 200 },
       });
-      blogsRepo.createNewBlog.mockResolvedValue({});
+      blogsRepo.createNewBlog.mockResolvedValue({ insertId: 1 });
 
       const result = await blogsService.createBlog({ file });
       expect(result.statusCode).toBe(201);
@@ -80,7 +78,7 @@ describe("Blogs Service", () => {
   describe("updateBlog", () => {
     it("should update a blog", async () => {
       blogsRepo.getBlogById.mockResolvedValue({ id: 1 });
-      blogsRepo.updateBlogById.mockResolvedValue({});
+      blogsRepo.updateBlogById.mockResolvedValue({ affectedRows: 1 });
 
       const result = await blogsService.updateBlog({ id: 1 });
       expect(result.statusCode).toBe(200);
@@ -97,7 +95,7 @@ describe("Blogs Service", () => {
   describe("deleteBlog", () => {
     it("should delete a blog", async () => {
       blogsRepo.getBlogById.mockResolvedValue({ id: 1 });
-      blogsRepo.deleteBlogById.mockResolvedValue({});
+      blogsRepo.deleteBlogById.mockResolvedValue({ affectedRows: 1 });
 
       const result = await blogsService.deleteBlog(1);
       expect(result.statusCode).toBe(200);

@@ -61,7 +61,9 @@ describe("Specializations Service", () => {
   describe("createSpecialization", () => {
     it("should create a new specialization", async () => {
       specializationsRepo.getSpecializationByName.mockResolvedValue(null);
-      specializationsRepo.createNewSpecialization.mockResolvedValue({});
+      specializationsRepo.createNewSpecialization.mockResolvedValue({
+        insertId: 1,
+      });
 
       const result = await specializationsService.createSpecialization({
         name: "Dermatology",
@@ -85,7 +87,9 @@ describe("Specializations Service", () => {
   describe("updateSpecialization", () => {
     it("should update a specialization", async () => {
       specializationsRepo.getSpecializationById.mockResolvedValue({ id: 1 });
-      specializationsRepo.updateSpecializationById.mockResolvedValue({});
+      specializationsRepo.updateSpecializationById.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await specializationsService.updateSpecialization({
         specializationId: 1,
@@ -107,7 +111,9 @@ describe("Specializations Service", () => {
   describe("deleteSpecialization", () => {
     it("should delete a specialization", async () => {
       specializationsRepo.getSpecializationById.mockResolvedValue({ id: 1 });
-      specializationsRepo.deleteSpecializationById.mockResolvedValue({});
+      specializationsRepo.deleteSpecializationById.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await specializationsService.deleteSpecialization(1);
       expect(result.statusCode).toBe(200);

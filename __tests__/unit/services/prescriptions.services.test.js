@@ -6,7 +6,6 @@ const { redisClient } = require("../../../src/config/redis.config");
 const authUtils = require("../../../src/utils/auth.utils");
 const smsUtils = require("../../../src/utils/sms.utils");
 const caching = require("../../../src/utils/caching.utils");
-// const Response = require("../../../src/utils/response.utils");
 
 jest.mock("../../../src/repository/prescriptions.repository");
 jest.mock("../../../src/repository/patientAppointments.repository");
@@ -83,14 +82,20 @@ describe("Prescription Service", () => {
       authUtils.generateVerificationToken.mockReturnValue("token");
       authUtils.hashUsersPassword.mockResolvedValue("hashed_token");
       authUtils.encryptText.mockReturnValue("encrypted_text");
-      prescriptionRepo.createAppointmentPrescriptions.mockResolvedValue({});
+      prescriptionRepo.createAppointmentPrescriptions.mockResolvedValue({
+        insertId: 1,
+      });
       smsUtils.sendPrescriptionToken.mockResolvedValue({});
 
       const result = await prescriptionService.createPrescription({
         appointmentId: 1,
         diagnosis: "Fever",
-        medicines: [],
+        medicines: [
+          { name: "Paracetamol", dosage: "500mg", frequency: "2x a day" },
+        ],
         comment: "Rest well",
+        doctorId: 2,
+        patientId: 1,
       });
 
       expect(result.statusCode).toBe(201);
@@ -108,13 +113,15 @@ describe("Prescription Service", () => {
 
   describe("updatePrescriptions", () => {
     it("should update a prescription", async () => {
-      prescriptionRepo.updateAppointmentPrescriptions.mockResolvedValue({});
+      prescriptionRepo.updateAppointmentPrescriptions.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await prescriptionService.updatePrescriptions({
         appointmentId: 1,
         prescriptionId: 1,
       });
-      expect(result.statusCode).toBe(201); // Note: The service returns 201 for updates
+      expect(result.statusCode).toBe(200);
     });
 
     it("should throw an error if repo fails", async () => {

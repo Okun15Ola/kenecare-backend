@@ -1,8 +1,6 @@
 const patientMedicalHistoryService = require("../../../../src/services/patients/patients.medical-history.services");
 const patientsRepo = require("../../../../src/repository/patients.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
-// const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/patients.repository");
 jest.mock("../../../../src/config/redis.config");
@@ -39,7 +37,7 @@ describe("Patient Medical History Service", () => {
     it("should create a new medical history", async () => {
       patientsRepo.getPatientByUserId.mockResolvedValue({ patient_id: 1 });
       patientsRepo.getPatientMedicalInfoByPatientId.mockResolvedValue(null);
-      patientsRepo.createPatientMedicalInfo.mockResolvedValue({});
+      patientsRepo.createPatientMedicalInfo.mockResolvedValue({ insertId: 1 });
 
       const result =
         await patientMedicalHistoryService.createPatientMedicalHistory({
@@ -68,7 +66,9 @@ describe("Patient Medical History Service", () => {
       patientsRepo.getPatientMedicalInfoByPatientId.mockResolvedValue({
         id: 1,
       });
-      patientsRepo.updatePatientMedicalHistory.mockResolvedValue({});
+      patientsRepo.updatePatientMedicalHistory.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result =
         await patientMedicalHistoryService.updatePatientMedicalHistory({

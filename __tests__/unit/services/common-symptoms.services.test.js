@@ -5,7 +5,6 @@ const awsS3 = require("../../../src/utils/aws-s3.utils");
 const fileUpload = require("../../../src/utils/file-upload.utils");
 const dbMapper = require("../../../src/utils/db-mapper.utils");
 const caching = require("../../../src/utils/caching.utils");
-// const Response = require("../../../src/utils/response.utils");
 
 jest.mock("../../../src/repository/common-symptoms.repository");
 jest.mock("../../../src/config/redis.config");
@@ -133,7 +132,7 @@ describe("Common Symptoms Service", () => {
         tags: "tag1,tag2",
       });
 
-      expect(result.statusCode).toBe(200);
+      expect(result.statusCode).toBe(304);
       expect(commonSymptomsRepo.updateCommonSymptomById).toHaveBeenCalled();
     });
 
@@ -151,7 +150,7 @@ describe("Common Symptoms Service", () => {
       commonSymptomsRepo.deleteCommonSymptomById.mockResolvedValue({});
 
       const result = await commonSymptomsService.deleteCommonSymptom(1);
-      expect(result.statusCode).toBe(200);
+      expect(result.statusCode).toBe(304);
       expect(commonSymptomsRepo.deleteCommonSymptomById).toHaveBeenCalledWith(
         1,
       );

@@ -128,12 +128,12 @@ exports.loginAdmin = async (admin) => {
   try {
     const { adminId, accountActive } = admin;
 
-    const { affectecRows } = await dbObject.updateAdminAccountStatusById({
+    const { affectedRows } = await dbObject.updateAdminAccountStatusById({
       id: adminId,
       status: STATUS.ACTIVE,
     });
 
-    if (!affectecRows || affectecRows < 1) {
+    if (!affectedRows || affectedRows < 1) {
       logger.warn(`Failed to update admin account status for ID ${adminId}`);
       return Response.NOT_MODIFIED({});
     }

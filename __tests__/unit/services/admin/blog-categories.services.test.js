@@ -1,9 +1,9 @@
 const blogCategoriesService = require("../../../../src/services/admin/blog-categories.services");
 const blogCategoriesRepo = require("../../../../src/repository/blog-categories.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
+// const dbMapper = require('../../../../src/utils/db-mapper.utils');
 const caching = require("../../../../src/utils/caching.utils");
-// const Response = require("../../../../src/utils/response.utils");
+// const Response = require('../../../../src/utils/response.utils');
 
 jest.mock("../../../../src/repository/blog-categories.repository");
 jest.mock("../../../../src/config/redis.config");
@@ -44,7 +44,7 @@ describe("Blog Categories Service", () => {
 
       const result = await blogCategoriesService.getBlogCategory(1);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("blog-categories:1");
+      expect(redisClient.get).toHaveBeenCalledWith("blog-category:1");
     });
 
     it("should return a 404 if category not found", async () => {
@@ -59,7 +59,9 @@ describe("Blog Categories Service", () => {
   describe("createBlogCategory", () => {
     it("should create a new blog category", async () => {
       blogCategoriesRepo.getBlogCategoryByName.mockResolvedValue(null);
-      blogCategoriesRepo.createNewBlogCategory.mockResolvedValue({});
+      blogCategoriesRepo.createNewBlogCategory.mockResolvedValue({
+        insertId: 1,
+      });
 
       const result = await blogCategoriesService.createBlogCategory("Health");
       expect(result.statusCode).toBe(200);
@@ -79,7 +81,9 @@ describe("Blog Categories Service", () => {
   describe("updateBlogCategory", () => {
     it("should update a blog category", async () => {
       blogCategoriesRepo.getBlogCategoryById.mockResolvedValue({ id: 1 });
-      blogCategoriesRepo.updateBlogCategoryById.mockResolvedValue({});
+      blogCategoriesRepo.updateBlogCategoryById.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await blogCategoriesService.updateBlogCategory({
         id: 1,
@@ -99,7 +103,9 @@ describe("Blog Categories Service", () => {
   describe("deleteBlogCategory", () => {
     it("should delete a blog category", async () => {
       blogCategoriesRepo.getBlogCategoryById.mockResolvedValue({ id: 1 });
-      blogCategoriesRepo.deleteBlogCategoryById.mockResolvedValue({});
+      blogCategoriesRepo.deleteBlogCategoryById.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await blogCategoriesService.deleteBlogCategory(1);
       expect(result.statusCode).toBe(200);

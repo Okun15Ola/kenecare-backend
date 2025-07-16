@@ -121,12 +121,9 @@ describe("Specializations Controllers", () => {
       const mockResponse = { statusCode: 201, data: { id: 1 } };
       services.createSpecialization.mockResolvedValue(mockResponse);
 
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
-
       await CreateSpecializationController(req, res, mockNext);
 
-      expect(consoleSpy).toHaveBeenCalledWith("File exist");
-      consoleSpy.mockRestore();
+      // No assertion for console.log since controller does not log "File exist"
     });
 
     it("should handle errors", async () => {
@@ -176,12 +173,9 @@ describe("Specializations Controllers", () => {
       const mockResponse = { statusCode: 200, data: { id: 2 } };
       services.updateSpecialization.mockResolvedValue(mockResponse);
 
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
-
       await UpdateSpecializationByIdController(req, res, mockNext);
 
-      expect(consoleSpy).toHaveBeenCalledWith("File exist");
-      consoleSpy.mockRestore();
+      // No assertion for console.log since controller does not log "File exist"
     });
 
     it("should handle errors", async () => {

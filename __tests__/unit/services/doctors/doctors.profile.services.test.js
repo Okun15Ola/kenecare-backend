@@ -155,7 +155,9 @@ describe("doctors.profile.services", () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
       dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue(null);
-      dbObject.createDoctorMedicalCouncilRegistration.mockResolvedValue({});
+      dbObject.createDoctorMedicalCouncilRegistration.mockResolvedValue({
+        insertId: 1,
+      });
       adminDoctorCouncilRegistrationEmail.mockResolvedValue();
       doctorCouncilRegistrationEmail.mockResolvedValue();
       Response.CREATED.mockReturnValue("CREATED");
@@ -280,7 +282,9 @@ describe("doctors.profile.services", () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
       dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue(null);
-      dbObject.createDoctorMedicalCouncilRegistration.mockResolvedValue({});
+      dbObject.createDoctorMedicalCouncilRegistration.mockResolvedValue({
+        insertId: 1,
+      });
       adminDoctorCouncilRegistrationEmail.mockResolvedValue();
       doctorCouncilRegistrationEmail.mockResolvedValue();
       Response.CREATED.mockReturnValue("CREATED");

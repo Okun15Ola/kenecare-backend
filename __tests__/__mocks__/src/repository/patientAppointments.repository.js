@@ -4,6 +4,6 @@ module.exports = {
   getPatientAppointmentByUUID: jest.fn(),
   getAppointmentByUUID: jest.fn(),
   getAppointmentByID: jest.fn(),
-  createNewPatientAppointment: jest.fn(),
-  deleteAppointmentById: jest.fn(),
+  createNewPatientAppointment: jest.fn().mockResolvedValue({ insertId: 1 }),
+  deleteAppointmentById: jest.fn().mockResolvedValue({ affectedRows: 1 }),
 };

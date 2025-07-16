@@ -274,7 +274,7 @@ describe("users.service", () => {
 
     it("should return INTERNAL_SERVER_ERROR if update fails", async () => {
       repo.updateUserAccountStatusById.mockResolvedValue({ affectedRows: 0 });
-      Response.INTERNAL_SERVER_ERROR.mockReturnValue("fail");
+      Response.NOT_MODIFIED.mockReturnValue("fail");
       const result = await usersService.loginUser({
         is2faEnabled: 0,
         userId: 1,
@@ -283,7 +283,7 @@ describe("users.service", () => {
         accountActive: 1,
         mobileNumber: "123",
       });
-      expect(Response.INTERNAL_SERVER_ERROR).toHaveBeenCalled();
+      expect(Response.NOT_MODIFIED).toHaveBeenCalled();
       expect(result).toBe("fail");
     });
   });

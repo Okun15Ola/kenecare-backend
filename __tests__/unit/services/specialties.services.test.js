@@ -116,7 +116,7 @@ describe("Specialties Service", () => {
 
   describe("createSpecialty", () => {
     it("should create a new specialty", async () => {
-      specialtyRepo.createNewSpecialty.mockResolvedValue();
+      specialtyRepo.createNewSpecialty.mockResolvedValue({ insertId: 1 });
 
       const result = await specialtyService.createSpecialty({
         name: "Dermatology",
@@ -142,7 +142,7 @@ describe("Specialties Service", () => {
         image_url: "old.png",
       });
       fileUpload.deleteFile.mockResolvedValue();
-      specialtyRepo.updateSpecialtiyById.mockResolvedValue();
+      specialtyRepo.updateSpecialtiyById.mockResolvedValue({ affectedRows: 1 });
 
       const result = await specialtyService.updateSpecialty({
         id: 1,
@@ -152,10 +152,14 @@ describe("Specialties Service", () => {
       expect(result.statusCode).toBe(200);
     });
 
-    it("should return null if not found", async () => {
+    it("should return 404 error object if not found", async () => {
       specialtyRepo.getSpecialtiyById.mockResolvedValue(null);
       const result = await specialtyService.updateSpecialty({ id: 1 });
-      expect(result).toBeNull();
+      expect(result).toMatchObject({
+        statusCode: 404,
+        message: "Specialty Not Found",
+        status: "error",
+      });
     });
   });
 
@@ -169,7 +173,9 @@ describe("Specialties Service", () => {
     });
 
     it("should update status when valid", async () => {
-      specialtyRepo.updateSpecialtiyStatusById.mockResolvedValue();
+      specialtyRepo.updateSpecialtiyStatusById.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await specialtyService.updateSpecialtyStatus({
         id: 1,
@@ -186,7 +192,7 @@ describe("Specialties Service", () => {
       });
       // eslint-disable-next-line global-require
       jest.spyOn(require("fs"), "unlinkSync").mockReturnValue(undefined);
-      specialtyRepo.deleteSpecialtieById.mockResolvedValue();
+      specialtyRepo.deleteSpecialtieById.mockResolvedValue({ affectedRows: 1 });
 
       const result = await specialtyService.deleteSpecialty(1);
       expect(result.statusCode).toBe(200);

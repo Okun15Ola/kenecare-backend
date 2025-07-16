@@ -394,7 +394,7 @@ describe("patients.services", () => {
     it("should create medical info", async () => {
       repo.getPatientByUserId.mockResolvedValueOnce({ patient_id: 1 });
       repo.getPatientMedicalInfoByPatientId.mockResolvedValueOnce(null);
-      repo.createPatientMedicalInfo.mockResolvedValueOnce();
+      repo.createPatientMedicalInfo.mockResolvedValueOnce({ insertId: 1 });
       Response.CREATED.mockImplementation((data) => data);
 
       const result = await patientsService.createPatientMedicalInfo({
@@ -425,7 +425,7 @@ describe("patients.services", () => {
     it("should update patient profile", async () => {
       getUserById.mockResolvedValueOnce({ user_type: USERTYPE.PATIENT });
       repo.getPatientByUserId.mockResolvedValueOnce({ patient_id: 1 });
-      repo.updatePatientById.mockResolvedValueOnce();
+      repo.updatePatientById.mockResolvedValueOnce({ affectedRows: 1 });
       Response.SUCCESS.mockImplementation((data) => data);
 
       const result = await patientsService.updatePatientProfile({
@@ -445,7 +445,9 @@ describe("patients.services", () => {
         profile_pic_url: "pic.jpg",
       });
       deleteFile.mockResolvedValueOnce();
-      repo.updatePatientProfilePictureByUserId.mockResolvedValueOnce();
+      repo.updatePatientProfilePictureByUserId.mockResolvedValueOnce({
+        affectedRows: 1,
+      });
       Response.SUCCESS.mockImplementation((data) => data);
 
       const result = await patientsService.updatePatientProfilePicture({
@@ -458,7 +460,9 @@ describe("patients.services", () => {
 
     it("should update profile pic if no old pic", async () => {
       repo.getPatientByUserId.mockResolvedValueOnce({ profile_pic_url: null });
-      repo.updatePatientProfilePictureByUserId.mockResolvedValueOnce();
+      repo.updatePatientProfilePictureByUserId.mockResolvedValueOnce({
+        affectedRows: 1,
+      });
       Response.SUCCESS.mockImplementation((data) => data);
 
       const result = await patientsService.updatePatientProfilePicture({

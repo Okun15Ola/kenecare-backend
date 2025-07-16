@@ -1,7 +1,6 @@
 const citiesService = require("../../../../src/services/admin/cities.services");
 const citiesRepo = require("../../../../src/repository/cities.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
 
 jest.mock("../../../../src/repository/cities.repository");
@@ -55,7 +54,7 @@ describe("Cities Service", () => {
 
   describe("createCity", () => {
     it("should create a new city", async () => {
-      citiesRepo.createNewCity.mockResolvedValue({});
+      citiesRepo.createNewCity.mockResolvedValue({ insertId: 1 });
 
       const result = await citiesService.createCity({ name: "Abuja" });
       expect(result.statusCode).toBe(201);
@@ -70,7 +69,7 @@ describe("Cities Service", () => {
   describe("updateCity", () => {
     it("should update a city", async () => {
       citiesRepo.getCityById.mockResolvedValue([{}]);
-      citiesRepo.updateCityById.mockResolvedValue({});
+      citiesRepo.updateCityById.mockResolvedValue({ affectedRows: 1 });
 
       const result = await citiesService.updateCity({ id: 1 });
       expect(result.statusCode).toBe(200);
@@ -87,7 +86,7 @@ describe("Cities Service", () => {
   describe("deleteCity", () => {
     it("should delete a city", async () => {
       citiesRepo.getCityById.mockResolvedValue([{}]);
-      citiesRepo.deleteCityById.mockResolvedValue({});
+      citiesRepo.deleteCityById.mockResolvedValue({ affectedRows: 1 });
 
       const result = await citiesService.deleteCity(1);
       expect(result.statusCode).toBe(200);

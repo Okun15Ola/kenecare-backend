@@ -5,8 +5,6 @@ const doctorsRepo = require("../../../../src/repository/doctors.repository");
 const patientsRepo = require("../../../../src/repository/patients.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
 const smsUtils = require("../../../../src/utils/sms.utils");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
-// const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/follow-up.repository");
 jest.mock("../../../../src/repository/doctorAppointments.repository");
@@ -32,7 +30,7 @@ describe("Follow Ups Service", () => {
         patient_id: 1,
       });
       patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
-      followUpRepo.createNewFollowUp.mockResolvedValue({});
+      followUpRepo.createNewFollowUp.mockResolvedValue({ insertId: 1 });
       smsUtils.newFollowAppointmentSms.mockResolvedValue({});
 
       const result = await followUpsService.createFollowUp({ userId: 1 });
@@ -77,7 +75,9 @@ describe("Follow Ups Service", () => {
       doctorAppointmentsRepo.getDoctorAppointmentById.mockResolvedValue({
         id: 1,
       });
-      followUpRepo.deleteAppointmentFollowUp.mockResolvedValue({});
+      followUpRepo.deleteAppointmentFollowUp.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await followUpsService.deleteAppointmentFollowUpService({
         followUpId: 1,

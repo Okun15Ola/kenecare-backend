@@ -1,9 +1,7 @@
 const testimonialService = require("../../../src/services/testimonials.services");
 const testimonialRepo = require("../../../src/repository/testimonials.repository");
 const { redisClient } = require("../../../src/config/redis.config");
-// const dbMapper = require("../../../src/utils/db-mapper.utils");
 const caching = require("../../../src/utils/caching.utils");
-// const Response = require("../../../src/utils/response.utils");
 
 jest.mock("../../../src/repository/testimonials.repository");
 jest.mock("../../../src/config/redis.config");
@@ -55,7 +53,7 @@ describe("Testimonials Service", () => {
 
   describe("createTestimonial", () => {
     it("should create a new testimonial", async () => {
-      testimonialRepo.createNewTestimonial.mockResolvedValue({});
+      testimonialRepo.createNewTestimonial.mockResolvedValue({ insertId: 1 });
 
       const result = await testimonialService.createTestimonial({
         userId: 1,
@@ -78,7 +76,9 @@ describe("Testimonials Service", () => {
   describe("approveTestimonialById", () => {
     it("should approve a testimonial", async () => {
       testimonialRepo.getTestimonialById.mockResolvedValue({ id: 1 });
-      testimonialRepo.approveTestimonialById.mockResolvedValue({});
+      testimonialRepo.approveTestimonialById.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await testimonialService.approveTestimonialById({
         testimonialId: 1,
@@ -100,7 +100,9 @@ describe("Testimonials Service", () => {
   describe("denyTestimonialById", () => {
     it("should deny a testimonial", async () => {
       testimonialRepo.getTestimonialById.mockResolvedValue({ id: 1 });
-      testimonialRepo.denyTestimonialById.mockResolvedValue({});
+      testimonialRepo.denyTestimonialById.mockResolvedValue({
+        affectedRows: 1,
+      });
 
       const result = await testimonialService.denyTestimonialById({
         testimonialId: 1,
