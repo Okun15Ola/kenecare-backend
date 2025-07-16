@@ -5,7 +5,7 @@ services:
     image: imotechsl/kenecare-api:${TAG}
     container_name: kenecare-api-${ENV}
     ports:
-      - "${APP_PORT:-9500}:${APP_PORT:-8000}"
+      - "${APP_PORT:-9500}:8000"
     networks:
       - kenecare-prod-net
     restart: always
