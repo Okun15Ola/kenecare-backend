@@ -4,14 +4,14 @@ require("module-alias/register");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const path = require("path");
+// const path = require("path");
 const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
 
-const { authenticateAdmin } = require("./middlewares/auth.middleware");
+// const { authenticateAdmin } = require("./middlewares/auth.middleware");
 const {
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
@@ -78,18 +78,18 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(
-  "/user-profile",
-  express.static(path.join(__dirname, "public/upload/profile_pics")),
-);
+// app.use(
+//   "/user-profile",
+//   express.static(path.join(__dirname, "public/upload/profile_pics")),
+// );
 
-app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
+// app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
 
-app.use(
-  "/docs/admin",
-  authenticateAdmin,
-  express.static(path.join(__dirname, "public/upload/media")),
-);
+// app.use(
+//   "/docs/admin",
+//   authenticateAdmin,
+//   express.static(path.join(__dirname, "public/upload/media")),
+// );
 
 app.use("/api/v1/health-check", (req, res) =>
   res

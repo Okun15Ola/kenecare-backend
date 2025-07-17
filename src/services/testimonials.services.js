@@ -17,13 +17,14 @@ exports.getTestimonials = async (limit, offset, paginationInfo) => {
     }
     const rawData = await repo.getAllTestimonials(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Testimonials Not Found");
-      return Response.NOT_FOUND({ message: "Testimonials Not Found" });
+      return Response.SUCCESS({ message: "No testimonials found", data: [] });
     }
 
-    const testimonials = rawData
-      .filter((t) => t.is_approved && t.is_active)
-      .map(mapTestimonialRow);
+    const testimonials = await Promise.all(
+      rawData
+        .filter((t) => t.is_approved && t.is_active)
+        .map(mapTestimonialRow),
+    );
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(testimonials),
@@ -49,7 +50,7 @@ exports.getTestimonialById = async (id) => {
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
 
-    const testimonial = mapTestimonialRow(rawData);
+    const testimonial = await mapTestimonialRow(rawData);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(testimonial),

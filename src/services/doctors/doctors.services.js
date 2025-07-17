@@ -1,5 +1,3 @@
-const path = require("path");
-const fs = require("fs");
 const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 const {
@@ -23,6 +21,11 @@ const {
 const { redisClient } = require("../../config/redis.config");
 const { cacheKeyBulider } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
+const {
+  uploadFileToS3Bucket,
+  deleteFileFromS3Bucket,
+} = require("../../utils/aws-s3.utils");
+const { generateFileName } = require("../../utils/file-upload.utils");
 
 exports.getAllDoctors = async (limit, offset, paginationInfo) => {
   try {
@@ -38,11 +41,10 @@ exports.getAllDoctors = async (limit, offset, paginationInfo) => {
     const rawData = await dbObject.getAllDoctors(limit, offset);
 
     if (!rawData?.length) {
-      logger.error("No doctors found in the database.");
-      return Response.NOT_FOUND({ message: "Doctors not found" });
+      return Response.SUCCESS({ message: "No doctors found", data: [] });
     }
 
-    const doctors = rawData.map(mapDoctorRow);
+    const doctors = await Promise.all(rawData.map(mapDoctorRow));
 
     await redisClient.set({
       key: cacheKey,
@@ -64,7 +66,8 @@ exports.getDoctorByQuery = async (
 ) => {
   try {
     const cacheKey = cacheKeyBulider(
-      `doctor-search${locationId ? `:location=${locationId}` : ""}${query ? `:query=${query}` : ""}`,
+      `doctor-search${locationId ? `:location=${locationId}` : ""}
+      ${query ? `:query=${query}` : ""}`,
       limit,
       offset,
     );
@@ -83,11 +86,10 @@ exports.getDoctorByQuery = async (
     });
 
     if (!rawData?.length) {
-      logger.error("No doctors found for the given query.");
-      return Response.NOT_FOUND({ message: "Doctors not found" });
+      return Response.SUCCESS({ message: "No doctors found", data: [] });
     }
 
-    const doctors = rawData.map(mapDoctorRow);
+    const doctors = await Promise.all(rawData.map(mapDoctorRow));
 
     await redisClient.set({
       key: cacheKey,
@@ -126,11 +128,13 @@ exports.getDoctorBySpecialtyId = async (
     );
 
     if (!rawData?.length) {
-      logger.error("No doctors found for the given specialty ID.");
-      return Response.NOT_FOUND({ message: "Doctors not found" });
+      return Response.SUCCESS({
+        message: "No doctors available for this specialty",
+        data: [],
+      });
     }
 
-    const doctors = rawData.map(mapDoctorRow);
+    const doctors = await Promise.all(rawData.map(mapDoctorRow));
 
     await redisClient.set({
       key: cacheKey,
@@ -160,7 +164,7 @@ exports.getDoctorByUser = async (id) => {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
-    const doctor = mapDoctorUserProfileRow(rawData);
+    const doctor = await mapDoctorUserProfileRow(rawData);
 
     if (id !== doctor.userId || doctor.userType !== USERTYPE.DOCTOR) {
       logger.error(
@@ -197,7 +201,7 @@ exports.getDoctorById = async (id) => {
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
 
-    const doctor = mapDoctorRow(data);
+    const doctor = await mapDoctorRow(data);
 
     await redisClient.set({
       key: cacheKey,
@@ -389,30 +393,44 @@ exports.updateDoctorProfile = async ({
     throw error;
   }
 };
-exports.updateDoctorProfilePicture = async ({ userId, imageUrl }) => {
+exports.updateDoctorProfilePicture = async ({ userId, file }) => {
   try {
+    if (!file) {
+      return Response.BAD_REQUEST({
+        message: "No file provided for upload",
+      });
+    }
+
     const doctor = await dbObject.getDoctorByUserId(userId);
     if (!doctor) {
       logger.error(`Doctor profile not found for userId: ${userId}`);
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
-    const { doctor_id: doctorId, profile_pic_url: profilePicUrl } = doctor;
+    const { doctor_id: doctorId, profile_pic_url: oldProfilePicUrl } = doctor;
 
-    if (profilePicUrl) {
-      // delete old profile pic from file system
-      const file = path.join(
-        __dirname,
-        "../public/upload/profile_pics/",
-        profilePicUrl,
-      );
-      if (fs.existsSync(file)) {
-        await fs.promises.unlink(file);
-      }
+    let newImageUrl = null;
+
+    try {
+      const { buffer, mimetype } = file;
+      newImageUrl = `profile_pic_${generateFileName(file)}`;
+
+      await uploadFileToS3Bucket({
+        fileName: newImageUrl,
+        buffer,
+        mimetype,
+      });
+
+      logger.info(`Successfully uploaded new profile picture: ${newImageUrl}`);
+    } catch (uploadError) {
+      logger.error("Failed to upload profile picture to S3:", uploadError);
+      return Response.BAD_REQUEST({
+        message: "Failed to upload profile picture. Please try again.",
+      });
     }
 
     const { affectedRows } = await dbObject.updateDoctorProfilePictureById({
       doctorId,
-      imageUrl,
+      imageUrl: newImageUrl,
     });
 
     if (!affectedRows || affectedRows < 1) {
@@ -420,6 +438,20 @@ exports.updateDoctorProfilePicture = async ({ userId, imageUrl }) => {
         `Failed to update profile picture for doctorId: ${doctorId}`,
       );
       return Response.NOT_MODIFIED({});
+    }
+
+    if (oldProfilePicUrl) {
+      try {
+        await deleteFileFromS3Bucket(oldProfilePicUrl);
+        logger.info(
+          `Successfully deleted old profile picture: ${oldProfilePicUrl}`,
+        );
+      } catch (deleteError) {
+        logger.warn(
+          `Failed to delete old profile picture ${oldProfilePicUrl}:`,
+          deleteError.message,
+        );
+      }
     }
 
     await redisClient.clearCacheByPattern("doctors:*");

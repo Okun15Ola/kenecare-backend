@@ -2,7 +2,6 @@ const moment = require("moment");
 const he = require("he");
 const { getFileUrlFromS3Bucket } = require("./aws-s3.utils");
 const { decryptText } = require("./auth.utils");
-const { appBaseURL } = require("../config/default.config");
 
 exports.mapCommonSymptomsRow = async (commonSymptoms) => {
   const {
@@ -217,19 +216,24 @@ exports.mapCouncilRegistrationRow = async (councilRegistration) => {
     rejection_reason: rejectionReason,
     verified_by: verifiedBy,
   } = councilRegistration;
-  const url = await getFileUrlFromS3Bucket(regDocumentUrl);
+  const [documentUrl, profileImageUrl] = await Promise.all([
+    regDocumentUrl
+      ? getFileUrlFromS3Bucket(regDocumentUrl)
+      : Promise.resolve(null),
+    doctorPic ? getFileUrlFromS3Bucket(doctorPic) : Promise.resolve(null),
+  ]);
   return {
     registrationId,
     doctorId,
     doctor: `Dr. ${firstName} ${lastName}`,
     specialty,
-    doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
+    doctorPic: profileImageUrl,
     councilName,
     yearsOfExperience,
     isProfileApproved,
     regNumber,
     regYear,
-    regDocumentUrl: url,
+    regDocumentUrl: documentUrl,
     certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
     certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
     regStatus,
@@ -537,18 +541,23 @@ exports.mapDoctorCouncilRow = async (doctorCouncil) => {
     rejection_reason: rejectionReason,
     verified_by: verifiedBy,
   } = doctorCouncil;
-  const url = await getFileUrlFromS3Bucket(regDocumentUrl);
+  const [documentUrl, profileImageUrl] = await Promise.all([
+    regDocumentUrl
+      ? getFileUrlFromS3Bucket(regDocumentUrl)
+      : Promise.resolve(null),
+    doctorPic ? getFileUrlFromS3Bucket(doctorPic) : Promise.resolve(null),
+  ]);
   return {
     registrationId,
     doctor: `${firstName} ${lastName}`,
     specialty,
-    doctorPic: `${appBaseURL}/user-profile/${doctorPic}`,
+    doctorPic: profileImageUrl,
     councilName,
     yearsOfExperience,
     isProfileApproved,
     regNumber,
     regYear,
-    regDocumentUrl: url,
+    regDocumentUrl: documentUrl,
     certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
     certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
     regStatus,
@@ -715,6 +724,7 @@ exports.mapAppointmentPrescriptionRow = (prescription) => {
     encryptedText: doctorComment,
     key: hashedToken,
   });
+
   return {
     prescriptionId,
     appointmentId,
@@ -726,7 +736,7 @@ exports.mapAppointmentPrescriptionRow = (prescription) => {
   };
 };
 
-exports.mapDoctorRow = (doctor) => {
+exports.mapDoctorRow = async (doctor) => {
   const {
     doctor_id: doctorId,
     title,
@@ -750,6 +760,7 @@ exports.mapDoctorRow = (doctor) => {
     user_type: userType,
     is_account_active: isAccountActive,
   } = doctor;
+  const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
   return {
     doctorId,
     title,
@@ -758,7 +769,7 @@ exports.mapDoctorRow = (doctor) => {
     lastName,
     gender,
     professionalSummary,
-    profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
+    profilePic: imageUrl,
     specialtyId,
     specialization,
     qualifications,
@@ -775,7 +786,7 @@ exports.mapDoctorRow = (doctor) => {
   };
 };
 
-exports.mapDoctorUserProfileRow = (doctor) => {
+exports.mapDoctorUserProfileRow = async (doctor) => {
   const {
     doctor_id: doctorId,
     title,
@@ -797,6 +808,7 @@ exports.mapDoctorUserProfileRow = (doctor) => {
     user_id: userId,
     user_type: userType,
   } = doctor;
+  const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
   return {
     doctorId,
     userId,
@@ -809,7 +821,7 @@ exports.mapDoctorUserProfileRow = (doctor) => {
     mobileNumber,
     email,
     professionalSummary,
-    profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
+    profilePic: imageUrl,
     specialtyId,
     specialization,
     qualifications,
@@ -893,7 +905,7 @@ exports.mapPatientAppointment = (appointment) => {
   };
 };
 
-exports.mapTestimonialRow = (testimonial) => {
+exports.mapTestimonialRow = async (testimonial) => {
   const {
     testimonial_id: testimonialId,
     first_name: firstName,
@@ -904,10 +916,11 @@ exports.mapTestimonialRow = (testimonial) => {
     is_approved: isApproved,
     approved_by: approvedBy,
   } = testimonial;
+  const imageUrl = patientPic ? await getFileUrlFromS3Bucket(patientPic) : null;
   return {
     testimonialId,
     patientName: `${firstName} ${lastName}`,
-    patientPic: `${appBaseURL}/user-profile/${patientPic}`,
+    patientPic: imageUrl,
     content,
     isActive,
     isApproved,
@@ -925,12 +938,12 @@ exports.mapSpecialityRow = (speciality, includeTags = false) => {
     is_active: isActive,
     inputted_by: inputtedBy,
   } = speciality;
-
+  const specialityImageUrl = imageUrl ? getFileUrlFromS3Bucket(imageUrl) : null;
   const mapped = {
     specialtyId,
     specialtyName: he.decode(specialtyName),
     description: he.decode(description),
-    imageUrl: imageUrl ? `${appBaseURL}/images/${imageUrl}` : "",
+    imageUrl: specialityImageUrl,
     isActive,
     inputtedBy,
   };
@@ -1054,7 +1067,7 @@ exports.mapPatientDocumentRow = async (document, includeFileUrl = false) => {
   return mapped;
 };
 
-exports.mapPatientRow = (patient) => {
+exports.mapPatientRow = async (patient) => {
   const {
     patient_id: patientId,
     title,
@@ -1071,6 +1084,7 @@ exports.mapPatientRow = (patient) => {
     is_account_active: isAccountActive,
     is_online: isOnline,
   } = patient;
+  const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
   return {
     patientId,
     title,
@@ -1078,7 +1092,7 @@ exports.mapPatientRow = (patient) => {
     middleName,
     lastName,
     gender,
-    profilePic: profilePic ? `${appBaseURL}/user-profile/${profilePic}` : null,
+    profilePic: imageUrl,
     dob: moment(dob).format("YYYY-MM-DD"),
     mobileNumber,
     email,

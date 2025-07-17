@@ -57,11 +57,11 @@ exports.UpdatePatientProfileController = async (req, res, next) => {
 exports.UpdatePatientProfilePictureController = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const imageUrl = req.file.filename || null;
+    const file = req.file || null;
 
     const response = await updatePatientProfilePicture({
       userId: id,
-      imageUrl,
+      file,
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {

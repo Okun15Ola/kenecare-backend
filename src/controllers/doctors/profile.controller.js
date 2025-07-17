@@ -156,10 +156,10 @@ const UpdateDoctorProfileByIdController = async (req, res, next) => {
 const UpdateDoctorProfilePictureController = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const imageUrl = req.file.filename || null;
+    const { file } = req || null;
     const response = await updateDoctorProfilePicture({
       userId: id,
-      imageUrl,
+      file,
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {

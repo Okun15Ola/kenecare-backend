@@ -1,5 +1,4 @@
 const moment = require("moment");
-const path = require("path");
 const repo = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
 const {
@@ -8,7 +7,6 @@ const {
   VERIFICATIONSTATUS,
 } = require("../../utils/enum.utils");
 const { getUserById } = require("../../repository/users.repository");
-const { deleteFile } = require("../../utils/file-upload.utils");
 const {
   getMarketerByReferralCode,
   getMarketersTotalRegisteredUsers,
@@ -24,6 +22,11 @@ const {
   mapMedicalRecordRow,
 } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
+const {
+  uploadFileToS3Bucket,
+  deleteFileFromS3Bucket,
+} = require("../../utils/aws-s3.utils");
+const { generateFileName } = require("../../utils/file-upload.utils");
 
 exports.getAllPatients = async (limit, offset, paginationInfo) => {
   try {
@@ -38,11 +41,10 @@ exports.getAllPatients = async (limit, offset, paginationInfo) => {
     const rawData = await repo.getAllPatients(limit, offset);
 
     if (!rawData?.length) {
-      logger.warn("No Patients Found");
-      return Response.NOT_FOUND({ message: "Patient Not Found" });
+      return Response.SUCCESS({ message: "No patients found", data: [] });
     }
 
-    const patients = rawData.map(mapPatientRow);
+    const patients = await Promise.all(rawData.map(mapPatientRow));
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(patients),
@@ -69,7 +71,7 @@ exports.getPatientById = async (id) => {
           "Patient Profile Not Found. Please Create a profile to continue",
       });
     }
-    const patient = mapPatientRow(rawData);
+    const patient = await mapPatientRow(rawData);
 
     const medicalRecord = await repo.getPatientMedicalInfoByPatientId(
       patient.patientId,
@@ -108,13 +110,13 @@ exports.getPatientsTestimonial = async (limit, offset, paginationInfo) => {
     }
     const rawData = await getAllTestimonials(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Patient Testimonials Not Found");
-      return Response.NOT_FOUND({
-        message: "Patient Testimonials Not Found",
+      return Response.SUCCESS({
+        message: "No patient testimonials found",
+        data: [],
       });
     }
 
-    const patients = rawData.map(mapPatientRow);
+    const patients = await Promise.all(rawData.map(mapPatientRow));
 
     await redisClient.set({
       key: cacheKey,
@@ -146,7 +148,7 @@ exports.getPatientByUser = async (id) => {
       });
     }
 
-    const patient = mapPatientRow(rawData);
+    const patient = await mapPatientRow(rawData);
 
     if (id !== patient.userId || patient.userType !== USERTYPE.PATIENT) {
       logger.warn(
@@ -397,19 +399,32 @@ exports.updatePatientProfile = async ({
     throw error;
   }
 };
-exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
+exports.updatePatientProfilePicture = async ({ userId, file }) => {
   try {
-    const { profile_pic_url: profilePicUrl } =
+    if (!file) {
+      return Response.BAD_REQUEST({
+        message: "No file provided for upload",
+      });
+    }
+    const { profile_pic_url: oldProfilePicUrl } =
       await repo.getPatientByUserId(userId);
 
-    if (profilePicUrl) {
-      // delete old profile pic from file system
-      const file = path.join(
-        __dirname,
-        "../public/upload/profile_pics/",
-        profilePicUrl,
-      );
-      await deleteFile(file);
+    let imageUrl = null;
+
+    try {
+      const { buffer, mimetype } = file;
+      imageUrl = `profile_pic_${generateFileName(file)}`;
+
+      await uploadFileToS3Bucket({
+        fileName: imageUrl,
+        buffer,
+        mimetype,
+      });
+    } catch (uploadError) {
+      logger.error("Failed to upload profile picture to S3:", uploadError);
+      return Response.BAD_REQUEST({
+        message: "Failed to upload profile picture. Please try again.",
+      });
     }
 
     const { affectedRows } = await repo.updatePatientProfilePictureByUserId({
@@ -418,10 +433,19 @@ exports.updatePatientProfilePicture = async ({ userId, imageUrl }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.error(
-        `Failed to update patient profile picture for User ID: ${userId}. Affected Rows: ${affectedRows}`,
-      );
+      logger.error("Failed to update patient profile picture");
       return Response.NOT_MODIFIED({});
+    }
+
+    if (oldProfilePicUrl) {
+      try {
+        await deleteFileFromS3Bucket(oldProfilePicUrl);
+      } catch (deleteError) {
+        logger.warn(
+          `Failed to delete old profile picture ${oldProfilePicUrl}:`,
+          deleteError.message,
+        );
+      }
     }
 
     return Response.SUCCESS({
