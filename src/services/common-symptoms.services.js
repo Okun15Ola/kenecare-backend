@@ -21,8 +21,10 @@ exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
     const rawData = await repo.getAllCommonSymptoms(limit, offset);
 
     if (!rawData?.length) {
-      logger.warn("Common Symptoms Not Found");
-      return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
+      return Response.SUCCESS({
+        message: "No common symptoms found",
+        data: [],
+      });
     }
 
     const symptoms = await Promise.all(rawData.map(mapCommonSymptomsRow));

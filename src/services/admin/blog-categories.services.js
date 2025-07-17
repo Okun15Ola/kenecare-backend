@@ -18,8 +18,10 @@ exports.getBlogCategories = async (limit, offset, paginationInfo) => {
     const rawData = await dbObject.getAllBlogCategories(limit, offset);
 
     if (!rawData?.length) {
-      logger.warn("Blog Categories Not Found");
-      return Response.NOT_FOUND({ message: "Blog Category Not Found" });
+      return Response.SUCCESS({
+        message: "No blog categories found",
+        data: [],
+      });
     }
 
     const categories = rawData.map(mapBlogCategoryRow);

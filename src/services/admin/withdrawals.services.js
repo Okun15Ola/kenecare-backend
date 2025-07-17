@@ -21,8 +21,10 @@ exports.getAllRequests = async (limit, offset, paginationInfo) => {
   try {
     const rawData = await getAllWithdrawalRequests(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Withdrawal Request Not Found");
-      return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
+      return Response.SUCCESS({
+        message: "No withdrawal requests found",
+        data: [],
+      });
     }
     const data = rawData.map(mapWithdawalRow);
     return Response.SUCCESS({ data, pagination: paginationInfo });
@@ -36,7 +38,7 @@ exports.getRequestById = async (id) => {
     const rawData = await getWithdrawalRequestById(id);
     if (!rawData) {
       logger.warn(`Withdrawal Request Not Found for ID ${id}`);
-      return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
+      return Response.NOT_FOUND({ message: "Withdrawal request not found" });
     }
     const data = mapWithdawalRow(rawData);
     return Response.SUCCESS({ data });

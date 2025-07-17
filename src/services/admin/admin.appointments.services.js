@@ -18,8 +18,7 @@ exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
     const rawData = await dbObject.getAllAppointments(limit, offset);
 
     if (!rawData?.length) {
-      logger.warn("Admin Appointments Not Found");
-      return Response.NOT_FOUND({ message: "Appointments Not Found" });
+      return Response.SUCCESS({ message: "No appointments found", data: [] });
     }
 
     const appointments = rawData.map(mapAdminAppointmentRow);
@@ -62,8 +61,7 @@ exports.getAdminAppointmentsByDoctorId = async (
     const appointments = rawData.map(mapAdminAppointmentRow);
 
     if (!rawData?.length) {
-      logger.warn(`Admin Appointments Not Found for Doctor ID ${doctorId}`);
-      return Response.NOT_FOUND({ message: "Appointments Not Found" });
+      return Response.SUCCESS({ message: "No appointments found", data: [] });
     }
 
     await redisClient.set({

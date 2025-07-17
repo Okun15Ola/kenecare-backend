@@ -56,8 +56,7 @@ exports.getAllMarketersService = async (limit, offset, paginationInfo) => {
     }
     const rawData = await getAllMarketers(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Marketers Not Found");
-      return Response.NOT_FOUND({ message: "Marketer Not Found" });
+      return Response.SUCCESS({ message: "No marketers found", data: [] });
     }
     const marketers = rawData.map(mapMarketersRow);
     await redisClient.set({

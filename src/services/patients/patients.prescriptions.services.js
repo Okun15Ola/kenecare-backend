@@ -32,9 +32,9 @@ exports.getAppointmentPrescriptions = async (
     const rawData = await getAppointmentPrescriptions(limit, offset, id);
 
     if (!rawData?.length) {
-      logger.warn(`Prescription Not Found ${id}`);
-      return Response.NOT_FOUND({
-        message: "Presciption Not Found",
+      return Response.SUCCESS({
+        message: "No presciptions found",
+        data: [],
       });
     }
 

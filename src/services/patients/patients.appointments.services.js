@@ -66,8 +66,10 @@ exports.getPatientAppointments = async (
     });
 
     if (!rawData?.length) {
-      logger.warn(`Patients appointments not found for user ${userId}`);
-      return Response.NOT_FOUND({ message: "Patients appointments not found" });
+      return Response.SUCCESS({
+        message: "No patient appointments found",
+        data: [],
+      });
     }
 
     const appointments = rawData.map(mapPatientAppointment);
@@ -219,7 +221,7 @@ exports.createPatientAppointment = async ({
       });
     }
 
-    if (timeBooked.status === "fulfilled" || timeBooked.value) {
+    if (timeBooked.status === "fulfilled" && timeBooked.value) {
       logger.warn(
         `Appointment already booked for Doctor ${doctorId} on ${appointmentDate} at ${appointmentTime}`,
       );

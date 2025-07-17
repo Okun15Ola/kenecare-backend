@@ -49,8 +49,7 @@ exports.getUsers = async (limit, offset, paginationInfo) => {
 
     const rawData = await repo.getAllUsers(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Users not found");
-      return Response.NOT_FOUND({ message: "Users not found" });
+      return Response.SUCCESS({ message: "No users found", data: [] });
     }
 
     const users = rawData.map(mapUserRow);

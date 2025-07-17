@@ -8,8 +8,10 @@ exports.getSpecialties = async () => {
     const rawData = await repo.getAllSpecialization();
 
     if (!rawData?.length) {
-      logger.warn("Specializations Not Found");
-      return Response.NOT_FOUND({ message: "Specializations Not Found" });
+      return Response.SUCCESS({
+        message: "No specializations found",
+        data: [],
+      });
     }
 
     const specializations = rawData.map(mapSpecializationRow);

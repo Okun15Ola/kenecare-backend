@@ -18,15 +18,25 @@ exports.getDoctorAvailableDays = async (userId) => {
     }
     const doctors = await db.getDoctorsAvailableDays(doctorId);
     if (!doctors?.length) {
-      logger.error("Doctor's Available Days Not Found");
-      return Response.NOT_FOUND({
-        message: "Doctor's Available Days Not Found",
+      return Response.SUCCESS({
+        message: "No available days found",
       });
     }
 
-    await redisClient.set({ key: cacheKey, value: JSON.stringify(doctors) });
+    const availableDays = doctors.map((day) => ({
+      dayId: day.day_slot_id,
+      day: day.day_of_week,
+      startTime: day.day_start_time,
+      endTime: day.day_end_time,
+      isAvailable: day.is_available,
+    }));
 
-    return Response.SUCCESS({ data: doctors });
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(availableDays),
+    });
+
+    return Response.SUCCESS({ data: availableDays });
   } catch (error) {
     logger.error("getDoctorAvailableDays: ", error);
     throw error;
@@ -45,17 +55,28 @@ exports.getDoctorSpecifyDayAvailabilty = async (userId, day) => {
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-    const doctors = await db.getSpecificDayAvailability(doctorId, day);
-    if (!doctors) {
+    const doctor = await db.getSpecificDayAvailability(doctorId, day);
+    if (!doctor) {
       logger.error(`Doctor Availabilty For ${day} Not Found`);
       return Response.NOT_FOUND({
-        message: `Doctor Availabilty For ${day} Not Found`,
+        message: `Doctor availabilty for ${day} not found`,
       });
     }
 
-    await redisClient.set({ key: cacheKey, value: JSON.stringify(doctors) });
+    const availability = {
+      dayId: doctor.day_slot_id,
+      day: doctor.day_of_week,
+      startTime: doctor.day_start_time,
+      endTime: doctor.day_end_time,
+      isAvailable: doctor.is_available,
+    };
 
-    return Response.SUCCESS({ data: doctors });
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(availability),
+    });
+
+    return Response.SUCCESS({ data: availability });
   } catch (error) {
     logger.error("getDoctorSpecifyDayAvailabilty: ", error);
     throw error;
@@ -70,16 +91,26 @@ exports.getDoctorsAvailableOnSpecifyDay = async (dayOfWeek) => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
     const doctors = await db.getDoctorsAvailableOnDay(dayOfWeek);
-    if (!doctors) {
-      logger.error(`Doctors Available For ${dayOfWeek} Not Found`);
-      return Response.NOT_FOUND({
-        message: `Doctor Available For ${dayOfWeek} Not Found`,
+    if (!doctors?.length) {
+      return Response.SUCCESS({
+        message: `No doctor available on ${dayOfWeek}`,
       });
     }
 
-    await redisClient.set({ key: cacheKey, value: JSON.stringify(doctors) });
+    const doctorsDayAvailability = doctors.map((day) => ({
+      doctorId: day.doctor_id,
+      doctor: `${day.title} ${day.last_name}`,
+      day: day.day_of_week,
+      startTime: day.day_start_time,
+      endTime: day.day_end_time,
+    }));
 
-    return Response.SUCCESS({ data: doctors });
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctorsDayAvailability),
+    });
+
+    return Response.SUCCESS({ data: doctorsDayAvailability });
   } catch (error) {
     logger.error("getDoctorsAvailableOnSpecifyDay: ", error);
     throw error;

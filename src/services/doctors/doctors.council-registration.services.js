@@ -41,7 +41,7 @@ exports.getDoctorCouncilRegistration = async (id) => {
       logger.error(
         `Unauthorized access attempt by userId: ${id} for doctorId: ${doctorId}`,
       );
-      return Response.UNAUTHORIZED({ message: "Unauthorized account access" });
+      return Response.FORBIDDEN({});
     }
 
     const rawData = await dbObject.getCouncilRegistrationByDoctorId(doctorId);
@@ -95,9 +95,7 @@ exports.createDoctorCouncilRegistration = async ({
       logger.error(
         `Unauthorized action by userId: ${userId}. User type: ${userType}`,
       );
-      return Response.UNAUTHORIZED({
-        message: "Unauthorized Action.",
-      });
+      return Response.FORBIDDEN({});
     }
     const doctor = await dbObject.getDoctorByUserId(userId);
     if (!doctor) {

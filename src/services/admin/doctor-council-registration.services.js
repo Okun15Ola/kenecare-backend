@@ -28,9 +28,9 @@ exports.getAllCouncilRegistrations = async (limit, offset, paginationInfo) => {
       offset,
     );
     if (!rawData?.length) {
-      logger.warn("Medical Council Registrations Not Found");
-      return Response.NOT_FOUND({
-        message: "Medical Council Registration Not Found",
+      return Response.SUCCESS({
+        message: "No medical council registrations found",
+        data: [],
       });
     }
     const registrations = await Promise.all(

@@ -42,9 +42,9 @@ exports.getPatientMedicalDocuments = async (userId) => {
     }
     const rawData = await getMedicalDocumentsByPatientId(patientId);
     if (!rawData?.length) {
-      logger.warn(`Patient Medical Document Not Found for user ${userId}`);
-      return Response.NOT_FOUND({
-        message: "Patient Medical Document Not Found",
+      return Response.SUCCESS({
+        message: "No patient medical documents found",
+        data: [],
       });
     }
 
@@ -389,11 +389,9 @@ exports.getPatientSharedMedicalDocuments = async (userId) => {
     const rawData = await getPatientSharedMedicalDocuments(patientId);
 
     if (!rawData?.length) {
-      logger.warn(
-        `Patient Shared Medical Documents Not Found for user ${userId}`,
-      );
-      return Response.NOT_FOUND({
-        message: "Patient Shared Medical Documents Not Found",
+      return Response.SUCCESS({
+        message: "No patient shared medical documents found",
+        data: [],
       });
     }
 
