@@ -62,8 +62,11 @@ const hashUsersPassword = async (password) => {
  * @returns {string} The encrypted text in hexadecimal format.
  */
 const encryptText = (text, key) => {
-  const cipher = crypto.createCipheriv("aes-256-cbc", key);
-  // changed from createCipher to createCipheriv due to the previous pagackage been expired
+  const hash = crypto.createHash("md5").update(String(key)).digest();
+  const iv = hash.subarray(0, 16);
+  const keyBuffer = crypto.createHash("sha256").update(String(key)).digest();
+  const cipher = crypto.createCipheriv("aes-256-cbc", keyBuffer, iv);
+  // cipher.setAutoPadding(true); // Enable PKCS#7 padding (default and secure)
   let encryptedText = cipher.update(text, "utf8", "hex");
   encryptedText += cipher.final("hex");
   return encryptedText;
@@ -77,12 +80,31 @@ const encryptText = (text, key) => {
  * @returns {string} The decrypted plain text.
  */
 const decryptText = ({ encryptedText, key }) => {
-  const decipher = crypto.createDecipheriv("aes-256-cbc", key);
-  // changed from createDecipher to createDecipheriv due to the previous pagackage been expired
+  const hash = crypto.createHash("md5").update(String(key)).digest();
+  const iv = hash.subarray(0, 16);
+  const keyBuffer = crypto.createHash("sha256").update(String(key)).digest();
+  const decipher = crypto.createDecipheriv("aes-256-cbc", keyBuffer, iv);
+  // Enable PKCS#7 padding (default and secure)
+  // decipher.setAutoPadding(true);
   let decryptedText = decipher.update(encryptedText, "hex", "utf8");
   decryptedText += decipher.final("utf8");
+
   return decryptedText;
 };
+
+// const encryptText = (text, key) => {
+//   const cipher = crypto.createCipheriv("aes-256-cbc", key);
+//   let encryptedText = cipher.update(text, "utf8", "hex");
+//   encryptedText += cipher.final("hex");
+//   return encryptedText;
+// };
+
+// const decryptText = ({ encryptedText, key }) => {
+//   const decipher = crypto.createDecipheriv("aes-256-cbc", key);
+//   let decryptedText = decipher.update(encryptedText, "hex", "utf8");
+//   decryptedText += decipher.final("utf8");
+//   return decryptedText;
+// };
 
 /**
  * Compares a plain password with a hashed password.

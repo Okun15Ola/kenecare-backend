@@ -13,7 +13,7 @@ const {
   UpdateSpecialtyStatusController,
   DeleteSpecialtyByIdController,
 } = require("../../../controllers/admin/specialties.controller");
-const { localMediaUploader } = require("../../../utils/file-upload.utils");
+const { AWSUploader } = require("../../../utils/file-upload.utils");
 const { adminLimiter } = require("../../../utils/rate-limit.utils");
 const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
 const {
@@ -35,14 +35,14 @@ router.get(
 router.get("/:id", SpecialtyIDValidation, Validate, GetSpecialtyByIDController);
 router.post(
   "/",
-  localMediaUploader.single("image"),
+  AWSUploader.single("image"),
   CreateSpecialtyValidation,
   Validate,
   CreateSpecialtyController,
 );
 router.put(
   "/:id",
-  localMediaUploader.single("image"),
+  AWSUploader.single("image"),
   UpdateSpecialtyValidation,
   Validate,
   UpdateSpecialtyByIdController,

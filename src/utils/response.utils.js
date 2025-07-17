@@ -62,7 +62,7 @@ Response.UNAUTHORIZED = ({ message, error, errorCode }) => {
     errorCode,
     statusCode: HttpStatus.StatusCodes.UNAUTHORIZED,
     timestamp,
-    message,
+    message: message || "Authentication required",
     errors: error,
   };
 };
@@ -85,7 +85,7 @@ Response.FORBIDDEN = ({ message, error, errorCode }) => {
     errorCode,
     statusCode: HttpStatus.StatusCodes.FORBIDDEN,
     timestamp,
-    message,
+    message: message || "You don't have permission to access this resource",
     errors: error,
   };
 };
@@ -97,8 +97,58 @@ Response.INTERNAL_SERVER_ERROR = ({ message, errorCode }) => {
     errorCode,
     statusCode: HttpStatus.StatusCodes.INTERNAL_SERVER_ERROR,
     timestamp,
-    message,
+    message: message || "Internal server error",
     errors: null,
+  };
+};
+
+Response.CONFLICT = ({ message, error, errorCode }) => {
+  const timestamp = new Date();
+  return {
+    status: "error",
+    errorCode,
+    statusCode: HttpStatus.StatusCodes.CONFLICT,
+    timestamp,
+    message: message || "Resource conflict",
+    errors: error,
+  };
+};
+
+Response.TOO_MANY_REQUESTS = ({ message, error, errorCode, retryAfter }) => {
+  const timestamp = new Date();
+  return {
+    status: "error",
+    errorCode,
+    statusCode: HttpStatus.StatusCodes.TOO_MANY_REQUESTS,
+    timestamp,
+    message: message || "Too many requests",
+    errors: error,
+    ...(retryAfter && { retryAfter }),
+  };
+};
+
+Response.BAD_GATEWAY = ({ message, errorCode }) => {
+  const timestamp = new Date();
+  return {
+    status: "error",
+    errorCode,
+    statusCode: HttpStatus.StatusCodes.BAD_GATEWAY,
+    timestamp,
+    message: message || "Bad gateway",
+    errors: null,
+  };
+};
+
+Response.SERVICE_UNAVAILABLE = ({ message, errorCode, retryAfter }) => {
+  const timestamp = new Date();
+  return {
+    status: "error",
+    errorCode,
+    statusCode: HttpStatus.StatusCodes.SERVICE_UNAVAILABLE,
+    timestamp,
+    message: message || "Service temporarily unavailable",
+    errors: null,
+    ...(retryAfter && { retryAfter }),
   };
 };
 

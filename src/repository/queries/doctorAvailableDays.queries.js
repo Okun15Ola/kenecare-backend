@@ -34,8 +34,9 @@ module.exports = {
   `,
 
   SELECT_DOCTORS_AVAILABLE_ON_DAY: `
-    SELECT d.doctor_id, d.day_of_week, d.day_start_time, d.day_end_time
+    SELECT d.doctor_id, d.day_of_week, d.day_start_time, d.day_end_time, dr.title, dr.last_name
     FROM doctor_available_days d
+    INNER JOIN doctors dr ON d.doctor_id = dr.doctor_id
     WHERE d.day_of_week = ? AND d.is_available = 1;
   `,
 
