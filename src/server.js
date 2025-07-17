@@ -3,11 +3,11 @@ const { appPort, appBaseURL } = require("./config/default.config");
 const { connectionPool } = require("./repository/db.connection");
 const { startCron: runCron } = require("./utils/cron.utils");
 require("./config/redis.config"); // Ensure Redis client is initialized
-const logger = require("./middlewares/logger.middleware");
+// const console = require("./middlewares/console.middleware");
 
 connectionPool.getConnection((err, connection) => {
   if (err) {
-    logger.error(
+    console.error(
       "❌ Error connecting to the database, exiting application:",
       err,
     );
@@ -16,7 +16,7 @@ connectionPool.getConnection((err, connection) => {
     console.info("✅ Database connected Successfully");
     app.listen(appPort, (err) => {
       if (err) {
-        logger.error("❌ There was an error running the server:", err);
+        console.error("❌ There was an error running the server:", err);
       } else {
         console.info(`🚀 Server running on ${appBaseURL}:${appPort}`);
         runCron();
@@ -25,8 +25,8 @@ connectionPool.getConnection((err, connection) => {
   }
 
   connection.on("error", (error) => {
-    logger.error(error);
-    logger.error("❌ Database connection error:", error.sqlMessage);
+    console.error(error);
+    console.error("❌ Database connection error:", error.sqlMessage);
     process.exit(1);
   });
 });

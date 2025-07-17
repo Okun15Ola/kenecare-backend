@@ -131,7 +131,6 @@ app.use("/api/v1/patients/prescriptions", patientPrescriptionRoutes);
 app.use("/api/v1/payments", appointmentPaymentRoutes);
 
 // ADMIN ROUTES
-// TODO Add a middle ware to authenticate ADMIN JWT
 app.use("/api/v1/admin/auth", adminAuthRouter);
 app.use("/api/v1/admin/accounts", adminAccountsRouter);
 app.use("/api/v1/admin/appointments", adminAppointmentsRouter);
@@ -161,22 +160,11 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
+  console.error("An unexpected error occured: ", err);
   logger.error("An unexpected error occured: ", err);
 
   let statusCode = 500;
   let errorMessage = "Internal Server Error";
-
-  logger.error("[ERROR_HANDLER] Error caught:", {
-    message: err.message,
-    stack: err.stack,
-    statusCode: err.statusCode,
-    code: err.code,
-    name: err.name,
-    path: req.path,
-    method: req.method,
-    userId: req.user?.id,
-    authComplete: req.authorizationComplete,
-  });
 
   if (err.response) {
     return res
@@ -201,14 +189,6 @@ app.use((err, req, res, next) => {
   }
   if (err.statusCode === 401) {
     statusCode = 401;
-    logger.log("UNAUTHORIZED response called", {
-      error: err,
-      message: err.message,
-      stack: err.stack,
-      path: req.path,
-      method: req.method,
-      userId: req.user?.id,
-    });
     return res.status(statusCode).json(UNAUTHORIZED({ message: err.message }));
   }
   if (err.code === 404) {
