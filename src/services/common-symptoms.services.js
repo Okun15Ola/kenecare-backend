@@ -25,7 +25,7 @@ exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
 
-    const [symptoms] = await Promise.all(rawData.map(mapCommonSymptomsRow));
+    const symptoms = await Promise.all(rawData.map(mapCommonSymptomsRow));
 
     await redisClient.set({
       key: cacheKey,
