@@ -54,8 +54,16 @@ exports.updateUserEmailById = async ({ userId, email }) => {
   return query(queries.UPDATE_USER_EMAIL_BY_ID, [email, userId]);
 };
 
-exports.updateUserVerificationTokenById = async ({ userId, token }) => {
-  return query(queries.UPDATE_USER_VERIFICATION_TOKEN_BY_ID, [token, userId]);
+exports.updateUserVerificationTokenById = async ({
+  userId,
+  token,
+  tokenExpiry,
+}) => {
+  return query(queries.UPDATE_USER_VERIFICATION_TOKEN_BY_ID, [
+    token,
+    tokenExpiry,
+    userId,
+  ]);
 };
 
 exports.updateUserNotificationToken = async ({ userId, notifToken }) => {

@@ -50,7 +50,7 @@ exports.getDoctorCouncilRegistration = async (id) => {
         `Medical Council Registration not found for doctorId: ${doctorId}`,
       );
       return Response.NOT_FOUND({
-        message: "Medical Council Registration Not Found",
+        message: "Medical council registration not found",
       });
     }
     const registration = await mapDoctorCouncilRow(rawData);

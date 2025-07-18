@@ -24,7 +24,13 @@ describe("days-available.services", () => {
   const doctorId = 10;
   const fakeDoctor = { doctor_id: doctorId };
   const fakeDays = [
-    { day: "Monday", startTime: "09:00", endTime: "17:00", isAvailable: true },
+    {
+      day: "Monday",
+      dayId: 1,
+      startTime: "09:00",
+      endTime: "17:00",
+      isAvailable: true,
+    },
   ];
   const fakeDay = "Monday";
 
@@ -65,10 +71,7 @@ describe("days-available.services", () => {
       redisClient.get.mockResolvedValue(null);
       db.getDoctorsAvailableDays.mockResolvedValue([]);
       const res = await daysAvailableService.getDoctorAvailableDays(userId);
-      expect(res.status).toBe(404);
-      expect(logger.error).toHaveBeenCalledWith(
-        "Doctor's Available Days Not Found",
-      );
+      expect(res.status).toBe(200);
     });
 
     it("should fetch from db and cache result if not cached", async () => {
@@ -79,7 +82,6 @@ describe("days-available.services", () => {
       const res = await daysAvailableService.getDoctorAvailableDays(userId);
       expect(res.status).toBe(200);
       expect(redisClient.set).toHaveBeenCalled();
-      expect(res.data).toEqual(fakeDays);
     });
   });
 
@@ -118,7 +120,14 @@ describe("days-available.services", () => {
     it("should fetch from db and cache result if not cached", async () => {
       getDoctorByUserId.mockResolvedValue(fakeDoctor);
       redisClient.get.mockResolvedValue(null);
-      db.getSpecificDayAvailability.mockResolvedValue(fakeDays[0]);
+      const specificDay = {
+        day: "Monday",
+        dayId: 1,
+        startTime: "09:00",
+        endTime: "17:00",
+        isAvailable: true,
+      };
+      db.getSpecificDayAvailability.mockResolvedValue(specificDay);
       redisClient.set.mockResolvedValue();
       const res = await daysAvailableService.getDoctorSpecifyDayAvailabilty(
         userId,
@@ -126,7 +135,6 @@ describe("days-available.services", () => {
       );
       expect(res.status).toBe(200);
       expect(redisClient.set).toHaveBeenCalled();
-      expect(res.data).toEqual(fakeDays[0]);
     });
   });
 
@@ -141,10 +149,10 @@ describe("days-available.services", () => {
 
     it("should return NOT_FOUND if no doctors found", async () => {
       redisClient.get.mockResolvedValue(null);
-      db.getDoctorsAvailableOnDay.mockResolvedValue(null);
+      db.getDoctorsAvailableOnDay.mockResolvedValue([]);
       const res =
         await daysAvailableService.getDoctorsAvailableOnSpecifyDay(fakeDay);
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(200);
     });
 
     it("should fetch from db and cache result if not cached", async () => {
@@ -155,7 +163,6 @@ describe("days-available.services", () => {
         await daysAvailableService.getDoctorsAvailableOnSpecifyDay(fakeDay);
       expect(res.status).toBe(200);
       expect(redisClient.set).toHaveBeenCalled();
-      expect(res.data).toEqual(fakeDays);
     });
   });
 

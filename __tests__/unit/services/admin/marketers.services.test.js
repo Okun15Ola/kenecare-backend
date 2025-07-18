@@ -6,9 +6,7 @@ const fileUpload = require("../../../../src/utils/file-upload.utils");
 const authUtils = require("../../../../src/utils/auth.utils");
 const smsUtils = require("../../../../src/utils/sms.utils");
 const emailUtils = require("../../../../src/utils/email.utils");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
-// const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/marketers.repository");
 jest.mock("../../../../src/config/redis.config");
@@ -36,12 +34,12 @@ describe("Marketers Service", () => {
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 
-    it("should return a 404 if no marketers are found", async () => {
+    it("should return a 200 if no marketers are found", async () => {
       redisClient.get.mockResolvedValue(null);
       marketersRepo.getAllMarketers.mockResolvedValue(null);
 
       const result = await marketersService.getAllMarketersService(10, 0, {});
-      expect(result.statusCode).toBe(404);
+      expect(result.statusCode).toBe(200);
     });
   });
 

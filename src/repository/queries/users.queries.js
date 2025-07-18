@@ -20,7 +20,7 @@ module.exports = {
   UPDATE_USER_EMAIL_BY_ID:
     "UPDATE users SET email = ? WHERE user_id = ? AND deleted_at IS NULL;",
   UPDATE_USER_VERIFICATION_TOKEN_BY_ID:
-    "UPDATE users SET verification_token = ? WHERE user_id = ? AND deleted_at IS NULL;",
+    "UPDATE users SET verification_token = ?, expiry_time = ? WHERE user_id = ? AND deleted_at IS NULL;",
   UPDATE_USER_NOTIFICATION_TOKEN:
     "UPDATE users SET notification_token = ? WHERE user_id = ? AND deleted_at IS NULL;",
   UPDATE_USER_DEVICE_AND_NOTIFICATION_TOKEN: `

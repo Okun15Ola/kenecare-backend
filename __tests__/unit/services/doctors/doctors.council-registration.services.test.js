@@ -65,7 +65,7 @@ describe("doctors.council-registration.services", () => {
       expect(result).toEqual({ status: 404 });
     });
 
-    it("should return UNAUTHORIZED if user id/type mismatch", async () => {
+    it("should return FORBIDDEN if user id/type mismatch", async () => {
       const id = "user3";
       redisClient.get.mockResolvedValue(null);
       dbObject.getDoctorByUserId.mockResolvedValue({
@@ -73,17 +73,15 @@ describe("doctors.council-registration.services", () => {
         user_type: USERTYPE.PATIENT,
         user_id: "otherUser",
       });
-      Response.UNAUTHORIZED.mockReturnValue({ status: 401 });
+      Response.FORBIDDEN.mockReturnValue({ status: 403 });
 
       const result =
         await doctorsCouncilRegistrationServices.getDoctorCouncilRegistration(
           id,
         );
 
-      expect(Response.UNAUTHORIZED).toHaveBeenCalledWith({
-        message: "Unauthorized account access",
-      });
-      expect(result).toEqual({ status: 401 });
+      expect(Response.FORBIDDEN).toHaveBeenCalled();
+      expect(result).toEqual({ status: 403 });
     });
 
     it("should return NOT_FOUND if council registration not found", async () => {
@@ -103,7 +101,7 @@ describe("doctors.council-registration.services", () => {
         );
 
       expect(Response.NOT_FOUND).toHaveBeenCalledWith({
-        message: "Medical Council Registration Not Found",
+        message: "Medical council registration not found",
       });
       expect(result).toEqual({ status: 404 });
     });
@@ -174,15 +172,15 @@ describe("doctors.council-registration.services", () => {
       expect(result).toEqual({ status: 404 });
     });
 
-    it("should return UNAUTHORIZED if user is not doctor", async () => {
+    it("should return FORBIDDEN if user is not doctor", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.PATIENT });
-      Response.UNAUTHORIZED.mockReturnValue({ status: 401 });
+      Response.FORBIDDEN.mockReturnValue({ status: 403 });
       const result =
         await doctorsCouncilRegistrationServices.createDoctorCouncilRegistration(
           baseArgs,
         );
-      expect(Response.UNAUTHORIZED).toHaveBeenCalled();
-      expect(result).toEqual({ status: 401 });
+      expect(Response.FORBIDDEN).toHaveBeenCalled();
+      expect(result).toEqual({ status: 403 });
     });
 
     it("should return BAD_REQUEST if doctor profile does not exist", async () => {

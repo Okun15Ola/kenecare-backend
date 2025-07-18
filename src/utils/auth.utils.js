@@ -14,6 +14,7 @@ const {
 } = require("../repository/users.repository");
 const logger = require("../middlewares/logger.middleware");
 const { redisClient } = require("../config/redis.config");
+const { generateTokenExpiryTime } = require("./time.utils");
 
 const { sendAuthTokenSMS } = require("./sms.utils");
 const Response = require("./response.utils");
@@ -305,10 +306,12 @@ const generateVerificationToken = () => {
  */
 const generateAndSendVerificationOTP = async ({ userId, mobileNumber }) => {
   const token = generateVerificationToken();
+  const tokenExpiry = generateTokenExpiryTime(15);
   const [updateResult, smsResult] = await Promise.allSettled([
     updateUserVerificationTokenById({
       userId,
       token,
+      tokenExpiry,
     }),
     sendAuthTokenSMS({
       token,
@@ -316,13 +319,13 @@ const generateAndSendVerificationOTP = async ({ userId, mobileNumber }) => {
     }),
   ]);
 
-  if (!updateResult && !smsResult) {
+  if (updateResult.status === "rejected" || smsResult.status === "rejected") {
     return Response.INTERNAL_SERVER_ERROR({
-      message: "Internal Server Error. Please Try Again",
+      message: "Error sending verification code. Please try again.",
     });
   }
 
-  return Response.SUCCESS({ message: "Verification OTP sent succesfully" });
+  return Response.SUCCESS({ message: "Verification OTP sent successfully" });
 };
 
 /**

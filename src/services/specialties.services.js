@@ -4,7 +4,7 @@ const {
   uploadFileToS3Bucket,
   deleteFileFromS3Bucket,
 } = require("../utils/aws-s3.utils");
-const { generateFilename } = require("../utils/file-upload.utils");
+const { generateFileName } = require("../utils/file-upload.utils");
 const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapSpecialityRow } = require("../utils/db-mapper.utils");
@@ -90,7 +90,7 @@ exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
     let fileName = null;
     if (image) {
       const { buffer, mimetype } = image;
-      fileName = `specialty_${generateFilename(image)}`;
+      fileName = `specialty_${generateFileName(image)}`;
       await uploadFileToS3Bucket({
         fileName,
         buffer,
@@ -132,7 +132,7 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
     let fileName = null;
     if (image) {
       const { buffer, mimetype } = image;
-      fileName = imageUrl || `specialty_${generateFilename(image)}`;
+      fileName = imageUrl || `specialty_${generateFileName(image)}`;
       await uploadFileToS3Bucket({
         fileName,
         buffer,

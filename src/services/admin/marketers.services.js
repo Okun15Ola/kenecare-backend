@@ -217,7 +217,7 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
       phone_number: mobileNumber,
     } = marketer;
     const verifiedAt = new Date();
-    const results = await Promise.all([
+    const results = await Promise.allSettled([
       verifyMarketerPhoneById({
         marketerId,
         phoneNumber: mobileNumber,
@@ -354,7 +354,7 @@ exports.deleteMarketerByIdService = async (id) => {
     }
     const { id_document_uuid: idDocumentUuid } = marketer;
 
-    const results = await Promise.all([
+    const results = await Promise.allSettled([
       deleteFileFromS3Bucket(idDocumentUuid),
       deleteMarketerById(id),
     ]);

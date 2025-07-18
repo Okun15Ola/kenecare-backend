@@ -97,7 +97,7 @@ describe("Specialties Controllers", () => {
       expect(specialtiesServices.createSpecialty).toHaveBeenCalledWith({
         name: "Cardiology",
         description: "desc",
-        image: "img.png",
+        image: { filename: "img.png" },
         inputtedBy: 2,
       });
       expect(res.status).toHaveBeenCalledWith(201);
@@ -119,7 +119,7 @@ describe("Specialties Controllers", () => {
       expect(specialtiesServices.createSpecialty).toHaveBeenCalledWith({
         name: "Cardiology",
         description: "desc",
-        image: null,
+        image: {},
         inputtedBy: 2,
       });
     });
@@ -149,7 +149,7 @@ describe("Specialties Controllers", () => {
       expect(specialtiesServices.updateSpecialty).toHaveBeenCalledWith({
         id: 3,
         name: "Neuro",
-        image: "img2.png",
+        image: { filename: "img2.png" },
         description: "desc2",
       });
       expect(res.status).toHaveBeenCalledWith(200);
@@ -171,7 +171,7 @@ describe("Specialties Controllers", () => {
       expect(specialtiesServices.updateSpecialty).toHaveBeenCalledWith({
         id: 3,
         name: "Neuro",
-        image: null,
+        image: {},
         description: "desc2",
       });
     });

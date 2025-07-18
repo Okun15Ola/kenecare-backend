@@ -11,7 +11,6 @@ const {
   updateUserPassword,
   verifyRequestedOTP,
   updatePushNotificationToken,
-  // updateUserAccountStatus,
 } = require("../services/users.service");
 const logger = require("../middlewares/logger.middleware");
 
@@ -78,41 +77,6 @@ exports.LogoutAllDevicesController = async (req, res, next) => {
   }
 };
 
-// exports.SendEmailVerificationController = async (req, res, next) => {
-//   try {
-//     const { userId, email } = req.user;
-//     const response = await sendEmailVerification({ userId, email });
-//     return res.status(response.statusCode).json(response);
-//   } catch (error) {
-//     logger.error("SendEmailVerificationController", error);
-//     return next(error);
-//   }
-// };
-
-// exports.VerifyEmailTokenController = async (req, res, next) => {
-//   try {
-//     const { token } = req.params;
-//     const { user } = req;
-//     const response = await verifyEmailToken({ token, user });
-//     return res.status(response.statusCode).json(response);
-//   } catch (error) {
-//     logger.error("VerifyEmailTokenController", error);
-//     return next(error);
-//   }
-// };
-
-// exports.UpdateUserEmailController = async (req, res, next) => {
-//   try {
-//     const { userId } = req.user;
-//     const { email } = req.body;
-//     const response = await updateUserEmail({ userId, email });
-//     return res.status(response.statusCode).json(response);
-//   } catch (error) {
-//     logger.error("UpdateUserEmailController", error);
-//     return next(error);
-//   }
-// };
-
 exports.RegisterController = async (req, res, next) => {
   try {
     const response = await registerNewUser(req.body);
@@ -131,6 +95,16 @@ exports.VerifyRegisterOTPController = async (req, res, next) => {
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("VerifyRegisterOTPController", error);
+    return next(error);
+  }
+};
+
+exports.ResendVerificationOTPController = async (req, res, next) => {
+  try {
+    const response = await resendVerificationOTP(req.user);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("ResendVerificationOTPController", error);
     return next(error);
   }
 };
@@ -171,26 +145,6 @@ exports.UpdatePasswordController = async (req, res, next) => {
   }
 };
 
-exports.ResendVerificationOTPController = async (req, res, next) => {
-  try {
-    const response = await resendVerificationOTP(req.user);
-    return res.status(response.statusCode).json(response);
-  } catch (error) {
-    logger.error("ResendVerificationOTPController", error);
-    return next(error);
-  }
-};
-
-// exports.SendVerificationOTPController = async (req, res, next) => {
-//   try {
-//     const response = await sendVerificationOTP(req.user);
-//     return res.status(response.statusCode).json(response);
-//   } catch (error) {
-//     logger.error("SendVerificationOTPController", error);
-//     return next(error);
-//   }
-// };
-
 exports.VerifyRequestedOTPController = async (req, res, next) => {
   try {
     const { phoneNumber } = req.body;
@@ -202,17 +156,6 @@ exports.VerifyRequestedOTPController = async (req, res, next) => {
     return next(error);
   }
 };
-
-// exports.UpdateAccountStatusController = async (req, res, next) => {
-//   try {
-//     const { userId } = req.user;
-//     const response = await updateUserAccountStatus({ token, userId });
-//     return res.status(response.statusCode).json(response);
-//   } catch (error) {
-//     logger.error("UpdatePushNotificationTokenController", error);
-//     return next(error);
-//   }
-// };
 
 exports.UpdatePushNotificationTokenController = async (req, res, next) => {
   try {

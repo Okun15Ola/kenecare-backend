@@ -28,12 +28,12 @@ describe("Blogs Service", () => {
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 
-    it("should return a 404 if no blogs are found", async () => {
+    it("should return a 200 if no blogs are found", async () => {
       redisClient.get.mockResolvedValue(null);
       blogsRepo.getAllBlogs.mockResolvedValue(null);
 
       const result = await blogsService.getBlogs(10, 0, {});
-      expect(result.statusCode).toBe(404);
+      expect(result.statusCode).toBe(200);
     });
   });
 

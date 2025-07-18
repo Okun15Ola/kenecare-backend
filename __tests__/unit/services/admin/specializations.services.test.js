@@ -1,9 +1,7 @@
 const specializationsService = require("../../../../src/services/admin/specializations.services");
 const specializationsRepo = require("../../../../src/repository/specializations.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
-// const dbMapper = require('../../../../src/utils/db-mapper.utils');
 const caching = require("../../../../src/utils/caching.utils");
-// const Response = require('../../../../src/utils/response.utils');
 
 jest.mock("../../../../src/repository/specializations.repository");
 jest.mock("../../../../src/config/redis.config");
@@ -26,12 +24,12 @@ describe("Specializations Service", () => {
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 
-    it("should return a 404 if no specializations are found", async () => {
+    it("should return a 200 if no specializations are found", async () => {
       redisClient.get.mockResolvedValue(null);
-      specializationsRepo.getAllSpecialization.mockResolvedValue(null);
+      specializationsRepo.getAllSpecialization.mockResolvedValue([]);
 
       const result = await specializationsService.getSpecializations(10, 0, {});
-      expect(result.statusCode).toBe(404);
+      expect(result.statusCode).toBe(200);
     });
   });
 

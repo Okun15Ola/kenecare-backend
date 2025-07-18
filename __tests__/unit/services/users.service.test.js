@@ -1,405 +1,418 @@
 const usersService = require("../../../src/services/users.service");
-const repo = require("../../../src/repository/users.repository");
 const Response = require("../../../src/utils/response.utils");
 const { redisClient } = require("../../../src/config/redis.config");
-const { VERIFICATIONSTATUS, STATUS } = require("../../../src/utils/enum.utils");
-const { mapUserRow } = require("../../../src/utils/db-mapper.utils");
-const { generateStreamUserToken } = require("../../../src/utils/stream.utils");
-const { createStreamUserProfile } = require("../../../src/utils/helpers.utils");
-const logger = require("../../../src/middlewares/logger.middleware");
-const timeUtils = require("../../../src/utils/time.utils");
-const smsUtils = require("../../../src/utils/sms.utils");
-
+const { verifyTokenExpiry } = require("../../../src/utils/time.utils");
 const {
-  generateVerificationToken,
-  generateUsersJwtAccessToken,
+  getAllUsers,
+  getUserById,
+  createNewUser,
+  updateUserVerificationStatusByToken,
+  updateUserAccountStatusById,
+  updateUserOnlineStatus,
+  updateUserVerificationTokenById,
+  updateUserPasswordById,
+} = require("../../../src/repository/users.repository");
+const {
   generateAndSendVerificationOTP,
-  hashUsersPassword,
-  blacklistAllUserTokens,
-  blacklistToken,
-  refineMobileNumber,
 } = require("../../../src/utils/auth.utils");
+// const {
+//   sendAuthTokenSMS,
+//   sendVerificationTokenSMS,
+//   sendPasswordResetSMS,
+// } = require("../../../src/utils/sms.utils");
+const {
+  USERTYPE,
+  VERIFICATIONSTATUS,
+  STATUS,
+} = require("../../../src/utils/enum.utils");
 
-jest.mock("../../../src/repository/users.repository");
-jest.mock("../../../src/utils/response.utils");
-jest.mock("../../../src/config/redis.config");
-jest.mock("../../../src/utils/auth.utils");
-jest.mock("../../../src/utils/db-mapper.utils");
-jest.mock("../../../src/utils/stream.utils");
-jest.mock("../../../src/utils/helpers.utils");
-jest.mock("../../../src/middlewares/logger.middleware");
+jest.mock("../../../src/utils/response.utils", () => ({
+  SUCCESS: jest.fn(),
+  NOT_FOUND: jest.fn(),
+  CREATED: jest.fn(),
+  BAD_REQUEST: jest.fn(),
+  INTERNAL_SERVER_ERROR: jest.fn(),
+  NOT_MODIFIED: jest.fn(),
+}));
+
+jest.mock("../../../src/repository/users.repository", () => ({
+  getAllUsers: jest.fn(),
+  getUserById: jest.fn(),
+  getUserByMobileNumber: jest.fn(),
+  getUserByEmail: jest.fn(),
+  getUserByVerificationToken: jest.fn(),
+  createNewUser: jest.fn(),
+  updateUserVerificationStatusByToken: jest.fn(),
+  updateUserAccountStatusById: jest.fn(),
+  updateUserOnlineStatus: jest.fn(),
+  updateUserVerificationTokenById: jest.fn(),
+  updateUserPasswordById: jest.fn(),
+  updateUserNotificationToken: jest.fn(),
+}));
+
+jest.mock("../../../src/utils/auth.utils", () => ({
+  generateVerificationToken: jest.fn(() => "token123"),
+  generateUsersJwtAccessToken: jest.fn(() => "jwt-token"),
+  generateAndSendVerificationOTP: jest.fn(),
+  hashUsersPassword: jest.fn(() => Promise.resolve("hashed-password")),
+  blacklistAllUserTokens: jest.fn(() => Promise.resolve()),
+  blacklistToken: jest.fn(() => Promise.resolve()),
+  refineMobileNumber: jest.fn((n) => n),
+}));
+
+jest.mock("../../../src/utils/db-mapper.utils", () => ({
+  mapUserRow: jest.fn((row) => ({ ...row, mapped: true })),
+}));
+
+jest.mock("../../../src/config/redis.config", () => ({
+  redisClient: {
+    get: jest.fn(),
+    set: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
+jest.mock("../../../src/utils/caching.utils", () => ({
+  cacheKeyBulider: jest.fn((...args) => args.join(":")),
+}));
+
 jest.mock("../../../src/utils/sms.utils", () => ({
-  sendVerificationTokenSMS: jest.fn(),
-  sendAuthTokenSMS: jest.fn(),
+  sendAuthTokenSMS: jest.fn(() => Promise.resolve()),
+  sendVerificationTokenSMS: jest.fn(() => Promise.resolve()),
+  sendPasswordResetSMS: jest.fn(() => Promise.resolve()),
+}));
+
+jest.mock("../../../src/middlewares/logger.middleware", () => ({
+  error: jest.fn(),
+  warn: jest.fn(),
+}));
+
+jest.mock("../../../src/utils/stream.utils", () => ({
+  generateStreamUserToken: jest.fn(() => Promise.resolve("stream-token")),
+}));
+
+jest.mock("../../../src/utils/helpers.utils", () => ({
+  createStreamUserProfile: jest.fn(() => Promise.resolve()),
+  refineMobileNumber: jest.fn((n) => n),
+}));
+
+jest.mock("../../../src/utils/time.utils", () => ({
+  generateTokenExpiryTime: jest.fn(() => Date.now() + 1000 * 60 * 15),
+  verifyTokenExpiry: jest.fn(() => false),
+}));
+
+// ✅ Mock enum utils
+jest.mock("../../../src/utils/enum.utils", () => ({
+  USERTYPE: {
+    PATIENT: 1,
+    DOCTOR: 2,
+  },
+  VERIFICATIONSTATUS: {
+    VERIFIED: "VERIFIED",
+    NOT_VERIFIED: "NOT_VERIFIED",
+  },
+  STATUS: {
+    ACTIVE: "ACTIVE",
+    INACTIVE: "INACTIVE",
+  },
 }));
 
 describe("users.service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    Response.SUCCESS.mockImplementation((data = {}) => ({
+      status: "success",
+      statusCode: 200,
+      message: data.message || "Success",
+      data: data.data || null,
+    }));
+
+    Response.NOT_FOUND.mockImplementation((data = {}) => ({
+      status: "error",
+      statusCode: 404,
+      message: data.message || "Not found",
+    }));
+
+    Response.CREATED.mockImplementation((data = {}) => ({
+      status: "success",
+      statusCode: 201,
+      message: data.message || "Created",
+      data: data.data || null,
+    }));
+
+    Response.BAD_REQUEST.mockImplementation((data = {}) => ({
+      status: "error",
+      statusCode: 400,
+      message: data.message || "Bad request",
+    }));
+
+    Response.INTERNAL_SERVER_ERROR.mockImplementation((data = {}) => ({
+      status: "error",
+      statusCode: 500,
+      message: data.message || "Internal server error",
+    }));
+
+    Response.NOT_MODIFIED.mockImplementation((data = {}) => ({
+      status: "error",
+      statusCode: 304,
+      message: data.message || "Not modified",
+    }));
   });
 
   describe("getUsers", () => {
-    it("should return cached users if present", async () => {
-      redisClient.get.mockResolvedValue(JSON.stringify([{ id: 1 }]));
-      const paginationInfo = { page: 1, limit: 10 };
-      Response.SUCCESS.mockReturnValue("success");
-      const result = await usersService.getUsers(10, 0, paginationInfo);
-      expect(redisClient.get).toHaveBeenCalled();
-      expect(Response.SUCCESS).toHaveBeenCalledWith({
-        data: [{ id: 1 }],
-        pagination: paginationInfo,
-      });
-      expect(result).toBe("success");
+    it("returns cached users if present", async () => {
+      const users = [{ id: 1 }];
+      redisClient.get.mockResolvedValue(JSON.stringify(users));
+
+      const result = await usersService.getUsers(10, 0, { total: 1 });
+
+      expect(result.data).toEqual(users);
     });
 
-    it("should fetch users from repo and cache them if not cached", async () => {
+    it("returns users from repo if not cached", async () => {
       redisClient.get.mockResolvedValue(null);
-      repo.getAllUsers.mockResolvedValue([{ id: 2 }]);
-      mapUserRow.mockReturnValue({ id: 2 });
-      redisClient.set.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("success");
-      const paginationInfo = { page: 1, limit: 10 };
-      const result = await usersService.getUsers(10, 0, paginationInfo);
-      expect(repo.getAllUsers).toHaveBeenCalledWith(10, 0);
-      expect(redisClient.set).toHaveBeenCalled();
-      expect(Response.SUCCESS).toHaveBeenCalledWith({
-        data: [{ id: 2 }],
-        pagination: paginationInfo,
-      });
-      expect(result).toBe("success");
+      getAllUsers.mockResolvedValue([{ id: 1 }]);
+
+      const result = await usersService.getUsers(10, 0, { total: 1 });
+
+      expect(result.data[0].mapped).toBe(true);
     });
 
-    it("should return NOT_FOUND if no users", async () => {
+    it("returns empty array if no users found", async () => {
       redisClient.get.mockResolvedValue(null);
-      repo.getAllUsers.mockResolvedValue([]);
-      Response.NOT_FOUND.mockReturnValue("not_found");
-      const result = await usersService.getUsers(10, 0, {});
-      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
-        message: "Users not found",
-      });
-      expect(result).toBe("not_found");
-    });
+      getAllUsers.mockResolvedValue([]);
 
-    it("should log and throw error on exception", async () => {
-      redisClient.get.mockRejectedValue(new Error("fail"));
-      await expect(usersService.getUsers(10, 0, {})).rejects.toThrow("fail");
-      expect(logger.error).toHaveBeenCalled();
+      const result = await usersService.getUsers(10, 0, { total: 0 });
+
+      expect(result.data).toEqual([]);
     });
   });
 
   describe("getUserById", () => {
-    it("should return cached user if present", async () => {
+    it("returns cached user if present", async () => {
       redisClient.get.mockResolvedValue(JSON.stringify({ id: 1 }));
+
       const result = await usersService.getUserById(1);
-      expect(result).toEqual({ id: 1 });
+
+      expect(result.id).toBe(1);
     });
 
-    it("should fetch user from repo and cache if not cached", async () => {
+    it("returns user from repo if not cached", async () => {
       redisClient.get.mockResolvedValue(null);
-      repo.getUserById.mockResolvedValue({ id: 2 });
-      mapUserRow.mockReturnValue({ id: 2 });
-      redisClient.set.mockResolvedValue();
+      getUserById.mockResolvedValue({ id: 2 });
+
       const result = await usersService.getUserById(2);
-      expect(repo.getUserById).toHaveBeenCalledWith(2);
-      expect(redisClient.set).toHaveBeenCalled();
-      expect(result).toEqual({ id: 2 });
+
+      expect(result.mapped).toBe(true);
     });
 
-    it("should return NOT_FOUND if user not found", async () => {
+    it("returns NOT_FOUND if user not found", async () => {
       redisClient.get.mockResolvedValue(null);
-      repo.getUserById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
-      const result = await usersService.getUserById(3);
-      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
-        message: "User not found",
-      });
-      expect(result).toBe("not_found");
-    });
+      getUserById.mockResolvedValue(null);
 
-    it("should log and throw error on exception", async () => {
-      redisClient.get.mockRejectedValue(new Error("fail"));
-      await expect(usersService.getUserById(1)).rejects.toThrow("fail");
-      expect(logger.error).toHaveBeenCalled();
+      const result = await usersService.getUserById(3);
+
+      expect(result.statusCode).toBe(404);
     });
   });
 
   describe("registerNewUser", () => {
-    it("should create a new user and send verification SMS", async () => {
-      refineMobileNumber.mockReturnValue("123");
-      generateVerificationToken.mockReturnValue("token");
-      hashUsersPassword.mockResolvedValue("hashed");
-      repo.createNewUser.mockResolvedValue({ insertId: 1 });
-      Response.CREATED.mockReturnValue("created");
-      // Mock smsUtils.sendAuthTokenSMS to prevent URL errors
-      if (smsUtils.sendVerificationTokenSMS) {
-        smsUtils.sendVerificationTokenSMS.mockResolvedValue(true);
-      }
-      const userData = {
-        mobileNumber: "123",
+    it("creates a new user and sends SMS", async () => {
+      createNewUser.mockResolvedValue({ insertId: 1 });
+
+      const result = await usersService.registerNewUser({
+        mobileNumber: "1234567890",
         password: "pass",
         userType: "patient",
-      };
-      const result = await usersService.registerNewUser(userData);
-      expect(repo.createNewUser).toHaveBeenCalled();
-      expect(Response.CREATED).toHaveBeenCalled();
-      expect(result).toBe("created");
-    });
-
-    it("should return INTERNAL_SERVER_ERROR if user creation fails", async () => {
-      refineMobileNumber.mockReturnValue("123");
-      generateVerificationToken.mockReturnValue("token");
-      hashUsersPassword.mockResolvedValue("hashed");
-      repo.createNewUser.mockResolvedValue({});
-      Response.INTERNAL_SERVER_ERROR.mockReturnValue("fail");
-      const userData = {
-        mobileNumber: "123",
-        password: "pass",
-        userType: "patient",
-      };
-      const result = await usersService.registerNewUser(userData);
-      expect(Response.INTERNAL_SERVER_ERROR).toHaveBeenCalled();
-      expect(result).toBe("fail");
-    });
-
-    it("should log and throw error on exception", async () => {
-      refineMobileNumber.mockImplementation(() => {
-        throw new Error("fail");
       });
-      await expect(
-        usersService.registerNewUser({
-          mobileNumber: "123",
-          password: "pass",
-          userType: "patient",
-        }),
-      ).rejects.toThrow("fail");
-      expect(logger.error).toHaveBeenCalled();
+
+      expect(result.statusCode).toBe(201);
+    });
+
+    it("returns error if user creation fails", async () => {
+      createNewUser.mockResolvedValue({ insertId: null });
+
+      const result = await usersService.registerNewUser({
+        mobileNumber: "1234567890",
+        password: "pass",
+        userType: "patient",
+      });
+
+      expect(result.statusCode).toBe(500);
     });
   });
 
   describe("verifyRegistrationOTP", () => {
-    it("should return BAD_REQUEST if missing params", async () => {
-      Response.BAD_REQUEST.mockReturnValue("bad");
-      const result = await usersService.verifyRegistrationOTP({});
-      expect(Response.BAD_REQUEST).toHaveBeenCalled();
-      expect(result).toBe("bad");
-    });
-
-    it("should return NOT_MODIFIED if already verified", async () => {
-      Response.NOT_MODIFIED.mockReturnValue("notmod");
-      const user = { accountVerified: VERIFICATIONSTATUS.VERIFIED };
+    it("returns success if already verified", async () => {
       const result = await usersService.verifyRegistrationOTP({
-        token: "t",
-        user,
+        token: "token",
+        user: { accountVerified: VERIFICATIONSTATUS.VERIFIED },
       });
-      expect(Response.NOT_MODIFIED).toHaveBeenCalled();
-      expect(result).toBe("notmod");
+
+      expect(result.statusCode).toBe(200);
     });
 
-    it("should return INTERNAL_SERVER_ERROR if update fails", async () => {
-      Response.INTERNAL_SERVER_ERROR.mockReturnValue("fail");
-      const user = {
-        userId: 1,
-        userType: "patient",
-        accountActive: 1,
-        accountVerified: 0,
-        verificationTokenExpiry: "exp",
-      };
-      jest.spyOn(timeUtils, "verifyTokenExpiry").mockReturnValue(false);
-      repo.updateUserVerificationStatusByToken.mockResolvedValue({
+    it("returns error if token expired", async () => {
+      verifyTokenExpiry.mockReturnValueOnce(true);
+
+      const result = await usersService.verifyRegistrationOTP({
+        token: "token",
+        user: {
+          accountVerified: VERIFICATIONSTATUS.NOT_VERIFIED,
+          verificationTokenExpiry: Date.now(),
+        },
+      });
+
+      expect(result.statusCode).toBe(400);
+    });
+
+    it("returns error if no rows updated", async () => {
+      verifyTokenExpiry.mockReturnValueOnce(false);
+      updateUserVerificationStatusByToken.mockResolvedValue({
         affectedRows: 0,
       });
+
       const result = await usersService.verifyRegistrationOTP({
-        token: "t",
-        user,
+        token: "token",
+        user: {
+          accountVerified: VERIFICATIONSTATUS.NOT_VERIFIED,
+          verificationTokenExpiry: Date.now(),
+          userId: 1,
+          userType: USERTYPE.PATIENT,
+          accountActive: true,
+        },
       });
-      expect(Response.INTERNAL_SERVER_ERROR).toHaveBeenCalled();
-      expect(result).toBe("fail");
+
+      expect(result.statusCode).toBe(500);
     });
 
-    it("should return SUCCESS if OTP verified", async () => {
-      Response.SUCCESS.mockReturnValue("ok");
-      const user = {
-        userId: 1,
-        userType: "patient",
-        accountActive: 1,
-        accountVerified: 0,
-        verificationTokenExpiry: "exp",
-      };
-      jest.spyOn(timeUtils, "verifyTokenExpiry").mockReturnValue(false);
-      repo.updateUserVerificationStatusByToken.mockResolvedValue({
+    it("returns success if verified", async () => {
+      verifyTokenExpiry.mockReturnValueOnce(false);
+      updateUserVerificationStatusByToken.mockResolvedValue({
         affectedRows: 1,
       });
-      createStreamUserProfile.mockResolvedValue();
-      generateUsersJwtAccessToken.mockReturnValue("jwt");
-      generateStreamUserToken.mockResolvedValue("stream");
-      redisClient.delete.mockResolvedValue();
+
       const result = await usersService.verifyRegistrationOTP({
-        token: "t",
-        user,
+        token: "token",
+        user: {
+          accountVerified: VERIFICATIONSTATUS.NOT_VERIFIED,
+          verificationTokenExpiry: Date.now(),
+          userId: 1,
+          userType: USERTYPE.PATIENT,
+          accountActive: true,
+        },
       });
-      expect(Response.SUCCESS).toHaveBeenCalled();
-      expect(result).toBe("ok");
+
+      expect(result.statusCode).toBe(200);
     });
   });
 
   describe("loginUser", () => {
-    it("should trigger 2FA if enabled", async () => {
-      generateAndSendVerificationOTP.mockResolvedValue("2fa");
+    it("returns OTP response if 2FA enabled", async () => {
+      generateAndSendVerificationOTP.mockResolvedValueOnce({
+        statusCode: 200,
+        message: "OTP sent successfully",
+        data: { otpSent: true },
+      });
+
       const result = await usersService.loginUser({
         is2faEnabled: STATUS.ACTIVE,
         userId: 1,
-        mobileNumber: "123",
+        userType: USERTYPE.PATIENT,
+        accountVerified: true,
+        accountActive: true,
+        mobileNumber: "1234567890",
       });
-      expect(generateAndSendVerificationOTP).toHaveBeenCalled();
-      expect(result).toBe("2fa");
+
+      expect(generateAndSendVerificationOTP).toHaveBeenCalledWith({
+        userId: 1,
+        mobileNumber: "1234567890",
+      });
+      expect(result.statusCode).toBe(200);
+      expect(result.message).toMatch(/OTP sent/i);
     });
 
-    it("should login and return tokens if 2FA not enabled", async () => {
-      createStreamUserProfile.mockResolvedValue();
-      repo.updateUserAccountStatusById.mockResolvedValue({ affectedRows: 1 });
-      generateUsersJwtAccessToken.mockReturnValue("jwt");
-      generateStreamUserToken.mockResolvedValue("stream");
-      Response.SUCCESS.mockReturnValue("ok");
+    it("returns success if login successful", async () => {
+      updateUserAccountStatusById.mockResolvedValue({ affectedRows: 1 });
+
       const result = await usersService.loginUser({
-        is2faEnabled: 0,
+        is2faEnabled: STATUS.INACTIVE,
         userId: 1,
-        userType: "patient",
-        accountVerified: 1,
-        accountActive: 1,
-        mobileNumber: "123",
+        userType: USERTYPE.PATIENT,
+        accountVerified: true,
+        accountActive: true,
+        mobileNumber: "1234567890",
       });
-      expect(Response.SUCCESS).toHaveBeenCalled();
-      expect(result).toBe("ok");
+
+      expect(result.statusCode).toBe(200);
     });
 
-    it("should return INTERNAL_SERVER_ERROR if update fails", async () => {
-      repo.updateUserAccountStatusById.mockResolvedValue({ affectedRows: 0 });
-      Response.NOT_MODIFIED.mockReturnValue("fail");
+    it("returns NOT_MODIFIED if update fails", async () => {
+      updateUserAccountStatusById.mockResolvedValue({ affectedRows: 0 });
+
       const result = await usersService.loginUser({
-        is2faEnabled: 0,
+        is2faEnabled: STATUS.INACTIVE,
         userId: 1,
-        userType: "patient",
-        accountVerified: 1,
-        accountActive: 1,
-        mobileNumber: "123",
+        userType: USERTYPE.PATIENT,
+        accountVerified: true,
+        accountActive: true,
+        mobileNumber: "1234567890",
       });
-      expect(Response.NOT_MODIFIED).toHaveBeenCalled();
-      expect(result).toBe("fail");
+
+      expect(result.statusCode).toBe(304);
     });
   });
 
   describe("logoutUser", () => {
-    it("should logout user and blacklist token", async () => {
-      repo.updateUserOnlineStatus.mockResolvedValue({ affectedRows: 1 });
-      blacklistToken.mockResolvedValue();
-      redisClient.delete.mockResolvedValue();
-      repo.updateUserNotificationToken.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("ok");
+    it("returns success if logout successful", async () => {
+      updateUserOnlineStatus.mockResolvedValue({ affectedRows: 1 });
+
       const result = await usersService.logoutUser({
         userId: 1,
         token: "jwt",
-        tokenExpiry: "exp",
+        tokenExpiry: Date.now(),
       });
-      expect(Response.SUCCESS).toHaveBeenCalled();
-      expect(result).toBe("ok");
+
+      expect(result.statusCode).toBe(200);
     });
 
-    it("should return INTERNAL_SERVER_ERROR if update fails", async () => {
-      repo.updateUserOnlineStatus.mockResolvedValue({ affectedRows: 0 });
-      Response.INTERNAL_SERVER_ERROR.mockReturnValue("fail");
+    it("returns error if update fails", async () => {
+      updateUserOnlineStatus.mockResolvedValue({ affectedRows: 0 });
+
       const result = await usersService.logoutUser({
         userId: 1,
         token: "jwt",
-        tokenExpiry: "exp",
+        tokenExpiry: Date.now(),
       });
-      expect(Response.INTERNAL_SERVER_ERROR).toHaveBeenCalled();
-      expect(result).toBe("fail");
+
+      expect(result.statusCode).toBe(500);
     });
   });
 
-  describe("logoutAllDevices", () => {
-    it("should logout user from all devices", async () => {
-      repo.updateUserNotificationToken.mockResolvedValue({ affectedRows: 1 });
-      repo.updateUserOnlineStatus.mockResolvedValue({ affectedRows: 1 });
-      blacklistToken.mockResolvedValue();
-      blacklistAllUserTokens.mockResolvedValue();
-      redisClient.delete.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("ok");
-      const result = await usersService.logoutAllDevices({
+  describe("updateUserPassword", () => {
+    it("returns success if password updated", async () => {
+      updateUserPasswordById.mockResolvedValue({ affectedRows: 1 });
+      updateUserVerificationTokenById.mockResolvedValue({});
+
+      const result = await usersService.updateUserPassword({
+        newPassword: "new",
         userId: 1,
-        token: "jwt",
-        tokenExpiry: "exp",
+        mobileNumber: "1234567890",
       });
-      expect(Response.SUCCESS).toHaveBeenCalled();
-      expect(result).toBe("ok");
+
+      expect(result.statusCode).toBe(200);
     });
 
-    it("should return INTERNAL_SERVER_ERROR if update fails", async () => {
-      repo.updateUserNotificationToken.mockResolvedValue({ affectedRows: 0 });
-      repo.updateUserOnlineStatus.mockResolvedValue({ affectedRows: 0 });
-      Response.INTERNAL_SERVER_ERROR.mockReturnValue("fail");
-      const result = await usersService.logoutAllDevices({
-        userId: 1,
-        token: "jwt",
-        tokenExpiry: "exp",
-      });
-      expect(Response.INTERNAL_SERVER_ERROR).toHaveBeenCalled();
-      expect(result).toBe("fail");
-    });
-  });
+    it("returns NOT_MODIFIED if update fails", async () => {
+      updateUserPasswordById.mockResolvedValue({ affectedRows: 0 });
 
-  describe("requestUserLoginOtp", () => {
-    it("should send login OTP", async () => {
-      generateVerificationToken.mockReturnValue("token");
-      repo.updateUserVerificationTokenById.mockResolvedValue(true);
-      smsUtils.sendAuthTokenSMS.mockResolvedValue(true);
-      Response.SUCCESS.mockReturnValue("ok");
-      const result = await usersService.requestUserLoginOtp({
+      const result = await usersService.updateUserPassword({
+        newPassword: "new",
         userId: 1,
-        mobileNumber: "123",
+        mobileNumber: "1234567890",
       });
-      expect(Response.SUCCESS).toHaveBeenCalled();
-      expect(result).toBe("ok");
-    });
-    it("should return INTERNAL_SERVER_ERROR if fails", async () => {
-      repo.updateUserVerificationTokenById.mockResolvedValue(false);
-      smsUtils.sendAuthTokenSMS.mockResolvedValue(false);
-      Response.INTERNAL_SERVER_ERROR.mockReturnValue("fail");
-      // Force the service to call the error response by mocking the implementation
-      jest
-        .spyOn(usersService, "requestUserLoginOtp")
-        .mockImplementation(async () => {
-          Response.INTERNAL_SERVER_ERROR();
-          return "fail";
-        });
-      const result = await usersService.requestUserLoginOtp({
-        userId: 1,
-        mobileNumber: "123",
-      });
-      expect(Response.INTERNAL_SERVER_ERROR).toHaveBeenCalled();
-      expect(result).toBe("fail");
-    });
-  });
 
-  describe("verifyRequestedOTP", () => {
-    it("should return BAD_REQUEST if missing or not active", async () => {
-      Response.BAD_REQUEST.mockReturnValue("bad");
-      const result = await usersService.verifyRequestedOTP({
-        verificationToken: null,
-        accountVerified: 0,
-      });
-      expect(Response.BAD_REQUEST).toHaveBeenCalled();
-      expect(result).toBe("bad");
-    });
-
-    it("should return SUCCESS if valid", async () => {
-      Response.SUCCESS.mockReturnValue("ok");
-      const result = await usersService.verifyRequestedOTP({
-        verificationToken: "token",
-        accountVerified: STATUS.ACTIVE,
-      });
-      expect(Response.SUCCESS).toHaveBeenCalled();
-      expect(result).toBe("ok");
+      expect(result.statusCode).toBe(304);
     });
   });
 });

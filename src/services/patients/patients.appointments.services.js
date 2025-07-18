@@ -205,8 +205,8 @@ exports.createPatientAppointment = async ({
     ]);
 
     //  validate patient
-    if (patient.status === "rejected" || !patient.value) {
-      logger.warn(`Patient Profile Not Found for user ${userId}`);
+    if (patient.status === "rejected") {
+      logger.warn("Patient Profile Not Found for user");
       return Response.BAD_REQUEST({
         message:
           "Please create a patient profile before booking an appointment",
@@ -214,14 +214,14 @@ exports.createPatientAppointment = async ({
     }
 
     // validate doctor
-    if (doctor.status === "rejected" || !doctor.value) {
-      logger.warn(`Doctor Not Found for ID ${doctorId}`);
+    if (doctor.status === "rejected") {
+      logger.warn("Doctor Not Found for ID");
       return Response.BAD_REQUEST({
         message: "Specified Doctor does not exist. Please try again",
       });
     }
 
-    if (timeBooked.status === "fulfilled" && timeBooked.value) {
+    if (timeBooked.status === "fulfilled") {
       logger.warn(
         `Appointment already booked for Doctor ${doctorId} on ${appointmentDate} at ${appointmentTime}`,
       );
@@ -267,7 +267,7 @@ exports.createPatientAppointment = async ({
     if (!appointmentId) {
       logger.error("Failed to create new patient appointment");
       return Response.INTERNAL_SERVER_ERROR({
-        message: "An Error Occured on our side, please try again",
+        message: "An error occurred, please try again",
       });
     }
 

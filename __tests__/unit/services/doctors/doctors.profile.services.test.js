@@ -3,82 +3,96 @@ const dbObject = require("../../../../src/repository/doctors.repository");
 const Response = require("../../../../src/utils/response.utils");
 const { USERTYPE } = require("../../../../src/utils/enum.utils");
 const { getUserById } = require("../../../../src/repository/users.repository");
-
-const {
-  doctorCouncilRegistrationEmail,
-  adminDoctorCouncilRegistrationEmail,
-} = require("../../../../src/utils/email.utils");
+const emailUtils = require("../../../../src/utils/email.utils");
+const logger = require("../../../../src/middlewares/logger.middleware");
 
 jest.mock("../../../../src/repository/doctors.repository");
 jest.mock("../../../../src/utils/response.utils");
 jest.mock("../../../../src/repository/users.repository");
 jest.mock("../../../../src/utils/email.utils");
+jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("doctors.profile.services", () => {
-  afterEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe("getDoctorCouncilRegistration", () => {
-    it("should return NOT_FOUND if doctor profile does not exist", async () => {
+    it("should return NOT_FOUND if doctor profile not found", async () => {
       dbObject.getDoctorByUserId.mockResolvedValue(null);
       Response.NOT_FOUND.mockReturnValue("NOT_FOUND");
-
       const result =
-        await doctorsProfileServices.getDoctorCouncilRegistration("user1");
+        await doctorsProfileServices.getDoctorCouncilRegistration(1);
+      expect(logger.error).toHaveBeenCalledWith(
+        "Doctor profile not found for userId: 1",
+      );
       expect(result).toBe("NOT_FOUND");
-      expect(dbObject.getDoctorByUserId).toHaveBeenCalledWith("user1");
     });
 
-    it("should return UNAUTHORIZED if user id does not match or user type is not doctor", async () => {
+    it("should return UNAUTHORIZED if userId or userType mismatch", async () => {
       dbObject.getDoctorByUserId.mockResolvedValue({
-        doctor_id: 1,
+        doctor_id: 2,
         user_type: USERTYPE.PATIENT,
-        user_id: "user2",
+        user_id: 3,
       });
       Response.UNAUTHORIZED.mockReturnValue("UNAUTHORIZED");
-
       const result =
-        await doctorsProfileServices.getDoctorCouncilRegistration("user1");
+        await doctorsProfileServices.getDoctorCouncilRegistration(1);
+      expect(logger.error).toHaveBeenCalledWith(
+        "Unauthorized access attempt by userId: 1 for doctorId: 2",
+      );
       expect(result).toBe("UNAUTHORIZED");
     });
 
-    it("should return SUCCESS with data if doctor profile exists and user is doctor", async () => {
+    it("should return SUCCESS with council registration data", async () => {
       dbObject.getDoctorByUserId.mockResolvedValue({
-        doctor_id: 1,
+        doctor_id: 2,
         user_type: USERTYPE.DOCTOR,
-        user_id: "user1",
+        user_id: 1,
       });
       dbObject.getDoctorMedicalCouncilRegistration.mockResolvedValue({
         reg: "data",
       });
       Response.SUCCESS.mockReturnValue("SUCCESS");
-
       const result =
-        await doctorsProfileServices.getDoctorCouncilRegistration("user1");
+        await doctorsProfileServices.getDoctorCouncilRegistration(1);
       expect(result).toBe("SUCCESS");
-      expect(dbObject.getDoctorMedicalCouncilRegistration).toHaveBeenCalledWith(
-        { doctorId: 1 },
+      expect(Response.SUCCESS).toHaveBeenCalledWith({ data: { reg: "data" } });
+    });
+
+    it("should log and throw error on exception", async () => {
+      dbObject.getDoctorByUserId.mockRejectedValue(new Error("fail"));
+      await expect(
+        doctorsProfileServices.getDoctorCouncilRegistration(1),
+      ).rejects.toThrow("fail");
+      expect(logger.error).toHaveBeenCalledWith(
+        "getDoctorCouncilRegistration: ",
+        expect.any(Error),
       );
     });
   });
 
   describe("createDoctorCouncilRegistration", () => {
-    const file = { filename: "doc.pdf" };
-    const userId = "user1";
-    const doctorProfile = {
-      doctor_id: 1,
-      first_name: "John",
-      last_name: "Doe",
-      email: "john@example.com",
+    const params = {
+      userId: 1,
+      councilId: 2,
+      regNumber: "123",
+      regYear: 2020,
+      certIssuedDate: "2021-01-01",
+      certExpiryDate: "2025-01-01",
+      file: { filename: "doc.pdf" },
     };
 
-    it("should return BAD_REQUEST if file is not provided", async () => {
+    it("should return BAD_REQUEST if no file provided", async () => {
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
         await doctorsProfileServices.createDoctorCouncilRegistration({
-          userId,
+          ...params,
+          file: null,
         });
+      expect(logger.error).toHaveBeenCalledWith(
+        "No file provided for council registration.",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
@@ -86,10 +100,7 @@ describe("doctors.profile.services", () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.PATIENT });
       Response.UNAUTHORIZED.mockReturnValue("UNAUTHORIZED");
       const result =
-        await doctorsProfileServices.createDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.createDoctorCouncilRegistration(params);
       expect(result).toBe("UNAUTHORIZED");
     });
 
@@ -98,114 +109,155 @@ describe("doctors.profile.services", () => {
       dbObject.getDoctorByUserId.mockResolvedValue({});
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
-        await doctorsProfileServices.createDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.createDoctorCouncilRegistration(params);
+      expect(logger.error).toHaveBeenCalledWith(
+        "Doctor profile not found for userId: 1 while creating council registration",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
-    it("should return BAD_REQUEST if registration is pending", async () => {
+    it("should return BAD_REQUEST if council registration is pending", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue({
         registration_status: "pending",
       });
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
-        await doctorsProfileServices.createDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.createDoctorCouncilRegistration(params);
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Doctor with ID 10 has a pending council registration.",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
-    it("should return BAD_REQUEST if registration is rejected", async () => {
+    it("should return BAD_REQUEST if council registration is rejected", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue({
         registration_status: "rejected",
-        reject_reason: "Invalid doc",
+        reject_reason: "Invalid document",
       });
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
-        await doctorsProfileServices.createDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.createDoctorCouncilRegistration(params);
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Doctor with ID 10 has a rejected council registration.",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
-    it("should return BAD_REQUEST if registration is approved", async () => {
+    it("should return BAD_REQUEST if council registration is approved", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue({
         registration_status: "approved",
       });
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
-        await doctorsProfileServices.createDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.createDoctorCouncilRegistration(params);
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Doctor with ID 10 has an approved council registration.",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
-    it("should create registration and send emails if all is valid", async () => {
+    it("should return INTERNAL_SERVER_ERROR if insertId is missing", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
+      dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue(null);
+      dbObject.createDoctorMedicalCouncilRegistration.mockResolvedValue({});
+      Response.INTERNAL_SERVER_ERROR.mockReturnValue("INTERNAL_SERVER_ERROR");
+      const result =
+        await doctorsProfileServices.createDoctorCouncilRegistration(params);
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to create council registration for doctorId: 10",
+      );
+      expect(result).toBe("INTERNAL_SERVER_ERROR");
+    });
+
+    it("should send emails and return CREATED on success", async () => {
+      getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue(null);
       dbObject.createDoctorMedicalCouncilRegistration.mockResolvedValue({
-        insertId: 1,
+        insertId: 99,
       });
-      adminDoctorCouncilRegistrationEmail.mockResolvedValue();
-      doctorCouncilRegistrationEmail.mockResolvedValue();
+      emailUtils.adminDoctorCouncilRegistrationEmail.mockResolvedValue();
+      emailUtils.doctorCouncilRegistrationEmail.mockResolvedValue();
       Response.CREATED.mockReturnValue("CREATED");
-
       const result =
-        await doctorsProfileServices.createDoctorCouncilRegistration({
-          userId,
-          councilId: 2,
-          regNumber: "123",
-          regYear: 2020,
-          certIssuedDate: "2020-01-01",
-          certExpiryDate: "2025-01-01",
-          file,
-        });
-
+        await doctorsProfileServices.createDoctorCouncilRegistration(params);
       expect(
-        dbObject.createDoctorMedicalCouncilRegistration,
+        emailUtils.adminDoctorCouncilRegistrationEmail,
       ).toHaveBeenCalledWith({
-        doctorId: 1,
-        councilId: 2,
-        regNumber: "123",
-        regYear: 2020,
-        certIssuedDate: "2020-01-01",
-        certExpiryDate: "2025-01-01",
-        filename: "doc.pdf",
+        doctorName: "John Doe",
       });
-      expect(adminDoctorCouncilRegistrationEmail).toHaveBeenCalled();
-      expect(doctorCouncilRegistrationEmail).toHaveBeenCalled();
+      expect(emailUtils.doctorCouncilRegistrationEmail).toHaveBeenCalledWith({
+        doctorEmail: "doc@email.com",
+        doctorName: "John Doe",
+      });
       expect(result).toBe("CREATED");
+    });
+
+    it("should log and throw error on exception", async () => {
+      getUserById.mockRejectedValue(new Error("fail"));
+      await expect(
+        doctorsProfileServices.createDoctorCouncilRegistration(params),
+      ).rejects.toThrow("fail");
+      expect(logger.error).toHaveBeenCalledWith(
+        "createDoctorCouncilRegistration: ",
+        expect.any(Error),
+      );
     });
   });
 
   describe("updateDoctorCouncilRegistration", () => {
-    const file = { filename: "doc.pdf" };
-    const userId = "user1";
-    const doctorProfile = {
-      doctor_id: 1,
-      first_name: "John",
-      last_name: "Doe",
-      email: "john@example.com",
+    const params = {
+      userId: 1,
+      councilId: 2,
+      regNumber: "123",
+      regYear: 2020,
+      certIssuedDate: "2021-01-01",
+      certExpiryDate: "2025-01-01",
+      file: { filename: "doc.pdf" },
     };
 
-    it("should return BAD_REQUEST if file is not provided", async () => {
+    it("should return BAD_REQUEST if no file provided", async () => {
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
         await doctorsProfileServices.updateDoctorCouncilRegistration({
-          userId,
+          ...params,
+          file: null,
         });
+      expect(logger.error).toHaveBeenCalledWith(
+        "No file provided for council registration.",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
@@ -213,10 +265,7 @@ describe("doctors.profile.services", () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.PATIENT });
       Response.UNAUTHORIZED.mockReturnValue("UNAUTHORIZED");
       const result =
-        await doctorsProfileServices.updateDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.updateDoctorCouncilRegistration(params);
       expect(result).toBe("UNAUTHORIZED");
     });
 
@@ -225,95 +274,131 @@ describe("doctors.profile.services", () => {
       dbObject.getDoctorByUserId.mockResolvedValue({});
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
-        await doctorsProfileServices.updateDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.updateDoctorCouncilRegistration(params);
+      expect(logger.error).toHaveBeenCalledWith(
+        "Doctor profile not found for userId: 1 while updating council registration",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
-    it("should return BAD_REQUEST if registration is pending", async () => {
+    it("should return BAD_REQUEST if council registration is pending", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue({
         registration_status: "pending",
       });
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
-        await doctorsProfileServices.updateDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.updateDoctorCouncilRegistration(params);
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Doctor with ID 10 has a pending council registration.",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
-    it("should return BAD_REQUEST if registration is rejected", async () => {
+    it("should return BAD_REQUEST if council registration is rejected", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue({
         registration_status: "rejected",
-        reject_reason: "Invalid doc",
+        reject_reason: "Invalid document",
       });
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
-        await doctorsProfileServices.updateDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.updateDoctorCouncilRegistration(params);
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Doctor with ID 10 has a rejected council registration.",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
-    it("should return BAD_REQUEST if registration is approved", async () => {
+    it("should return BAD_REQUEST if council registration is approved", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue({
         registration_status: "approved",
       });
       Response.BAD_REQUEST.mockReturnValue("BAD_REQUEST");
       const result =
-        await doctorsProfileServices.updateDoctorCouncilRegistration({
-          userId,
-          file,
-        });
+        await doctorsProfileServices.updateDoctorCouncilRegistration(params);
+      expect(logger.warn).toHaveBeenCalledWith(
+        "Doctor with ID 10 has an approved council registration.",
+      );
       expect(result).toBe("BAD_REQUEST");
     });
 
-    it("should update registration and send emails if all is valid", async () => {
+    it("should return INTERNAL_SERVER_ERROR if insertId is missing", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(doctorProfile);
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
+      dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue(null);
+      dbObject.createDoctorMedicalCouncilRegistration.mockResolvedValue({});
+      Response.INTERNAL_SERVER_ERROR.mockReturnValue("INTERNAL_SERVER_ERROR");
+      const result =
+        await doctorsProfileServices.updateDoctorCouncilRegistration(params);
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to create council registration for doctorId: 10",
+      );
+      expect(result).toBe("INTERNAL_SERVER_ERROR");
+    });
+
+    it("should send emails and return CREATED on success", async () => {
+      getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        first_name: "John",
+        last_name: "Doe",
+        email: "doc@email.com",
+      });
       dbObject.getCouncilRegistrationByDoctorId.mockResolvedValue(null);
       dbObject.createDoctorMedicalCouncilRegistration.mockResolvedValue({
-        insertId: 1,
+        insertId: 99,
       });
-      adminDoctorCouncilRegistrationEmail.mockResolvedValue();
-      doctorCouncilRegistrationEmail.mockResolvedValue();
+      emailUtils.adminDoctorCouncilRegistrationEmail.mockResolvedValue();
+      emailUtils.doctorCouncilRegistrationEmail.mockResolvedValue();
       Response.CREATED.mockReturnValue("CREATED");
-
       const result =
-        await doctorsProfileServices.updateDoctorCouncilRegistration({
-          userId,
-          councilId: 2,
-          regNumber: "123",
-          regYear: 2020,
-          certIssuedDate: "2020-01-01",
-          certExpiryDate: "2025-01-01",
-          file,
-        });
-
+        await doctorsProfileServices.updateDoctorCouncilRegistration(params);
       expect(
-        dbObject.createDoctorMedicalCouncilRegistration,
+        emailUtils.adminDoctorCouncilRegistrationEmail,
       ).toHaveBeenCalledWith({
-        doctorId: 1,
-        councilId: 2,
-        regNumber: "123",
-        regYear: 2020,
-        certIssuedDate: "2020-01-01",
-        certExpiryDate: "2025-01-01",
-        filename: "doc.pdf",
+        doctorName: "John Doe",
       });
-      expect(adminDoctorCouncilRegistrationEmail).toHaveBeenCalled();
-      expect(doctorCouncilRegistrationEmail).toHaveBeenCalled();
+      expect(emailUtils.doctorCouncilRegistrationEmail).toHaveBeenCalledWith({
+        doctorEmail: "doc@email.com",
+        doctorName: "John Doe",
+      });
       expect(result).toBe("CREATED");
+    });
+
+    it("should log and throw error on exception", async () => {
+      getUserById.mockRejectedValue(new Error("fail"));
+      await expect(
+        doctorsProfileServices.updateDoctorCouncilRegistration(params),
+      ).rejects.toThrow("fail");
+      expect(logger.error).toHaveBeenCalledWith(
+        "updateDoctorCouncilRegistration: ",
+        expect.any(Error),
+      );
     });
   });
 });

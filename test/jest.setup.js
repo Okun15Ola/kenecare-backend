@@ -1,3 +1,11 @@
+process.env.NODE_ENV = "test";
+
+// Optional: Set up AWS config mocks if needed
+process.env.AWS_ACCESS_KEY_ID = "test-access-key";
+process.env.AWS_SECRET_ACCESS_KEY = "test-secret-key";
+process.env.AWS_REGION = "us-east-1";
+process.env.AWS_BUCKET_NAME = "test-bucket";
+
 // Force Jest to use local mock for DB connection
 jest.mock("../__tests__/__mocks__/src/repository/db.connection.js");
 
@@ -52,6 +60,26 @@ jest.mock("ioredis", () => {
 jest.mock("@sendgrid/mail", () => ({
   setApiKey: jest.fn(),
   send: jest.fn().mockResolvedValue([{ statusCode: 202 }]),
+}));
+
+jest.mock("@aws-sdk/client-s3", () => ({
+  S3Client: jest.fn().mockImplementation(() => ({
+    send: jest.fn(),
+  })),
+  PutObjectCommand: jest.fn(),
+  GetObjectCommand: jest.fn(),
+  DeleteObjectCommand: jest.fn(),
+}));
+
+jest.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: jest.fn(),
+}));
+
+jest.mock("../src/middlewares/logger.middleware", () => ({
+  error: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
 }));
 
 // Suppress noisy console errors
