@@ -5,7 +5,7 @@ services:
     image: imotechsl/kenecare-api:${TAG}
     container_name: kenecare-api-${ENV}
     ports:
-      - "${APP_PORT:-9500}:${APP_PORT:-8000}"
+      - 9500:8000
     networks:
       - kenecare-prod-net
     restart: always
@@ -59,6 +59,10 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_DB=${REDIS_DB:-0}
       - CACHE_TTL=${CACHE_TTL:-3600}
+      - MAX_AUTH_REQUEST=${MAX_AUTH_REQUEST:-5}
+      - MAX_OTP_REQUEST=${MAX_OTP_REQUEST:-5}
+      - MAX_FILE_UPLOAD_REQUEST=${MAX_FILE_UPLOAD_REQUEST:-5}
+      - MAX_ADMIN_REQUEST=${MAX_ADMIN_REQUEST:-5}
     volumes:
       - kenecare-app-data-prod:/usr/src/app/src/public/upload
 

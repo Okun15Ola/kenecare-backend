@@ -94,7 +94,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/v1/health-check", (req, res) =>
   res
     .status(200)
-    .json(SUCCESS({ message: "Health Check Passed. API Working!!!" })),
+    .json(
+      SUCCESS({ message: "Kenecare API Health Check Passed. API Working!!!" }),
+    ),
 );
 
 app.use(logUserInteraction);
