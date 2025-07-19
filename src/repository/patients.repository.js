@@ -20,6 +20,10 @@ exports.getPatientsByCityId = async (cityId) => {
   return query(queries.GET_PATIENTS_BY_CITY_ID, [cityId]);
 };
 
+exports.getDoctorsPatientHasBooked = async (patientId) => {
+  return query(queries.GET_DOCTORS_PATIENT_HAS_MET, [patientId]);
+};
+
 exports.createPatient = async ({
   userId,
   firstName,

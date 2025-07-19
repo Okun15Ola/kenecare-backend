@@ -4,12 +4,24 @@ const {
   createPatientProfile,
   updatePatientProfile,
   updatePatientProfilePicture,
+  getDoctorsPatientsHasMet,
 } = require("../../services/patients/patients.services");
 
 exports.GetPatientProfileController = async (req, res, next) => {
   try {
     const { id } = req.user;
     const response = await getPatientByUser(id);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.GetDoctorsPatientsHasMetController = async (req, res, next) => {
+  try {
+    const { id } = req.user;
+    const response = await getDoctorsPatientsHasMet(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

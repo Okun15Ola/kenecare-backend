@@ -5,6 +5,7 @@ const {
   CreatePatientProfileController,
   UpdatePatientProfileController,
   UpdatePatientProfilePictureController,
+  GetDoctorsPatientsHasMetController,
 } = require("../../../controllers/patients/profile.controller");
 const {
   profileValidation,
@@ -19,6 +20,7 @@ const {
 router.use(authenticateUser, limiter, authorizePatient); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
 router.get("/profile", GetPatientProfileController);
+router.get("/doctors-booked", GetDoctorsPatientsHasMetController);
 router.post(
   "/profile",
   profileValidation,
