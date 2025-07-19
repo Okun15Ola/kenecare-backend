@@ -211,7 +211,7 @@ jobs:
 
       - name: Run Compose and Deploy New Image
         run: |
-          @echo "🚀 GH ACTIONS: Deploying new ${{env.ENV}} image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}"  
+          echo "🚀 GH ACTIONS: Deploying new ${{env.ENV}} image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}"  
           ENV=${{env.ENV}} make deploy-prod TAG=${IMAGE_TAG}
 
       - name: Post-deployment Container Health Check
