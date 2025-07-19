@@ -1,0 +1,81 @@
+name: api
+services:
+  api:
+    container_name: kenecare-api-staging
+    environment:
+      ADMINS_JWT_SECRET: qlgMy9oI651AWusdP9EZ
+      API_BASE_URL: https://api.kenecare.com
+      APP_PORT: "8000"
+      AWS_ACCESS_KEY_ID: AKIARX74KKEHNV5EFTUB
+      AWS_ACCESS_SECRET_KEY: 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
+      AWS_BUCKET_NAME: imotechsl-kenecare-medical-records
+      AWS_REGION: us-east-1
+      BASE_URL: https://api.kenecare.com
+      CACHE_TTL: "3600"
+      CLIENT_APP_URL: https://dashboard.kenecare.com/
+      DB_CONNECTION_LIMIT: "10"
+      DB_HOST: db
+      DB_NAME: db_kenecare
+      DB_PASS: R5rzLoJNoRzYhbwjUf3S
+      DB_PORT: "3306"
+      DB_USER: db_user
+      HOST: localhost
+      JWT_ADMIN_AUDIENCE: admin.kenecare.com
+      JWT_AUDIENCE: kenecare.com
+      JWT_ISSUER: auth.kenecare.com
+      KENECARE_ADMIN_EMAIL: admin@kenecare.com
+      KENECARE_APPOINTMENTS_EMAIL: appointments@kenecare.com
+      KENECARE_INFO_EMAIL: info@kenecare.com
+      KENECARE_MEETING_EMAIL: meetings@kenecare.com
+      KENECARE_SUPPORT_EMAIL: support@kenecare.com
+      MAX_ADMIN_REQUEST: "10"
+      MAX_AUTH_REQUEST: "10"
+      MAX_FILE_UPLOAD_REQUEST: "10"
+      MAX_OTP_REQUEST: "10"
+      MAX_REQUEST: "10"
+      NEW_RELIC_APP_NAME: kenecare-api
+      NEW_RELIC_LICENSE_KEY: ffb99df1cfa6546d824cbf3c9017fb85FFFFNRAL
+      NODE_ENV: staging
+      OM_BASIC_AUTH_TOKEN: Basic V1Z5R3VTeDB5V3dncEVpSXlYY3RyT2ZFcHVVM3VhcVU6V29UbVEyV2poSzB5U3Vraw==
+      OM_CANCEL_URL: /api/v1/payments/om/cancel
+      OM_CURRENCY: OUV
+      OM_MERCHANT_KEY: 4848368f
+      OM_NOTIFICATION_URL: /api/v1/payments/om/notification
+      OM_RETURN_URL: /api/v1/payments/om/return
+      OM_TOKEN_URL: https://api.orange.com/oauth/v3/token
+      OM_TRANSACTION_STATUS_URL: https://api.orange.com/orange-money-webpay/dev/v1/transactionstatus
+      OM_WEB_PAYMENT_URL: https://api.orange.com/orange-money-webpay/dev/v1/webpayment
+      PATIENTS_JWT_SECRET: ssquYp4CqGXqNRQlqsJa4
+      REDIS_DB: redis-db
+      REDIS_HOST: redis
+      REDIS_PASSWORD: changeme
+      REDIS_PORT: "6379"
+      SENDGRID_API_KEY: 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
+      SENDGRID_EMAIL: chinedum.eke@imo-tech.com
+      SESSION_SECRET: ZbHpZqdGRAiL0t6##D@@@KtS!!$$$$D
+      SMS_HIVE_AUTH_TOKEN: cd3e42dd3d284c10bb91c3d87f59d224
+      SMS_HIVE_CLIENT_ID: b4b1837df8c
+      SMS_HIVE_CLIENT_SECRET: 54674748581743e7952f6dc006782 a7d
+      SMS_HIVE_URL: https://api.sierrahive.com/v1
+      TIME_SLOT_INTERVAL: "60"
+    image: imotechsl/kenecare-api:staging
+    networks:
+      kenecare-staging-net: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "9000"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: kenecare-app-data-staging
+        target: /usr/src/app/src/public/upload
+        volume: {}
+networks:
+  kenecare-staging-net:
+    name: kenecare-staging-net
+    driver: bridge
+volumes:
+  kenecare-app-data-staging:
+    name: kenecare-app-data-staging

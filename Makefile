@@ -264,7 +264,7 @@ deploy-prod: check-env
 	@ENV=production TAG=$(CURRENT_IMAGE_TAG) docker compose --env-file=$(ENV_FILE_PROD) -f $(DOCKER_COMPOSE_PROD) up -d --force-recreate --remove-orphans
 	@echo "$(CURRENT_IMAGE_TAG)" > ~/.last_kenecare_api_deployed_image 
 	@echo "Deployment Successful!!"
-# 	@$(MAKE) test-deploy
+
 
 .PHONY: stop-prod
 stop-prod: check-env

@@ -21,6 +21,7 @@ env:
   DOCKER_COMPOSE_PROD: docker-compose.api-prod.yml
   ENV_FILE_STAGING: .env.staging
   ENV_FILE_PROD: .env.production
+  ENV_FILE: .env.${{github.event.inputs.ENV || 'staging'}}
   GH_RUN_NUMBER: ${{github.run_number}}
   DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
@@ -149,9 +150,6 @@ jobs:
           COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
           DIGEST: ${{steps.build-and-push.outputs.digest}}
 
-      # - name: Copy Variables
-      #   run: cp ~/.env.kenecare.api-prod ./.env.production
-
   deploy-to-prod:
     needs: build-and-scan-image
     runs-on: ["self-hosted", "imotechsl-apps"]
@@ -162,6 +160,15 @@ jobs:
       packages: write
       id-token: write
     steps:
+      - name: Set COMPOSE_FILE based on Input 
+        run: |
+          if [ "${{github.event.inputs.ENV}}" == "staging" ]; then
+            echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_STAGING}}" >> $GITHUB_ENV
+            echo "Using compose file: $COMPOSE_FILE"
+          else
+            echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_PROD}}" >> $GITHUB_ENV
+          fi
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -182,7 +189,7 @@ jobs:
       - name: Create deployment backup directory and backup compose file
         run: |
           mkdir -p /home/ubuntu/deployment-backups
-          ENV=production docker compose -f docker-compose.api-prod.yml config > /home/ubuntu/deployment-backups/docker-compose.api-prod.yml
+          ENV=production docker compose -f docker-compose.api-prod.yml --env-file=${{env.ENV_FILE_PROD}} config > /home/ubuntu/deployment-backups/docker-compose.api-prod.yml
 
       - name: Remove Old Container and Images Gracefully
         run: |
