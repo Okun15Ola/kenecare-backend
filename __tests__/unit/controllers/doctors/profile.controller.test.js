@@ -273,16 +273,28 @@ describe("Doctor Profile Controllers", () => {
 
   describe("UpdateDoctorProfilePictureController", () => {
     it("should update doctor profile picture", async () => {
-      req.user.id = "7";
-      req.file = { filename: "profile.jpg" };
+      req.params = { userId: "7" };
+      req.file = {
+        filename: "profile.jpg",
+        buffer: expect.any(Buffer),
+        mimetype: "image/jpeg",
+        originalname: "profile.jpg",
+        size: 1024,
+      };
       const mockResponse = { statusCode: 200, data: { id: 7 } };
       services.updateDoctorProfilePicture.mockResolvedValue(mockResponse);
 
       await UpdateDoctorProfilePictureController(req, res, next);
 
       expect(services.updateDoctorProfilePicture).toHaveBeenCalledWith({
-        userId: "7",
-        imageUrl: "profile.jpg",
+        userId: "1",
+        file: {
+          filename: "profile.jpg",
+          buffer: expect.any(Buffer),
+          mimetype: "image/jpeg",
+          originalname: "profile.jpg",
+          size: 1024,
+        },
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);

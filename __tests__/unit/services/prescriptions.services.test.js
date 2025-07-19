@@ -1,136 +1,352 @@
-const prescriptionService = require("../../../src/services/prescriptions.services");
-const prescriptionRepo = require("../../../src/repository/prescriptions.repository");
-const patientAppointmentsRepo = require("../../../src/repository/patientAppointments.repository");
-const patientsRepo = require("../../../src/repository/patients.repository");
-const { redisClient } = require("../../../src/config/redis.config");
+const prescriptionsService = require("../../../src/services/prescriptions.services");
+const prescriptionsRepo = require("../../../src/repository/prescriptions.repository");
+const Response = require("../../../src/utils/response.utils");
 const authUtils = require("../../../src/utils/auth.utils");
 const smsUtils = require("../../../src/utils/sms.utils");
-const caching = require("../../../src/utils/caching.utils");
+const appointmentsRepo = require("../../../src/repository/patientAppointments.repository");
+const patientsRepo = require("../../../src/repository/patients.repository");
+const redisConfig = require("../../../src/config/redis.config");
+const cachingUtils = require("../../../src/utils/caching.utils");
+const dbMapper = require("../../../src/utils/db-mapper.utils");
+const logger = require("../../../src/middlewares/logger.middleware");
 
 jest.mock("../../../src/repository/prescriptions.repository");
+jest.mock("../../../src/utils/response.utils");
+jest.mock("../../../src/utils/auth.utils");
+jest.mock("../../../src/utils/sms.utils");
 jest.mock("../../../src/repository/patientAppointments.repository");
 jest.mock("../../../src/repository/patients.repository");
 jest.mock("../../../src/config/redis.config");
-jest.mock("../../../src/utils/auth.utils");
-jest.mock("../../../src/utils/sms.utils");
 jest.mock("../../../src/utils/caching.utils");
+jest.mock("../../../src/utils/db-mapper.utils");
+jest.mock("../../../src/middlewares/logger.middleware");
 
-describe("Prescription Service", () => {
-  afterEach(() => {
+describe("prescriptions.services", () => {
+  beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe("getAppointmentPrescriptions", () => {
-    it("should return prescriptions from cache if available", async () => {
-      const cachedData = [{ id: 1, diagnosis: "Fever" }];
-      redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
-      caching.cacheKeyBulider.mockReturnValue("cache-key");
+    it("should return cached prescriptions if available", async () => {
+      const cacheKey = "appointment-prescriptions:all:10:0";
+      cachingUtils.cacheKeyBulider.mockReturnValue(cacheKey);
+      redisConfig.redisClient.get.mockResolvedValue(
+        JSON.stringify([{ id: 1 }]),
+      );
+      Response.SUCCESS.mockReturnValue("success");
 
-      const result = await prescriptionService.getAppointmentPrescriptions(
+      const result = await prescriptionsService.getAppointmentPrescriptions(
         1,
         10,
         0,
         {},
       );
-      expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("cache-key");
+
+      expect(redisConfig.redisClient.get).toHaveBeenCalledWith(cacheKey);
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        data: [{ id: 1 }],
+        pagination: {},
+      });
+      expect(result).toBe("success");
     });
 
-    it("should throw an error if repo fails", async () => {
-      redisClient.get.mockResolvedValue(null);
-      prescriptionRepo.getAppointmentPrescriptions.mockRejectedValue(
-        new Error("DB Error"),
+    it("should fetch prescriptions from repo and cache them if not cached", async () => {
+      cachingUtils.cacheKeyBulider.mockReturnValue("key");
+      redisConfig.redisClient.get.mockResolvedValue(null);
+      prescriptionsRepo.getAppointmentPrescriptions.mockResolvedValue([
+        { id: 2 },
+      ]);
+      dbMapper.mapPrescriptionRow.mockReturnValue({ id: 2, mapped: true });
+      redisConfig.redisClient.set.mockResolvedValue();
+      Response.SUCCESS.mockReturnValue("success");
+
+      const result = await prescriptionsService.getAppointmentPrescriptions(
+        1,
+        10,
+        0,
+        {},
       );
+
+      expect(prescriptionsRepo.getAppointmentPrescriptions).toHaveBeenCalled();
+      expect(redisConfig.redisClient.set).toHaveBeenCalledWith({
+        key: "key",
+        value: JSON.stringify([{ id: 2, mapped: true }]),
+      });
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        data: [{ id: 2, mapped: true }],
+        pagination: {},
+      });
+      expect(result).toBe("success");
+    });
+
+    it("should return empty array if no prescriptions found", async () => {
+      cachingUtils.cacheKeyBulider.mockReturnValue("key");
+      redisConfig.redisClient.get.mockResolvedValue(null);
+      prescriptionsRepo.getAppointmentPrescriptions.mockResolvedValue([]);
+      Response.SUCCESS.mockReturnValue("empty");
+
+      const result = await prescriptionsService.getAppointmentPrescriptions(
+        1,
+        10,
+        0,
+        {},
+      );
+
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        message: "No prescriptions found",
+        data: [],
+      });
+      expect(result).toBe("empty");
+    });
+
+    it("should log and throw error on failure", async () => {
+      redisConfig.redisClient.get.mockRejectedValue(new Error("fail"));
+      logger.error.mockReturnValue();
+
       await expect(
-        prescriptionService.getAppointmentPrescriptions(1, 10, 0, {}),
-      ).rejects.toThrow("DB Error");
+        prescriptionsService.getAppointmentPrescriptions(1, 10, 0, {}),
+      ).rejects.toThrow("fail");
+      expect(logger.error).toHaveBeenCalled();
     });
   });
 
   describe("getAppointmentPrescriptionById", () => {
-    it("should return a prescription by id from cache if available", async () => {
-      const cachedData = { id: 1, diagnosis: "Fever" };
-      redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
+    it("should return cached prescription if available", async () => {
+      redisConfig.redisClient.get.mockResolvedValue(JSON.stringify({ id: 1 }));
+      Response.SUCCESS.mockReturnValue("success");
 
       const result =
-        await prescriptionService.getAppointmentPrescriptionById(1);
-      expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith(
+        await prescriptionsService.getAppointmentPrescriptionById(1);
+
+      expect(redisConfig.redisClient.get).toHaveBeenCalledWith(
         "appointment-prescriptions:1",
       );
+      expect(Response.SUCCESS).toHaveBeenCalledWith({ data: { id: 1 } });
+      expect(result).toBe("success");
     });
 
-    it("should return a 404 if prescription not found", async () => {
-      redisClient.get.mockResolvedValue(null);
-      prescriptionRepo.getAppointmentPrescriptionById.mockResolvedValue(null);
+    it("should return NOT_FOUND if prescription does not exist", async () => {
+      redisConfig.redisClient.get.mockResolvedValue(null);
+      prescriptionsRepo.getAppointmentPrescriptionById.mockResolvedValue(null);
+      logger.warn.mockReturnValue();
+      Response.NOT_FOUND.mockReturnValue("not_found");
 
       const result =
-        await prescriptionService.getAppointmentPrescriptionById(1);
-      expect(result.statusCode).toBe(404);
+        await prescriptionsService.getAppointmentPrescriptionById(2);
+
+      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
+        message: "Prescription not found. Try again",
+      });
+      expect(result).toBe("not_found");
+    });
+
+    it("should fetch, map, cache and return prescription", async () => {
+      redisConfig.redisClient.get.mockResolvedValue(null);
+      prescriptionsRepo.getAppointmentPrescriptionById.mockResolvedValue({
+        id: 3,
+        access_jwt: "token",
+      });
+      dbMapper.mapPrescriptionRow.mockReturnValue({ id: 3, mapped: true });
+      redisConfig.redisClient.set.mockResolvedValue();
+      Response.SUCCESS.mockReturnValue("success");
+
+      const result =
+        await prescriptionsService.getAppointmentPrescriptionById(3);
+
+      expect(dbMapper.mapPrescriptionRow).toHaveBeenCalledWith(
+        { id: 3, access_jwt: "token" },
+        "token",
+        true,
+        true,
+        true,
+      );
+      expect(redisConfig.redisClient.set).toHaveBeenCalledWith({
+        key: "appointment-prescriptions:3",
+        value: JSON.stringify({ id: 3, mapped: true }),
+      });
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        data: { id: 3, mapped: true },
+      });
+      expect(result).toBe("success");
+    });
+
+    it("should log and throw error on failure", async () => {
+      redisConfig.redisClient.get.mockRejectedValue(new Error("fail"));
+      logger.error.mockReturnValue();
+
+      await expect(
+        prescriptionsService.getAppointmentPrescriptionById(1),
+      ).rejects.toThrow("fail");
+      expect(logger.error).toHaveBeenCalled();
     });
   });
 
   describe("createPrescription", () => {
-    it("should create a new prescription", async () => {
-      patientAppointmentsRepo.getAppointmentByID.mockResolvedValue({
-        patient_id: 1,
+    it("should return NOT_FOUND if appointment does not exist", async () => {
+      appointmentsRepo.getAppointmentByID.mockResolvedValue(null);
+      logger.warn.mockReturnValue();
+      Response.NOT_FOUND.mockReturnValue("not_found");
+
+      const result = await prescriptionsService.createPrescription({
+        appointmentId: 1,
+        diagnosis: "diag",
+        medicines: [],
+        comment: "comm",
+      });
+
+      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
+        message: "Appointment Not Found! Please Try again",
+      });
+      expect(result).toBe("not_found");
+    });
+
+    it("should return BAD_REQUEST if insertId is missing", async () => {
+      appointmentsRepo.getAppointmentByID.mockResolvedValue({
+        patient_id: 2,
         doctor_last_name: "Smith",
       });
       patientsRepo.getPatientById.mockResolvedValue({
         mobile_number: "1234567890",
       });
       authUtils.generateVerificationToken.mockReturnValue("token");
-      authUtils.hashUsersPassword.mockResolvedValue("hashed_token");
-      authUtils.encryptText.mockReturnValue("encrypted_text");
-      prescriptionRepo.createAppointmentPrescriptions.mockResolvedValue({
-        insertId: 1,
+      authUtils.hashUsersPassword.mockResolvedValue("hashed");
+      authUtils.encryptText.mockReturnValue("enc");
+      prescriptionsRepo.createAppointmentPrescriptions.mockResolvedValue({
+        insertId: null,
       });
-      smsUtils.sendPrescriptionToken.mockResolvedValue({});
+      logger.warn.mockReturnValue();
+      Response.BAD_REQUEST.mockReturnValue("bad");
 
-      const result = await prescriptionService.createPrescription({
+      const result = await prescriptionsService.createPrescription({
         appointmentId: 1,
-        diagnosis: "Fever",
-        medicines: [
-          { name: "Paracetamol", dosage: "500mg", frequency: "2x a day" },
-        ],
-        comment: "Rest well",
-        doctorId: 2,
-        patientId: 1,
+        diagnosis: "diag",
+        medicines: [],
+        comment: "comm",
       });
 
-      expect(result.statusCode).toBe(201);
+      expect(Response.BAD_REQUEST).toHaveBeenCalledWith({
+        message: "Failed to create prescription. Try again",
+      });
+      expect(result).toBe("bad");
     });
 
-    it("should return a 404 if appointment not found", async () => {
-      patientAppointmentsRepo.getAppointmentByID.mockResolvedValue(null);
-
-      const result = await prescriptionService.createPrescription({
-        appointmentId: 1,
+    it("should create prescription, send token, clear cache and return CREATED", async () => {
+      appointmentsRepo.getAppointmentByID.mockResolvedValue({
+        patient_id: 2,
+        doctor_last_name: "Smith",
       });
-      expect(result.statusCode).toBe(404);
+      patientsRepo.getPatientById.mockResolvedValue({
+        mobile_number: "1234567890",
+      });
+      authUtils.generateVerificationToken.mockReturnValue("token");
+      authUtils.hashUsersPassword.mockResolvedValue("hashed");
+      authUtils.encryptText.mockReturnValue("enc");
+      prescriptionsRepo.createAppointmentPrescriptions.mockResolvedValue({
+        insertId: 5,
+      });
+      smsUtils.sendPrescriptionToken.mockResolvedValue();
+      redisConfig.redisClient.clearCacheByPattern.mockResolvedValue();
+      Response.CREATED.mockReturnValue("created");
+
+      const result = await prescriptionsService.createPrescription({
+        appointmentId: 1,
+        diagnosis: "diag",
+        medicines: [],
+        comment: "comm",
+      });
+
+      expect(
+        prescriptionsRepo.createAppointmentPrescriptions,
+      ).toHaveBeenCalled();
+      expect(smsUtils.sendPrescriptionToken).toHaveBeenCalledWith({
+        mobileNumber: "1234567890",
+        doctorName: "Smith",
+      });
+      expect(redisConfig.redisClient.clearCacheByPattern).toHaveBeenCalledWith(
+        "appointment-prescriptions:*",
+      );
+      expect(Response.CREATED).toHaveBeenCalledWith({
+        message: "Prescription Created Successfully",
+      });
+      expect(result).toBe("created");
+    });
+
+    it("should log and throw error on failure", async () => {
+      appointmentsRepo.getAppointmentByID.mockRejectedValue(new Error("fail"));
+      logger.error.mockReturnValue();
+
+      await expect(
+        prescriptionsService.createPrescription({
+          appointmentId: 1,
+          diagnosis: "diag",
+          medicines: [],
+          comment: "comm",
+        }),
+      ).rejects.toThrow("fail");
+      expect(logger.error).toHaveBeenCalled();
     });
   });
 
   describe("updatePrescriptions", () => {
-    it("should update a prescription", async () => {
-      prescriptionRepo.updateAppointmentPrescriptions.mockResolvedValue({
-        affectedRows: 1,
+    it("should return NOT_MODIFIED if affectedRows is missing or < 1", async () => {
+      prescriptionsRepo.updateAppointmentPrescriptions.mockResolvedValue({
+        affectedRows: 0,
+      });
+      logger.warn.mockReturnValue();
+      Response.NOT_MODIFIED.mockReturnValue("not_modified");
+
+      const result = await prescriptionsService.updatePrescriptions({
+        appointmentId: 1,
+        prescriptionId: 2,
+        diagnosis: "diag",
+        medicines: [],
+        comment: "comm",
       });
 
-      const result = await prescriptionService.updatePrescriptions({
-        appointmentId: 1,
-        prescriptionId: 1,
-      });
-      expect(result.statusCode).toBe(200);
+      expect(Response.NOT_MODIFIED).toHaveBeenCalledWith({});
+      expect(result).toBe("not_modified");
     });
 
-    it("should throw an error if repo fails", async () => {
-      prescriptionRepo.updateAppointmentPrescriptions.mockRejectedValue(
-        new Error("DB Error"),
+    it("should update prescription, delete cache and return SUCCESS", async () => {
+      prescriptionsRepo.updateAppointmentPrescriptions.mockResolvedValue({
+        affectedRows: 1,
+      });
+      redisConfig.redisClient.delete.mockResolvedValue();
+      Response.SUCCESS.mockReturnValue("success");
+
+      const result = await prescriptionsService.updatePrescriptions({
+        appointmentId: 1,
+        prescriptionId: 2,
+        diagnosis: "diag",
+        medicines: [],
+        comment: "comm",
+      });
+
+      expect(redisConfig.redisClient.delete).toHaveBeenCalledWith(
+        "appointment-prescriptions:2",
       );
-      await expect(prescriptionService.updatePrescriptions({})).rejects.toThrow(
-        "DB Error",
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        message: "Prescription Updated Successfully",
+      });
+      expect(result).toBe("success");
+    });
+
+    it("should log and throw error on failure", async () => {
+      prescriptionsRepo.updateAppointmentPrescriptions.mockRejectedValue(
+        new Error("fail"),
       );
+      logger.error.mockReturnValue();
+
+      await expect(
+        prescriptionsService.updatePrescriptions({
+          appointmentId: 1,
+          prescriptionId: 2,
+          diagnosis: "diag",
+          medicines: [],
+          comment: "comm",
+        }),
+      ).rejects.toThrow("fail");
+      expect(logger.error).toHaveBeenCalled();
     });
   });
 });

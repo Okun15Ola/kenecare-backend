@@ -24,11 +24,11 @@ describe("Testimonials Service", () => {
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 
-    it("should return a 404 if no testimonials are found", async () => {
+    it("should return a 200 if no testimonials are found", async () => {
       redisClient.get.mockResolvedValue(null);
       testimonialRepo.getAllTestimonials.mockResolvedValue(null);
       const result = await testimonialService.getTestimonials(10, 0, {});
-      expect(result.statusCode).toBe(404);
+      expect(result.statusCode).toBe(200);
     });
   });
 

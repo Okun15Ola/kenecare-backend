@@ -62,8 +62,7 @@ exports.getDoctorAppointments = async ({
     });
 
     if (!rawData?.length) {
-      logger.warn("No appointments found for doctorId:", doctorId);
-      return Response.NOT_FOUND({ message: "Appointment Not Found" });
+      return Response.SUCCESS({ message: "No appointments found", data: [] });
     }
 
     const appointments = rawData.map((row) =>
@@ -167,8 +166,7 @@ exports.getDoctorAppointmentByDateRange = async ({
     });
 
     if (!rawData?.length) {
-      logger.warn("No appointments found for doctorId:", doctorId);
-      return Response.NOT_FOUND({ message: "Appointment Not Found" });
+      return Response.SUCCESS({ message: "No appointments found", data: [] });
     }
 
     const appointments = rawData.map((row) =>

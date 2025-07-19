@@ -1,8 +1,10 @@
-const fs = require("fs");
-const path = require("path");
 const repo = require("../repository/specialities.repository");
 const Response = require("../utils/response.utils");
-const { deleteFile } = require("../utils/file-upload.utils");
+const {
+  uploadFileToS3Bucket,
+  deleteFileFromS3Bucket,
+} = require("../utils/aws-s3.utils");
+const { generateFileName } = require("../utils/file-upload.utils");
 const { redisClient } = require("../config/redis.config");
 const { cacheKeyBulider } = require("../utils/caching.utils");
 const { mapSpecialityRow } = require("../utils/db-mapper.utils");
@@ -17,8 +19,7 @@ exports.getSpecialties = async (limit, offset, paginationInfo) => {
     }
     const rawData = await repo.getAllSpecialties(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Specialties Not Found");
-      return Response.NOT_FOUND({ message: "Speciality Not Found" });
+      return Response.SUCCESS({ message: "No specialities found", data: [] });
     }
     const specialties = rawData.map(mapSpecialityRow);
     await redisClient.set({
@@ -86,10 +87,21 @@ exports.getSpecialtyById = async (id) => {
 
 exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
   try {
+    let fileName = null;
+    if (image) {
+      const { buffer, mimetype } = image;
+      fileName = `specialty_${generateFileName(image)}`;
+      await uploadFileToS3Bucket({
+        fileName,
+        buffer,
+        mimetype,
+      });
+    }
+
     const { insertId } = await repo.createNewSpecialty({
       name,
       description,
-      image,
+      image: fileName,
       inputtedBy,
     });
 
@@ -117,14 +129,21 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
 
     const { image_url: imageUrl } = rawData;
 
-    if (imageUrl) {
-      const file = path.join(__dirname, "../public/upload/media/", imageUrl);
-      await deleteFile(file);
+    let fileName = null;
+    if (image) {
+      const { buffer, mimetype } = image;
+      fileName = imageUrl || `specialty_${generateFileName(image)}`;
+      await uploadFileToS3Bucket({
+        fileName,
+        buffer,
+        mimetype,
+      });
     }
+
     const { affectedRows } = await repo.updateSpecialtiyById({
       id,
       name,
-      image,
+      image: fileName,
       description,
     });
 
@@ -175,8 +194,7 @@ exports.deleteSpecialty = async (id) => {
   try {
     const { image_url: imageUrl } = await repo.getSpecialtiyById(id);
     if (imageUrl) {
-      const file = path.join(__dirname, "../public/upload/media/", imageUrl);
-      fs.unlinkSync(file);
+      await deleteFileFromS3Bucket(imageUrl);
     }
 
     const { affectedRows } = await repo.deleteSpecialtieById(id);

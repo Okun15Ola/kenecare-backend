@@ -2,8 +2,6 @@ const doctorCouncilRegistrationService = require("../../../../src/services/admin
 const doctorsRepo = require("../../../../src/repository/doctors.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
 const emailUtils = require("../../../../src/utils/email.utils");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
-// const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/doctors.repository");
 jest.mock("../../../../src/config/redis.config");
@@ -28,13 +26,13 @@ describe("Doctor Council Registration Service", () => {
       );
     });
 
-    it("should return a 404 if no registrations are found", async () => {
+    it("should return a 200 if no registrations are found", async () => {
       redisClient.get.mockResolvedValue(null);
       doctorsRepo.getAllMedicalCouncilRegistration.mockResolvedValue(null);
 
       const result =
         await doctorCouncilRegistrationService.getAllCouncilRegistrations();
-      expect(result.statusCode).toBe(404);
+      expect(result.statusCode).toBe(200);
     });
   });
 

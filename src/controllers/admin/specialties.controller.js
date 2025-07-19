@@ -28,9 +28,7 @@ exports.GetSpecialtiesController = async (req, res, next) => {
 exports.GetSpecialtyByIDController = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     const response = await getSpecialtyById(id);
-
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
@@ -40,7 +38,7 @@ exports.GetSpecialtyByIDController = async (req, res, next) => {
 exports.CreateSpecialtyController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const image = req.file.filename || null;
+    const image = req.file || null;
     const { name, description } = req.body;
     const response = await createSpecialty({
       name,
@@ -57,10 +55,9 @@ exports.CreateSpecialtyController = async (req, res, next) => {
 
 exports.UpdateSpecialtyByIdController = async (req, res, next) => {
   try {
-    const image = req.file.filename || null;
+    const image = req.file || null;
     const id = parseInt(req.params.id, 10);
     const { name, description } = req.body;
-
     const response = await updateSpecialty({
       id,
       name,
@@ -77,7 +74,6 @@ exports.UpdateSpecialtyStatusController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
     const status = parseInt(req.query.status, 10);
-
     const response = await updateSpecialtyStatus({
       id,
       status,
@@ -92,7 +88,6 @@ exports.UpdateSpecialtyStatusController = async (req, res, next) => {
 exports.DeleteSpecialtyByIdController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-
     const response = await deleteSpecialty(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {

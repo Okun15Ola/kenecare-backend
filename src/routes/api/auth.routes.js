@@ -8,8 +8,7 @@ const {
   VerifyLoginOTPController,
   RequestForgotPasswordOTPController,
   ResendVerificationOTPController,
-  // SendVerificationOTPController,
-  VerifyRequestedOTPController,
+  // VerifyRequestedOTPController,
   UpdatePasswordController,
   UpdatePushNotificationTokenController,
   VerifyForgotPasswordOTPController,
@@ -117,18 +116,11 @@ router.put(
 );
 
 // router.post(
-//   "/otp-request",
-//   otpLimiter,
+//   "/resend-verification-otp",
+//   authLimiter,
 //   authenticateUser,
-//   SendVerificationOTPController,
+//   VerifyRequestedOTPController,
 // );
-
-router.post(
-  "/otp-request",
-  authLimiter,
-  authenticateUser,
-  VerifyRequestedOTPController,
-);
 
 router.put(
   "/notif-token",

@@ -41,12 +41,12 @@ describe("Medical Councils Service", () => {
       });
     });
 
-    it("should return a 404 if no councils are found", async () => {
+    it("should return a 200 if no councils are found", async () => {
       redisClient.get.mockResolvedValue(null);
       medicalCouncilRepo.getAllMedicalCouncils.mockResolvedValue(null);
 
       const result = await medicalCouncilService.getMedicalCouncils(10, 0, {});
-      expect(result.statusCode).toBe(404);
+      expect(result.statusCode).toBe(200);
     });
   });
 

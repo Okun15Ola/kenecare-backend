@@ -15,10 +15,10 @@ class RedisClient {
   constructor() {
     if (RedisClient.instance) return RedisClient.instance;
     this.client = this.initializeClient();
-    this.client.on("connect", () => console.info("✅ Connected to Redis"));
+    this.client.on("connect", () => console.log("✅ Connected to Redis"));
     this.client.on("error", (err) => console.error("❌ Redis Error:", err));
     this.client.on("reconnecting", () =>
-      console.info("♻️ Reconnecting to Redis..."),
+      console.log("♻️ Reconnecting to Redis..."),
     );
 
     RedisClient.instance = this;
@@ -55,6 +55,7 @@ class RedisClient {
     try {
       return await this.client.get(key);
     } catch (error) {
+      console.error("❌ Redis GET Error:", error);
       logger.error("❌ Redis GET Error:", error);
       return null;
     }
@@ -64,6 +65,7 @@ class RedisClient {
     try {
       await this.client.set(key, value, "EX", expiry);
     } catch (error) {
+      console.error("❌ Redis SET Error:", error);
       logger.error("❌ Redis SET Error:", error);
     }
   }
@@ -72,6 +74,7 @@ class RedisClient {
     try {
       return await this.client.keys(pattern);
     } catch (error) {
+      console.error("❌ Redis KEYS Error:", error);
       logger.error("❌ Redis KEYS Error:", error);
       return [];
     }
@@ -81,6 +84,7 @@ class RedisClient {
     try {
       return await this.client.del(key);
     } catch (error) {
+      console.error("❌ Redis DEL Error:", error);
       logger.error("❌ Redis DEL Error:", error);
       throw error;
     }
@@ -91,21 +95,28 @@ class RedisClient {
       const keys = await this.keys(pattern);
       if (keys.length > 0) {
         await this.client.unlink(...keys); // More efficient than DEL for large sets
+        console.log(
+          `🗑️ Cleared ${keys.length} keys matching pattern "${pattern}"`,
+        );
         logger.info(
           `🗑️ Cleared ${keys.length} keys matching pattern "${pattern}"`,
         );
       }
     } catch (error) {
+      console.error("❌ Redis Clear Cache Error:", error);
       logger.error("❌ Redis Clear Cache Error:", error);
     }
   }
 
   async disconnect() {
     try {
+      console.log("🔌 Closing Redis connection...");
       logger.info("🔌 Closing Redis connection...");
       await this.client.quit();
+      console.log("✅ Redis connection closed.");
       logger.info("✅ Redis connection closed.");
     } catch (error) {
+      console.error("❌ Redis Disconnect Error:", error);
       logger.error("❌ Redis Disconnect Error:", error);
     }
   }

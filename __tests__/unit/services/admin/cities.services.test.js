@@ -24,12 +24,12 @@ describe("Cities Service", () => {
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 
-    it("should return a 404 if no cities are found", async () => {
+    it("should return a 200 if no cities are found", async () => {
       redisClient.get.mockResolvedValue(null);
       citiesRepo.getAllCities.mockResolvedValue([[]]);
 
       const result = await citiesService.getCities(10, 0, {});
-      expect(result.statusCode).toBe(404);
+      expect(result.statusCode).toBe(200);
     });
   });
 

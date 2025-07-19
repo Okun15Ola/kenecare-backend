@@ -17,9 +17,9 @@ exports.getMedicalCouncils = async (limit, offset, paginationInfo) => {
     }
     const rawData = await repo.getAllMedicalCouncils(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Medical Councils Not Found");
-      return Response.NOT_FOUND({
-        message: "Medical Council Not Found ",
+      return Response.SUCCESS({
+        message: "No medical councils found ",
+        data: [],
       });
     }
 
@@ -141,7 +141,7 @@ exports.createMedicalCouncil = async ({
     await redisClient.clearCacheByPattern(cacheKey);
 
     return Response.CREATED({
-      message: "Medical Council Created Successfully",
+      message: "Medical council created successfully",
     });
   } catch (error) {
     logger.error("createMedicalCouncil: ", error);
@@ -161,7 +161,7 @@ exports.updateMedicalCouncil = async ({
 
     if (!rawData) {
       logger.warn(`Medical Council Not Found for ID ${id}`);
-      return Response.NOT_FOUND({ message: "Medical Council Not Found" });
+      return Response.NOT_FOUND({ message: "Medical council not found" });
     }
     const { affectedRows } = await repo.updateMedicalCouncilById({
       id,
@@ -197,8 +197,7 @@ exports.updateMedicalCouncilStatus = async ({ id, status }) => {
     }
 
     if (!Number.isInteger(status) || status < 0 || status > 1) {
-      logger.warn(`Invalid Status Code: ${status}`);
-      return Response.BAD_REQUEST({ message: "Invalid Status Code" });
+      return Response.BAD_REQUEST({ message: "Invalid status" });
     }
 
     const { affectedRows } = await repo.updateMedicalCouncilStatusById({

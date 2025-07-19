@@ -263,10 +263,7 @@ exports.getAllAppointmentFollowupService = async ({
     const rawData = await followUpRepo.getAppointmentFollowUps(appointmentId);
 
     if (!rawData?.length) {
-      logger.error(
-        `No follow-ups found for appointmentId: ${appointmentId} by doctorId: ${doctorId}`,
-      );
-      return Response.NOT_FOUND({ message: "No Follow-ups Found" });
+      return Response.SUCCESS({ message: "No follow-ups found", data: [] });
     }
 
     const followUps = rawData.map(mapFollowUpRow);

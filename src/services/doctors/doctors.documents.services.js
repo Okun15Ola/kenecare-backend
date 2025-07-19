@@ -28,11 +28,9 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
     const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
 
     if (!rawData?.length) {
-      logger.error(
-        `No shared medical documents found for doctorId: ${doctorId}`,
-      );
-      return Response.NOT_FOUND({
-        message: "Shared Medical Document Not Found.",
+      return Response.SUCCESS({
+        message: "No shared medical documents found at the moment.",
+        data: [],
       });
     }
 

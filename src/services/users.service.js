@@ -49,8 +49,7 @@ exports.getUsers = async (limit, offset, paginationInfo) => {
 
     const rawData = await repo.getAllUsers(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Users not found");
-      return Response.NOT_FOUND({ message: "Users not found" });
+      return Response.SUCCESS({ message: "No users found", data: [] });
     }
 
     const users = rawData.map(mapUserRow);
@@ -84,7 +83,7 @@ exports.getUserById = async (id) => {
     const rawData = await repo.getUserById(id);
 
     if (!rawData) {
-      logger.warn(`User not found for ID ${id}`);
+      logger.warn("User not found for ID");
       return Response.NOT_FOUND({ message: "User not found" });
     }
 
@@ -115,7 +114,7 @@ exports.getUserByMobileNumber = async (number) => {
     }
     const rawData = await repo.getUserByMobileNumber(number);
     if (!rawData) {
-      logger.warn(`User not found for mobile number ${number}`);
+      logger.warn("User not found for mobile number");
       return Response.NOT_FOUND({ message: "User not found" });
     }
 
@@ -147,7 +146,7 @@ exports.getUserByEmail = async (userEmail) => {
     const rawData = await repo.getUserByEmail(userEmail);
 
     if (!rawData) {
-      logger.warn(`User not found for email ${userEmail}`);
+      logger.warn("User not found for email");
       return Response.NOT_FOUND({ message: "User not found" });
     }
 
@@ -179,7 +178,7 @@ exports.getUserByToken = async (token) => {
     const rawData = await repo.getUserByVerificationToken(token);
 
     if (!rawData) {
-      logger.warn(`User not found for token ${token}`);
+      logger.warn("User not found for token");
       return Response.NOT_FOUND({ message: "User not found" });
     }
 
@@ -220,26 +219,24 @@ exports.registerNewUser = async ({
     const hashedPassword = await hashUsersPassword(password);
     const expiryTime = generateTokenExpiryTime(15);
 
-    // eslint-disable-next-line no-unused-vars
-    const [userResult, _smsResult] = await Promise.all([
-      repo.createNewUser({
-        mobileNumber: phoneNumber,
-        userType: type,
-        email,
-        password: hashedPassword,
-        vToken,
-        referralCode,
-        expiryTime,
-      }),
-      sendVerificationTokenSMS({ token: vToken, mobileNumber: phoneNumber }),
-    ]);
+    const { insertId } = await repo.createNewUser({
+      mobileNumber: phoneNumber,
+      userType: type,
+      email,
+      password: hashedPassword,
+      vToken,
+      referralCode,
+      expiryTime,
+    });
 
-    if (!userResult.insertId) {
-      logger.error("Failed to create user:", userResult);
+    if (!insertId) {
+      logger.error("Fail to create user");
       return Response.INTERNAL_SERVER_ERROR({
-        message: "Failed to create user account.",
+        message: "Fail to create user account. Please try again.",
       });
     }
+
+    sendVerificationTokenSMS({ token: vToken, mobileNumber: phoneNumber });
 
     return Response.CREATED({
       message: "Account Created Successfully. Please Proceed to Verification",
@@ -258,11 +255,6 @@ exports.registerNewUser = async ({
  */
 exports.verifyRegistrationOTP = async ({ token, user }) => {
   try {
-    if (!token || !user) {
-      logger.error("verifyRegistrationOTP: Missing token or user");
-      return Response.BAD_REQUEST({ message: "Invalid request parameters." });
-    }
-
     const {
       userId,
       userType,
@@ -272,18 +264,11 @@ exports.verifyRegistrationOTP = async ({ token, user }) => {
     } = user;
 
     if (accountVerified === VERIFICATIONSTATUS.VERIFIED) {
-      logger.warn("verifyRegistrationOTP: Account already verified", {
-        userId,
-        userType,
-      });
-      return Response.NOT_MODIFIED({ message: "Account is already verified" });
+      return Response.SUCCESS({ message: "Account is already verified" });
     }
 
     if (verifyTokenExpiry(verificationTokenExpiry)) {
-      logger.warn("verifyRegistrationOTP: Verification code expired", {
-        token,
-        userId,
-      });
+      logger.warn("verifyRegistrationOTP: Verification code expired");
       return Response.BAD_REQUEST({
         message:
           "Verification Code Expired. Please Request a New Verification Code",
@@ -296,10 +281,7 @@ exports.verifyRegistrationOTP = async ({ token, user }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.error("verifyRegistrationOTP: No rows updated for token", {
-        token,
-        userId,
-      });
+      logger.error("verifyRegistrationOTP: No rows updated for token");
       return Response.INTERNAL_SERVER_ERROR({
         message: "Verification Failed. Please Try Again",
       });
@@ -359,10 +341,7 @@ exports.loginUser = async ({
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.error("loginUser: Failed to update user account status", {
-        userId,
-        userType,
-      });
+      logger.error("loginUser: Failed to update user account status");
       return Response.NOT_MODIFIED({});
     }
 
@@ -411,37 +390,11 @@ exports.logoutUser = async ({ userId, token, tokenExpiry }) => {
       });
     }
 
-    const [blacklistResult, cacheResult, notifResult] =
-      await Promise.allSettled([
-        blacklistToken(token, tokenExpiry),
-        redisClient.delete(`user:${userId}`),
-        repo.updateUserNotificationToken({
-          userId,
-          notifToken: null,
-        }),
-      ]);
+    await Promise.all([
+      blacklistToken(token, tokenExpiry),
+      redisClient.delete(`user:${userId}`),
+    ]);
 
-    // Log any secondary operation failures
-    if (blacklistResult.status === "rejected") {
-      logger.warn(
-        "[LOGOUT_SERVICE] Token blacklisting failed:",
-        blacklistResult.reason,
-      );
-    }
-
-    if (cacheResult.status === "rejected") {
-      logger.warn(
-        "[LOGOUT_SERVICE] Cache deletion failed:",
-        cacheResult.reason,
-      );
-    }
-
-    if (notifResult.status === "rejected") {
-      logger.warn(
-        "[LOGOUT_SERVICE] Notification token update failed:",
-        notifResult.reason,
-      );
-    }
     return Response.SUCCESS({ message: "Logged out successfully" });
   } catch (error) {
     logger.error("logoutUser:", error);
@@ -494,15 +447,14 @@ exports.logoutAllDevices = async ({ userId, token, tokenExpiry }) => {
  */
 exports.requestUserLoginOtp = async ({ userId, mobileNumber }) => {
   try {
-    // TODO: add token expiry here and validate it
     const token = generateVerificationToken();
-    // const tokenExpiry = generateTokenExpiryTime(15);
+    const tokenExpiry = generateTokenExpiryTime(15);
     const [updateResult, smsResult] = await Promise.allSettled([
-      repo.updateUserVerificationTokenById({ userId, token }),
+      repo.updateUserVerificationTokenById({ userId, token, tokenExpiry }),
       sendAuthTokenSMS({ token, mobileNumber }),
     ]);
 
-    if (updateResult.status === "rejected" && smsResult.status === "rejected") {
+    if (updateResult.status === "rejected" || smsResult.status === "rejected") {
       logger.error(
         "requestUserLoginOtp: Failed to update user token or send SMS",
       );
@@ -530,6 +482,7 @@ exports.verifyUserLoginOtp = async ({
   mobileNumber,
   accountActive,
   accountVerified,
+  verificationTokenExpiry,
 }) => {
   try {
     if (is2faEnabled === STATUS.ACTIVE) {
@@ -538,6 +491,13 @@ exports.verifyUserLoginOtp = async ({
         mobileNumber,
       });
       return response;
+    }
+
+    if (verifyTokenExpiry(verificationTokenExpiry)) {
+      logger.warn("verifyUserLoginOtp: Verification code expired");
+      return Response.BAD_REQUEST({
+        message: "Login OTP expired. Please request a new login OTP",
+      });
     }
 
     await createStreamUserProfile(userType, userId);
@@ -609,7 +569,7 @@ exports.resendVerificationOTP = async (user) => {
       });
       return response;
     }
-    return Response.NOT_MODIFIED();
+    return Response.NOT_MODIFIED({});
   } catch (error) {
     logger.error("resendVerificationOTP: ", error);
     throw error;
@@ -629,23 +589,13 @@ exports.sendForgetPasswordOTP = async ({
 }) => {
   try {
     if (!accountVerified) {
-      logger.error("sendForgetPasswordOTP: Unverified user account", {
-        userId,
-        mobileNumber,
-        accountActive,
-        accountVerified,
-      });
+      logger.error("sendForgetPasswordOTP: Unverified user account");
       return Response.BAD_REQUEST({
         message: "Error Sending OTP. Unverified User Account",
       });
     }
     if (!accountActive) {
-      logger.error("sendForgetPasswordOTP: Inactive user account", {
-        userId,
-        mobileNumber,
-        accountActive,
-        accountVerified,
-      });
+      logger.error("sendForgetPasswordOTP: Inactive user account");
       return Response.BAD_REQUEST({
         message: "Error Sending OTP. User Account Inactive",
       });
@@ -667,133 +617,34 @@ exports.sendForgetPasswordOTP = async ({
  * @param {Object} user - User object with verification token
  * @returns {Promise<Object>} Success response or error
  */
-exports.verifyRequestedOTP = async ({ verificationToken, accountVerified }) => {
+exports.verifyRequestedOTP = async ({
+  verificationToken,
+  accountVerified,
+  verificationTokenExpiry,
+}) => {
   try {
     if (!verificationToken || accountVerified !== STATUS.ACTIVE) {
       logger.error("verifyRequestedOTP: Missing token or unverified account");
       return Response.BAD_REQUEST({
-        message: "Error verifying token, please try again.",
+        message: "Error verifying forget password OTP, please try again.",
+      });
+    }
+
+    if (verifyTokenExpiry(verificationTokenExpiry)) {
+      logger.warn("verifyRequestedOTP: Forget password OTP expired");
+      return Response.BAD_REQUEST({
+        message:
+          "Forget password OTP expired. Please request a new forget password OTP",
       });
     }
     return Response.SUCCESS({
-      message: "OTP Verified Successfully.",
+      message: "Forget password OTP verified successfully.",
     });
   } catch (error) {
     logger.error("verifyRequestedOTP: ", error);
     throw error;
   }
 };
-
-/**
- * Sends Email Verification
- * @param {number} params.userId - User ID
- * @param {string} params.email - User Email
- * @returns {Promise<Object>} Success response or error
- */
-// exports.sendEmailVerification = async ({ userId, email }) => {
-//   try {
-//     if (!userId || !email) {
-//       return Response.BAD_REQUEST({
-//         message: "User ID and email are required",
-//       });
-//     }
-
-//     const emailToken = generateVerificationToken();
-
-//     // Save email verification token
-//     const { affectedRows } = await repo.updateUserEmailVerificationToken({
-//       userId,
-//       emailVerificationToken: emailToken,
-//     });
-
-//     if (affectedRows <= 0) {
-//       return Response.INTERNAL_SERVER_ERROR({
-//         message: "Failed to send email verification. Please try again.",
-//       });
-//     }
-
-//     // Send email with verification token
-//     // await sendEmailVerificationEmail({ email, token: emailToken });
-
-//     return Response.SUCCESS({
-//       message: "Email verification sent successfully",
-//     });
-//   } catch (error) {
-//     logger.error("sendEmailVerification:", error);
-//     throw error;
-//   }
-// };
-
-/**
- * Sends Email Verification
- * @param {number} params.token - Verification Token
- * @param {Object}  user - User Object
- * @returns {Promise<Object>} Success response or error
- */
-// exports.verifyEmailToken = async ({ token, user }) => {
-//   try {
-//     if (!token || !user) {
-//       return Response.BAD_REQUEST({ message: "Token and user are required" });
-//     }
-
-//     const { userId } = user;
-
-//     const { affectedRows } = await repo.updateUserEmailVerificationStatus({
-//       userId,
-//       token,
-//       isEmailVerified: 1,
-//     });
-
-//     if (affectedRows <= 0) {
-//       return Response.INTERNAL_SERVER_ERROR({
-//         message: "Email verification failed. Please try again.",
-//       });
-//     }
-
-//     return Response.SUCCESS({
-//       message: "Email verified successfully",
-//     });
-//   } catch (error) {
-//     logger.error("verifyEmailToken:", error);
-//     throw error;
-//   }
-// };
-
-/**
- * Update User's Email
- * @param {number} params.userId - User ID
- * @param {string} params.email - New email address
- * @returns {Promise<Object>} Success response or error
- */
-// exports.updateUserEmail = async ({ userId, email }) => {
-//   try {
-//     if (!userId || !email) {
-//       return Response.BAD_REQUEST({
-//         message: "User ID and email are required",
-//       });
-//     }
-
-//     const { affectedRows } = await repo.updateUserEmailById({
-//       userId,
-//       email,
-//       isEmailVerified: 0, // Reset verification status
-//     });
-
-//     if (affectedRows <= 0) {
-//       return Response.INTERNAL_SERVER_ERROR({
-//         message: "Email update failed. Please try again.",
-//       });
-//     }
-
-//     // Clear cache
-//     await redisClient.delete(`user:${userId}`);
-
-//     return Response.SUCCESS({ message: "Email updated successfully" });
-//   } catch (error) {
-//     logger.error("updateUserEmail:", error);
-//     throw error;
-//   }
-// };
 
 /**
  * Updates user's account status by ID
@@ -806,14 +657,11 @@ exports.updateUserAccountStatus = async ({ userId, status }) => {
   try {
     const { affectedRows } = await repo.updateUserAccountStatusById({
       userId,
-      status: status === STATUS.ACTIVE ? STATUS.INACTIVE : STATUS.ACTIVE,
+      status: status === STATUS.ACTIVE ? STATUS.NOT_ACTIVE : STATUS.ACTIVE,
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.error("updateUserAccountStatus: Failed to update account status", {
-        userId,
-        status,
-      });
+      logger.error("updateUserAccountStatus: Failed to update account status");
       return Response.INTERNAL_SERVER_ERROR({
         message: "Failed to update account status. Please try again.",
       });
@@ -838,23 +686,26 @@ exports.updateUserAccountStatus = async ({ userId, status }) => {
 exports.updateUserPassword = async ({ newPassword, userId, mobileNumber }) => {
   try {
     const hashedPassword = await hashUsersPassword(newPassword);
-    const [updateResult, smsResult] = await Promise.all([
-      repo.updateUserPasswordById({
-        userId,
-        password: hashedPassword,
-      }),
-      repo.updateUserVerificationTokenById({ userId, token: null }),
-      sendPasswordResetSMS(mobileNumber),
-    ]);
+    const { affectedRows } = await repo.updateUserPasswordById({
+      userId,
+      password: hashedPassword,
+    });
 
-    if (updateResult.status === "rejected" || smsResult.status === "rejected") {
+    if (!affectedRows || affectedRows < 1) {
       logger.error("updateUserPassword: Failed to update password or send SMS");
-      return Response.NOT_MODIFIED({});
+      return Response.NOT_MODIFIED({
+        message: "Failed to update password. Please try again.",
+      });
     }
+
+    await repo.updateUserVerificationTokenById({ userId, token: null });
+    await sendPasswordResetSMS(mobileNumber);
+
+    // TODO: check if user want to logout of all other devices
 
     return Response.SUCCESS({
       message:
-        "Password Reset Successfully. Please login with your new password.",
+        "Password updated successfully. Please login with your new password.",
     });
   } catch (error) {
     logger.error("updateUserPassword: ", error);
@@ -879,10 +730,6 @@ exports.updatePushNotificationToken = async ({ token, id }) => {
     if (!affectedRows || affectedRows < 1) {
       logger.error(
         "UPDATE_PUSH_NOTIFICATION_TOKEN_SERVICE: Failed to update token",
-        {
-          userId: id,
-          token,
-        },
       );
       return Response.NOT_MODIFIED({});
     }

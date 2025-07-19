@@ -17,8 +17,7 @@ exports.getCities = async (limit, offset, paginationInfo) => {
     }
     const [rawData] = await dbObject.getAllCities(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Cities Not Found");
-      return Response.NOT_FOUND({ message: "City Not Found" });
+      return Response.SUCCESS({ message: "No cities found", data: [] });
     }
 
     const cities = rawData.map(mapCityRow);

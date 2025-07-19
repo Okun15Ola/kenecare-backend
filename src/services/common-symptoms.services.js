@@ -21,8 +21,10 @@ exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
     const rawData = await repo.getAllCommonSymptoms(limit, offset);
 
     if (!rawData?.length) {
-      logger.warn("Common Symptoms Not Found");
-      return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
+      return Response.SUCCESS({
+        message: "No common symptoms found",
+        data: [],
+      });
     }
 
     const symptoms = await Promise.all(rawData.map(mapCommonSymptomsRow));
@@ -108,7 +110,7 @@ exports.createCommonSymptom = async ({
     if (createSymptom.status === "rejected") {
       logger.error("Common Symptom creation failed: ", createSymptom.reason);
       return Response.INTERNAL_SERVER_ERROR({
-        message: "Common Symptom creation failed. Please try again.",
+        message: "Common symptom creation failed. Please try again.",
       });
     }
 
@@ -116,7 +118,7 @@ exports.createCommonSymptom = async ({
     await redisClient.clearCacheByPattern(cacheKey);
 
     return Response.CREATED({
-      message: "Common Symptom Created Successfully",
+      message: "Common symptom created successfully",
     });
   } catch (error) {
     logger.error("createCommonSymptom: ", error);

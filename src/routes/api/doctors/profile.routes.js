@@ -9,7 +9,7 @@ const {
 const {
   createDoctorProfileValidations,
 } = require("../../../validations/doctors/doctor-profile.validations");
-const { localProfilePicUploader } = require("../../../utils/file-upload.utils");
+const { AWSUploader } = require("../../../utils/file-upload.utils");
 const { limiter } = require("../../../utils/rate-limit.utils");
 const {
   authenticateUser,
@@ -33,7 +33,7 @@ router.put(
 );
 router.patch(
   "/profile/",
-  localProfilePicUploader.single("profilepic"),
+  AWSUploader.single("profilepic"),
   UpdateDoctorProfilePictureController,
 );
 

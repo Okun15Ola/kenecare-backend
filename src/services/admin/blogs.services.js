@@ -20,8 +20,7 @@ exports.getBlogs = async (limit, offset, paginationInfo) => {
     const rawData = await dbObject.getAllBlogs(limit, offset);
 
     if (!rawData?.length) {
-      logger.warn("Blogs Not Found");
-      return Response.NOT_FOUND({ message: "Blogs Not Found" });
+      return Response.SUCCESS({ message: "No blogs found", data: [] });
     }
 
     const blogs = await Promise.all(rawData.map(mapBlogRow));

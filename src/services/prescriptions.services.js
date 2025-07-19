@@ -42,8 +42,7 @@ exports.getAppointmentPrescriptions = async (
     const rawData = await getAppointmentPrescriptions(limit, offset, id);
 
     if (!rawData?.length) {
-      logger.warn(`Prescription Not Found for Appointment ID ${id}`);
-      return Response.NOT_FOUND({ message: "Presciption Not Found" });
+      return Response.SUCCESS({ message: "No prescriptions found", data: [] });
     }
 
     const prescriptions = rawData.map(mapPrescriptionRow);
@@ -72,9 +71,9 @@ exports.getAppointmentPrescriptionById = async (id) => {
     const prescriptionExist = await getAppointmentPrescriptionById(id);
 
     if (!prescriptionExist) {
-      logger.warn(`Prescription Not Found for ID ${id}`);
+      logger.warn(`Prescription not found for ID ${id}`);
       return Response.NOT_FOUND({
-        message: "Prescription Not Found. Try again",
+        message: "Prescription not found. Try again",
       });
     }
     const { access_jwt: hashedToken } = prescriptionExist;

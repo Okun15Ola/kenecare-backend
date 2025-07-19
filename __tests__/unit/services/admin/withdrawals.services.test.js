@@ -30,11 +30,11 @@ describe("Withdrawals Service", () => {
       expect(result.data).toEqual(mappedData);
     });
 
-    it("should return a 404 if no requests are found", async () => {
+    it("should return a 200 if no requests are found", async () => {
       withdrawalRequestsRepo.getAllWithdrawalRequests.mockResolvedValue(null);
 
       const result = await withdrawalsService.getAllRequests(10, 0, {});
-      expect(result.statusCode).toBe(404);
+      expect(result.statusCode).toBe(200);
     });
   });
 

@@ -1,210 +1,300 @@
-const specialtyService = require("../../../src/services/specialties.services");
-const specialtyRepo = require("../../../src/repository/specialities.repository");
+const specialtiesService = require("../../../src/services/specialties.services");
+const repo = require("../../../src/repository/specialities.repository");
+const Response = require("../../../src/utils/response.utils");
+const awsS3Utils = require("../../../src/utils/aws-s3.utils");
+const fileUploadUtils = require("../../../src/utils/file-upload.utils");
 const { redisClient } = require("../../../src/config/redis.config");
-const fileUpload = require("../../../src/utils/file-upload.utils");
-const dbMapper = require("../../../src/utils/db-mapper.utils");
-const caching = require("../../../src/utils/caching.utils");
+const dbMapperUtils = require("../../../src/utils/db-mapper.utils");
 
 jest.mock("../../../src/repository/specialities.repository");
-jest.mock("../../../src/config/redis.config");
+jest.mock("../../../src/utils/response.utils");
+jest.mock("../../../src/utils/aws-s3.utils");
 jest.mock("../../../src/utils/file-upload.utils");
-jest.mock("../../../src/utils/db-mapper.utils");
+jest.mock("../../../src/config/redis.config");
 jest.mock("../../../src/utils/caching.utils");
+jest.mock("../../../src/utils/db-mapper.utils");
+jest.mock("../../../src/middlewares/logger.middleware");
 
-describe("Specialties Service", () => {
-  beforeEach(() => {
+describe("specialties.services", () => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
   describe("getSpecialties", () => {
-    it("should return specialties from cache", async () => {
-      const cachedData = [{ id: 1, name: "Cardiology" }];
-      redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
-      caching.cacheKeyBulider.mockReturnValue("specialties:cache-key");
-
-      const result = await specialtyService.getSpecialties(10, 0, {});
-      expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("specialties:cache-key");
+    it("returns cached specialties if present", async () => {
+      const cached = [{ id: 1, name: "Cardiology" }];
+      redisClient.get.mockResolvedValueOnce(JSON.stringify(cached));
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.getSpecialties(10, 0, {
+        total: 1,
+      });
+      expect(redisClient.get).toHaveBeenCalled();
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        data: cached,
+        paginationInfo: { total: 1 },
+      });
+      expect(result).toBe("success");
     });
 
-    it("should return specialties from DB and set cache", async () => {
-      redisClient.get.mockResolvedValue(null);
-      const rawData = [{ id: 1 }];
-      const mapped = [{ id: 1 }];
-      caching.cacheKeyBulider.mockReturnValue("specialties:cache-key");
-
-      specialtyRepo.getAllSpecialties.mockResolvedValue(rawData);
-      dbMapper.mapSpecialityRow.mockImplementation((row) => row);
-      redisClient.set.mockResolvedValue();
-
-      const result = await specialtyService.getSpecialties(10, 0, {});
-      expect(result.data).toEqual(mapped);
+    it("returns specialties from repo and sets cache if not cached", async () => {
+      redisClient.get.mockResolvedValueOnce(null);
+      repo.getAllSpecialties.mockResolvedValueOnce([{ id: 1 }]);
+      dbMapperUtils.mapSpecialityRow.mockReturnValueOnce({
+        id: 1,
+        name: "Cardiology",
+      });
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.getSpecialties(10, 0, {
+        total: 1,
+      });
+      expect(repo.getAllSpecialties).toHaveBeenCalledWith(10, 0);
       expect(redisClient.set).toHaveBeenCalled();
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        data: [{ id: 1, name: "Cardiology" }],
+        pagination: { total: 1 },
+      });
+      expect(result).toBe("success");
     });
 
-    it("should throw an error if DB fails", async () => {
-      redisClient.get.mockResolvedValue(null);
-      specialtyRepo.getAllSpecialties.mockRejectedValue(new Error("DB Error"));
-
-      await expect(specialtyService.getSpecialties(10, 0, {})).rejects.toThrow(
-        "DB Error",
-      );
+    it("returns empty array if no specialties found", async () => {
+      redisClient.get.mockResolvedValueOnce(null);
+      repo.getAllSpecialties.mockResolvedValueOnce([]);
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.getSpecialties(10, 0, {});
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        message: "No specialities found",
+        data: [],
+      });
+      expect(result).toBe("success");
     });
   });
 
   describe("getSpecialtyByName", () => {
-    it("should return a specialty from cache", async () => {
-      const cachedData = { id: 1, name: "Cardiology" };
-      redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
-
-      const result = await specialtyService.getSpecialtyByName("Cardiology");
-      expect(result.data).toEqual(cachedData);
+    it("returns cached specialty if present", async () => {
+      const cached = { id: 1, name: "Cardiology" };
+      redisClient.get.mockResolvedValueOnce(JSON.stringify(cached));
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.getSpecialtyByName("Cardiology");
+      expect(Response.SUCCESS).toHaveBeenCalledWith({ data: cached });
+      expect(result).toBe("success");
     });
 
-    it("should return a 404 if not found in DB", async () => {
-      redisClient.get.mockResolvedValue(null);
-      specialtyRepo.getSpecialtyByName.mockResolvedValue(null);
-
-      const result = await specialtyService.getSpecialtyByName("Unknown");
-      expect(result.statusCode).toBe(404);
+    it("returns NOT_FOUND if specialty not found", async () => {
+      redisClient.get.mockResolvedValueOnce(null);
+      repo.getSpecialtyByName.mockResolvedValueOnce(null);
+      Response.NOT_FOUND.mockReturnValueOnce("not_found");
+      const result = await specialtiesService.getSpecialtyByName("Unknown");
+      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
+        message: "Specialty Not Found",
+      });
+      expect(result).toBe("not_found");
     });
 
-    it("should return from DB and set cache", async () => {
-      redisClient.get.mockResolvedValue(null);
-      const dbData = { id: 1, name: "Cardiology" };
-      const mapped = { id: 1, name: "Cardiology" };
-
-      specialtyRepo.getSpecialtyByName.mockResolvedValue(dbData);
-      dbMapper.mapSpecialityRow.mockReturnValue(mapped);
-      redisClient.set.mockResolvedValue();
-
-      const result = await specialtyService.getSpecialtyByName("Cardiology");
-      expect(result.data).toEqual(mapped);
+    it("returns specialty from repo and sets cache", async () => {
+      redisClient.get.mockResolvedValueOnce(null);
+      repo.getSpecialtyByName.mockResolvedValueOnce({ id: 1 });
+      dbMapperUtils.mapSpecialityRow.mockReturnValueOnce({
+        id: 1,
+        name: "Cardiology",
+      });
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.getSpecialtyByName("Cardiology");
+      expect(redisClient.set).toHaveBeenCalled();
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        data: { id: 1, name: "Cardiology" },
+      });
+      expect(result).toBe("success");
     });
   });
 
   describe("getSpecialtyById", () => {
-    it("should return from cache", async () => {
-      const cached = { id: 1, name: "Neuro" };
-      redisClient.get.mockResolvedValue(JSON.stringify(cached));
-
-      const result = await specialtyService.getSpecialtyById(1);
-      expect(result.data).toEqual(cached);
+    it("returns cached specialty if present", async () => {
+      const cached = { id: 1, name: "Cardiology" };
+      redisClient.get.mockResolvedValueOnce(JSON.stringify(cached));
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.getSpecialtyById(1);
+      expect(Response.SUCCESS).toHaveBeenCalledWith({ data: cached });
+      expect(result).toBe("success");
     });
 
-    it("should return from DB and set cache", async () => {
-      redisClient.get.mockResolvedValue(null);
-      const dbData = { id: 1 };
-      const mapped = { id: 1 };
-
-      specialtyRepo.getSpecialtiyById.mockResolvedValue(dbData);
-      dbMapper.mapSpecialityRow.mockReturnValue(mapped);
-      redisClient.set.mockResolvedValue();
-
-      const result = await specialtyService.getSpecialtyById(1);
-      expect(result.data).toEqual(mapped);
+    it("returns NOT_FOUND if specialty not found", async () => {
+      redisClient.get.mockResolvedValueOnce(null);
+      repo.getSpecialtiyById.mockResolvedValueOnce(null);
+      Response.NOT_FOUND.mockReturnValueOnce("not_found");
+      const result = await specialtiesService.getSpecialtyById(999);
+      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
+        message: "Specialty Not Found",
+      });
+      expect(result).toBe("not_found");
     });
 
-    it("should return 404 if not found", async () => {
-      redisClient.get.mockResolvedValue(null);
-      specialtyRepo.getSpecialtiyById.mockResolvedValue(null);
-
-      const result = await specialtyService.getSpecialtyById(1);
-      expect(result.statusCode).toBe(404);
+    it("returns specialty from repo and sets cache", async () => {
+      redisClient.get.mockResolvedValueOnce(null);
+      repo.getSpecialtiyById.mockResolvedValueOnce({ id: 1 });
+      dbMapperUtils.mapSpecialityRow.mockReturnValueOnce({
+        id: 1,
+        name: "Cardiology",
+      });
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.getSpecialtyById(1);
+      expect(redisClient.set).toHaveBeenCalled();
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        data: { id: 1, name: "Cardiology" },
+      });
+      expect(result).toBe("success");
     });
   });
 
   describe("createSpecialty", () => {
-    it("should create a new specialty", async () => {
-      specialtyRepo.createNewSpecialty.mockResolvedValue({ insertId: 1 });
-
-      const result = await specialtyService.createSpecialty({
-        name: "Dermatology",
-        description: "",
+    it("creates specialty with image and clears cache", async () => {
+      fileUploadUtils.generateFileName.mockReturnValueOnce("file.png");
+      awsS3Utils.uploadFileToS3Bucket.mockResolvedValueOnce();
+      repo.createNewSpecialty.mockResolvedValueOnce({ insertId: 1 });
+      Response.CREATED.mockReturnValueOnce("created");
+      const specialty = {
+        name: "Cardiology",
+        description: "desc",
+        image: { buffer: Buffer.from(""), mimetype: "image/png" },
         inputtedBy: 1,
-        image: "img.png",
+      };
+      const result = await specialtiesService.createSpecialty(specialty);
+      expect(awsS3Utils.uploadFileToS3Bucket).toHaveBeenCalled();
+      expect(redisClient.clearCacheByPattern).toHaveBeenCalledWith(
+        "specialties:*",
+      );
+      expect(Response.CREATED).toHaveBeenCalledWith({
+        message: "Specialty Created Successfully",
       });
-
-      expect(result.statusCode).toBe(201);
+      expect(result).toBe("created");
     });
 
-    it("should throw if repo fails", async () => {
-      specialtyRepo.createNewSpecialty.mockRejectedValue(new Error("DB Error"));
-      await expect(specialtyService.createSpecialty({})).rejects.toThrow(
-        "DB Error",
-      );
+    it("returns BAD_REQUEST if insertId is missing", async () => {
+      repo.createNewSpecialty.mockResolvedValueOnce({});
+      Response.BAD_REQUEST.mockReturnValueOnce("bad_request");
+      const specialty = {
+        name: "Cardiology",
+        description: "desc",
+        inputtedBy: 1,
+      };
+      const result = await specialtiesService.createSpecialty(specialty);
+      expect(Response.BAD_REQUEST).toHaveBeenCalledWith({
+        message: "Failed to create specialty",
+      });
+      expect(result).toBe("bad_request");
     });
   });
 
   describe("updateSpecialty", () => {
-    it("should update and delete old image", async () => {
-      specialtyRepo.getSpecialtiyById.mockResolvedValue({
-        image_url: "old.png",
-      });
-      fileUpload.deleteFile.mockResolvedValue();
-      specialtyRepo.updateSpecialtiyById.mockResolvedValue({ affectedRows: 1 });
-
-      const result = await specialtyService.updateSpecialty({
+    it("returns NOT_FOUND if specialty does not exist", async () => {
+      repo.getSpecialtiyById.mockResolvedValueOnce(null);
+      Response.NOT_FOUND.mockReturnValueOnce("not_found");
+      const result = await specialtiesService.updateSpecialty({
         id: 1,
-        name: "Updated",
+        name: "Cardiology",
       });
-      expect(fileUpload.deleteFile).toHaveBeenCalled();
-      expect(result.statusCode).toBe(200);
+      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
+        message: "Specialty Not Found",
+      });
+      expect(result).toBe("not_found");
     });
 
-    it("should return 404 error object if not found", async () => {
-      specialtyRepo.getSpecialtiyById.mockResolvedValue(null);
-      const result = await specialtyService.updateSpecialty({ id: 1 });
-      expect(result).toMatchObject({
-        statusCode: 404,
-        message: "Specialty Not Found",
-        status: "error",
+    it("updates specialty and deletes cache", async () => {
+      repo.getSpecialtiyById.mockResolvedValueOnce({ image_url: "img.png" });
+      awsS3Utils.uploadFileToS3Bucket.mockResolvedValueOnce();
+      repo.updateSpecialtiyById.mockResolvedValueOnce({ affectedRows: 1 });
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.updateSpecialty({
+        id: 1,
+        name: "Cardiology",
+        image: { buffer: Buffer.from(""), mimetype: "image/png" },
+        description: "desc",
       });
+      expect(awsS3Utils.uploadFileToS3Bucket).toHaveBeenCalled();
+      expect(redisClient.delete).toHaveBeenCalledWith("specialties:1");
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        message: "Specialty Updated Successfully",
+      });
+      expect(result).toBe("success");
+    });
+
+    it("returns NOT_MODIFIED if affectedRows < 1", async () => {
+      repo.getSpecialtiyById.mockResolvedValueOnce({ image_url: "img.png" });
+      repo.updateSpecialtiyById.mockResolvedValueOnce({ affectedRows: 0 });
+      Response.NOT_MODIFIED.mockReturnValueOnce("not_modified");
+      const result = await specialtiesService.updateSpecialty({
+        id: 1,
+        name: "Cardiology",
+        description: "desc",
+      });
+      expect(Response.NOT_MODIFIED).toHaveBeenCalledWith({});
+      expect(result).toBe("not_modified");
     });
   });
 
   describe("updateSpecialtyStatus", () => {
-    it("should return 400 for invalid status", async () => {
-      const result = await specialtyService.updateSpecialtyStatus({
+    it("returns BAD_REQUEST for invalid status", async () => {
+      Response.BAD_REQUEST.mockReturnValueOnce("bad_request");
+      const result = await specialtiesService.updateSpecialtyStatus({
         id: 1,
-        status: 3,
+        status: 2,
       });
-      expect(result.statusCode).toBe(400);
+      expect(Response.BAD_REQUEST).toHaveBeenCalledWith({
+        message: "Invalid Status Code",
+      });
+      expect(result).toBe("bad_request");
     });
 
-    it("should update status when valid", async () => {
-      specialtyRepo.updateSpecialtiyStatusById.mockResolvedValue({
-        affectedRows: 1,
+    it("returns NOT_MODIFIED if affectedRows < 1", async () => {
+      repo.updateSpecialtiyStatusById.mockResolvedValueOnce({
+        affectedRows: 0,
       });
-
-      const result = await specialtyService.updateSpecialtyStatus({
+      Response.NOT_MODIFIED.mockReturnValueOnce("not_modified");
+      const result = await specialtiesService.updateSpecialtyStatus({
         id: 1,
         status: 1,
       });
-      expect(result.statusCode).toBe(200);
+      expect(Response.NOT_MODIFIED).toHaveBeenCalledWith({});
+      expect(result).toBe("not_modified");
+    });
+
+    it("updates status and deletes cache", async () => {
+      repo.updateSpecialtiyStatusById.mockResolvedValueOnce({
+        affectedRows: 1,
+      });
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.updateSpecialtyStatus({
+        id: 1,
+        status: 1,
+      });
+      expect(redisClient.delete).toHaveBeenCalledWith("specialties:1");
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        message: "Specialty Status Updated Successfully",
+      });
+      expect(result).toBe("success");
     });
   });
 
   describe("deleteSpecialty", () => {
-    it("should delete image and call repo", async () => {
-      specialtyRepo.getSpecialtiyById.mockResolvedValue({
-        image_url: "img.png",
+    it("deletes specialty and returns success", async () => {
+      repo.getSpecialtiyById.mockResolvedValueOnce({ image_url: "img.png" });
+      awsS3Utils.deleteFileFromS3Bucket.mockResolvedValueOnce();
+      repo.deleteSpecialtieById.mockResolvedValueOnce({ affectedRows: 1 });
+      Response.SUCCESS.mockReturnValueOnce("success");
+      const result = await specialtiesService.deleteSpecialty(1);
+      expect(awsS3Utils.deleteFileFromS3Bucket).toHaveBeenCalledWith("img.png");
+      expect(Response.SUCCESS).toHaveBeenCalledWith({
+        message: "Specialty Deleted Successfully",
       });
-      // eslint-disable-next-line global-require
-      jest.spyOn(require("fs"), "unlinkSync").mockReturnValue(undefined);
-      specialtyRepo.deleteSpecialtieById.mockResolvedValue({ affectedRows: 1 });
-
-      const result = await specialtyService.deleteSpecialty(1);
-      expect(result.statusCode).toBe(200);
-      // eslint-disable-next-line global-require
-      expect(require("fs").unlinkSync).toHaveBeenCalled();
+      expect(result).toBe("success");
     });
 
-    it("should throw if repo fails", async () => {
-      specialtyRepo.getSpecialtiyById.mockRejectedValue(new Error("DB Error"));
-      await expect(specialtyService.deleteSpecialty(1)).rejects.toThrow(
-        "DB Error",
-      );
+    it("returns NOT_MODIFIED if affectedRows < 1", async () => {
+      repo.getSpecialtiyById.mockResolvedValueOnce({ image_url: null });
+      repo.deleteSpecialtieById.mockResolvedValueOnce({ affectedRows: 0 });
+      Response.NOT_MODIFIED.mockReturnValueOnce("not_modified");
+      const result = await specialtiesService.deleteSpecialty(1);
+      expect(Response.NOT_MODIFIED).toHaveBeenCalledWith({});
+      expect(result).toBe("not_modified");
     });
   });
 });

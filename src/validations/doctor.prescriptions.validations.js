@@ -151,7 +151,7 @@ exports.GetPrescriptionsByAppointmentValidation = [
         appointmentId: value,
       });
       if (!appointment) {
-        throw new Error("Appintment Not Found");
+        throw new Error("Appointment Not Found");
       }
       return true;
     }),
@@ -161,7 +161,7 @@ exports.GetPrescriptionByIdValidation = [
   param("id")
     .notEmpty()
     .withMessage("Prescription ID is required")
-    .isInt("Invalid Appoitment ID")
+    .isInt("Invalid Prescription ID")
     .trim()
     .escape()
     .custom(async (value) => {

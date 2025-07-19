@@ -56,8 +56,7 @@ exports.getAllMarketersService = async (limit, offset, paginationInfo) => {
     }
     const rawData = await getAllMarketers(limit, offset);
     if (!rawData?.length) {
-      logger.warn("Marketers Not Found");
-      return Response.NOT_FOUND({ message: "Marketer Not Found" });
+      return Response.SUCCESS({ message: "No marketers found", data: [] });
     }
     const marketers = rawData.map(mapMarketersRow);
     await redisClient.set({
@@ -218,7 +217,7 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
       phone_number: mobileNumber,
     } = marketer;
     const verifiedAt = new Date();
-    const results = await Promise.all([
+    const results = await Promise.allSettled([
       verifyMarketerPhoneById({
         marketerId,
         phoneNumber: mobileNumber,
@@ -355,7 +354,7 @@ exports.deleteMarketerByIdService = async (id) => {
     }
     const { id_document_uuid: idDocumentUuid } = marketer;
 
-    const results = await Promise.all([
+    const results = await Promise.allSettled([
       deleteFileFromS3Bucket(idDocumentUuid),
       deleteMarketerById(id),
     ]);

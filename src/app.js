@@ -4,14 +4,14 @@ require("module-alias/register");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const path = require("path");
+// const path = require("path");
 const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
 
-const { authenticateAdmin } = require("./middlewares/auth.middleware");
+// const { authenticateAdmin } = require("./middlewares/auth.middleware");
 const {
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
@@ -78,18 +78,18 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(
-  "/user-profile",
-  express.static(path.join(__dirname, "public/upload/profile_pics")),
-);
+// app.use(
+//   "/user-profile",
+//   express.static(path.join(__dirname, "public/upload/profile_pics")),
+// );
 
-app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
+// app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
 
-app.use(
-  "/docs/admin",
-  authenticateAdmin,
-  express.static(path.join(__dirname, "public/upload/media")),
-);
+// app.use(
+//   "/docs/admin",
+//   authenticateAdmin,
+//   express.static(path.join(__dirname, "public/upload/media")),
+// );
 
 app.use("/api/v1/health-check", (req, res) =>
   res
@@ -133,7 +133,6 @@ app.use("/api/v1/patients/prescriptions", patientPrescriptionRoutes);
 app.use("/api/v1/payments", appointmentPaymentRoutes);
 
 // ADMIN ROUTES
-// TODO Add a middle ware to authenticate ADMIN JWT
 app.use("/api/v1/admin/auth", adminAuthRouter);
 app.use("/api/v1/admin/accounts", adminAccountsRouter);
 app.use("/api/v1/admin/appointments", adminAppointmentsRouter);
@@ -163,22 +162,11 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
+  console.error("An unexpected error occured: ", err);
   logger.error("An unexpected error occured: ", err);
 
   let statusCode = 500;
   let errorMessage = "Internal Server Error";
-
-  logger.error("[ERROR_HANDLER] Error caught:", {
-    message: err.message,
-    stack: err.stack,
-    statusCode: err.statusCode,
-    code: err.code,
-    name: err.name,
-    path: req.path,
-    method: req.method,
-    userId: req.user?.id,
-    authComplete: req.authorizationComplete,
-  });
 
   if (err.response) {
     return res
@@ -203,14 +191,6 @@ app.use((err, req, res, next) => {
   }
   if (err.statusCode === 401) {
     statusCode = 401;
-    logger.log("UNAUTHORIZED response called", {
-      error: err,
-      message: err.message,
-      stack: err.stack,
-      path: req.path,
-      method: req.method,
-      userId: req.user?.id,
-    });
     return res.status(statusCode).json(UNAUTHORIZED({ message: err.message }));
   }
   if (err.code === 404) {
