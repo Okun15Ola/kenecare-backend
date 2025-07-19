@@ -1,12 +1,19 @@
 const patientMedicalHistoryService = require("../../../../src/services/patients/patients.medical-history.services");
 const patientsRepo = require("../../../../src/repository/patients.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
+const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/patients.repository");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/db-mapper.utils");
 
 describe("Patient Medical History Service", () => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
+  });
   afterEach(() => {
     jest.clearAllMocks();
   });

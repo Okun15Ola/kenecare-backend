@@ -3,6 +3,7 @@ const patientDocsRepo = require("../../../../src/repository/patient-docs.reposit
 const patientsRepo = require("../../../../src/repository/patients.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
 const awsS3 = require("../../../../src/utils/aws-s3.utils");
+const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/patient-docs.repository");
 jest.mock("../../../../src/repository/patients.repository");
@@ -12,6 +13,12 @@ jest.mock("../../../../src/utils/aws-s3.utils");
 jest.mock("../../../../src/utils/sms.utils");
 
 describe("Patient Documents Service", () => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
+  });
   afterEach(() => {
     jest.clearAllMocks();
   });

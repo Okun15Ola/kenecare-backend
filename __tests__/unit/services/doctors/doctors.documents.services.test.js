@@ -14,6 +14,11 @@ jest.mock("../../../../src/utils/response.utils");
 jest.mock("../../../../src/middlewares/logger.middleware");
 
 describe("doctors.documents.services", () => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+  });
   beforeEach(() => {
     jest.clearAllMocks();
   });

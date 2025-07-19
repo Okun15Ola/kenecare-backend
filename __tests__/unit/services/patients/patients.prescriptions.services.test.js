@@ -3,7 +3,7 @@ const prescriptionsRepo = require("../../../../src/repository/prescriptions.repo
 const { redisClient } = require("../../../../src/config/redis.config");
 // const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
-// const Response = require("../../../../src/utils/response.utils");
+const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/prescriptions.repository");
 jest.mock("../../../../src/config/redis.config");
@@ -11,6 +11,13 @@ jest.mock("../../../../src/utils/db-mapper.utils");
 jest.mock("../../../../src/utils/caching.utils");
 
 describe("Patient Prescriptions Service", () => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_MODIFIED").mockImplementation((data) => data);
+  });
   afterEach(() => {
     jest.clearAllMocks();
   });
