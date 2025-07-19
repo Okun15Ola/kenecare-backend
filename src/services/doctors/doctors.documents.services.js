@@ -10,7 +10,7 @@ const logger = require("../../middlewares/logger.middleware");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {
   try {
-    const cacheKey = `doctor-shared-medical-documents:${userId}`;
+    const cacheKey = `doctor:shared-medical-documents:${userId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -49,7 +49,7 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
 };
 exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
   try {
-    const cacheKey = `doctor-shared-medical-documents:${sharedDocId}`;
+    const cacheKey = `doctor:shared-medical-documents:${sharedDocId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -80,6 +80,7 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
     const sharedMedicalDocument = await mapDoctorSharedMedicalDocs(
       document,
       title,
+      true,
     );
 
     await redisClient.set({

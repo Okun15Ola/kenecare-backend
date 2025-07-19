@@ -55,6 +55,48 @@ exports.getAllPatients = async (limit, offset, paginationInfo) => {
     throw error;
   }
 };
+
+exports.getDoctorsPatientsHasMet = async (userId) => {
+  try {
+    const { patient_id: patientId } = await repo.getPatientByUserId(userId);
+    if (!patientId) {
+      logger.warn(`Patient not found for user ID: ${userId}`);
+      return Response.NOT_FOUND({
+        message: "Patient Profile Found.",
+      });
+    }
+    const cacheKey = cacheKeyBulider(`patient:${patientId}:doctors:has-met`);
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+      });
+    }
+
+    const rawData = await repo.getDoctorsPatientHasBooked(patientId);
+
+    if (!rawData?.length) {
+      return Response.SUCCESS({
+        message: "Patient hasn't seen any doctors yet.",
+        data: [],
+      });
+    }
+
+    const doctors = rawData.map((doctor) => ({
+      doctorId: doctor.doctor_id,
+      doctor: `${doctor.title} ${doctor.last_name}`,
+    }));
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctors),
+    });
+    return Response.SUCCESS({ data: doctors });
+  } catch (error) {
+    logger.error("getDoctorsPatientsHasMet: ", error);
+    throw error;
+  }
+};
+
 exports.getPatientById = async (id) => {
   try {
     const cacheKey = `patients:${id}`;
