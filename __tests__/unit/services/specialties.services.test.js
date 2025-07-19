@@ -16,6 +16,13 @@ jest.mock("../../../src/utils/db-mapper.utils");
 jest.mock("../../../src/middlewares/logger.middleware");
 
 describe("specialties.services", () => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_MODIFIED").mockImplementation((data) => data);
+  });
   afterEach(() => {
     jest.clearAllMocks();
   });

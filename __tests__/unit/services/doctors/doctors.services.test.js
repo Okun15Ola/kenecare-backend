@@ -40,11 +40,21 @@ jest.mock("../../../../src/middlewares/logger.middleware");
 jest.mock("../../../../src/utils/aws-s3.utils");
 jest.mock("../../../../src/utils/file-upload.utils");
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 describe("Doctors Service", () => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_MODIFIED").mockImplementation((data) => data);
+    jest.spyOn(Response, "UNAUTHORIZED").mockImplementation((data) => data);
+    jest
+      .spyOn(Response, "INTERNAL_SERVER_ERROR")
+      .mockImplementation((data) => data);
+  });
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
   describe("getAllDoctors", () => {
     it("returns cached doctors if available", async () => {
       redisClient.get.mockResolvedValue(JSON.stringify([{ id: 1 }]));

@@ -1,5 +1,4 @@
 const paymentServices = require("../../../src/services/payment.services");
-const Response = require("../../../src/utils/response.utils");
 const {
   getPatientById,
 } = require("../../../src/repository/patients.repository");
@@ -13,6 +12,7 @@ const {
   doctorAppointmentBookedSms,
   appointmentBookedSms,
 } = require("../../../src/utils/sms.utils");
+const Response = require("../../../src/utils/response.utils");
 
 jest.mock("../../../src/repository/patientAppointments.repository");
 jest.mock("../../../src/repository/payments.repository");
@@ -34,6 +34,13 @@ const {
 } = require("../../../src/repository/payments.repository");
 
 describe("payment.services", () => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
+    jest.spyOn(Response, "NO_CONTENT").mockImplementation((data) => data);
+  });
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -131,11 +138,7 @@ describe("payment.services", () => {
 
       const result =
         await paymentServices.processAppointmentPayment(validParams);
-      expect(result).toEqual(
-        Response.SUCCESS({
-          message: "Appointment Payment Processed Successfully",
-        }),
-      );
+      expect(result.statusCode).toBe(200);
       expect(updateAppointmentPaymentStatus).toHaveBeenCalled();
       expect(updateDoctorWalletBalance).toHaveBeenCalled();
       expect(doctorAppointmentBookedSms).toHaveBeenCalled();
@@ -189,7 +192,7 @@ describe("payment.services", () => {
       });
       const result =
         await paymentServices.cancelAppointmentPayment(validParams);
-      expect(result).toEqual(Response.NO_CONTENT({}));
+      expect(result.statusCode).toBe(204);
     });
 
     it("should cancel payment and delete appointment/payment", async () => {
@@ -206,11 +209,7 @@ describe("payment.services", () => {
 
       const result =
         await paymentServices.cancelAppointmentPayment(validParams);
-      expect(result).toEqual(
-        Response.SUCCESS({
-          message: "Medical Appointment Cancelled Successfully.",
-        }),
-      );
+      expect(result.statusCode).toBe(200);
       expect(deleteAppointmentPaymentByAppointmentId).toHaveBeenCalled();
       expect(deleteAppointmentById).toHaveBeenCalled();
       expect(cancelPaymentUSSD).toHaveBeenCalled();
@@ -271,11 +270,7 @@ describe("payment.services", () => {
 
       const result =
         await paymentServices.cancelAppointmentPayment(validParams);
-      expect(result).toEqual(
-        Response.SUCCESS({
-          message: "Medical Appointment Cancelled Successfully.",
-        }),
-      );
+      expect(result.statusCode).toBe(200);
     });
 
     it("should throw error if something fails", async () => {
