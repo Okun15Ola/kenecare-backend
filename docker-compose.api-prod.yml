@@ -38,22 +38,12 @@ services:
       - OM_TOKEN_URL=$OM_TOKEN_URL
       - OM_TRANSACTION_STATUS_URL=$OM_TRANSACTION_STATUS_URL
       - OM_CURRENCY=$OM_CURRENCY
-      - TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID
-      - TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
-      - TWILIO_PHONE_NUMBER=$TWILIO_PHONE_NUMBER
       - SENDGRID_API_KEY=$SENDGRID_API_KEY
       - SENDGRID_EMAIL=$SENDGRID_EMAIL
       - SMS_HIVE_CLIENT_ID=$SMS_HIVE_CLIENT_ID
       - SMS_HIVE_CLIENT_SECRET=$SMS_HIVE_CLIENT_SECRET
       - SMS_HIVE_AUTH_TOKEN=$SMS_HIVE_AUTH_TOKEN
       - SMS_HIVE_URL=$SMS_HIVE_URL
-      - ZOOM_ACCOUNT_ID=$ZOOM_ACCOUNT_ID
-      - ZOOM_CLIENT_ID=$ZOOM_CLIENT_ID
-      - ZOOM_CLIENT_SECRET=$ZOOM_CLIENT_SECRET
-      - ZOOM_SECRET_TOKEN=$ZOOM_SECRET_TOKEN
-      - ZOOM_VERIFICATION_TOKEN=$ZOOM_VERIFICATION_TOKEN
-      - ZOOM_ACCESS_TOKEN_URL=$ZOOM_ACCESS_TOKEN_URL
-      - ZOOM_API_URL=$ZOOM_API_URL
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -64,17 +54,16 @@ services:
       - MAX_FILE_UPLOAD_REQUEST=${MAX_FILE_UPLOAD_REQUEST:-5}
       - MAX_ADMIN_REQUEST=${MAX_ADMIN_REQUEST:-5}
     volumes:
-      - kenecare-app-data-prod:/usr/src/app/src/public/upload
+      # - kenecare-app-data-prod:/usr/src/app/src/public/upload
+      - kenecare-app-data-staging:/usr/src/app/src/public/upload
 
 volumes:
-  kenecare-app-data-prod:
-    name: kenecare-app-data-prod
+  # kenecare-app-data-prod:
+  #   name: kenecare-app-data-prod
+  kenecare-app-data-staging:
+    name: kenecare-app-data-staging
 
 networks:
   kenecare-prod-net:
     name: kenecare-prod-net
     driver: bridge
-  # redis-net:
-  #   external: true
-  #   labels:
-  #     - "com.docker.compose.network.optional=true"
