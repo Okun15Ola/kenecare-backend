@@ -2,6 +2,7 @@ const moment = require("moment");
 const he = require("he");
 const { getFileUrlFromS3Bucket } = require("./aws-s3.utils");
 const { decryptText } = require("./auth.utils");
+const availableDaysDB = require("../repository/doctorAvailableDays.repository");
 
 exports.mapCommonSymptomsRow = async (commonSymptoms) => {
   const {
@@ -566,7 +567,11 @@ exports.mapDoctorCouncilRow = async (doctorCouncil) => {
   };
 };
 
-exports.mapDoctorSharedMedicalDocs = async (docs, title) => {
+exports.mapDoctorSharedMedicalDocs = async (
+  docs,
+  title,
+  includeDocumentUrl = false,
+) => {
   const {
     sharing_id: sharingId,
     document_id: documentId,
@@ -580,19 +585,22 @@ exports.mapDoctorSharedMedicalDocs = async (docs, title) => {
     note,
     created_at: createdAt,
   } = docs;
-  const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
-  return {
+  const mapped = {
     sharingId,
     documentId,
     documentUUID,
     documentTitle,
-    documentUrl,
     patientId,
     patientName: `${patientFirstName} ${patientLastName}`,
     doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
     note,
     createdAt: moment(createdAt).format("YYYY-MM-DD"),
   };
+  if (includeDocumentUrl && documentUUID !== null) {
+    const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
+    mapped.documentUrl = documentUrl;
+  }
+  return mapped;
 };
 
 exports.mapPatientAppointments = (appointment) => {
@@ -737,6 +745,7 @@ exports.mapAppointmentPrescriptionRow = (prescription) => {
 };
 
 exports.mapDoctorRow = async (doctor) => {
+  let doctorAvailableDays = [];
   const {
     doctor_id: doctorId,
     title,
@@ -761,6 +770,17 @@ exports.mapDoctorRow = async (doctor) => {
     is_account_active: isAccountActive,
   } = doctor;
   const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
+  const mappedAvailableDays =
+    await availableDaysDB.getDoctorsAvailableDays(doctorId);
+  if (mappedAvailableDays && mappedAvailableDays.length > 0) {
+    doctorAvailableDays = mappedAvailableDays.map((day) => ({
+      dayId: day.day_slot_id,
+      day: day.day_of_week,
+      startTime: day.day_start_time,
+      endTime: day.day_end_time,
+      isAvailable: day.is_available,
+    }));
+  }
   return {
     doctorId,
     title,
@@ -783,10 +803,12 @@ exports.mapDoctorRow = async (doctor) => {
     email,
     userType,
     isAccountActive,
+    doctorAvailableDays,
   };
 };
 
 exports.mapDoctorUserProfileRow = async (doctor) => {
+  let doctorAvailableDays = [];
   const {
     doctor_id: doctorId,
     title,
@@ -809,6 +831,17 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     user_type: userType,
   } = doctor;
   const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
+  const mappedAvailableDays =
+    await availableDaysDB.getDoctorsAvailableDays(doctorId);
+  if (mappedAvailableDays && mappedAvailableDays.length > 0) {
+    doctorAvailableDays = mappedAvailableDays.map((day) => ({
+      dayId: day.day_slot_id,
+      day: day.day_of_week,
+      startTime: day.day_start_time,
+      endTime: day.day_end_time,
+      isAvailable: day.is_available,
+    }));
+  }
   return {
     doctorId,
     userId,
@@ -829,6 +862,7 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     city,
     yearOfExperience,
     isProfileApproved,
+    doctorAvailableDays,
   };
 };
 
@@ -1036,7 +1070,7 @@ exports.mapPatientMedicalDocumentRow = async (
     createdAt: moment(createdAt).format("YYYY-MM-DD"),
   };
 
-  if (!includeDocumentUrl) {
+  if (includeDocumentUrl) {
     const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
     mapped.documentUrl = documentUrl;
   }

@@ -8,7 +8,7 @@ const {
 } = require("../../../controllers/patients/medical-record.controller");
 const {
   ShareMedicalDocumentValidation,
-  GetDoctorSharedMedicalDocumentValidation,
+  GetPatientSharedMedicalDocumentValidation,
 } = require("../../../validations/medical-records.validations");
 const { Validate } = require("../../../validations/validate");
 const { limiter } = require("../../../utils/rate-limit.utils");
@@ -20,12 +20,14 @@ const {
 router.use(authenticateUser, limiter, authorizePatient); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
 router.get("/", GetAllSharedMedicalDocumentsController);
+
 router.get(
   "/:id",
-  GetDoctorSharedMedicalDocumentValidation,
+  GetPatientSharedMedicalDocumentValidation,
   Validate,
   GetSharedMedicalDocumentByIDController,
 );
+
 router.post(
   "/",
   ShareMedicalDocumentValidation,
@@ -40,7 +42,7 @@ router.put(
 );
 router.delete(
   "/:id",
-  GetDoctorSharedMedicalDocumentValidation,
+  GetPatientSharedMedicalDocumentValidation,
   Validate,
   DeleteSharedMedicalDocumentByIdController,
 );

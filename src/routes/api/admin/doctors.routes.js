@@ -5,8 +5,10 @@ const {
   UpdateDoctorByIdController,
   ApproveDoctorAccountController,
   DeleteDoctorByIdController,
-  GetDoctorsCouncilRegistrationController,
 } = require("../../../controllers/admin/doctors.controller");
+const {
+  GetCouncilRegistrationController,
+} = require("../../../controllers/admin/doctors.council-registration.controller");
 const { adminLimiter } = require("../../../utils/rate-limit.utils");
 const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
 const {
@@ -31,8 +33,8 @@ router.get(
   "/council-registration",
   paginationValidation,
   Validate,
-  calculatePaginationInfo("doctors"),
-  GetDoctorsCouncilRegistrationController,
+  calculatePaginationInfo("doctors_council_registration"),
+  GetCouncilRegistrationController,
 );
 router.post("/:id", GetDoctorByIDController);
 router.put("/:id", UpdateDoctorByIdController);
