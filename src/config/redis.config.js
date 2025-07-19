@@ -29,8 +29,8 @@ class RedisClient {
       return new Redis.Cluster(
         [
           {
-            host: "clustercfg.imo-redis-cluster.ybsy2m.use1.cache.amazonaws.com",
-            port: 6379,
+            host: redisHost,
+            port: redisPort,
           },
         ],
         {
