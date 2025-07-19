@@ -196,7 +196,7 @@ exports.updateDoctorProfilePictureById = async ({ doctorId, imageUrl }) => {
 };
 
 exports.approveDoctorProfileByDoctorId = async ({ doctorId, approvedBy }) => {
-  return query(queries.APPROVE_PROFILE, [approvedBy, doctorId]);
+  return query(queries.APPROVE_DOCTOR_PROFILE, [approvedBy, doctorId]);
 };
 
 exports.approveDoctorMedicalCouncilRegistrationById = async ({
