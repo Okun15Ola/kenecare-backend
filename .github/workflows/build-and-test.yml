@@ -160,22 +160,34 @@ jobs:
       packages: write
       id-token: write
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0
       - name: Set COMPOSE_FILE based on Input 
         run: |
           if [ "${{github.event.inputs.ENV}}" == "staging" ]; then
             echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_STAGING}}" >> $GITHUB_ENV
-            echo "Using compose file: $COMPOSE_FILE"
           else
             echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_PROD}}" >> $GITHUB_ENV
           fi
-
-      - name: Checkout Code
-        uses: actions/checkout@v4
+          echo "Using compose file: $COMPOSE_FILE"
 
       - name: Set Old Image Tag
         run: |
           echo "OLD_IMAGE_TAG=prod-1.0.$(($GITHUB_RUN_NUMBER-1))" >> $GITHUB_ENV
           echo "DEPLOYMENT_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+
+      - name: Copy Production Environment Variables
+        run: |
+          if [ -f ~/.env.kenecare.api-prod ]; then
+            echo "Copying production environment variables..."
+            cp ~/.env.kenecare.api-prod ./.env.production
+            echo "Production environment variables copied successfully."
+          else
+            echo "Production environment variables file not found, skipping copy."
+          fi
 
       - name: Pre-deployment Health Check
         run: |
@@ -193,18 +205,9 @@ jobs:
 
       - name: Remove Old Container and Images Gracefully
         run: |
-          ENV=production docker compose -f docker-compose.api-prod.yml down --timeout 30 || true
+          ENV=production docker compose -f docker-compose.api-prod.yml --env-file=${{env.ENV_FILE_PROD}} down --timeout 30 || true
           docker rmi imotechsl/kenecare-api-prod:${OLD_IMAGE_TAG} || true
 
-      - name: Copy Production Environment Variables
-        run: |
-          if [ -f ~/.env.kenecare.api-prod ]; then
-            echo "Copying production environment variables..."
-            cp ~/.env.kenecare.api-prod ./.env.production
-            echo "Production environment variables copied successfully."
-          else
-            echo "Production environment variables file not found, skipping copy."
-          fi
 
       - name: Run Compose and Deploy New Image
         run: |
