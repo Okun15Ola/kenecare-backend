@@ -16,8 +16,9 @@ describe("Doctor Medical Record Controllers", () => {
 
   beforeEach(() => {
     req = {
-      user: { id: "1" },
-      params: { id: "2" },
+      user: { id: 1 },
+      params: { id: 2 },
+      body: { id: 2 },
     };
     res = {
       status: jest.fn().mockReturnThis(),

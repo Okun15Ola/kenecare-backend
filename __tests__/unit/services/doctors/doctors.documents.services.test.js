@@ -28,7 +28,7 @@ describe("doctors.documents.services", () => {
     const doctor = { doctor_id: "doc-1", title: "Dr." };
     const rawDocs = [{ id: 1 }, { id: 2 }];
     const mappedDocs = [{ mapped: 1 }, { mapped: 2 }];
-    const cacheKey = `doctor-shared-medical-documents:${userId}`;
+    const cacheKey = `doctor:shared-medical-documents:${userId}`;
 
     it("returns cached data if present", async () => {
       redisConfig.redisClient.get.mockResolvedValue(JSON.stringify(mappedDocs));
@@ -126,7 +126,7 @@ describe("doctors.documents.services", () => {
     const doctor = { doctor_id: "doc-1", title: "Dr." };
     const document = { id: 1 };
     const mappedDocument = { mapped: 1 };
-    const cacheKey = `doctor-shared-medical-documents:${sharedDocId}`;
+    const cacheKey = `doctor:shared-medical-documents:${sharedDocId}`;
 
     it("returns cached data if present", async () => {
       redisConfig.redisClient.get.mockResolvedValue(
@@ -206,6 +206,7 @@ describe("doctors.documents.services", () => {
       expect(dbMapperUtils.mapDoctorSharedMedicalDocs).toHaveBeenCalledWith(
         document,
         doctor.title,
+        true,
       );
       expect(redisConfig.redisClient.set).toHaveBeenCalledWith({
         key: cacheKey,

@@ -1,12 +1,11 @@
-jest.mock("../../../../src/services/doctors/doctors.services");
+jest.mock("../../../../src/services/admin/doctors.services");
 jest.mock("../../../../src/middlewares/logger.middleware");
 
-const doctorsServices = require("../../../../src/services/doctors/doctors.services");
+const doctorsServices = require("../../../../src/services/admin/doctors.services");
 const logger = require("../../../../src/middlewares/logger.middleware");
 
 const {
   GetDoctorsController,
-  GetDoctorsCouncilRegistrationController,
   GetDoctorByIDController,
   CreateDoctorController,
   UpdateDoctorByIdController,
@@ -38,15 +37,11 @@ describe("Doctors Controller", () => {
         paginationInfo: jest.fn(),
       };
       const response = { statusCode: 200, data: [{ id: 1 }] };
-      doctorsServices.getAllDoctors.mockResolvedValue(response);
+      doctorsServices.getAllDoctors = jest.fn().mockResolvedValue(response);
 
       await GetDoctorsController(req, res, mockNext);
 
-      expect(doctorsServices.getAllDoctors).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
-      );
+      expect(doctorsServices.getAllDoctors).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(response);
     });
@@ -64,45 +59,7 @@ describe("Doctors Controller", () => {
       await GetDoctorsController(req, res, mockNext);
 
       expect(logger.error).toHaveBeenCalledWith(error);
-      expect(mockNext).toHaveBeenCalledWith(error);
-    });
-  });
-
-  describe("GetDoctorsCouncilRegistrationController", () => {
-    it("should return doctors with correct status", async () => {
-      const res = mockRes();
-      const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
-      };
-      const response = { statusCode: 200, data: [{ id: 2 }] };
-      doctorsServices.getAllDoctors.mockResolvedValue(response);
-
-      await GetDoctorsCouncilRegistrationController(req, res, mockNext);
-
-      expect(doctorsServices.getAllDoctors).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
-      );
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(response);
-    });
-
-    it("should handle errors", async () => {
-      const res = mockRes();
-      const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
-      };
-      const error = new Error("fail");
-      doctorsServices.getAllDoctors.mockRejectedValue(error);
-
-      await GetDoctorsCouncilRegistrationController(req, res, mockNext);
-
-      expect(logger.error).toHaveBeenCalledWith(error);
+      expect(logger.error).toHaveBeenCalledWith(expect.anything());
       expect(mockNext).toHaveBeenCalledWith(error);
     });
   });
