@@ -5,7 +5,7 @@ const {
   GetSharedMedicalRecordByIDController,
 } = require("../../../controllers/doctors/medical-record.controller");
 const {
-  GetDoctorSharedMedicalDocumentValidation,
+  VerifySharedMedicalDocumentPasswordValidation,
 } = require("../../../validations/medical-records.validations");
 const { limiter } = require("../../../utils/rate-limit.utils");
 const {
@@ -16,9 +16,9 @@ const {
 router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware, Rate limiting & authorize middleware applied to all routes in this router
 
 router.get("/", GetAllSharedMedicalRecordsController);
-router.get(
-  "/:id",
-  GetDoctorSharedMedicalDocumentValidation,
+router.post(
+  "/",
+  VerifySharedMedicalDocumentPasswordValidation,
   Validate,
   GetSharedMedicalRecordByIDController,
 );

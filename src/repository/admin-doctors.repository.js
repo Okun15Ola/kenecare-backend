@@ -1,5 +1,5 @@
 const { query } = require("./db.connection");
-const queries = require("./queries/doctors.queries");
+const queries = require("./queries/adminDoctors.queries");
 
 exports.getAllDoctors = async (limit, offset) => {
   const optimizedQuery =
@@ -29,30 +29,6 @@ exports.getDoctorByQuery = async ({
 exports.getDoctorById = async (doctorId) => {
   const result = await query(queries.GET_DOCTOR_BY_ID, [doctorId]);
   return result[0];
-};
-
-exports.getDoctorByUserId = async (userId) => {
-  const result = await query(queries.GET_DOCTOR_BY_USER_ID, [userId]);
-  return result[0];
-};
-
-exports.getDoctorsByCityId = async (cityId, limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_BY_CITY_ID} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery, [cityId]);
-};
-
-exports.getDoctorsBySpecializationId = async (
-  specializationId,
-  limit,
-  offset,
-) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_BY_SPECIALIZATION_ID} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery, [specializationId]);
-};
-
-exports.getDoctorsByHospitalId = async (hospitalId, limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_BY_HOSPITAL_ID} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery, [hospitalId]);
 };
 
 exports.getCouncilRegistrationByDoctorId = async (doctorId) => {
@@ -196,7 +172,7 @@ exports.updateDoctorProfilePictureById = async ({ doctorId, imageUrl }) => {
 };
 
 exports.approveDoctorProfileByDoctorId = async ({ doctorId, approvedBy }) => {
-  return query(queries.APPROVE_DOCTOR_PROFILE, [approvedBy, doctorId]);
+  return query(queries.APPROVE_PROFILE, [approvedBy, doctorId]);
 };
 
 exports.approveDoctorMedicalCouncilRegistrationById = async ({

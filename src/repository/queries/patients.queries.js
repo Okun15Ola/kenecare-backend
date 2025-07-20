@@ -30,6 +30,12 @@ module.exports = {
   GET_PATIENT_MEDICAL_INFO_BY_PATIENT_ID: `
     SELECT * FROM patient_medical_history WHERE patient_id = ? LIMIT 1;
   `,
+  GET_DOCTORS_PATIENT_HAS_MET: `
+  SELECT DISTINCT d.doctor_id, d.first_name, d.last_name, d.title, d.specialization_id, ms.speciality_name
+  FROM medical_appointments ma
+  INNER JOIN doctors d ON ma.doctor_id = d.doctor_id
+  INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
+  WHERE ma.patient_id = ? AND ma.appointment_status IN ('approved', 'started', 'completed');`,
   UPDATE_PATIENT_BY_ID: `
     UPDATE patients SET first_name = ?, middle_name = ?, last_name = ?, gender = ?, dob = ? WHERE patient_id = ?;
   `,

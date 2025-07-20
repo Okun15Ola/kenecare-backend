@@ -339,6 +339,10 @@ exports.loginUser = async ({
       userId,
       status: STATUS.ACTIVE,
     });
+    await repo.updateUserOnlineStatus({
+      userId,
+      status: STATUS.ACTIVE,
+    });
 
     if (!affectedRows || affectedRows < 1) {
       logger.error("loginUser: Failed to update user account status");
@@ -360,6 +364,7 @@ exports.loginUser = async ({
         type: userType,
         isVerified: accountVerified,
         isActive: accountActive,
+        isOnline: STATUS.ACTIVE,
       },
     });
   } catch (error) {
@@ -395,7 +400,12 @@ exports.logoutUser = async ({ userId, token, tokenExpiry }) => {
       redisClient.delete(`user:${userId}`),
     ]);
 
-    return Response.SUCCESS({ message: "Logged out successfully" });
+    return Response.SUCCESS({
+      message: "Logged out successfully",
+      data: {
+        isOnline: STATUS.NOT_ACTIVE,
+      },
+    });
   } catch (error) {
     logger.error("logoutUser:", error);
     throw error;
@@ -433,6 +443,9 @@ exports.logoutAllDevices = async ({ userId, token, tokenExpiry }) => {
 
     return Response.SUCCESS({
       message: "Logged out from all devices successfully",
+      data: {
+        isOnline: STATUS.NOT_ACTIVE,
+      },
     });
   } catch (error) {
     logger.error("logoutAllDevices:", error);
@@ -536,6 +549,7 @@ exports.verifyUserLoginOtp = async ({
         type: userType,
         isVerified: accountVerified,
         isActive: accountActive,
+        isOnline: STATUS.ACTIVE,
       },
     });
   } catch (error) {

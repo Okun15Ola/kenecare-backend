@@ -10,7 +10,7 @@ const {
 const { STATUS, VERIFICATIONSTATUS, USERTYPE } = require("../utils/enum.utils");
 const {
   getUserById,
-  updateUserAccountStatusById,
+  updateUserOnlineStatus,
 } = require("../repository/users.repository");
 const { getDoctorByUserId } = require("../repository/doctors.repository");
 const {
@@ -125,13 +125,14 @@ const authenticateUser = async (req, res, next) => {
       );
     }
 
-    updateUserAccountStatusById({
+    updateUserOnlineStatus({
       userId,
       status: STATUS.ACTIVE,
     });
 
     req.user = {
       id: decoded.sub,
+      isOnline: STATUS.ACTIVE,
     };
 
     req.token = token;

@@ -1,11 +1,5 @@
 const logger = require("../../middlewares/logger.middleware");
-const {
-  getAllDoctors,
-  getDoctorById,
-  // getDoctorsCouncilRegistration,
-  // getDoctorByUserId,
-  approveDoctorProfile,
-} = require("../../services/doctors/doctors.services");
+const service = require("../../services/admin/doctors.services");
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {
@@ -13,20 +7,7 @@ exports.GetDoctorsController = async (req, res, next) => {
       pagination: { limit, offset },
       paginationInfo,
     } = req;
-    const response = await getAllDoctors(limit, offset, paginationInfo);
-    return res.status(response.statusCode).json(response);
-  } catch (error) {
-    logger.error(error);
-    return next(error);
-  }
-};
-exports.GetDoctorsCouncilRegistrationController = async (req, res, next) => {
-  try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getAllDoctors(limit, offset, paginationInfo);
+    const response = await service.getAllDoctors(limit, offset, paginationInfo);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
@@ -37,13 +18,14 @@ exports.GetDoctorsCouncilRegistrationController = async (req, res, next) => {
 exports.GetDoctorByIDController = async (req, res, next) => {
   try {
     const { id: doctorId } = req.params;
-    const response = await getDoctorById(doctorId);
+    const response = await service.getDoctorById(doctorId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
     return next(error);
   }
 };
+
 exports.CreateDoctorController = async (req, res, next) => {
   try {
     return res.send("Created Doctor");
@@ -66,7 +48,7 @@ exports.ApproveDoctorAccountController = async (req, res, next) => {
     const { id: doctorId } = req.params;
     const userId = parseInt(req.user.id, 10);
 
-    const response = await approveDoctorProfile({
+    const response = await service.approveDoctorProfile({
       doctorId,
       approvedBy: userId,
     });

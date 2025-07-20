@@ -141,3 +141,72 @@ exports.GetDoctorSharedMedicalDocumentValidation = [
       return true;
     }),
 ];
+
+exports.GetPatientSharedMedicalDocumentValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Document ID is Required")
+    .bail()
+    .custom(async (value, { req }) => {
+      const userId = parseInt(req.user.id, 10);
+      const sharedDocumentId = parseInt(value, 10);
+      const patient = await getPatientByUserId(userId);
+      if (!patient) {
+        throw new Error("Unauthorized Action. Please Try again");
+      }
+      const document = await getPatientMedicalDocumentById(sharedDocumentId);
+      if (!document) {
+        throw new Error("Specified Document Not Found");
+      }
+      return true;
+    }),
+];
+
+exports.VerifySharedMedicalDocumentPasswordValidation = [
+  body("id")
+    .notEmpty()
+    .withMessage("Document ID is Required")
+    .bail()
+    .custom(async (value, { req }) => {
+      const userId = parseInt(req.user.id, 10);
+      const sharedDocumentId = parseInt(value, 10);
+      const doctor = await getDoctorByUserId(userId);
+      if (!doctor) {
+        throw new Error("Unauthorized Action. Please Try again");
+      }
+      const { doctor_id: doctorId } = doctor;
+      const document = await getDoctorSharedMedicalDocumentById({
+        doctorId,
+        sharedDocumentId,
+      });
+      if (!document) {
+        throw new Error("Specified Document Not Found");
+      }
+      return true;
+    }),
+  body("password")
+    .notEmpty()
+    .withMessage("Password is required")
+    .bail()
+    .trim()
+    .escape()
+    .custom(async (password, { req }) => {
+      const user = await getUserById(req.user.id);
+      if (!user) {
+        throw new Error("Error Viewing Shared Medical Document!");
+      }
+
+      const { password: hashedPassword } = user;
+      const isMatch = await comparePassword({
+        plainPassword: password,
+        hashedPassword,
+      });
+
+      if (!isMatch) {
+        throw new Error(
+          "Error Viewing Shared Medical Document. Incorrect Password",
+        );
+      }
+      return true;
+    }),
+];

@@ -395,7 +395,9 @@ exports.getPatientSharedMedicalDocuments = async (userId) => {
       });
     }
 
-    const data = await Promise.all(rawData.map(mapPatientMedicalDocumentRow));
+    const data = await Promise.all(
+      rawData.map((doc) => mapPatientMedicalDocumentRow(doc, true)),
+    );
     return Response.SUCCESS({ data });
   } catch (error) {
     logger.error("getPatientSharedMedicalDocuments: ", error);
@@ -417,6 +419,7 @@ exports.getPatientSharedMedicalDocument = async ({ userId, documentId }) => {
       patientId,
       documentId,
     });
+
     if (!rawData) {
       logger.warn(
         `Shared Medical Document ${documentId} Not Found for user ${userId}`,
@@ -426,7 +429,7 @@ exports.getPatientSharedMedicalDocument = async ({ userId, documentId }) => {
       });
     }
 
-    const data = mapPatientMedicalDocumentRow(rawData, true);
+    const data = await mapPatientMedicalDocumentRow(rawData, true);
 
     return Response.SUCCESS({ data });
   } catch (error) {
