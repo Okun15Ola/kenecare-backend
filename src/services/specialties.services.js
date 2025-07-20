@@ -21,7 +21,8 @@ exports.getSpecialties = async (limit, offset, paginationInfo) => {
     if (!rawData?.length) {
       return Response.SUCCESS({ message: "No specialities found", data: [] });
     }
-    const specialties = rawData.map(mapSpecialityRow);
+    const specialties = await Promise.all(rawData.map(mapSpecialityRow));
+
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialties),

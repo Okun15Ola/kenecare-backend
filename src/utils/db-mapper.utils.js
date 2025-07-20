@@ -928,7 +928,7 @@ exports.mapTestimonialRow = async (testimonial) => {
   };
 };
 
-exports.mapSpecialityRow = (speciality, includeTags = false) => {
+exports.mapSpecialityRow = async (speciality, includeTags = false) => {
   const {
     speciality_id: specialtyId,
     speciality_name: specialtyName,
@@ -938,21 +938,22 @@ exports.mapSpecialityRow = (speciality, includeTags = false) => {
     is_active: isActive,
     inputted_by: inputtedBy,
   } = speciality;
-  const specialityImageUrl = imageUrl ? getFileUrlFromS3Bucket(imageUrl) : null;
-  const mapped = {
+  const specialityImageUrl = imageUrl
+    ? await getFileUrlFromS3Bucket(imageUrl)
+    : null;
+  return {
     specialtyId,
     specialtyName: he.decode(specialtyName),
     description: he.decode(description),
     imageUrl: specialityImageUrl,
+    tags: includeTags ? JSON.parse(tags) : null,
     isActive,
     inputtedBy,
   };
 
-  if (!includeTags) {
-    mapped.tags = tags;
-  }
-
-  return mapped;
+  // if (includeTags) {
+  //   mapped.tags = tags;
+  // }
 };
 
 exports.mapUserRow = (

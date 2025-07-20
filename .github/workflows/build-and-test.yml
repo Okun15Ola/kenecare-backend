@@ -97,7 +97,7 @@ jobs:
 
       - name: Login to Registry ${{env.REGISTRY}}
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2.1.0
+        uses: docker/login-action@v3
         with:
           registry: ${{env.REGISTRY}}
           username: ${{env.DOCKER_USERNAME}}
@@ -117,7 +117,7 @@ jobs:
 
       - name: Build and Push Docker Image
         id: build-and-push
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile.prod
@@ -154,7 +154,10 @@ jobs:
     needs: build-and-scan-image
     runs-on: ["self-hosted", "imotechsl-apps"]
     timeout-minutes: 30
-    if: always() && needs.build-and-scan-image.result == 'success'
+    if: |
+      always() &&
+      needs.build-and-scan-image.result == 'success' &&
+      github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -165,13 +168,14 @@ jobs:
         with:
           ref: ${{ env.SHA }}
           fetch-depth: 0
-      - name: Set COMPOSE_FILE based on Input 
+      - name: Set COMPOSE_FILE based on Input
         run: |
           if [ "${{github.event.inputs.ENV}}" == "staging" ]; then
             echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_STAGING}}" >> $GITHUB_ENV
           else
             echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_PROD}}" >> $GITHUB_ENV
           fi
+          echo "ENV_FILE=.env.${{github.event.inputs.ENV}}" >> $GITHUB_ENV
           echo "Using compose file: $COMPOSE_FILE"
 
       - name: Set Old Image Tag
@@ -207,8 +211,6 @@ jobs:
         run: |
           ENV=production docker compose -f docker-compose.api-prod.yml --env-file=${{env.ENV_FILE_PROD}} down --timeout 30 || true
           docker rmi imotechsl/kenecare-api-prod:${OLD_IMAGE_TAG} || true
-
-
       - name: Run Compose and Deploy New Image
         run: |
           echo "🚀 GH ACTIONS: Deploying new ${{env.ENV}} image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}"  
@@ -227,11 +229,23 @@ jobs:
       - name: Post Deployment API Health Check
         run: |
           echo "Running post-deployment API health check..."
-          if curl -s --head ${{env.HEALTH_CHECK_URL}} | grep "200 OK" > /dev/null; then
-            echo "Health check passed."
+          sleep 20 # Wait for the service to stabilize
+          if [ "${{env.ENV}}" == "prod" ]; then
+            echo "Checking production health endpoint..."
+            if curl -s --head ${{env.PRODUCTION_HEALTH_CHECK_URL}} | grep "200 OK" > /dev/null; then
+              echo "Production health check passed."
+            else
+              echo "Production health check failed, please investigate."
+              exit 1
+            fi
           else
-            echo "Health check failed, please investigate."
-            exit 1
+            echo "Checking staging health endpoint..."
+            if curl -s --head ${{env.HEALTH_CHECK_URL}} | grep "200 OK" > /dev/null; then
+              echo "Staging health check passed."
+            else
+              echo "Staging health check failed, please investigate."
+              exit 1
+            fi
           fi
 
       - name: Clean up Dangling Images
@@ -243,6 +257,7 @@ jobs:
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
           echo "SHA=${SHA}" >> $GITHUB_ENV
           echo "${IMAGE_NAME}:${IMAGE_TAG}" > ~/.last_kenecare_api_deployed_image
+          echo "${IMAGE_NAME}:${IMAGE_TAG}" > ~/.last_deployed_image
 
       - name: Notify Deployment Success
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
