@@ -32,12 +32,8 @@ const { getTestimonials } = require("../../services/testimonials.services");
 
 exports.GetBlogsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-
-    const response = await getBlogs(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await getBlogs(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetBlogsController: ", error);
@@ -56,11 +52,8 @@ exports.GetBlogByIDController = async (req, res, next) => {
 };
 exports.GetBlogCategoriesController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getBlogCategories(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await getBlogCategories(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetBlogCategoriesController: ", error);
@@ -79,11 +72,8 @@ exports.GetBlogCategoryByIDController = async (req, res, next) => {
 };
 exports.GetCitiesController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getCities(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await getCities(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetCitiesController: ", error);
@@ -102,11 +92,8 @@ exports.GetCityByIDController = async (req, res, next) => {
 };
 exports.GetCommonSymptomsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getCommonSymptoms(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await getCommonSymptoms(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetCommonSymptomsController: ", error);
@@ -126,30 +113,21 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
 exports.GetDoctorsController = async (req, res, next) => {
   try {
     const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const { locationId, q: query, specialty_id: specialtyId } = req.query;
+      locationId,
+      q: query,
+      specialty_id: specialtyId,
+      page,
+      limit,
+    } = req.query;
 
     let response;
 
     if (specialtyId) {
-      response = await getDoctorBySpecialtyId(
-        specialtyId,
-        limit,
-        offset,
-        paginationInfo,
-      );
+      response = await getDoctorBySpecialtyId(specialtyId, limit, page);
     } else if (locationId || query) {
-      response = await getDoctorByQuery(
-        locationId,
-        query,
-        limit,
-        offset,
-        paginationInfo,
-      );
+      response = await getDoctorByQuery(locationId, query, limit, page);
     } else {
-      response = await getAllDoctors(limit, offset, paginationInfo);
+      response = await getAllDoctors(limit, page);
     }
 
     return res.status(response.statusCode).json(response);
@@ -186,11 +164,8 @@ exports.GetFaqByIdController = async (req, res, next) => {
 };
 exports.GetMedicalCouncilsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getMedicalCouncils(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await getMedicalCouncils(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetMedicalCouncilsController: ", error);
@@ -249,11 +224,8 @@ exports.GetServiceByIDController = async (req, res, next) => {
 };
 exports.GetSpecializationsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getSpecializations(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await getSpecializations(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetSpecializationsController: ", error);
@@ -264,7 +236,6 @@ exports.GetSpecializationByIDController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const response = await getSpecializationById(id);
-
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetSpecializationByIDController: ", error);
@@ -273,11 +244,8 @@ exports.GetSpecializationByIDController = async (req, res, next) => {
 };
 exports.GetSpecialtiesController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getSpecialties(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await getSpecialties(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetSpecialtiesController: ", error);
@@ -288,7 +256,6 @@ exports.GetSpecialtyByIDController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const response = await getSpecialtyById(id);
-
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetSpecialtyByIDController: ", error);
@@ -313,11 +280,8 @@ exports.GetUserTypeByIDController = async (req, res, next) => {
 };
 exports.GetTestimonialsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getTestimonials(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await getTestimonials(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetTestimonialsController: ", error);
