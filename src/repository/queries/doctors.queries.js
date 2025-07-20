@@ -7,6 +7,8 @@ module.exports = {
     INNER JOIN cities ON doctors.city_id = cities.city_id
     WHERE is_profile_approved = 1
   `,
+  GET_DOCTORS_COUNT:
+    "SELECT COUNT(*) as totalRows FROM doctors WHERE is_profile_approved = 1;",
   SEARCH_DOCTOR_BY_QUERY: `
   SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url,
          doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, latitude, longitude,
@@ -24,6 +26,22 @@ module.exports = {
       OR speciality_name LIKE ?
     ) AND is_profile_approved = 1
 `,
+  COUNT_SEARCH_DOCTOR_BY_QUERY: `
+  SELECT COUNT(*) AS totalRows
+  FROM doctors
+  INNER JOIN users ON doctors.user_id = users.user_id
+  INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
+  INNER JOIN cities ON doctors.city_id = cities.city_id
+  WHERE doctors.city_id = ?
+  AND (
+    doctors.first_name LIKE ?
+    OR doctors.middle_name LIKE ?
+    OR doctors.last_name LIKE ?
+    OR doctors.specialization_id LIKE ?
+    OR speciality_name LIKE ?
+  )
+  AND is_profile_approved = 1;
+  `,
   GET_DOCTOR_BY_ID: `
     SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
     FROM doctors
@@ -42,6 +60,8 @@ module.exports = {
   `,
   GET_DOCTOR_BY_CITY_ID:
     "SELECT * FROM doctors WHERE city_id = ? AND is_profile_approved = 1",
+  GET_DOCTORS_COUNT_BY_CITY:
+    "SELECT COUNT(*) AS totalRows FROM doctors WHERE city_id = ? AND is_profile_approved = 1;",
   GET_DOCTOR_BY_SPECIALIZATION_ID: `
     SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
     FROM doctors
@@ -50,7 +70,14 @@ module.exports = {
     INNER JOIN cities ON doctors.city_id = cities.city_id
     WHERE doctors.specialization_id = ? AND is_profile_approved = 1
   `,
+  GET_DOCTOR_BY_SPECIALIZATION_ID_COUNT: `
+    SELECT COUNT(*) AS totalRows
+    FROM doctors
+    WHERE specialization_id = ? AND is_profile_approved = 1;
+  `,
   GET_DOCTOR_BY_HOSPITAL_ID: "SELECT * FROM doctors WHERE hospital_id = ?",
+  GET_DOCTOR_BY_HOSPITAL_ID_COUNT:
+    "SELECT COUNT(*) AS totalRows FROM doctors WHERE hospital_id = ?;",
   GET_DOCTOR_COUNCIL_REGISTRATION_BY_DOCTOR_ID: `
     SELECT council_registration_id, dcr.doctor_id, first_name, last_name, gender, doctors.specialization_id, speciality_name, profile_pic_url, council_name, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, fullname as 'verified_by'
     FROM doctors_council_registration as dcr
@@ -74,7 +101,12 @@ module.exports = {
     INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id
     INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id
     INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id
-    WHERE council_registration_id = ? LIMIT 1 AND is_profile_approved = 1;
+    WHERE council_registration_id = ? AND is_profile_approved = 1 LIMIT 1;
+  `,
+  GET_DOCTOR_COUNCIL_REGISTRATION_COUNT: `
+    SELECT COUNT(*) AS totalRows
+    FROM doctors_council_registration
+    WHERE is_profile_approved = 1;
   `,
   GET_DOCTOR_COUNCIL_REGISTRATION_BY_REG_NUMBER: `
     SELECT council_registration_id, doctors_council_registration.doctor_id, first_name, last_name, doctors.specialization_id, speciality_name, profile_pic_url, council_name, years_of_experience, is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, verified_by, doctors_council_registration.created_at
