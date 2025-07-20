@@ -6,6 +6,11 @@ exports.getAllSpecialties = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.getSpecialtiyCount = async () => {
+  const result = await query(queries.COUNT_SPECIALITY);
+  return result[0];
+};
+
 exports.getSpecialtiyById = async (id) => {
   const result = await query(queries.GET_SPECIALTY_BY_ID, [id]);
   return result[0];

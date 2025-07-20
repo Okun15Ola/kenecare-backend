@@ -2,6 +2,7 @@ module.exports = {
   GET_ALL_SPECIALTIES: `
     SELECT * FROM medical_specialities
   `,
+  COUNT_SPECIALITY: "SELECT COUNT(*) AS totalRows FROM medical_specialities;",
   GET_SPECIALTY_BY_ID: `
     SELECT * FROM medical_specialities WHERE speciality_id = ? LIMIT 1;
   `,
