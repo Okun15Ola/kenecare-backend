@@ -5,12 +5,12 @@ exports.paginationValidation = [
     .optional()
     .default(1)
     .isInt({ min: 1 })
-    .toInt()
-    .withMessage("Page must be a positive integer"),
+    .withMessage("Page must be a positive number")
+    .toInt(),
   query("limit")
     .optional()
-    .default(20)
-    .isInt({ min: 1 })
-    .toInt()
-    .withMessage("Limit must be a positive integer"),
+    .default(10)
+    .isInt({ min: 1, max: 100 })
+    .withMessage("Limit must be a number between 1 and 100")
+    .toInt(),
 ];
