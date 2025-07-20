@@ -60,6 +60,7 @@ const getFileUrlFromS3Bucket = async (fileName) => {
 };
 const getObjectFromS3Bucket = async (fileName) => {
   try {
+    if (!fileName) return null;
     const params = {
       Bucket: awsBucketName,
       Key: fileName,
