@@ -13,13 +13,7 @@ router.get(
   authorizePatient,
   paymentController.returnHandler,
 );
-router.get(
-  "/om/cancel",
-  authenticateUser,
-  limiter,
-  authorizePatient,
-  paymentController.cancelHandler,
-);
+router.get("/om/cancel", limiter, paymentController.cancelHandler);
 router.post(
   "/om/notification",
   authenticateUser,
