@@ -418,7 +418,7 @@ exports.updateDoctorProfile = async ({
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern("doctors:*");
+    await redisClient.delete(`doctor:${doctorId}`);
 
     return Response.SUCCESS({
       message: "Doctor profile updated successfully.",
@@ -490,7 +490,7 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
       }
     }
 
-    await redisClient.clearCacheByPattern("doctors:*");
+    await redisClient.delete(`doctor:${doctorId}`);
     return Response.SUCCESS({
       message: "Doctor's profile picture updated successfully.",
     });

@@ -481,10 +481,10 @@ describe("Doctors Service", () => {
         doctor_id: 11,
       });
       dbObject.updateDoctorById.mockResolvedValue({ affectedRows: 1 });
-      redisClient.clearCacheByPattern.mockResolvedValue();
+      redisClient.delete.mockResolvedValue();
       Response.SUCCESS.mockReturnValue("success");
       const result = await doctorsService.updateDoctorProfile({ userId: 6 });
-      expect(redisClient.clearCacheByPattern).toHaveBeenCalled();
+      expect(redisClient.delete).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalled();
       expect(result).toBe("success");
     });
@@ -551,7 +551,7 @@ describe("Doctors Service", () => {
         affectedRows: 1,
       });
       deleteFileFromS3Bucket.mockResolvedValue();
-      redisClient.clearCacheByPattern.mockResolvedValue();
+      redisClient.delete.mockResolvedValue();
       Response.SUCCESS.mockReturnValue("success");
       generateFileName.mockReturnValue("file.png");
       const result = await doctorsService.updateDoctorProfilePicture({
@@ -559,7 +559,7 @@ describe("Doctors Service", () => {
         file: { buffer: Buffer.from(""), mimetype: "image/png" },
       });
       expect(deleteFileFromS3Bucket).toHaveBeenCalledWith("old.png");
-      expect(redisClient.clearCacheByPattern).toHaveBeenCalled();
+      expect(redisClient.delete).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalled();
       expect(result).toBe("success");
     });
