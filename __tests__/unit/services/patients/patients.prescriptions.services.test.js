@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const patientPrescriptionsService = require("../../../../src/services/patients/patients.prescriptions.services");
 const prescriptionsRepo = require("../../../../src/repository/prescriptions.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
@@ -9,6 +10,12 @@ jest.mock("../../../../src/repository/prescriptions.repository");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/db-mapper.utils");
 jest.mock("../../../../src/utils/caching.utils");
+
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("Patient Prescriptions Service", () => {
   beforeAll(() => {
@@ -58,7 +65,7 @@ describe("Patient Prescriptions Service", () => {
       const result =
         await patientPrescriptionsService.getAppointmentPrescriptionById(1);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("patient-prescriptions:1");
+      expect(redisClient.get).toHaveBeenCalledWith("patient:prescriptions:1");
     });
 
     it("should return a 404 if prescription not found", async () => {

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const specialtiesService = require("../../../src/services/specialties.services");
 const repo = require("../../../src/repository/specialities.repository");
 const Response = require("../../../src/utils/response.utils");
@@ -14,6 +15,19 @@ jest.mock("../../../src/config/redis.config");
 jest.mock("../../../src/utils/caching.utils");
 jest.mock("../../../src/utils/db-mapper.utils");
 jest.mock("../../../src/middlewares/logger.middleware");
+
+jest.mock("../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn(({ totalRows, limit, page }) => ({
+    totalItems: totalRows,
+    totalPages: Math.ceil(totalRows / limit),
+    currentPage: page,
+    itemsPerPage: limit,
+    nextPage: page < Math.ceil(totalRows / limit) ? page + 1 : null,
+    previousPage: page > 1 ? page - 1 : null,
+  })),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("specialties.services", () => {
   beforeAll(() => {
@@ -32,13 +46,20 @@ describe("specialties.services", () => {
       const cached = [{ id: 1, name: "Cardiology" }];
       redisClient.get.mockResolvedValueOnce(JSON.stringify(cached));
       Response.SUCCESS.mockReturnValueOnce("success");
-      const result = await specialtiesService.getSpecialties(10, 0, {
+      const result = await specialtiesService.getSpecialties(10, 1, {
         total: 1,
       });
       expect(redisClient.get).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         data: cached,
-        paginationInfo: { total: 1 },
+        paginationInfo: {
+          currentPage: 1,
+          totalItems: 1,
+          totalPages: 1,
+          itemsPerPage: 10,
+          nextPage: null,
+          previousPage: null,
+        },
       });
       expect(result).toBe("success");
     });
@@ -51,14 +72,21 @@ describe("specialties.services", () => {
         name: "Cardiology",
       });
       Response.SUCCESS.mockReturnValueOnce("success");
-      const result = await specialtiesService.getSpecialties(10, 0, {
+      const result = await specialtiesService.getSpecialties(10, 1, {
         total: 1,
       });
       expect(repo.getAllSpecialties).toHaveBeenCalledWith(10, 0);
       expect(redisClient.set).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         data: [{ id: 1, name: "Cardiology" }],
-        pagination: { total: 1 },
+        pagination: {
+          currentPage: 1,
+          totalItems: 1,
+          totalPages: 1,
+          itemsPerPage: 10,
+          nextPage: null,
+          previousPage: null,
+        },
       });
       expect(result).toBe("success");
     });
@@ -69,7 +97,7 @@ describe("specialties.services", () => {
       Response.SUCCESS.mockReturnValueOnce("success");
       const result = await specialtiesService.getSpecialties(10, 0, {});
       expect(Response.SUCCESS).toHaveBeenCalledWith({
-        message: "No specialities found",
+        message: "No specialties found",
         data: [],
       });
       expect(result).toBe("success");
@@ -217,7 +245,7 @@ describe("specialties.services", () => {
         description: "desc",
       });
       expect(awsS3Utils.uploadFileToS3Bucket).toHaveBeenCalled();
-      expect(redisClient.delete).toHaveBeenCalledWith("specialties:1");
+      expect(redisClient.delete).toHaveBeenCalledWith("specialty:1");
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         message: "Specialty Updated Successfully",
       });
@@ -273,7 +301,7 @@ describe("specialties.services", () => {
         id: 1,
         status: 1,
       });
-      expect(redisClient.delete).toHaveBeenCalledWith("specialties:1");
+      expect(redisClient.delete).toHaveBeenCalledWith("specialty:1");
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         message: "Specialty Status Updated Successfully",
       });

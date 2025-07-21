@@ -30,8 +30,6 @@ describe("Doctor Prescriptions Controllers", () => {
       user: { id: "1" },
       params: { id: "2" },
       body: {},
-      pagination: { limit: 10, offset: 0 },
-      paginationInfo: {},
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -44,18 +42,15 @@ describe("Doctor Prescriptions Controllers", () => {
   describe("GetPrescriptionsController", () => {
     it("should return prescriptions for the doctor", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
-      req.query = {};
-      req.pagination = { limit: 10, offset: 0 };
-      req.paginationInfo = {};
+      req.query = { limit: 10, page: 1 };
       services.getAppointmentPrescriptions.mockResolvedValue(mockResponse);
 
       await GetPrescriptionsController(req, res, next);
 
       expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(
         parseInt(req.user.id, 10),
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -63,6 +58,7 @@ describe("Doctor Prescriptions Controllers", () => {
 
     it("should handle errors", async () => {
       const error = new Error("Test error");
+      req.query = { limit: 10, page: 1 };
       services.getAppointmentPrescriptions.mockRejectedValue(error);
 
       await GetPrescriptionsController(req, res, next);
@@ -98,15 +94,15 @@ describe("Doctor Prescriptions Controllers", () => {
   describe("GetAppointmentPrescriptionsController", () => {
     it("should return prescriptions for an appointment", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 2 }] };
+      req.query = { limit: 10, page: 1 };
       services.getAppointmentPrescriptions.mockResolvedValue(mockResponse);
 
       await GetAppointmentPrescriptionsController(req, res, next);
 
       expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(
         2,
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -114,6 +110,7 @@ describe("Doctor Prescriptions Controllers", () => {
 
     it("should handle errors", async () => {
       const error = new Error("Test error");
+      req.query = { limit: 10, page: 1 };
       services.getAppointmentPrescriptions.mockRejectedValue(error);
 
       await GetAppointmentPrescriptionsController(req, res, next);

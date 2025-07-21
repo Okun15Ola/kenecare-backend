@@ -24,7 +24,7 @@ describe("Blog Categories Controllers", () => {
     req = {
       params: {},
       body: {},
-      query: {},
+      query: { limit: 10, page: 1 },
       pagination: { limit: 10, offset: 0 },
       paginationInfo: jest.fn(),
     };
@@ -44,9 +44,8 @@ describe("Blog Categories Controllers", () => {
       await GetBlogCategoriesController(req, res, next);
 
       expect(blogCategoriesServices.getBlogCategories).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);

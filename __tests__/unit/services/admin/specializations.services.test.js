@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const specializationsService = require("../../../../src/services/admin/specializations.services");
 const specializationsRepo = require("../../../../src/repository/specializations.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
@@ -7,6 +8,12 @@ jest.mock("../../../../src/repository/specializations.repository");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/db-mapper.utils");
 jest.mock("../../../../src/utils/caching.utils");
+
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("Specializations Service", () => {
   afterEach(() => {

@@ -23,27 +23,30 @@ const mockRes = () => {
 const mockNext = jest.fn();
 
 describe("Specializations Controllers", () => {
+  let req;
+
   afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    req = { params: {}, body: {}, user: { id: 1 } };
+
     jest.clearAllMocks();
   });
 
   describe("GetSpecializationsController", () => {
     it("should return specializations with correct status", async () => {
       const res = mockRes();
-      const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
-      };
+      req.query = { limit: 10, page: 1 };
       const mockResponse = { statusCode: 200, data: [] };
       services.getSpecializations.mockResolvedValue(mockResponse);
 
       await GetSpecializationsController(req, res, mockNext);
 
       expect(services.getSpecializations).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -51,11 +54,7 @@ describe("Specializations Controllers", () => {
 
     it("should handle errors", async () => {
       const res = mockRes();
-      const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
-      };
+      req.query = { limit: 10, page: 1 };
 
       const error = new Error("Test error");
       services.getSpecializations.mockRejectedValue(error);

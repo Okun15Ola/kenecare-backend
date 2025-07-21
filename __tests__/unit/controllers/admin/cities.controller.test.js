@@ -31,9 +31,7 @@ describe("Cities Controller", () => {
     it("should return cities with correct status", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       const fakeResponse = { statusCode: 200, data: [{ id: 1, name: "City" }] };
       services.getCities.mockResolvedValue(fakeResponse);
@@ -41,9 +39,8 @@ describe("Cities Controller", () => {
       await GetCitiesController(req, res, mockNext);
 
       expect(services.getCities).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(fakeResponse);
@@ -52,9 +49,7 @@ describe("Cities Controller", () => {
     it("should handle errors", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       const error = new Error("fail");
       services.getCities.mockRejectedValue(error);

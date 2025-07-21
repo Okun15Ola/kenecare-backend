@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const doctorsService = require("../../../../src/services/doctors/doctors.services");
 const dbObject = require("../../../../src/repository/doctors.repository");
 const Response = require("../../../../src/utils/response.utils");
@@ -40,6 +41,22 @@ jest.mock("../../../../src/middlewares/logger.middleware");
 jest.mock("../../../../src/utils/aws-s3.utils");
 jest.mock("../../../../src/utils/file-upload.utils");
 
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn(({ page }) => ({
+    currentPage: page,
+    totalItems: 1,
+    totalPages: 1,
+    itemsPerPage: 10,
+    nextPage: null,
+    previousPage: null,
+  })),
+  cacheKeyBulider: jest.fn(
+    (key, limit, offset) =>
+      `${key}${limit ? `:limit=${limit}` : ""}${offset ? `:offset=${offset}` : ""}`,
+  ),
+}));
+
 describe("Doctors Service", () => {
   beforeAll(() => {
     jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
@@ -59,11 +76,18 @@ describe("Doctors Service", () => {
     it("returns cached doctors if available", async () => {
       redisClient.get.mockResolvedValue(JSON.stringify([{ id: 1 }]));
       Response.SUCCESS.mockReturnValue("success");
-      const result = await doctorsService.getAllDoctors(10, 0, { page: 1 });
+      const result = await doctorsService.getAllDoctors(10, 0);
       expect(redisClient.get).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         data: [{ id: 1 }],
-        pagination: { page: 1 },
+        pagination: {
+          currentPage: 0,
+          totalItems: 1,
+          totalPages: 1,
+          itemsPerPage: 10,
+          nextPage: null,
+          previousPage: null,
+        },
       });
       expect(result).toBe("success");
     });
@@ -74,12 +98,19 @@ describe("Doctors Service", () => {
       mapDoctorRow.mockResolvedValue({ id: 2, name: "Dr. Test" });
       redisClient.set.mockResolvedValue();
       Response.SUCCESS.mockReturnValue("success");
-      const result = await doctorsService.getAllDoctors(10, 0, { page: 1 });
+      const result = await doctorsService.getAllDoctors(10, 0);
       expect(dbObject.getAllDoctors).toHaveBeenCalled();
       expect(redisClient.set).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         data: [{ id: 2, name: "Dr. Test" }],
-        pagination: { page: 1 },
+        pagination: {
+          currentPage: 0,
+          totalItems: 1,
+          totalPages: 1,
+          itemsPerPage: 10,
+          nextPage: null,
+          previousPage: null,
+        },
       });
       expect(result).toBe("success");
     });
@@ -107,7 +138,14 @@ describe("Doctors Service", () => {
       expect(redisClient.get).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         data: [{ id: 3 }],
-        pagination: { page: 1 },
+        pagination: {
+          currentPage: 0,
+          totalItems: 1,
+          totalPages: 1,
+          itemsPerPage: 10,
+          nextPage: null,
+          previousPage: null,
+        },
       });
       expect(result).toBe("success");
     });
@@ -125,7 +163,14 @@ describe("Doctors Service", () => {
       expect(redisClient.set).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         data: [{ id: 4, name: "Dr. Query" }],
-        pagination: { page: 1 },
+        pagination: {
+          currentPage: 0,
+          totalItems: 1,
+          totalPages: 1,
+          itemsPerPage: 10,
+          nextPage: null,
+          previousPage: null,
+        },
       });
       expect(result).toBe("success");
     });
@@ -155,7 +200,14 @@ describe("Doctors Service", () => {
       expect(redisClient.get).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         data: [{ id: 5 }],
-        pagination: { page: 1 },
+        pagination: {
+          currentPage: 0,
+          totalItems: 1,
+          totalPages: 1,
+          itemsPerPage: 10,
+          nextPage: null,
+          previousPage: null,
+        },
       });
       expect(result).toBe("success");
     });
@@ -173,7 +225,14 @@ describe("Doctors Service", () => {
       expect(redisClient.set).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalledWith({
         data: [{ id: 6, name: "Dr. Spec" }],
-        pagination: { page: 1 },
+        pagination: {
+          currentPage: 0,
+          totalItems: 1,
+          totalPages: 1,
+          itemsPerPage: 10,
+          nextPage: null,
+          previousPage: null,
+        },
       });
       expect(result).toBe("success");
     });

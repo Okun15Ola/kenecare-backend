@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const prescriptionsService = require("../../../src/services/prescriptions.services");
 const prescriptionsRepo = require("../../../src/repository/prescriptions.repository");
 const Response = require("../../../src/utils/response.utils");
@@ -20,6 +21,12 @@ jest.mock("../../../src/config/redis.config");
 jest.mock("../../../src/utils/caching.utils");
 jest.mock("../../../src/utils/db-mapper.utils");
 jest.mock("../../../src/middlewares/logger.middleware");
+
+jest.mock("../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("prescriptions.services", () => {
   beforeAll(() => {

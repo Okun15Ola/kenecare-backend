@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const patientsService = require("../../../../src/services/patients/patients.services");
 const repo = require("../../../../src/repository/patients.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
@@ -89,6 +90,8 @@ jest.mock("../../../../src/utils/caching.utils", () => ({
   cacheKeyBulider: jest.fn(
     (prefix, limit, offset) => `${prefix}:${limit}:${offset}`,
   ),
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
 }));
 jest.mock("../../../../src/utils/aws-s3.utils", () => ({
   uploadFileToS3Bucket: jest.fn(),

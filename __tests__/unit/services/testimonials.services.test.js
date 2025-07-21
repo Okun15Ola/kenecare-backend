@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const testimonialService = require("../../../src/services/testimonials.services");
 const testimonialRepo = require("../../../src/repository/testimonials.repository");
 const { redisClient } = require("../../../src/config/redis.config");
@@ -8,6 +9,12 @@ jest.mock("../../../src/repository/testimonials.repository");
 jest.mock("../../../src/config/redis.config");
 jest.mock("../../../src/utils/db-mapper.utils");
 jest.mock("../../../src/utils/caching.utils");
+
+jest.mock("../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("Testimonials Service", () => {
   beforeAll(() => {
@@ -24,18 +31,20 @@ describe("Testimonials Service", () => {
   describe("getTestimonials", () => {
     it("should return testimonials from cache if available", async () => {
       const cachedData = [{ id: 1, content: "Great service!" }];
+      caching.cacheKeyBulider.mockReturnValue("testimonials:limit:10:offset:0");
       redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
-      caching.cacheKeyBulider.mockReturnValue("cache-key");
 
-      const result = await testimonialService.getTestimonials(10, 0, {});
+      const result = await testimonialService.getTestimonials(10, 0);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("cache-key");
+      expect(redisClient.get).toHaveBeenCalledWith(
+        "testimonials:limit:10:offset:0",
+      );
     });
 
     it("should return a 200 if no testimonials are found", async () => {
       redisClient.get.mockResolvedValue(null);
       testimonialRepo.getAllTestimonials.mockResolvedValue(null);
-      const result = await testimonialService.getTestimonials(10, 0, {});
+      const result = await testimonialService.getTestimonials(10, 0);
       expect(result.statusCode).toBe(200);
     });
   });

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const usersService = require("../../../src/services/users.service");
 const Response = require("../../../src/utils/response.utils");
 const { redisClient } = require("../../../src/config/redis.config");
@@ -74,6 +75,8 @@ jest.mock("../../../src/config/redis.config", () => ({
 
 jest.mock("../../../src/utils/caching.utils", () => ({
   cacheKeyBulider: jest.fn((...args) => args.join(":")),
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
 }));
 
 jest.mock("../../../src/utils/sms.utils", () => ({

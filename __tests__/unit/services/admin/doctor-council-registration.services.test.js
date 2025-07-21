@@ -1,12 +1,22 @@
+/* eslint-disable no-unused-vars */
 const doctorCouncilRegistrationService = require("../../../../src/services/admin/doctor-council-registration.services");
 const doctorsRepo = require("../../../../src/repository/doctors.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
 const emailUtils = require("../../../../src/utils/email.utils");
+const cachingUtils = require("../../../../src/utils/caching.utils");
+
+jest.mock("../../../../src/utils/caching.utils");
 
 jest.mock("../../../../src/repository/doctors.repository");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/email.utils");
 jest.mock("../../../../src/utils/db-mapper.utils");
+
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("Doctor Council Registration Service", () => {
   afterEach(() => {
@@ -21,9 +31,7 @@ describe("Doctor Council Registration Service", () => {
       const result =
         await doctorCouncilRegistrationService.getAllCouncilRegistrations();
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith(
-        "admin-doctors-council-registrations:all",
-      );
+      expect(redisClient.get).toHaveBeenCalledWith("admin:doctors-council:all");
     });
 
     it("should return a 200 if no registrations are found", async () => {
@@ -45,7 +53,7 @@ describe("Doctor Council Registration Service", () => {
         await doctorCouncilRegistrationService.getCouncilRegistration(1);
       expect(result.data).toEqual(cachedData);
       expect(redisClient.get).toHaveBeenCalledWith(
-        "admin-doctors-council-registrations:1",
+        "admin:doctors-council-registrations:1",
       );
     });
 

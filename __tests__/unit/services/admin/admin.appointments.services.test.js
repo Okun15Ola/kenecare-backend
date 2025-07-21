@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const adminAppointmentsService = require("../../../../src/services/admin/admin.appointments.services");
 const adminAppointmentsRepo = require("../../../../src/repository/adminAppointments.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
@@ -8,6 +9,12 @@ jest.mock("../../../../src/repository/adminAppointments.repository");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/db-mapper.utils");
 jest.mock("../../../../src/utils/caching.utils");
+
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("Admin Appointments Service", () => {
   afterEach(() => {
