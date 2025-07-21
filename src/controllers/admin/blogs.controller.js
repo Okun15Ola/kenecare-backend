@@ -10,11 +10,8 @@ const {
 
 exports.GetBlogsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getBlogs(limit, offset, paginationInfo);
+    const { limit, page } = req.query;
+    const response = await getBlogs(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

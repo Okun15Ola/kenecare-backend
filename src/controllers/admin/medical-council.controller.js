@@ -12,11 +12,8 @@ const {
 
 exports.GetMedicalCouncilsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getMedicalCouncils(limit, offset, paginationInfo);
+    const { limit, page } = req.query;
+    const response = await getMedicalCouncils(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

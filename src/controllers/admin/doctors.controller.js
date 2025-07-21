@@ -3,11 +3,8 @@ const service = require("../../services/admin/doctors.services");
 
 exports.GetDoctorsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await service.getAllDoctors(limit, offset, paginationInfo);
+    const { limit, page } = req.query;
+    const response = await service.getAllDoctors(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

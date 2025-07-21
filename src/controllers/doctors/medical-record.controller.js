@@ -14,6 +14,7 @@ exports.GetAllSharedMedicalRecordsController = async (req, res, next) => {
     return next(error);
   }
 };
+
 exports.GetSharedMedicalRecordByIDController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);

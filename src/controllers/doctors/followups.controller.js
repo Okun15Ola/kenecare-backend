@@ -31,6 +31,7 @@ exports.CreateAppointmentFollowUpController = async (req, res, next) => {
     return next(error);
   }
 };
+
 exports.UpdateAppointmentFollowUpController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
@@ -57,6 +58,7 @@ exports.UpdateAppointmentFollowUpController = async (req, res, next) => {
     return next(error);
   }
 };
+
 exports.DeleteAppointmentFollowUpController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
@@ -72,6 +74,7 @@ exports.DeleteAppointmentFollowUpController = async (req, res, next) => {
     return next(error);
   }
 };
+
 exports.GetAppointmentFollowUpsController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
@@ -87,6 +90,7 @@ exports.GetAppointmentFollowUpsController = async (req, res, next) => {
     return next(error);
   }
 };
+
 exports.GetFollowUpByIdController = async (req, res, next) => {
   try {
     const userId = Number(req.user.id);
@@ -99,36 +103,3 @@ exports.GetFollowUpByIdController = async (req, res, next) => {
     return next(error);
   }
 };
-
-// exports.StartAppointmentFollowUpController = async (req, res, next) => {
-//   try {
-//     const userId = parseInt(req.user.id, 10);
-//     const appointmentId = parseInt(req.params.id, 10);
-
-//     const response = await startDoctorAppointment({
-//       userId,
-//       appointmentId,
-//     });
-//     return res.status(response.statusCode).json(response);
-//   } catch (error) {
-//
-//     logger.error(error);
-//     return next(error);
-//   }
-// };
-// exports.EndAppointmentFollowUpController = async (req, res, next) => {
-//   try {
-//     const userId = parseInt(req.user.id, 10);
-//     const appointmentId = parseInt(req.params.id, 10);
-
-//     const response = await endDoctorAppointment({
-//       userId,
-//       appointmentId,
-//     });
-//     return res.status(response.statusCode).json(response);
-//   } catch (error) {
-//
-//     logger.error(error);
-//     return next(error);
-//   }
-// };
