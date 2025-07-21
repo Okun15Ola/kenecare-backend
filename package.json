@@ -37,7 +37,7 @@
     "express-validator": "^7.2.1",
     "google-auth-library": "^9.15.0",
     "he": "^1.2.0",
-    "helmet": "^7.0.0",
+    "helmet": "^8.1.0",
     "html-entities": "^2.3.3",
     "http-status-codes": "^2.3.0",
     "ioredis": "^5.6.0",
