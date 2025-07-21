@@ -2,6 +2,9 @@ module.exports = {
   GET_ALL_SPECIALIZATIONS: `
     SELECT * FROM specializations
   `,
+  COUNT_SPECIALIZATIONS: `
+    SELECT COUNT(*) AS totalRows FROM specializations;
+  `,
   GET_SPECIALIZATION_BY_ID: `
     SELECT * FROM specializations WHERE specialization_id = ? LIMIT 1;
   `,

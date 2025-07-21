@@ -1,5 +1,6 @@
 module.exports = {
   GET_ALL_MEDICAL_COUNCILS: "SELECT * FROM medical_councils",
+  COUNT_MEDICAL_COUNCILS: "SELECT COUNT(*) AS totalRows FROM medical_councils",
   GET_MEDICAL_COUNCIL_BY_ID:
     "SELECT * FROM medical_councils WHERE council_id = ? LIMIT 1",
   GET_MEDICAL_COUNCIL_BY_EMAIL:

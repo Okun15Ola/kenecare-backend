@@ -1,5 +1,6 @@
 module.exports = {
   GET_ALL_BLOG_CATEGORY: "SELECT * FROM blog_categories",
+  COUNT_BLOG_CATEGORY: "SELECT COUNT(*) as totalRows FROM blog_categories;",
   GET_BLOG_CATEGORY_BY_ID:
     "SELECT * FROM blog_categories WHERE category_id = ? LIMIT 1",
   GET_BLOG_CATEGORY_BY_NAME:

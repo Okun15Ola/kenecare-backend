@@ -1,6 +1,7 @@
 module.exports = {
   GET_ALL_USERS:
     "SELECT * FROM users ORDER BY user_id WHERE deleted_at IS NULL ORDER BY created_at DESC;",
+  COUNT_USERS: "SELECT COUNT(*) AS totalRows FROM users;",
   GET_USERS_BY_TYPE:
     "SELECT * FROM users WHERE user_type = ? AND deleted_at IS NULL;",
   GET_USER_BY_ID: `

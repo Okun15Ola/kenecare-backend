@@ -1,5 +1,6 @@
 module.exports = {
   GET_ALL_MARKETERS: "SELECT * FROM marketers",
+  COUNT_MARKETERS: "SELECT COUNT(*) as totalRows FROM marketers;",
   GET_MARKETER_BY_ID: "SELECT * FROM marketers WHERE marketer_id = ? LIMIT 1",
   GET_MARKETER_BY_UUID:
     "SELECT * FROM marketers WHERE marketer_uuid = ? LIMIT 1",
