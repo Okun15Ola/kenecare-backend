@@ -6,6 +6,11 @@ exports.getAllBlogs = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countBlog = async () => {
+  const row = await query(queries.COUNT_BLOG);
+  return row[0];
+};
+
 exports.getBlogById = async (id) => {
   const row = await query(queries.GET_BLOG_BY_ID, [id]);
   return row[0];

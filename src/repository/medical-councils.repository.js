@@ -6,6 +6,11 @@ exports.getAllMedicalCouncils = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countMedicalCouncils = async () => {
+  const result = await query(queries.COUNT_MEDICAL_COUNCILS);
+  return result[0];
+};
+
 exports.getMedicalCouncilById = async (id) => {
   const result = await query(queries.GET_MEDICAL_COUNCIL_BY_ID, [id]);
   return result[0];

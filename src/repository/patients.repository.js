@@ -6,6 +6,11 @@ exports.getAllPatients = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countPatients = async () => {
+  const result = await query(queries.COUNT_PATIENTS);
+  return result[0];
+};
+
 exports.getPatientById = async (id) => {
   const result = await query(queries.GET_PATIENT_BY_ID, [id]);
   return result[0];

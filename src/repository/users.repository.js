@@ -6,6 +6,11 @@ exports.getAllUsers = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countUsers = async () => {
+  const result = await query(queries.COUNT_USERS);
+  return result[0];
+};
+
 exports.getUserByUsersType = async (typeId) => {
   return query(queries.GET_USERS_BY_TYPE, [typeId]);
 };

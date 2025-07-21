@@ -9,6 +9,11 @@ exports.getAllDoctors = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countDoctors = async () => {
+  const row = await query(queries.COUNT_DOCTORS);
+  return row[0];
+};
+
 exports.getDoctorByQuery = async ({
   locationId,
   query: search,

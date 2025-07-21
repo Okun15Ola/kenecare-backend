@@ -6,10 +6,16 @@ exports.getAllBlogCategories = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countBlogCategory = async () => {
+  const row = await query(queries.COUNT_BLOG_CATEGORY);
+  return row[0];
+};
+
 exports.getBlogCategoryById = async (id) => {
   const row = await query(queries.GET_BLOG_CATEGORY_BY_ID, [id]);
   return row[0];
 };
+
 exports.getBlogCategoryByName = async (name) => {
   const row = await query(queries.GET_BLOG_CATEGORY_BY_NAME, [name]);
   return row[0];

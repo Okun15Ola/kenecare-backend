@@ -6,6 +6,11 @@ exports.getAllWithdrawalRequests = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countWithdrawalRequests = async () => {
+  const result = await query(queries.COUNT_WITHDRAWAL_REQUEST);
+  return result[0];
+};
+
 exports.getWithdrawalRequestById = async (id) => {
   const result = await query(queries.GET_WITHDRAWAL_REQUEST_BY_ID, [id]);
   return result[0];

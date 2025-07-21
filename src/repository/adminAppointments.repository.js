@@ -18,6 +18,16 @@ exports.getAppointments = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countAppointments = async () => {
+  const row = await query(queries.COUNT_APPOINTMENTS);
+  return row[0];
+};
+
+exports.countDoctorAppointments = async (doctorId) => {
+  const row = await query(queries.COUNT_DOCTORS_APPOINTMENTS, [doctorId]);
+  return row[0];
+};
+
 exports.getAppointmentsByDoctorId = async ({ limit, offset, doctorId }) => {
   const optimizedQuery = `${queries.GET_APPOINTMENTS_BY_DOCTOR_ID} LIMIT ${limit} OFFSET ${offset}`;
   return query(optimizedQuery, [doctorId]);
