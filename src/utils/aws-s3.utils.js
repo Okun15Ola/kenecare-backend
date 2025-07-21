@@ -50,8 +50,26 @@ const getFileUrlFromS3Bucket = async (fileName) => {
       Key: fileName,
     };
     const command = new GetObjectCommand(params);
+    // 1 day = 24 * 60 * 60 = 86400 seconds
     return await getSignedUrl(s3Client, command, {
-      expiresIn: 3600,
+      expiresIn: 86400,
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+const getPublicFileUrlFromS3Bucket = async (fileName) => {
+  try {
+    if (!fileName) return null;
+    const params = {
+      Bucket: awsBucketName,
+      Key: fileName,
+    };
+    const command = new GetObjectCommand(params);
+    // 3 days = 3 * 24 * 60 * 60 = 259200 seconds
+    return await getSignedUrl(s3Client, command, {
+      expiresIn: 259200,
     });
   } catch (error) {
     logger.error(error);
@@ -91,6 +109,7 @@ const deleteFileFromS3Bucket = async (fileName) => {
 module.exports = {
   uploadFileToS3Bucket,
   getFileUrlFromS3Bucket,
+  getPublicFileUrlFromS3Bucket,
   getObjectFromS3Bucket,
   deleteFileFromS3Bucket,
 };
