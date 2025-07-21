@@ -962,7 +962,7 @@ exports.mapTestimonialRow = async (testimonial) => {
   };
 };
 
-exports.mapSpecialityRow = (speciality, includeTags = false) => {
+exports.mapSpecialityRow = async (speciality, includeTags = false) => {
   const {
     speciality_id: specialtyId,
     speciality_name: specialtyName,
@@ -972,7 +972,9 @@ exports.mapSpecialityRow = (speciality, includeTags = false) => {
     is_active: isActive,
     inputted_by: inputtedBy,
   } = speciality;
-  const specialityImageUrl = imageUrl ? getFileUrlFromS3Bucket(imageUrl) : null;
+  const specialityImageUrl = imageUrl
+    ? await getFileUrlFromS3Bucket(imageUrl)
+    : null;
   const mapped = {
     specialtyId,
     specialtyName: he.decode(specialtyName),
@@ -982,7 +984,7 @@ exports.mapSpecialityRow = (speciality, includeTags = false) => {
     inputtedBy,
   };
 
-  if (!includeTags) {
+  if (includeTags) {
     mapped.tags = tags;
   }
 
@@ -1021,19 +1023,19 @@ exports.mapUserRow = (
     is2faEnabled,
     password,
   };
-  if (!includePassword) {
+  if (includePassword) {
     mapped.password = password;
   }
 
-  if (!includeReferralCode) {
+  if (includeReferralCode) {
     mapped.referralCode = referralCode;
   }
 
-  if (!includeVerificationToken) {
+  if (includeVerificationToken) {
     mapped.verificationToken = verificationToken;
   }
 
-  if (!includeExpiryTime) {
+  if (includeExpiryTime) {
     mapped.verificationExpiry = verificationExpiry;
   }
 
@@ -1189,7 +1191,7 @@ exports.mapPrescriptionRow = (
     updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
   };
 
-  if (!includeDiagnosis) {
+  if (includeDiagnosis) {
     const decryptedDiagnosis = decryptText({
       encryptedText: diagnosis,
       key: hashedToken,
@@ -1197,7 +1199,7 @@ exports.mapPrescriptionRow = (
     mapped.diagnosis = decryptedDiagnosis;
   }
 
-  if (!includeMedicines) {
+  if (includeMedicines) {
     const decryptedMedicines = decryptText({
       encryptedText: medicines,
       key: hashedToken,
@@ -1205,7 +1207,7 @@ exports.mapPrescriptionRow = (
     mapped.medicines = decryptedMedicines;
   }
 
-  if (!includeComments) {
+  if (includeComments) {
     const decryptedComment = decryptText({
       encryptedText: doctorComment,
       key: hashedToken,
