@@ -143,15 +143,14 @@ exports.RegisterValidations = [
     .bail()
     .trim()
     .escape()
-    .custom(async (mobileNumber) => {
-      const refinedMobileNumber = refineMobileNumber(mobileNumber);
+    .custom(async (value) => {
+      const refinedMobileNumber = refineMobileNumber(value);
       const user = await getUserByMobileNumber(refinedMobileNumber);
-      if (user.statusCode === 200) {
+      if (user && user.mobileNumber === refinedMobileNumber) {
         throw new Error(
           "Mobile Number Already Exist. Please try using a different number",
         );
       }
-
       return true;
     }),
   body("email")
@@ -164,7 +163,7 @@ exports.RegisterValidations = [
     .escape()
     .custom(async (email) => {
       const user = await getUserByEmail(email);
-      if (user) {
+      if (user && user.email === email) {
         throw new Error(
           "Email already exist. Please try using a different email",
         );
@@ -354,7 +353,6 @@ exports.TokenValidations = [
           "Invalid or expired token. Please try again with a valid token.",
         );
       }
-
       req.user = user;
       return true;
     }),

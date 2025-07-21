@@ -9,7 +9,7 @@ const {
   resendVerificationOTP,
   sendForgetPasswordOTP,
   updateUserPassword,
-  verifyRequestedOTP,
+  verifyForgetPasswordOTP,
   updatePushNotificationToken,
 } = require("../services/users.service");
 const logger = require("../middlewares/logger.middleware");
@@ -121,7 +121,14 @@ exports.RequestForgotPasswordOTPController = async (req, res, next) => {
 
 exports.VerifyForgotPasswordOTPController = async (req, res, next) => {
   try {
-    const response = await verifyRequestedOTP(req.user);
+    const { token } = req.body;
+    const { verificationToken, accountVerified, verificationExpiry } = req.user;
+    const response = await verifyForgetPasswordOTP(
+      token,
+      verificationToken,
+      accountVerified,
+      verificationExpiry,
+    );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("VerifyForgotPasswordOTPController", error);
