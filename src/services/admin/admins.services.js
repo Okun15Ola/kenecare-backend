@@ -42,6 +42,7 @@ exports.getAdminById = async (id) => {
     throw error;
   }
 };
+
 exports.getAdminByMobileNumber = async (adminMobileNumber) => {
   try {
     const rawData = await dbObject.getAdminByMobileNumber(adminMobileNumber);
@@ -69,6 +70,7 @@ exports.getAdminByMobileNumber = async (adminMobileNumber) => {
     throw error;
   }
 };
+
 exports.getAdminByEmail = async (adminEmail) => {
   try {
     const rawData = await dbObject.getAdminByEmail(adminEmail);

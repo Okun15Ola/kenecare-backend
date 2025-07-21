@@ -4,11 +4,28 @@ const { generateFileName } = require("../../utils/file-upload.utils");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapBlogRow } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 
-exports.getBlogs = async (limit, offset, paginationInfo) => {
+exports.getBlogs = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "blogs:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: dbObject.countBlog,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No blogs found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const cacheKey = cacheKeyBulider("blogs:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -61,6 +78,7 @@ exports.getBlog = async (id) => {
     throw error;
   }
 };
+
 exports.createBlog = async ({
   category,
   title,
@@ -113,6 +131,7 @@ exports.createBlog = async ({
     throw error;
   }
 };
+
 exports.updateBlog = async ({
   id,
   category,
@@ -166,6 +185,7 @@ exports.updateBlog = async ({
     throw error;
   }
 };
+
 exports.updateBlogStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogById(id);
@@ -192,6 +212,7 @@ exports.updateBlogStatus = async ({ id, status }) => {
     throw error;
   }
 };
+
 exports.updateBlogFeaturedStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogById(id);
@@ -219,6 +240,7 @@ exports.updateBlogFeaturedStatus = async ({ id, status }) => {
     throw error;
   }
 };
+
 exports.deleteBlog = async (id) => {
   try {
     const rawData = await dbObject.getBlogById(id);

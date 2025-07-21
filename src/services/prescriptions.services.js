@@ -3,6 +3,7 @@ const {
   createAppointmentPrescriptions,
   updateAppointmentPrescriptions,
   getAppointmentPrescriptionById,
+  countAppointmentPrescriptions,
 } = require("../repository/prescriptions.repository");
 const Response = require("../utils/response.utils");
 const {
@@ -16,17 +17,28 @@ const {
 } = require("../repository/patientAppointments.repository");
 const { getPatientById } = require("../repository/patients.repository");
 const { redisClient } = require("../config/redis.config");
-const { cacheKeyBulider } = require("../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../utils/caching.utils");
 const { mapPrescriptionRow } = require("../utils/db-mapper.utils");
 const logger = require("../middlewares/logger.middleware");
 
-exports.getAppointmentPrescriptions = async (
-  id,
-  limit,
-  offset,
-  paginationInfo,
-) => {
+exports.getAppointmentPrescriptions = async (id, limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "appointment-prescriptions:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => countAppointmentPrescriptions(id),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No prescriptions found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
       "appointment-prescriptions:all",
       limit,

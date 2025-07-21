@@ -4,11 +4,30 @@ const { redisClient } = require("../config/redis.config");
 const { uploadFileToS3Bucket } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 const { mapCommonSymptomsRow } = require("../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../utils/caching.utils");
 const logger = require("../middlewares/logger.middleware");
 
-exports.getCommonSymptoms = async (limit, offset, paginationInfo) => {
+exports.getCommonSymptoms = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "common-symptoms:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: repo.countCommonSymptom,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No common symptoms found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("common-symptoms:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -125,6 +144,7 @@ exports.createCommonSymptom = async ({
     throw error;
   }
 };
+
 exports.updateCommonSymptom = async ({
   id,
   name,
@@ -177,6 +197,7 @@ exports.updateCommonSymptom = async ({
     throw error;
   }
 };
+
 exports.updateCommonSymptomStatus = async ({ id, status }) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);
@@ -194,6 +215,7 @@ exports.updateCommonSymptomStatus = async ({ id, status }) => {
     throw error;
   }
 };
+
 exports.deleteCommonSymptom = async (id) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);

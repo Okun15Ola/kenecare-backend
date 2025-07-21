@@ -18,7 +18,11 @@ const {
 const Response = require("../utils/response.utils");
 const { generateStreamUserToken } = require("../utils/stream.utils");
 const { redisClient } = require("../config/redis.config");
-const { cacheKeyBulider } = require("../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../utils/caching.utils");
 const { mapUserRow } = require("../utils/db-mapper.utils");
 const logger = require("../middlewares/logger.middleware");
 const { refineMobileNumber } = require("../utils/auth.utils");
@@ -35,8 +39,20 @@ const {
  * @param {Object} paginationInfo - Pagination metadata
  * @returns {Promise<Object>} Response object with users data and pagination info
  */
-exports.getUsers = async (limit, offset, paginationInfo) => {
+exports.getUsers = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "users:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: repo.countUsers,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No users found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("users:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
 

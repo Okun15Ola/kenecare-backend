@@ -1,12 +1,29 @@
 const repo = require("../repository/testimonials.repository");
 const Response = require("../utils/response.utils");
 const { redisClient } = require("../config/redis.config");
-const { cacheKeyBulider } = require("../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../utils/caching.utils");
 const { mapTestimonialRow } = require("../utils/db-mapper.utils");
 const logger = require("../middlewares/logger.middleware");
 
-exports.getTestimonials = async (limit, offset, paginationInfo) => {
+exports.getTestimonials = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "testimonials:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: repo.countTestimonial,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No testimonials found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const cacheKey = cacheKeyBulider("testimonials:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -20,11 +37,7 @@ exports.getTestimonials = async (limit, offset, paginationInfo) => {
       return Response.SUCCESS({ message: "No testimonials found", data: [] });
     }
 
-    const testimonials = await Promise.all(
-      rawData
-        .filter((t) => t.is_approved && t.is_active)
-        .map(mapTestimonialRow),
-    );
+    const testimonials = await Promise.all(rawData.map(mapTestimonialRow));
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(testimonials),
@@ -108,6 +121,7 @@ exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
     throw error;
   }
 };
+
 exports.denyTestimonialById = async ({ testimonialId, approvedBy }) => {
   try {
     const rawData = await repo.getTestimonialById(testimonialId);

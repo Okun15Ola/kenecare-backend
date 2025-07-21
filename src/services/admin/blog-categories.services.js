@@ -2,11 +2,30 @@ const dbObject = require("../../repository/blog-categories.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapBlogCategoryRow } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 
-exports.getBlogCategories = async (limit, offset, paginationInfo) => {
+exports.getBlogCategories = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "blog-categories:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: dbObject.countBlogCategory,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No blog categories found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("blog-categories:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -126,6 +145,7 @@ exports.updateBlogCategory = async ({ id, name }) => {
     throw error;
   }
 };
+
 exports.updateBlogCategoryStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);

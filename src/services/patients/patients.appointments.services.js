@@ -28,14 +28,13 @@ const {
   mapPatientAppointment,
   mapFollowUpsRow,
 } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 
-exports.getPatientAppointments = async (
-  userId,
-  limit,
-  offset,
-  paginationInfo,
-) => {
+exports.getPatientAppointments = async (userId, limit, page) => {
   try {
     const patient = await getPatientByUserId(userId);
 
@@ -47,6 +46,22 @@ exports.getPatientAppointments = async (
       });
     }
     const { patient_id: patientId } = patient;
+
+    const offset = (page - 1) * limit;
+    const countCacheKey = "patient-appointments:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => repo.countPatientAppointments({ patientId }),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No patient appointments found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
       `patient-appointments-${patientId}:all`,
       limit,

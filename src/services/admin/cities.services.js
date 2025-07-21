@@ -2,11 +2,27 @@ const dbObject = require("../../repository/cities.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapCityRow } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 
-exports.getCities = async (limit, offset, paginationInfo) => {
+exports.getCities = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "cities:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: dbObject.countCity,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No cities found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("cities:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {

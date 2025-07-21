@@ -2,12 +2,31 @@ const dbObject = require("../../repository/adminAppointments.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapAdminAppointmentRow } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 
-exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
+exports.getAdminAppointments = async ({ limit, page }) => {
   try {
-    const cacheKey = cacheKeyBulider("admin-appointments:all", limit, offset);
+    const offset = (page - 1) * limit;
+    const countCacheKey = "admin:appointments:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: dbObject.countAppointments,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No appointments found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+    const cacheKey = cacheKeyBulider("admin:appointments:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
@@ -33,15 +52,26 @@ exports.getAdminAppointments = async ({ limit, offset, paginationInfo }) => {
     throw error;
   }
 };
-exports.getAdminAppointmentsByDoctorId = async (
-  doctorId,
-  limit,
-  offset,
-  paginationInfo,
-) => {
+
+exports.getAdminAppointmentsByDoctorId = async (doctorId, limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = `admin:appointments:count:doctor:${doctorId}`;
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => dbObject.countDoctorAppointments(doctorId),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No appointments found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
-      `admin-appointments-by-doctor-id:${doctorId}`,
+      `admin:appointments-by-doctor-id:${doctorId}`,
       limit,
       offset,
     );

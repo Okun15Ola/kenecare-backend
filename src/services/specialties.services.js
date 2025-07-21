@@ -183,6 +183,7 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
     throw error;
   }
 };
+
 exports.updateSpecialtyStatus = async ({ id, status }) => {
   try {
     if (!Number.isInteger(status) || status < 0 || status > 1) {

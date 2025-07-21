@@ -2,11 +2,27 @@ const dbObject = require("../../repository/specializations.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapSpecializationRow } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 
-exports.getSpecializations = async (limit, offset, paginationInfo) => {
+exports.getSpecializations = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "specializations:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: dbObject.countSpecialization,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No specialization found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("specializations:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -17,9 +33,8 @@ exports.getSpecializations = async (limit, offset, paginationInfo) => {
     }
     const rawData = await dbObject.getAllSpecialization(limit, offset);
 
-    if (!rawData) {
-      logger.warn("Specialization Not Found");
-      return Response.NOT_FOUND({ message: "Specialization Not Found" });
+    if (!rawData?.length) {
+      return Response.SUCCESS({ message: "No specialization found", data: [] });
     }
 
     const specializations = rawData.map(mapSpecializationRow);
@@ -146,6 +161,7 @@ exports.updateSpecialization = async ({ specializationId, specialization }) => {
     throw error;
   }
 };
+
 exports.updateSpecializationStatus = async ({ specializationId, status }) => {
   try {
     const rawData = await dbObject.getSpecializationById(specializationId);

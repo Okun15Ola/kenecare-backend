@@ -2,11 +2,30 @@ const repo = require("../repository/medical-councils.repository");
 const Response = require("../utils/response.utils");
 const { redisClient } = require("../config/redis.config");
 const { mapMedicalCouncilRow } = require("../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../utils/caching.utils");
 const logger = require("../middlewares/logger.middleware");
 
-exports.getMedicalCouncils = async (limit, offset, paginationInfo) => {
+exports.getMedicalCouncils = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "medical-council:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: repo.countMedicalCouncils,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No medical councils found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("medical-council:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -18,7 +37,7 @@ exports.getMedicalCouncils = async (limit, offset, paginationInfo) => {
     const rawData = await repo.getAllMedicalCouncils(limit, offset);
     if (!rawData?.length) {
       return Response.SUCCESS({
-        message: "No medical councils found ",
+        message: "No medical councils found",
         data: [],
       });
     }
@@ -61,6 +80,7 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
     throw error;
   }
 };
+
 exports.getMedicalCouncilByMobileNumber = async (number) => {
   try {
     const cacheKey = `medical-council:${number}`;
@@ -187,6 +207,7 @@ exports.updateMedicalCouncil = async ({
     throw error;
   }
 };
+
 exports.updateMedicalCouncilStatus = async ({ id, status }) => {
   try {
     const rawData = await repo.getMedicalCouncilById(id);

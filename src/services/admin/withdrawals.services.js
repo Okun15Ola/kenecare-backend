@@ -4,6 +4,7 @@ const {
   getWithdrawalRequestById,
   approveWithdrawalRequest,
   denyWithdrawalRequest,
+  countWithdrawalRequests,
 } = require("../../repository/withdrawal-requests.repository");
 const { getDoctorById } = require("../../repository/doctors.repository");
 const {
@@ -16,9 +17,29 @@ const {
 } = require("../../utils/sms.utils");
 const { mapWithdawalRow } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
+const {
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 
-exports.getAllRequests = async (limit, offset, paginationInfo) => {
+exports.getAllRequests = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "withdraw-requests:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: countWithdrawalRequests,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No withdrawal requests found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const rawData = await getAllWithdrawalRequests(limit, offset);
     if (!rawData?.length) {
       return Response.SUCCESS({
@@ -33,6 +54,7 @@ exports.getAllRequests = async (limit, offset, paginationInfo) => {
     throw error;
   }
 };
+
 exports.getRequestById = async (id) => {
   try {
     const rawData = await getWithdrawalRequestById(id);
@@ -122,6 +144,7 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
     throw error;
   }
 };
+
 exports.denyRequest = async ({ userId, requestId, comment }) => {
   try {
     const rawData = await getWithdrawalRequestById(requestId);

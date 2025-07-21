@@ -80,7 +80,7 @@ exports.getDoctorByQuery = async (locationId, query, limit, page) => {
     const countCacheKey = "doctors:search:count";
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
-      countQueryFn: dbObject.getDoctorsQueryCount,
+      countQueryFn: () => dbObject.getDoctorsQueryCount({ locationId, query }),
     });
 
     if (!totalRows) {
@@ -126,13 +126,14 @@ exports.getDoctorByQuery = async (locationId, query, limit, page) => {
     throw error;
   }
 };
+
 exports.getDoctorBySpecialtyId = async (specialityId, limit, page) => {
   try {
     const offset = (page - 1) * limit;
     const countCacheKey = "doctors:specialty:count";
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
-      countQueryFn: dbObject.getDoctorsSpecializationCount,
+      countQueryFn: () => dbObject.getDoctorsSpecializationCount(specialityId),
     });
 
     if (!totalRows) {
@@ -427,6 +428,7 @@ exports.updateDoctorProfile = async ({
     throw error;
   }
 };
+
 exports.updateDoctorProfilePicture = async ({ userId, file }) => {
   try {
     if (!file) {

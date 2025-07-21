@@ -36,6 +36,7 @@ exports.updateTestimonial = async () => {
     throw error;
   }
 };
+
 exports.deleteTestimonial = async () => {
   try {
     return Response.SUCCESS();
