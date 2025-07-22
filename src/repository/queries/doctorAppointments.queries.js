@@ -58,7 +58,7 @@ module.exports = {
   INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
   INNER JOIN medical_specialities AS ms ON medical_appointments.speciality_id = ms.speciality_id
   LEFT JOIN zoom_meetings ON medical_appointments.meeting_id = zoom_meetings.meeting_id
-    WHERE medical_appointments.doctor_id = 12 AND medical_appointments.appointment_id = 381 AND payment_status = 'success'
+    WHERE medical_appointments.doctor_id = ? AND medical_appointments.appointment_id = ? AND payment_status = 'success'
     LIMIT 1;
   `,
 
