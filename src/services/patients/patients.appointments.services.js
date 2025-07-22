@@ -7,6 +7,9 @@ const {
   updatePatientFirstAppointmentStatus,
 } = require("../../repository/patients.repository");
 const {
+  countPatientFollowUp,
+} = require("../../repository/follow-up.repository");
+const {
   getDoctorAppointByDateAndTime,
 } = require("../../repository/doctorAppointments.repository");
 const Response = require("../../utils/response.utils");
@@ -46,11 +49,54 @@ exports.getPatientAppointmentMetrics = async (userId) => {
       });
     }
 
+    const cacheKey = `patient:${patientId}:appointment-metrics`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ cachedData });
+    }
+
     const data = await repo.getPatientAppointmentsDashboardCount({ patientId });
+
+    await redisClient.set({
+      key: cacheKey,
+      value: data,
+    });
 
     return Response.SUCCESS({ data });
   } catch (error) {
     logger.error("getPatientAppointmentCounts: ", error);
+    throw error;
+  }
+};
+
+exports.getPatientFollowUpMetrics = async (userId) => {
+  try {
+    const { patient_id: patientId } = await getPatientByUserId(userId);
+
+    if (!patientId) {
+      logger.warn(`Patient Profile Not Found for user ${userId}`);
+      return Response.NOT_FOUND({
+        message:
+          "Patient profile not found please, create profile before proceeding",
+      });
+    }
+
+    const cacheKey = `patient:${patientId}:follow-up-metrics`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ cachedData });
+    }
+
+    const data = await countPatientFollowUp({ patientId });
+
+    await redisClient.set({
+      key: cacheKey,
+      value: data,
+    });
+
+    return Response.SUCCESS({ data });
+  } catch (error) {
+    logger.error("getPatientFollowUpMetrics: ", error);
     throw error;
   }
 };

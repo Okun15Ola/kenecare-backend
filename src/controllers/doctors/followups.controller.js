@@ -5,7 +5,19 @@ const {
   getFollowUpByIdService,
   updateAppointmentFollowUpService,
   deleteAppointmentFollowUpService,
+  getDoctorFollowUpMetrics,
 } = require("../../services/doctors/follow-ups.services");
+
+exports.GetDoctorFollowUpMetricsController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const response = await getDoctorFollowUpMetrics(userId);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
 
 exports.CreateAppointmentFollowUpController = async (req, res, next) => {
   try {

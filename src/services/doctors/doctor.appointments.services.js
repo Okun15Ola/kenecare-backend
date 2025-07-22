@@ -39,8 +39,19 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
       });
     }
 
+    const cacheKey = `doctor:${doctorId}:appointment-metrics`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ cachedData });
+    }
+
     const data = await dbObject.getDoctorAppointmentsDashboardCount({
       doctorId,
+    });
+
+    await redisClient.set({
+      key: cacheKey,
+      value: data,
     });
 
     return Response.SUCCESS({ data });

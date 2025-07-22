@@ -4,6 +4,7 @@ const {
   getPatientAppointments,
   createPatientAppointment,
   getPatientAppointmentMetrics,
+  getPatientFollowUpMetrics,
 } = require("../../services/patients/patients.appointments.services");
 const { refineMobileNumber } = require("../../utils/time.utils");
 
@@ -22,6 +23,16 @@ exports.GetPatientAppointmentMetricsController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
     const response = await getPatientAppointmentMetrics(userId);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+exports.GetPatientFollowUpMetricsController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const response = await getPatientFollowUpMetrics(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
