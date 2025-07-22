@@ -34,18 +34,38 @@ const {
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 
-exports.getPatientAppointments = async (userId, limit, page) => {
+exports.getPatientAppointmentMetrics = async (userId) => {
   try {
-    const patient = await getPatientByUserId(userId);
+    const { patient_id: patientId } = await getPatientByUserId(userId);
 
-    if (!patient) {
+    if (!patientId) {
       logger.warn(`Patient Profile Not Found for user ${userId}`);
       return Response.NOT_FOUND({
         message:
           "Patient profile not found please, create profile before proceeding",
       });
     }
-    const { patient_id: patientId } = patient;
+
+    const data = await repo.getPatientAppointmentsDashboardCount({ patientId });
+
+    return Response.SUCCESS({ data });
+  } catch (error) {
+    logger.error("getPatientAppointmentCounts: ", error);
+    throw error;
+  }
+};
+
+exports.getPatientAppointments = async (userId, limit, page) => {
+  try {
+    const { patient_id: patientId } = await getPatientByUserId(userId);
+
+    if (!patientId) {
+      logger.warn(`Patient Profile Not Found for user ${userId}`);
+      return Response.NOT_FOUND({
+        message:
+          "Patient profile not found please, create profile before proceeding",
+      });
+    }
 
     const offset = (page - 1) * limit;
     const countCacheKey = "patient-appointments:count";

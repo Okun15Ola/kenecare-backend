@@ -3,6 +3,7 @@ const {
   GetAppointmentsController,
   GetAppointmentsByIDController,
   CreateAppointmentController,
+  GetPatientAppointmentMetricsController,
 } = require("../../../controllers/patients/appointments.controller");
 const {
   CreateAppointmentValidation,
@@ -21,6 +22,7 @@ router.use(authenticateUser, limiter, authorizePatient); // Authentication middl
 
 router.get("/", paginationValidation, Validate, GetAppointmentsController);
 router.get("/:id", GetAppointmentsByIDController);
+router.get("/metrics", GetPatientAppointmentMetricsController);
 
 router.post(
   "/",
