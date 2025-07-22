@@ -49,14 +49,14 @@ exports.updateBlogById = async ({
   ]);
 };
 
-exports.updateBlogStatusById = ({ id, status }) => {
+exports.updateBlogStatusById = async ({ id, status }) => {
   return query(queries.UPDATE_BLOG_STATUS_BY_ID, [status, id]);
 };
 
-exports.updateBlogFeaturedById = ({ id, status }) => {
+exports.updateBlogFeaturedById = async ({ id, status }) => {
   return query(queries.UPDATE_BLOG_FEATURED_BY_ID, [status, id]);
 };
 
-exports.deleteBlogById = (id) => {
+exports.deleteBlogById = async (id) => {
   return query(queries.DELETE_BLOG_BY_ID, [id]);
 };
