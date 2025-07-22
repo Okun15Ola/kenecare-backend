@@ -93,20 +93,6 @@ const decryptText = ({ encryptedText, key }) => {
   return decryptedText;
 };
 
-// const encryptText = (text, key) => {
-//   const cipher = crypto.createCipheriv("aes-256-cbc", key);
-//   let encryptedText = cipher.update(text, "utf8", "hex");
-//   encryptedText += cipher.final("hex");
-//   return encryptedText;
-// };
-
-// const decryptText = ({ encryptedText, key }) => {
-//   const decipher = crypto.createDecipheriv("aes-256-cbc", key);
-//   let decryptedText = decipher.update(encryptedText, "hex", "utf8");
-//   decryptedText += decipher.final("utf8");
-//   return decryptedText;
-// };
-
 /**
  * Compares a plain password with a hashed password.
  * @async

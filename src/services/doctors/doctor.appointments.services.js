@@ -42,7 +42,7 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
     const cacheKey = `doctor:${doctorId}:appointment-metrics`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ cachedData });
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
     const data = await dbObject.getDoctorAppointmentsDashboardCount({
@@ -51,7 +51,7 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
 
     await redisClient.set({
       key: cacheKey,
-      value: data,
+      value: JSON.stringify(data),
     });
 
     return Response.SUCCESS({ data });
@@ -152,8 +152,8 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
     }
 
     const rawData = await dbObject.getDoctorAppointmentById({
-      appointmentId: id,
       doctorId,
+      appointmentId: id,
     });
 
     if (!rawData) {
@@ -252,7 +252,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
-      logger.error("Doctor profile not found for userId:", userId);
+      console.error("Doctor profile not found for userId:", userId);
       return Response.NOT_FOUND({
         message:
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
@@ -271,7 +271,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     });
 
     if (!appointment) {
-      logger.warn("Appointment not found for appointmentId:", appointmentId);
+      console.warn("Appointment not found for appointmentId:", appointmentId);
       return Response.NOT_FOUND({
         message: "Appointment Not Found! Please Try Again!",
       });
@@ -291,7 +291,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     } = appointment;
 
     if (appointmentStatus === "approved") {
-      logger.warn(
+      console.warn(
         "Appointment already approved for appointmentId:",
         appointmentId,
       );
@@ -300,7 +300,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       });
     }
     if (appointmentStatus === "started") {
-      logger.warn(
+      console.warn(
         "Appointment already started for appointmentId:",
         appointmentId,
       );
@@ -309,16 +309,15 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       });
     }
 
-    // TODO @Mevizcode Check if the appointment was updated
-    const [updated, patient] = await Promise.allSettled([
+    const [approveResult, patient] = await Promise.allSettled([
       dbObject.approveDoctorAppointmentById({
-        appointmentId,
         doctorId,
+        appointmentId,
       }),
       getPatientById(patientId),
     ]);
 
-    const { affectedRows, changedRows } = updated.value;
+    const { affectedRows, changedRows } = approveResult.value;
     if (affectedRows <= 0 && changedRows <= 0) {
       logger.warn(
         "Failed to approve appointment appointmentId:",
@@ -344,7 +343,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       message: "Medical Appointment Approved Successfully",
     });
   } catch (error) {
-    logger.error("approveDoctorAppointment: ", error);
+    console.error("approveDoctorAppointment: ", error);
     throw error;
   }
 };
@@ -390,9 +389,6 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
     }
 
     const { user_id: patientUserId } = ptnt;
-    // if (appointmentStatus === "started") {
-    //   return Response.NOT_MODIFIED();
-    // }
 
     const call = {
       callType: nodeEnv === "development" ? "development" : "default",
@@ -565,8 +561,8 @@ exports.cancelDoctorAppointment = async ({
 
     // UPDATE appointment status to 'approved'
     const { affectedRows } = await dbObject.cancelDoctorAppointmentById({
-      appointmentId,
       doctorId,
+      appointmentId,
       cancelReason,
     });
 
@@ -676,11 +672,11 @@ exports.postponeDoctorAppointment = async ({
     const { mobile_number: mobileNumber } = await getPatientById(patientId);
     // UPDATE appointment status to 'approved'
     const { affectedRows } = await dbObject.postponeDoctorAppointmentById({
+      doctorId,
+      appointmentId,
       postponedReason,
       postponedDate,
       postponedTime,
-      appointmentId,
-      doctorId,
     });
 
     if (!affectedRows || affectedRows < 1) {

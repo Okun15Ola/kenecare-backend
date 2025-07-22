@@ -40,6 +40,8 @@ module.exports = {
   omCancelURL: env.OM_CANCEL_URL,
   omCurrency: env.OM_CURRENCY,
   omNotificationURL: env.OM_NOTIFICATION_URL,
+  paymentCancelUrl: env.PAYMENT_CANCEL_URL,
+  paymentReturnUrl: env.PAYMENT_RETURN_URL,
   redisHost: env.REDIS_HOST,
   redisPort: env.REDIS_PORT,
   redisUsername: env.REDIS_USERNAME,

@@ -6,11 +6,6 @@ const logger = require("../../middlewares/logger.middleware");
 
 exports.getPatientMedicalHistory = async (userId) => {
   try {
-    const cacheKey = "patient-medicalHistory:all";
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
     const patient = await repo.getPatientByUserId(userId);
     if (!patient) {
       logger.warn(
@@ -22,6 +17,12 @@ exports.getPatientMedicalHistory = async (userId) => {
       });
     }
     const { patient_id: patientID } = patient;
+
+    const cacheKey = `patient:${patientID}-medical-history:all`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
 
     const data = await repo.getPatientMedicalInfoByPatientId(patientID);
     if (!data) {
@@ -99,7 +100,7 @@ exports.createPatientMedicalHistory = async ({
       });
     }
 
-    const cacheKey = "patient-medicalHistory:all";
+    const cacheKey = `patient:${patientId}-medical-history:all`;
     await redisClient.delete(cacheKey);
 
     return Response.CREATED({

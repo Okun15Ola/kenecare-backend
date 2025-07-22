@@ -13,15 +13,12 @@ const {
   authenticateUser,
   authorizePatient,
 } = require("../../../middlewares/auth.middleware");
-const {
-  paginationValidation,
-} = require("../../../validations/pagination.validations");
 
 router.use(authenticateUser, limiter, authorizePatient); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
 router.get(
   "/appointment/:id",
-  [...GetPrescriptionsByAppointmentValidation, ...paginationValidation],
+  GetPrescriptionsByAppointmentValidation,
   Validate,
   GetAppointmentPrescriptionsController,
 );

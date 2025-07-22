@@ -32,7 +32,7 @@ exports.getDoctorsWallet = async (userId) => {
       const hashedPin = await hashUsersPassword("1234");
       const response = await createDoctorWallet({ doctorId, pin: hashedPin });
 
-      wallet = await getWalletById(response.insertid);
+      wallet = await getWalletById(response.insertId);
       const { first_name: firstName, last_name: lastName, balance } = wallet;
       const data = {
         id: doctorId,

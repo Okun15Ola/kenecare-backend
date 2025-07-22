@@ -27,7 +27,7 @@ exports.GetPrescriptionsByAppointmentValidation = [
         appointmentId: value,
       });
       if (!appointment) {
-        throw new Error("Specified Patient Appintment Not Found");
+        throw new Error("Specified Patient Appointment Not Found");
       }
       return true;
     }),

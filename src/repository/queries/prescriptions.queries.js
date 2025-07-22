@@ -1,6 +1,6 @@
 module.exports = {
   GET_PRESCRIPTIONS_BY_APPOINTMENT_ID: `
-    SELECT * FROM appointment_prescriptions WHERE appointment_id = ?
+    SELECT * FROM appointment_prescriptions WHERE appointment_id = ? LIMIT 1;
   `,
   COUNT_PRESCRIPTIONS_BY_APPOINTMENT_ID: `
     SELECT COUNT(*) AS totalRows FROM appointment_prescriptions WHERE appointment_id = ?

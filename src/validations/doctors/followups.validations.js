@@ -37,11 +37,13 @@ exports.CreateFollowUpValidation = [
         throw new Error("Error Creating Follow up. ");
       }
       const { doctor_id: doctorId } = doctor;
+      console.log("Doctor ID: ", doctorId);
+      console.log("Appointment ID: ", appointmentId);
       const appointment = await getDoctorAppointmentById({
-        appointmentId,
         doctorId,
+        appointmentId,
       });
-
+      console.log("Appointment: ", appointment);
       if (!appointment) {
         throw new Error(
           "Appointment Not Found. Please select a valid appointment",
@@ -126,8 +128,8 @@ exports.UpdateFollowUpValidation = [
       }
       const { doctor_id: doctorId } = doctor;
       const appointment = await getDoctorAppointmentById({
-        appointmentId,
         doctorId,
+        appointmentId,
       });
 
       if (!appointment) {
@@ -271,6 +273,7 @@ exports.ApproveAppointmentValidation = [
         doctorId,
         appointmentId: value,
       });
+
       if (!appointment) {
         throw new Error("Appointment Not Found. Please Try Again");
       }

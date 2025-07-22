@@ -41,18 +41,18 @@ exports.updateDoctorAppointmentMeetingId = async ({
   appointmentId,
   meetingId,
 }) => {
-  return query(queries.UPDATE_MEETING_ID, [doctorId, appointmentId, meetingId]);
+  return query(queries.UPDATE_MEETING_ID, [meetingId, appointmentId, doctorId]);
 };
 
 exports.updateDoctorAppointmentStartTime = async ({
   appointmentId,
   startTime,
 }) => {
-  return query(queries.UPDATE_START_TIME, [appointmentId, startTime]);
+  return query(queries.UPDATE_START_TIME, [startTime, appointmentId]);
 };
 
 exports.updateDoctorAppointmentEndTime = async ({ appointmentId, endTime }) => {
-  return query(queries.UPDATE_END_TIME, [appointmentId, endTime]);
+  return query(queries.UPDATE_END_TIME, [endTime, appointmentId]);
 };
 
 exports.cancelDoctorAppointmentById = async ({
@@ -61,9 +61,9 @@ exports.cancelDoctorAppointmentById = async ({
   cancelReason,
 }) => {
   return query(queries.CANCEL_APPOINTMENT, [
-    doctorId,
-    appointmentId,
     cancelReason,
+    appointmentId,
+    doctorId,
   ]);
 };
 
@@ -74,12 +74,14 @@ exports.postponeDoctorAppointmentById = async ({
   postponedDate,
   postponedTime,
 }) => {
+  const newAppointmentDate = postponedDate;
   return query(queries.POSTPONE_APPOINTMENT, [
-    doctorId,
-    appointmentId,
     postponedReason,
     postponedDate,
+    newAppointmentDate,
     postponedTime,
+    appointmentId,
+    doctorId,
   ]);
 };
 

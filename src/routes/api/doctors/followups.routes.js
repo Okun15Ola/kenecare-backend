@@ -21,6 +21,7 @@ const {
 
 router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
+router.get("/metrics", GetDoctorFollowUpMetricsController);
 router.post(
   "/",
   CreateFollowUpValidation,
@@ -34,7 +35,6 @@ router.put(
   UpdateAppointmentFollowUpController,
 );
 router.get("/:id", followUpIdValidation, Validate, GetFollowUpByIdController);
-router.get("/metrics", GetDoctorFollowUpMetricsController);
 router.get(
   "/appointment/:id",
   followUpIdValidation,

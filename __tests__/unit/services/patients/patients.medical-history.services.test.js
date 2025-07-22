@@ -22,13 +22,14 @@ describe("Patient Medical History Service", () => {
     it("should return medical history from cache if available", async () => {
       const cachedData = { height: 180, weight: 80 };
       redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
+      patientsRepo.getPatientByUserId.mockResolvedValue({ patient_id: 1 });
 
       const result =
         await patientMedicalHistoryService.getPatientMedicalHistory(1);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith(
-        "patient-medicalHistory:all",
-      );
+      expect(result.status).toBe("success");
+      expect(result.statusCode).toBe(200);
+      expect(redisClient.get).toHaveBeenCalled();
     });
 
     it("should return a 400 if patient profile does not exist", async () => {
