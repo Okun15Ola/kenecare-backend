@@ -120,7 +120,7 @@ module.exports = {
   GET_APPOINTMENT_BY_DATE_AND_TIME: `
     ${COMMON_SELECT}
     WHERE appointment_date = ? AND appointment_time = ?
-      AND doctor_id = ? AND payment_status = 'success'
+      AND medical_appointments.doctor_id = ? AND payment_status = 'success'
     LIMIT 1;
   `,
 
