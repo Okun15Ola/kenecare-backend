@@ -11,6 +11,14 @@ exports.countDoctorAppointments = async ({ doctorId }) => {
   return row[0];
 };
 
+exports.getDoctorAppointmentsDashboardCount = async ({ doctorId }) => {
+  const result = await query(queries.GET_DOCTOR_APPOINTMENTS_DASHBOARD_COUNTS, [
+    doctorId,
+  ]);
+  return result[0];
+  //  || { upcoming_count: 0, today_count: 0, past_count: 0 };
+};
+
 exports.getDoctorAppointmentById = async ({ doctorId, appointmentId }) => {
   const row = await query(queries.GET_DOCTOR_APPOINTMENT_BY_ID, [
     doctorId,

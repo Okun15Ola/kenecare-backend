@@ -27,6 +27,29 @@ const {
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 
+exports.getDoctorAppointmentMetrics = async (userId) => {
+  try {
+    const { doctor_id: doctorId } = await getDoctorByUserId(userId);
+
+    if (!doctorId) {
+      logger.warn(`Doctor Profile Not Found for user ${userId}`);
+      return Response.NOT_FOUND({
+        message:
+          "Doctor profile not found please, create profile before proceeding",
+      });
+    }
+
+    const data = await dbObject.getDoctorAppointmentsDashboardCount({
+      doctorId,
+    });
+
+    return Response.SUCCESS({ data });
+  } catch (error) {
+    logger.error("getDoctorAppointmentCounts: ", error);
+    throw error;
+  }
+};
+
 exports.getDoctorAppointments = async ({ userId, limit, page }) => {
   try {
     const doctor = await getDoctorByUserId(userId);

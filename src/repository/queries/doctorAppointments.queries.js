@@ -22,6 +22,17 @@ module.exports = {
     ORDER BY medical_appointments.appointment_id DESC 
   `,
 
+  GET_DOCTOR_APPOINTMENTS_DASHBOARD_COUNTS: `
+  SELECT
+  SUM(appointment_date > CURDATE() AND appointment_status IN ('approved', 'pending', 'started')) AS upcoming_count,
+  SUM(appointment_date = CURDATE() AND appointment_status IN ('approved', 'pending', 'started')) AS today_count,
+  SUM(appointment_date < CURDATE() AND appointment_status IN ('completed', 'canceled', 'postponed', 'referred')) AS past_count
+  FROM medical_appointments
+  INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
+  INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
+  WHERE medical_appointments.doctor_id = ?;
+  `,
+
   COUNT_DOCTOR_APPOINTMENTS_BY_ID: `
   SELECT COUNT(*) AS totalRows
   FROM medical_appointments

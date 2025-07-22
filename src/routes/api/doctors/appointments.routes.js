@@ -8,6 +8,7 @@ const {
   PostponeDoctorAppointmentController,
   StartDoctorAppointmentController,
   EndDoctorAppointmentController,
+  GetDoctorAppointmentMetricsController,
 } = require("../../../controllers/doctors/appointments.controller");
 const {
   StartAppointmentValidation,
@@ -31,6 +32,7 @@ router.get(
   Validate,
   GetDoctorAppointmentsController,
 );
+router.get("/metrics", GetDoctorAppointmentMetricsController);
 router.get("/:id", GetDoctorAppointmentsByIDController);
 
 router.patch(

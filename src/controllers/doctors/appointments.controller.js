@@ -8,7 +8,19 @@ const {
   startDoctorAppointment,
   getDoctorAppointmentByDateRange,
   endDoctorAppointment,
+  getDoctorAppointmentMetrics,
 } = require("../../services/doctors/doctor.appointments.services");
+
+exports.GetDoctorAppointmentMetricsController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const response = await getDoctorAppointmentMetrics(userId);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
 
 exports.GetDoctorAppointmentsController = async (req, res, next) => {
   try {
