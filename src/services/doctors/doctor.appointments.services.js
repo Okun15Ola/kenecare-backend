@@ -318,7 +318,6 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       getPatientById(patientId),
     ]);
 
-    console.log(updated.value);
     const { affectedRows, changedRows } = updated.value;
     if (affectedRows <= 0 && changedRows <= 0) {
       logger.warn(
