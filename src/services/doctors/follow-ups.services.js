@@ -232,7 +232,6 @@ exports.updateAppointmentFollowUpService = async ({
       followUpTime,
       followUpReason,
       followUpType,
-      doctorId,
     });
 
     if (!affectedRows || affectedRows < 1) {
