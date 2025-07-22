@@ -52,14 +52,14 @@ exports.getPatientAppointmentMetrics = async (userId) => {
     const cacheKey = `patient:${patientId}:appointment-metrics`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ cachedData });
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
     const data = await repo.getPatientAppointmentsDashboardCount({ patientId });
 
     await redisClient.set({
       key: cacheKey,
-      value: data,
+      value: JSON.stringify(data),
     });
 
     return Response.SUCCESS({ data });
@@ -84,14 +84,16 @@ exports.getPatientFollowUpMetrics = async (userId) => {
     const cacheKey = `patient:${patientId}:follow-up-metrics`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ cachedData });
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
-    const data = await countPatientFollowUp({ patientId });
+    console.log("Fetching follow-up metrics for patient:", patientId);
+
+    const data = await countPatientFollowUp(patientId);
 
     await redisClient.set({
       key: cacheKey,
-      value: data,
+      value: JSON.stringify(data),
     });
 
     return Response.SUCCESS({ data });

@@ -26,13 +26,13 @@ const {
 
 router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
+router.get("/metrics", GetDoctorAppointmentMetricsController);
 router.get(
   "/",
   paginationValidation,
   Validate,
   GetDoctorAppointmentsController,
 );
-router.get("/metrics", GetDoctorAppointmentMetricsController);
 router.get("/:id", GetDoctorAppointmentsByIDController);
 
 router.patch(

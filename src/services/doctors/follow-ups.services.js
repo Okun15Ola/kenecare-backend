@@ -26,14 +26,14 @@ exports.getDoctorFollowUpMetrics = async (userId) => {
     const cacheKey = `doctor:${doctorId}:follow-up-metrics`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ cachedData });
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
-    const data = await followUpRepo.countDoctorFollowUp({ doctorId });
+    const data = await followUpRepo.countDoctorFollowUp(doctorId);
 
     await redisClient.set({
       key: cacheKey,
-      value: data,
+      value: JSON.stringify(data),
     });
 
     return Response.SUCCESS({ data });
