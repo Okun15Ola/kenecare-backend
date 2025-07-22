@@ -7,20 +7,20 @@ const {
 } = require("../../../middlewares/auth.middleware");
 
 router.get(
-  "/om/return",
+  "/return",
   authenticateUser,
   limiter,
   authorizePatient,
   paymentController.returnHandler,
 );
-router.get("/om/cancel", limiter, paymentController.cancelHandler);
-router.post(
-  "/om/notification",
-  authenticateUser,
-  limiter,
-  authorizePatient,
-  paymentController.notificationHandler,
-);
+router.get("/cancel", limiter, paymentController.cancelHandler);
+// router.post(
+//   "/notification",
+//   authenticateUser,
+//   limiter,
+//   authorizePatient,
+//   paymentController.notificationHandler,
+// );
 router.post("/monimee/webhook/return", paymentController.webhookHandler);
 
 module.exports = router;

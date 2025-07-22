@@ -13,5 +13,4 @@ module.exports = {
     "UPDATE admins SET is_verified = ? WHERE user_id = ?;",
   UPDATE_PASSWORD_BY_ID: "UPDATE admins SET password = ? WHERE user_id = ?;",
   DELETE_USER_BY_ID: "DELETE FROM admins WHERE user_id = ?;",
-  // GET_USER_BY_USERNAME: "SELECT * from admins WHERE username = ? LIMIT 1;",
 };

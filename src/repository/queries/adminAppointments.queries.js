@@ -18,7 +18,7 @@ const baseAppointmentSelect = `
 `;
 
 module.exports = {
-  GET_ALL_APPOINTMENTS: `${baseAppointmentSelect} `,
+  GET_ALL_APPOINTMENTS: `${baseAppointmentSelect} ORDER BY appointment_id ASC`,
   COUNT_APPOINTMENTS: "SELECT COUNT(*) AS totalRows FROM medical_appointments;",
   COUNT_DOCTORS_APPOINTMENTS:
     "SELECT COUNT(*) AS totalRows FROM medical_appointments WHERE doctor_id = ?;",

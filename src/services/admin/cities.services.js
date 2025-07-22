@@ -141,6 +141,8 @@ exports.updateCity = async ({ id, name, latitude, longitude }) => {
       logger.warn("Failed to update city");
       return Response.NOT_MODIFIED({});
     }
+    await redisClient.clearCacheByPattern("cities:*");
+
     return Response.SUCCESS({ message: "City Updated Succcessfully" });
   } catch (error) {
     logger.error("updateCity: ", error);

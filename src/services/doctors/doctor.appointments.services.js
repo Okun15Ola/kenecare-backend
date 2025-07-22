@@ -152,8 +152,8 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
     }
 
     const rawData = await dbObject.getDoctorAppointmentById({
-      appointmentId: id,
       doctorId,
+      appointmentId: id,
     });
 
     if (!rawData) {
@@ -252,7 +252,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
-      logger.error("Doctor profile not found for userId:", userId);
+      console.error("Doctor profile not found for userId:", userId);
       return Response.NOT_FOUND({
         message:
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
@@ -271,7 +271,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     });
 
     if (!appointment) {
-      logger.warn("Appointment not found for appointmentId:", appointmentId);
+      console.warn("Appointment not found for appointmentId:", appointmentId);
       return Response.NOT_FOUND({
         message: "Appointment Not Found! Please Try Again!",
       });
@@ -289,7 +289,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     } = appointment;
 
     if (appointmentStatus === "approved") {
-      logger.warn(
+      console.warn(
         "Appointment already approved for appointmentId:",
         appointmentId,
       );
@@ -298,7 +298,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       });
     }
     if (appointmentStatus === "started") {
-      logger.warn(
+      console.warn(
         "Appointment already started for appointmentId:",
         appointmentId,
       );
@@ -307,13 +307,23 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       });
     }
 
-    const [, patient] = await Promise.allSettled([
+    const [approveResult, patient] = await Promise.allSettled([
       dbObject.approveDoctorAppointmentById({
-        appointmentId,
         doctorId,
+        appointmentId,
       }),
       getPatientById(patientId),
     ]);
+
+    if (approveResult.status === "rejected") {
+      console.error(
+        "Failed to approve appointment for appointmentId:",
+        appointmentId,
+      );
+      return Response.BAD_REQUEST({
+        message: "Failed to approve appointment. Please try again later.",
+      });
+    }
 
     const { mobile_number: mobileNumber } = patient.value;
 
@@ -330,7 +340,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       message: "Medical Appointment Approved Successfully",
     });
   } catch (error) {
-    logger.error("approveDoctorAppointment: ", error);
+    console.error("approveDoctorAppointment: ", error);
     throw error;
   }
 };
@@ -551,8 +561,8 @@ exports.cancelDoctorAppointment = async ({
 
     // UPDATE appointment status to 'approved'
     const { affectedRows } = await dbObject.cancelDoctorAppointmentById({
-      appointmentId,
       doctorId,
+      appointmentId,
       cancelReason,
     });
 
@@ -662,11 +672,11 @@ exports.postponeDoctorAppointment = async ({
     const { mobile_number: mobileNumber } = await getPatientById(patientId);
     // UPDATE appointment status to 'approved'
     const { affectedRows } = await dbObject.postponeDoctorAppointmentById({
+      doctorId,
+      appointmentId,
       postponedReason,
       postponedDate,
       postponedTime,
-      appointmentId,
-      doctorId,
     });
 
     if (!affectedRows || affectedRows < 1) {
