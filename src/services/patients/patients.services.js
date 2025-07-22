@@ -13,10 +13,15 @@ const {
 } = require("../../repository/marketers.repository");
 const {
   getAllTestimonials,
+  countTestimonial,
 } = require("../../repository/testimonials.repository");
 const { sendMarketerUserRegisteredSMS } = require("../../utils/sms.utils");
 const { redisClient } = require("../../config/redis.config");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const {
   mapPatientRow,
   mapMedicalRecordRow,
@@ -28,8 +33,20 @@ const {
 } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
 
-exports.getAllPatients = async (limit, offset, paginationInfo) => {
+exports.getAllPatients = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "patients:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: repo.countPatients,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No patients found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("patients:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -140,8 +157,23 @@ exports.getPatientById = async (id) => {
   }
 };
 
-exports.getPatientsTestimonial = async (limit, offset, paginationInfo) => {
+exports.getPatientsTestimonial = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "patient-testimonials:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: countTestimonial,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No patient testimonials found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("patient-testimonials:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {

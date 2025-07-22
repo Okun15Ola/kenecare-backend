@@ -10,11 +10,8 @@ const { deleteBlog } = require("../../services/admin/blogs.services");
 
 exports.GetBlogCategoriesController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getBlogCategories(limit, offset, paginationInfo);
+    const { limit, page } = req.query;
+    const response = await getBlogCategories(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

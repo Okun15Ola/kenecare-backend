@@ -6,6 +6,30 @@ module.exports = {
   GET_ALL_APPOINTMENT_FOLLOW_UP_BY_APPOINTMENT_ID: `
     SELECT * FROM appointment_followup WHERE appointment_id = ?
   `,
+  COUNT_DOCTOR_FOLLOW_UPS: `
+  SELECT
+  COUNT(*) AS total_count,
+  SUM(followup_status = 'completed') AS completed_count,
+  SUM(followup_status = 'canceled') AS canceled_count,
+  SUM(followup_date > CURDATE() AND followup_status = 'pending') AS upcoming_count,
+  SUM(followup_date = CURDATE() AND followup_status = 'pending') AS today_count,
+  SUM(followup_date < CURDATE() AND followup_status IN ('completed', 'canceled')) AS past_count
+  FROM appointment_followup
+  WHERE doctor_id = ?;
+  `,
+  COUNT_PATIENT_FOLLOW_UPS: `
+  SELECT
+  COUNT(*) AS total_count,
+  SUM(followup_status = 'completed') AS completed_count,
+  SUM(followup_status = 'canceled') AS canceled_count,
+  SUM(followup_date > CURDATE() AND followup_status = 'pending') AS upcoming_count,
+  SUM(followup_date = CURDATE() AND followup_status = 'pending') AS today_count,
+  SUM(followup_date < CURDATE() AND followup_status IN ('completed', 'canceled')) AS past_count
+  FROM appointment_followup
+  WHERE appointment_id IN (
+  SELECT appointment_id FROM medical_appointments WHERE patient_id = ?
+);
+  `,
   GET_APPOINTMENT_FOLLOW_UP_BY_ID: `
     SELECT * FROM appointment_followup WHERE followup_id = ? LIMIT 1
   `,

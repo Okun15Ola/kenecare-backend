@@ -21,14 +21,47 @@ const {
   mapDoctorAppointmentRow,
   mapFollowUpsRow,
 } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 
-exports.getDoctorAppointments = async ({
-  userId,
-  limit,
-  offset,
-  paginationInfo,
-}) => {
+exports.getDoctorAppointmentMetrics = async (userId) => {
+  try {
+    const { doctor_id: doctorId } = await getDoctorByUserId(userId);
+
+    if (!doctorId) {
+      logger.warn(`Doctor Profile Not Found for user ${userId}`);
+      return Response.NOT_FOUND({
+        message:
+          "Doctor profile not found please, create profile before proceeding",
+      });
+    }
+
+    const cacheKey = `doctor:${doctorId}:appointment-metrics`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ cachedData });
+    }
+
+    const data = await dbObject.getDoctorAppointmentsDashboardCount({
+      doctorId,
+    });
+
+    await redisClient.set({
+      key: cacheKey,
+      value: data,
+    });
+
+    return Response.SUCCESS({ data });
+  } catch (error) {
+    logger.error("getDoctorAppointmentCounts: ", error);
+    throw error;
+  }
+};
+
+exports.getDoctorAppointments = async ({ userId, limit, page }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
 
@@ -41,8 +74,22 @@ exports.getDoctorAppointments = async ({
     }
 
     const { doctor_id: doctorId, title } = doctor;
+
+    const offset = (page - 1) * limit;
+    const countCacheKey = `doctors:appointments-${doctorId}:count`;
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => dbObject.countDoctorAppointments({ doctorId }),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No appointments found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const cacheKey = cacheKeyBulider(
-      `doctor-appointments-${doctorId}:all`,
+      `doctors:appointments-${doctorId}:all`,
       limit,
       offset,
     );
@@ -98,7 +145,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
-    const cacheKey = `doctor-appointments-${doctorId}:${id}`;
+    const cacheKey = `doctor:appointments-${doctorId}:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -141,11 +188,30 @@ exports.getDoctorAppointmentByDateRange = async ({
   startDate,
   endDate,
   limit,
-  offset,
-  paginationInfo,
+  page,
 }) => {
   try {
-    const cacheKey = `doctor-appointments-by-date:${startDate}-${endDate}`;
+    const doctor = await getDoctorByUserId(userId);
+    const { doctor_id: doctorId, title } = doctor;
+
+    const offset = (page - 1) * limit;
+    const countCacheKey = `doctor:${doctorId}:appointments-${startDate}-${endDate}:count`;
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () =>
+        dbObject.countDoctorAppointmentsByDate({
+          doctorId,
+          startDate,
+          endDate,
+        }),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No appointments found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+    const cacheKey = `doctors:${doctorId}:appointments:${startDate}-${endDate}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
@@ -153,9 +219,6 @@ exports.getDoctorAppointmentByDateRange = async ({
         pagination: paginationInfo,
       });
     }
-    const doctor = await getDoctorByUserId(userId);
-
-    const { doctor_id: doctorId, title } = doctor;
 
     const rawData = await dbObject.getDoctorAppointByDate({
       doctorId,
@@ -514,6 +577,7 @@ exports.cancelDoctorAppointment = async ({
     throw error;
   }
 };
+
 exports.postponeDoctorAppointment = async ({
   userId,
   appointmentId,

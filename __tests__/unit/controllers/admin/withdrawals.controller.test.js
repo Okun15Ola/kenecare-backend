@@ -30,9 +30,7 @@ describe("Withdrawals Controller", () => {
     it("should return all withdrawal requests", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
 
       withdrawalsServices.getAllRequests.mockResolvedValue(mockResponse);
@@ -40,9 +38,8 @@ describe("Withdrawals Controller", () => {
       await GetAllWithdrawalRequestsController(req, res, next);
 
       expect(withdrawalsServices.getAllRequests).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -51,9 +48,7 @@ describe("Withdrawals Controller", () => {
     it("should handle errors", async () => {
       const error = new Error("Test error");
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
 
       withdrawalsServices.getAllRequests.mockRejectedValue(error);

@@ -6,6 +6,11 @@ exports.getAllTestimonials = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countTestimonial = async () => {
+  const result = await query(queries.COUNT_TESTIMONIALS);
+  return result[0];
+};
+
 exports.getTestimonialById = async (testimonialId) => {
   const result = await query(queries.GET_TESTIMONIAL_BY_ID, [testimonialId]);
   return result[0];

@@ -23,7 +23,7 @@ describe("Patient Appointments Controllers", () => {
     req = {
       user: { id: "1" },
       params: { id: "2" },
-      query: {},
+      query: { limit: 10, page: 1 },
       body: {},
     };
     res = {
@@ -39,9 +39,7 @@ describe("Patient Appointments Controllers", () => {
     it("should return patient appointments", async () => {
       const req = {
         user: { id: 1 },
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       const userId = req.user.id;
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
@@ -51,9 +49,8 @@ describe("Patient Appointments Controllers", () => {
 
       expect(services.getPatientAppointments).toHaveBeenCalledWith(
         userId,
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -63,8 +60,7 @@ describe("Patient Appointments Controllers", () => {
       const error = new Error("Test error");
       const req = {
         user: { userId: 1 },
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       services.getPatientAppointments.mockRejectedValue(error);
 

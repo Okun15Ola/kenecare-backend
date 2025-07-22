@@ -6,6 +6,11 @@ exports.getAllCommonSymptoms = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countCommonSymptom = async () => {
+  const row = await query(queries.COUNT_COMMON_SYMPTOMS);
+  return row[0];
+};
+
 exports.getCommonSymptomById = async (id) => {
   const row = await query(queries.GET_COMMON_SYMPTOMS_BY_ID, [id]);
   return row[0];

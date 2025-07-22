@@ -31,9 +31,7 @@ describe("Medical Council Controllers", () => {
     it("should return medical councils with correct status", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, offset: 0 },
       };
       const response = { statusCode: 200, data: [{ id: 1 }] };
       services.getMedicalCouncils.mockResolvedValue(response);
@@ -41,9 +39,8 @@ describe("Medical Council Controllers", () => {
       await GetMedicalCouncilsController(req, res, mockNext);
 
       expect(services.getMedicalCouncils).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(response);
@@ -52,9 +49,7 @@ describe("Medical Council Controllers", () => {
     it("should handle errors", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, offset: 0 },
       };
       const error = new Error("fail");
       services.getMedicalCouncils.mockRejectedValue(error);

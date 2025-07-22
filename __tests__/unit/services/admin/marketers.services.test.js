@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const marketersService = require("../../../../src/services/admin/marketers.services");
 const marketersRepo = require("../../../../src/repository/marketers.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
@@ -17,6 +18,12 @@ jest.mock("../../../../src/utils/sms.utils");
 jest.mock("../../../../src/utils/email.utils");
 jest.mock("../../../../src/utils/db-mapper.utils");
 jest.mock("../../../../src/utils/caching.utils");
+
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("Marketers Service", () => {
   afterEach(() => {

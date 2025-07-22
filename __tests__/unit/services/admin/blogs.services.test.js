@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const blogsService = require("../../../../src/services/admin/blogs.services");
 const blogsRepo = require("../../../../src/repository/blogs.repository");
 const awsS3 = require("../../../../src/utils/aws-s3.utils");
@@ -11,6 +12,12 @@ jest.mock("../../../../src/utils/file-upload.utils");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/db-mapper.utils");
 jest.mock("../../../../src/utils/caching.utils");
+
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("Blogs Service", () => {
   afterEach(() => {

@@ -32,9 +32,7 @@ describe("Doctors Controller", () => {
     it("should return doctors with correct status", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       const response = { statusCode: 200, data: [{ id: 1 }] };
       doctorsServices.getAllDoctors = jest.fn().mockResolvedValue(response);
@@ -49,9 +47,7 @@ describe("Doctors Controller", () => {
     it("should handle errors", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       const error = new Error("fail");
       doctorsServices.getAllDoctors.mockRejectedValue(error);

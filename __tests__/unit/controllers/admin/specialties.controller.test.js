@@ -31,9 +31,7 @@ describe("Specialties Controllers", () => {
   describe("GetSpecialtiesController", () => {
     it("should return specialties with correct status", async () => {
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       specialtiesServices.getSpecialties.mockResolvedValue({
         statusCode: 200,
@@ -47,9 +45,7 @@ describe("Specialties Controllers", () => {
     it("should handle errors", async () => {
       const error = new Error("fail");
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       specialtiesServices.getSpecialties.mockRejectedValue(error);
       await GetSpecialtiesController(req, res, next);

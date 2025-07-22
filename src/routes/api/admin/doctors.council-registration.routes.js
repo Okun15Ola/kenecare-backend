@@ -11,9 +11,6 @@ const { Validate } = require("../../../validations/validate");
 const {
   paginationValidation,
 } = require("../../../validations/pagination.validations");
-const {
-  calculatePaginationInfo,
-} = require("../../../middlewares/paginator.middleware");
 
 router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
@@ -21,7 +18,6 @@ router.get(
   "/",
   paginationValidation,
   Validate,
-  calculatePaginationInfo("doctors_council_registration"),
   GetCouncilRegistrationController,
 );
 router.get("/:id", GetCouncilRegistrationByIdController);

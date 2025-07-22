@@ -6,6 +6,7 @@ module.exports = {
     INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
     INNER JOIN cities ON doctors.city_id = cities.city_id
   `,
+  COUNT_DOCTORS: "SELECT COUNT(*) AS totalRows FROM doctors;",
   SEARCH_DOCTOR_BY_QUERY: `
   SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url,
          doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, latitude, longitude,

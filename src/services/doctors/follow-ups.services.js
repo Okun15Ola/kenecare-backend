@@ -11,6 +11,38 @@ const { redisClient } = require("../../config/redis.config");
 const { mapFollowUpRow } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
 
+exports.getDoctorFollowUpMetrics = async (userId) => {
+  try {
+    const { doctor_id: doctorId } = await getDoctorByUserId(userId);
+
+    if (!doctorId) {
+      logger.warn(`Doctor Profile Not Found for user ${userId}`);
+      return Response.NOT_FOUND({
+        message:
+          "Doctor profile not found please, create profile before proceeding",
+      });
+    }
+
+    const cacheKey = `doctor:${doctorId}:follow-up-metrics`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ cachedData });
+    }
+
+    const data = await followUpRepo.countDoctorFollowUp({ doctorId });
+
+    await redisClient.set({
+      key: cacheKey,
+      value: data,
+    });
+
+    return Response.SUCCESS({ data });
+  } catch (error) {
+    logger.error("getDoctorFollowUpMetrics: ", error);
+    throw error;
+  }
+};
+
 exports.createFollowUp = async ({
   appointmentId,
   followUpDate,

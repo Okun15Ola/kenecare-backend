@@ -5,6 +5,11 @@ exports.getAllCities = async (limit, offset) => {
   return query(queries.GET_ALL_CITIES, [limit, offset]);
 };
 
+exports.countCity = async () => {
+  const row = await query(queries.COUNT_CITY);
+  return row[0];
+};
+
 exports.getCityById = async (id) => {
   const row = await query(queries.GET_CITY_BY_ID, [id]);
   return row[0];

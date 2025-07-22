@@ -28,19 +28,14 @@ describe("Patients Controller", () => {
   describe("GetPatientsController", () => {
     it("should return patients with correct status", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
-      const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
-      };
+      req.query = { limit: 10, page: 1 };
       patientsServices.getAllPatients.mockResolvedValue(mockResponse);
 
       await GetPatientsController(req, res, next);
 
       expect(patientsServices.getAllPatients).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -48,11 +43,7 @@ describe("Patients Controller", () => {
 
     it("should handle errors and call next", async () => {
       const error = new Error("Test error");
-      const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
-      };
+      req.query = { limit: 10, page: 1 };
       patientsServices.getAllPatients.mockRejectedValue(error);
 
       await GetPatientsController(req, res, next);
@@ -90,19 +81,14 @@ describe("Patients Controller", () => {
   describe("GetPatientTestimonialsController", () => {
     it("should return testimonials with correct status", async () => {
       const mockResponse = { statusCode: 200, data: ["testimonial"] };
-      const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
-      };
+      req.query = { limit: 10, page: 1 };
       patientsServices.getPatientsTestimonial.mockResolvedValue(mockResponse);
 
       await GetPatientTestimonialsController(req, res, next);
 
       expect(patientsServices.getPatientsTestimonial).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -110,11 +96,7 @@ describe("Patients Controller", () => {
 
     it("should handle errors and call next", async () => {
       const error = new Error("Test error");
-      const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
-      };
+      req.query = { limit: 10, page: 1 };
 
       patientsServices.getPatientsTestimonial.mockRejectedValue(error);
 

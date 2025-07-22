@@ -17,11 +17,16 @@ const {
   GET_MARKETER_BY_EMAIL_VERIFICATION_TOKEN,
   GET_USERS_BY_MARKETER_REFERRAL_CODE,
   GET_TOTAL_USERS_REGISTERED_BY_MARKETER_REFERRAL_CODE,
+  COUNT_MARKETERS,
 } = require("./queries/marketers.queries");
 
 exports.getAllMarketers = async (limit, offset) => {
   const optimizedQuery = `${GET_ALL_MARKETERS} LIMIT ${limit} OFFSET ${offset}`;
   return query(optimizedQuery);
+};
+exports.countMarketers = async () => {
+  const row = await query(COUNT_MARKETERS);
+  return row[0];
 };
 exports.getUsersByMarketerReferralCode = async (referralCode) => {
   return query(GET_USERS_BY_MARKETER_REFERRAL_CODE, [referralCode]);

@@ -1,9 +1,13 @@
+/* eslint-disable no-unused-vars */
 const withdrawalsService = require("../../../../src/services/admin/withdrawals.services");
 const withdrawalRequestsRepo = require("../../../../src/repository/withdrawal-requests.repository");
 const doctorsRepo = require("../../../../src/repository/doctors.repository");
 const doctorWalletRepo = require("../../../../src/repository/doctor-wallet.repository");
 const smsUtils = require("../../../../src/utils/sms.utils");
 const dbMapper = require("../../../../src/utils/db-mapper.utils");
+const cachingUtils = require("../../../../src/utils/caching.utils");
+
+jest.mock("../../../../src/utils/caching.utils");
 // const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/repository/withdrawal-requests.repository");
@@ -11,6 +15,11 @@ jest.mock("../../../../src/repository/doctors.repository");
 jest.mock("../../../../src/repository/doctor-wallet.repository");
 jest.mock("../../../../src/utils/sms.utils");
 jest.mock("../../../../src/utils/db-mapper.utils");
+
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+}));
 
 describe("Withdrawals Service", () => {
   afterEach(() => {

@@ -4,9 +4,6 @@ const {
   GetAdminAppointmentByIdController,
   GetAdminAppointmentsByDoctorIdController,
 } = require("../../../controllers/admin/appointments.controller");
-const {
-  calculatePaginationInfo,
-} = require("../../../middlewares/paginator.middleware");
 const { adminLimiter } = require("../../../utils/rate-limit.utils");
 const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
 const {
@@ -20,7 +17,6 @@ router.get(
   "/",
   adminAppointmentPaginationValidation,
   Validate,
-  calculatePaginationInfo("medical_appointments"),
   GetAdminAppointmentsController,
 );
 

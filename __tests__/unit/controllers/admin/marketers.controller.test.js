@@ -32,9 +32,7 @@ describe("Marketers Controllers", () => {
     it("should return marketers with correct status", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
       marketersServices.getAllMarketersService.mockResolvedValue(mockResponse);
@@ -42,9 +40,8 @@ describe("Marketers Controllers", () => {
       await GetAllMarketersController(req, res, mockNext);
 
       expect(marketersServices.getAllMarketersService).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -53,9 +50,7 @@ describe("Marketers Controllers", () => {
     it("should call next on error", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
 
       const error = new Error("fail");

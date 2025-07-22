@@ -7,16 +7,12 @@ const {
 
 const GetAppointmentPrescriptionsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
+    const { page, limit } = req.query;
     const appointmentId = parseInt(req.params.id, 10);
     const response = await getAppointmentPrescriptions(
       appointmentId,
       limit,
-      offset,
-      paginationInfo,
+      page,
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {

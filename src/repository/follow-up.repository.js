@@ -25,6 +25,16 @@ exports.getAppointmentFollowUps = async (appointmentId) => {
   ]);
 };
 
+exports.countDoctorFollowUp = async (doctorId) => {
+  const result = await query(queries.COUNT_DOCTOR_FOLLOW_UPS, [doctorId]);
+  return result[0];
+};
+
+exports.countPatientFollowUp = async (patientId) => {
+  const result = await query(queries.COUNT_PATIENT_FOLLOW_UPS, [patientId]);
+  return result[0];
+};
+
 exports.getFollowUpById = async (followUpId) => {
   const result = await query(queries.GET_APPOINTMENT_FOLLOW_UP_BY_ID, [
     followUpId,

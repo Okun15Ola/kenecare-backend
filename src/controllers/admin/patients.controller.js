@@ -7,11 +7,8 @@ const {
 
 exports.GetPatientsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getAllPatients(limit, offset, paginationInfo);
+    const { limit, page } = req.query;
+    const response = await getAllPatients(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
@@ -30,15 +27,8 @@ exports.GetPatientByIdController = async (req, res, next) => {
 };
 exports.GetPatientTestimonialsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getPatientsTestimonial(
-      limit,
-      offset,
-      paginationInfo,
-    );
+    const { limit, page } = req.query;
+    const response = await getPatientsTestimonial(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

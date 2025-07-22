@@ -16,9 +16,6 @@ const {
 const {
   paginationValidation,
 } = require("../../../validations/pagination.validations");
-const {
-  calculatePaginationInfo,
-} = require("../../../middlewares/paginator.middleware");
 
 router.use(authenticateUser, limiter, authorizePatient); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
@@ -26,7 +23,6 @@ router.get(
   "/appointment/:id",
   [...GetPrescriptionsByAppointmentValidation, ...paginationValidation],
   Validate,
-  calculatePaginationInfo("appointment_prescriptions"),
   GetAppointmentPrescriptionsController,
 );
 router.get(

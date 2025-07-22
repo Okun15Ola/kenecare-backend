@@ -1,13 +1,29 @@
-const dbObject = require("../../repository/doctors.repository");
+const dbObject = require("../../repository/admin-doctors.repository");
 const Response = require("../../utils/response.utils");
 const { doctorProfileApprovalSms } = require("../../utils/sms.utils");
 const { mapDoctorRow } = require("../../utils/db-mapper.utils");
 const { redisClient } = require("../../config/redis.config");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 
-exports.getAllDoctors = async (limit, offset, paginationInfo) => {
+exports.getAllDoctors = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "admin:doctors:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: dbObject.countDoctors,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No doctors found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("admin:doctors:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {

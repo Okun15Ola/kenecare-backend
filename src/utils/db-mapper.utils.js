@@ -1,10 +1,16 @@
 const moment = require("moment");
 const he = require("he");
-const { getFileUrlFromS3Bucket } = require("./aws-s3.utils");
+const {
+  getFileUrlFromS3Bucket,
+  getPublicFileUrlFromS3Bucket,
+} = require("./aws-s3.utils");
 const { decryptText } = require("./auth.utils");
 const availableDaysDB = require("../repository/doctorAvailableDays.repository");
 
-exports.mapCommonSymptomsRow = async (commonSymptoms) => {
+exports.mapCommonSymptomsRow = async (
+  commonSymptoms,
+  includeImageUrl = false,
+) => {
   const {
     symptom_id: symptomId,
     symptom_name: name,
@@ -17,10 +23,12 @@ exports.mapCommonSymptomsRow = async (commonSymptoms) => {
     inputted_by: inputtedBy,
   } = commonSymptoms;
 
-  let finalImageUrl = null;
+  let finalImage = null;
 
   if (imageUrl) {
-    finalImageUrl = await getFileUrlFromS3Bucket(imageUrl);
+    finalImage = includeImageUrl
+      ? await getPublicFileUrlFromS3Bucket(imageUrl)
+      : await getFileUrlFromS3Bucket(imageUrl);
   }
 
   return {
@@ -28,7 +36,7 @@ exports.mapCommonSymptomsRow = async (commonSymptoms) => {
     name: name?.toUpperCase() || "",
     description,
     specialty,
-    imageUrl: finalImageUrl,
+    imageUrl: finalImage || null,
     consultationFee,
     tags,
     isActive,
@@ -148,7 +156,7 @@ exports.mapBlogCategoryRow = (blogCategory) => {
   };
 };
 
-exports.mapBlogRow = async (blog) => {
+exports.mapBlogRow = async (blog, includeImageUrl) => {
   const {
     blog_id: blogId,
     category_name: blogCategory,
@@ -162,13 +170,18 @@ exports.mapBlogRow = async (blog) => {
     is_active: isActive,
     created_at: createdAt,
   } = blog;
-  const url = await getFileUrlFromS3Bucket(image);
+  let imageData = null;
+  if (image) {
+    imageData = includeImageUrl
+      ? await getPublicFileUrlFromS3Bucket(image)
+      : await getFileUrlFromS3Bucket(image);
+  }
   return {
     blogId,
     blogCategory,
     blogTitle,
     description,
-    image: image ? url : null,
+    image: imageData || null,
     tags: tags ? JSON.parse(tags) : null,
     disclaimer,
     author,
@@ -744,7 +757,7 @@ exports.mapAppointmentPrescriptionRow = (prescription) => {
   };
 };
 
-exports.mapDoctorRow = async (doctor) => {
+exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
   let doctorAvailableDays = [];
   const {
     doctor_id: doctorId,
@@ -769,7 +782,14 @@ exports.mapDoctorRow = async (doctor) => {
     user_type: userType,
     is_account_active: isAccountActive,
   } = doctor;
-  const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
+
+  let profilePicData = null;
+  if (profilePic) {
+    profilePicData = includeProfilePicBytes
+      ? await getPublicFileUrlFromS3Bucket(profilePic)
+      : await getFileUrlFromS3Bucket(profilePic);
+  }
+
   const mappedAvailableDays =
     await availableDaysDB.getDoctorsAvailableDays(doctorId);
   if (mappedAvailableDays && mappedAvailableDays.length > 0) {
@@ -789,7 +809,7 @@ exports.mapDoctorRow = async (doctor) => {
     lastName,
     gender,
     professionalSummary,
-    profilePic: imageUrl,
+    profilePic: profilePicData || null,
     specialtyId,
     specialization,
     qualifications,
@@ -939,7 +959,7 @@ exports.mapPatientAppointment = (appointment) => {
   };
 };
 
-exports.mapTestimonialRow = async (testimonial) => {
+exports.mapTestimonialRow = async (testimonial, includeImageUrl = false) => {
   const {
     testimonial_id: testimonialId,
     first_name: firstName,
@@ -950,11 +970,18 @@ exports.mapTestimonialRow = async (testimonial) => {
     is_approved: isApproved,
     approved_by: approvedBy,
   } = testimonial;
-  const imageUrl = patientPic ? await getFileUrlFromS3Bucket(patientPic) : null;
+  let imageData = null;
+  if (!patientPic) {
+    imageData = null;
+  } else if (includeImageUrl) {
+    imageData = await getPublicFileUrlFromS3Bucket(patientPic);
+  } else {
+    imageData = await getFileUrlFromS3Bucket(patientPic);
+  }
   return {
     testimonialId,
     patientName: `${firstName} ${lastName}`,
-    patientPic: imageUrl,
+    patientPic: imageData,
     content,
     isActive,
     isApproved,
@@ -962,7 +989,11 @@ exports.mapTestimonialRow = async (testimonial) => {
   };
 };
 
-exports.mapSpecialityRow = async (speciality, includeTags = false) => {
+exports.mapSpecialityRow = async (
+  speciality,
+  includeTags = false,
+  includeImageUrl = false,
+) => {
   const {
     speciality_id: specialtyId,
     speciality_name: specialtyName,
@@ -972,22 +1003,26 @@ exports.mapSpecialityRow = async (speciality, includeTags = false) => {
     is_active: isActive,
     inputted_by: inputtedBy,
   } = speciality;
-  const specialityImageUrl = imageUrl
-    ? await getFileUrlFromS3Bucket(imageUrl)
-    : null;
-  return {
+  let imageData = null;
+  if (imageUrl) {
+    imageData = includeImageUrl
+      ? await getPublicFileUrlFromS3Bucket(imageUrl)
+      : await getFileUrlFromS3Bucket(imageUrl);
+  }
+  const mapped = {
     specialtyId,
     specialtyName: he.decode(specialtyName),
     description: he.decode(description),
-    imageUrl: specialityImageUrl,
-    tags: includeTags ? JSON.parse(tags) : null,
+    imageUrl: imageData || null,
     isActive,
     inputtedBy,
   };
 
-  // if (includeTags) {
-  //   mapped.tags = tags;
-  // }
+  if (includeTags) {
+    mapped.tags = tags;
+  }
+
+  return mapped;
 };
 
 exports.mapUserRow = (
@@ -1022,19 +1057,19 @@ exports.mapUserRow = (
     is2faEnabled,
     password,
   };
-  if (!includePassword) {
+  if (includePassword) {
     mapped.password = password;
   }
 
-  if (!includeReferralCode) {
+  if (includeReferralCode) {
     mapped.referralCode = referralCode;
   }
 
-  if (!includeVerificationToken) {
+  if (includeVerificationToken) {
     mapped.verificationToken = verificationToken;
   }
 
-  if (!includeExpiryTime) {
+  if (includeExpiryTime) {
     mapped.verificationExpiry = verificationExpiry;
   }
 
@@ -1190,7 +1225,7 @@ exports.mapPrescriptionRow = (
     updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
   };
 
-  if (!includeDiagnosis) {
+  if (includeDiagnosis) {
     const decryptedDiagnosis = decryptText({
       encryptedText: diagnosis,
       key: hashedToken,
@@ -1198,7 +1233,7 @@ exports.mapPrescriptionRow = (
     mapped.diagnosis = decryptedDiagnosis;
   }
 
-  if (!includeMedicines) {
+  if (includeMedicines) {
     const decryptedMedicines = decryptText({
       encryptedText: medicines,
       key: hashedToken,
@@ -1206,7 +1241,7 @@ exports.mapPrescriptionRow = (
     mapped.medicines = decryptedMedicines;
   }
 
-  if (!includeComments) {
+  if (includeComments) {
     const decryptedComment = decryptText({
       encryptedText: doctorComment,
       key: hashedToken,

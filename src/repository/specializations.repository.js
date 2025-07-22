@@ -6,6 +6,11 @@ exports.getAllSpecialization = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.countSpecialization = async () => {
+  const result = await query(queries.COUNT_SPECIALIZATIONS);
+  return result[0];
+};
+
 exports.getSpecializationById = async (specializationId) => {
   const result = await query(queries.GET_SPECIALIZATION_BY_ID, [
     specializationId,

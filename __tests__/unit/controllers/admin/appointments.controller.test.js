@@ -17,8 +17,7 @@ describe("Admin Appointments Controllers", () => {
   beforeEach(() => {
     req = {
       params: { id: "1" },
-      pagination: { limit: 10, offset: 0 },
-      paginationInfo: {},
+      query: { limit: 10, page: 1 },
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -31,14 +30,11 @@ describe("Admin Appointments Controllers", () => {
   describe("GetAdminAppointmentsController", () => {
     it("should return appointments with correct status", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
-      req.pagination = { limit: 1, offset: 10 };
-      req.paginationInfo = {};
       services.getAdminAppointments.mockResolvedValue(mockResponse);
       await GetAdminAppointmentsController(req, res, next);
       expect(services.getAdminAppointments).toHaveBeenCalledWith({
-        limit: 1,
-        offset: 10,
-        paginationInfo: {},
+        limit: req.query.limit,
+        page: req.query.page,
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -46,7 +42,6 @@ describe("Admin Appointments Controllers", () => {
 
     it("should handle errors and call next", async () => {
       const error = new Error("Test error");
-      req.pagination = {};
       services.getAdminAppointments.mockRejectedValue(error);
 
       await GetAdminAppointmentsController(req, res, next);
@@ -82,20 +77,13 @@ describe("Admin Appointments Controllers", () => {
   describe("GetAdminAppointmentsByDoctorIdController", () => {
     it("should return appointments by doctor id with correct status", async () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1, doctorId: 1 }] };
-      const req = {
-        params: { id: "1" },
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: {},
-      };
       services.getAdminAppointmentsByDoctorId.mockResolvedValue(mockResponse);
 
       await GetAdminAppointmentsByDoctorIdController(req, res, next);
       expect(services.getAdminAppointmentsByDoctorId).toHaveBeenCalledWith(
         parseInt(req.params.id, 10),
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
 
       expect(res.status).toHaveBeenCalledWith(200);

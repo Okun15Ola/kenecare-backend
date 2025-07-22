@@ -6,6 +6,20 @@ exports.getAllPatientAppointments = async ({ patientId, offset, limit }) => {
   return query(optimizedQuery, [patientId]);
 };
 
+exports.countPatientAppointments = async ({ patientId }) => {
+  const result = await query(queries.COUNT_PATIENT_APPOINTMENTS, [patientId]);
+  return result[0];
+};
+
+exports.getPatientAppointmentsDashboardCount = async ({ patientId }) => {
+  const result = await query(
+    queries.GET_PATIENT_APPOINTMENTS_DASHBOARD_COUNTS,
+    [patientId],
+  );
+  return result[0];
+  //  || { upcoming_count: 0, today_count: 0, past_count: 0 };
+};
+
 exports.getPatientAppointmentById = async ({ patientId, appointmentId }) => {
   const result = await query(queries.GET_PATIENT_APPOINTMENT_BY_ID, [
     patientId,

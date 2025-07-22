@@ -8,17 +8,26 @@ const {
   startDoctorAppointment,
   getDoctorAppointmentByDateRange,
   endDoctorAppointment,
+  getDoctorAppointmentMetrics,
 } = require("../../services/doctors/doctor.appointments.services");
+
+exports.GetDoctorAppointmentMetricsController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const response = await getDoctorAppointmentMetrics(userId);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
 
 exports.GetDoctorAppointmentsController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
     const startDate = req.query.startDate ? req.query.startDate : null;
     const endDate = req.query.endDate ? req.query.endDate : null;
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
+    const { page, limit } = req.query;
 
     if (startDate && endDate) {
       const response = await getDoctorAppointmentByDateRange({
@@ -26,8 +35,7 @@ exports.GetDoctorAppointmentsController = async (req, res, next) => {
         startDate,
         endDate,
         limit,
-        offset,
-        paginationInfo,
+        page,
       });
       return res.status(response.statusCode).json(response);
     }
@@ -35,8 +43,7 @@ exports.GetDoctorAppointmentsController = async (req, res, next) => {
     const response = await getDoctorAppointments({
       userId,
       limit,
-      offset,
-      paginationInfo,
+      page,
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {
@@ -44,6 +51,7 @@ exports.GetDoctorAppointmentsController = async (req, res, next) => {
     return next(error);
   }
 };
+
 exports.GetDoctorAppointmentsByIDController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
@@ -63,11 +71,11 @@ exports.ApproveDoctorAppointmentController = async (req, res, next) => {
     const response = await approveDoctorAppointment({ userId, appointmentId });
     return res.status(response.statusCode).json(response);
   } catch (error) {
-    //
     logger.error(error);
     return next(error);
   }
 };
+
 exports.CancelDoctorAppointmentController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
@@ -105,6 +113,7 @@ exports.PostponeDoctorAppointmentController = async (req, res, next) => {
     return next(error);
   }
 };
+
 exports.StartDoctorAppointmentController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
@@ -120,6 +129,7 @@ exports.StartDoctorAppointmentController = async (req, res, next) => {
     return next(error);
   }
 };
+
 exports.EndDoctorAppointmentController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);

@@ -1,43 +1,10 @@
 const logger = require("../../middlewares/logger.middleware");
-const {
-  getBlogCategories,
-  getBlogCategory,
-} = require("../../services/admin/blog-categories.services");
-const { getBlogs, getBlog } = require("../../services/admin/blogs.services");
-const { getCities, getCity } = require("../../services/admin/cities.services");
-const {
-  getCommonSymptoms,
-  getCommonSymptom,
-} = require("../../services/common-symptoms.services");
-const {
-  getAllDoctors,
-  getDoctorById,
-  getDoctorBySpecialtyId,
-  getDoctorByQuery,
-} = require("../../services/doctors/doctors.services");
-
-const {
-  getMedicalCouncils,
-  getMedicalCouncil,
-} = require("../../services/medical-councils.services");
-const {
-  getSpecializations,
-  getSpecializationById,
-} = require("../../services/admin/specializations.services");
-const {
-  getSpecialties,
-  getSpecialtyById,
-} = require("../../services/specialties.services");
-const { getTestimonials } = require("../../services/testimonials.services");
+const service = require("../../services/index.services");
 
 exports.GetBlogsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-
-    const response = await getBlogs(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await service.getBlogsIndexService(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetBlogsController: ", error);
@@ -47,7 +14,7 @@ exports.GetBlogsController = async (req, res, next) => {
 exports.GetBlogByIDController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const response = await getBlog(id);
+    const response = await service.getBlogIndexService(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetBlogByIDController: ", error);
@@ -56,11 +23,8 @@ exports.GetBlogByIDController = async (req, res, next) => {
 };
 exports.GetBlogCategoriesController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getBlogCategories(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await service.getBlogCategoriesIndexService(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetBlogCategoriesController: ", error);
@@ -70,7 +34,7 @@ exports.GetBlogCategoriesController = async (req, res, next) => {
 exports.GetBlogCategoryByIDController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const response = await getBlogCategory(id);
+    const response = await service.getBlogCategoryIndexService(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetBlogCategoryByIDController: ", error);
@@ -79,11 +43,8 @@ exports.GetBlogCategoryByIDController = async (req, res, next) => {
 };
 exports.GetCitiesController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getCities(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await service.getCitiesIndexService(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetCitiesController: ", error);
@@ -93,7 +54,7 @@ exports.GetCitiesController = async (req, res, next) => {
 exports.GetCityByIDController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const response = await getCity(id);
+    const response = await service.getCityIndexService(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetCityByIDController", error);
@@ -102,11 +63,8 @@ exports.GetCityByIDController = async (req, res, next) => {
 };
 exports.GetCommonSymptomsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getCommonSymptoms(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await service.getCommonSymptomsIndexService(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetCommonSymptomsController: ", error);
@@ -116,7 +74,7 @@ exports.GetCommonSymptomsController = async (req, res, next) => {
 exports.GetCommonSymptomByIDController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const response = await getCommonSymptom(id);
+    const response = await service.getCommonSymptomIndexService(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetCommonSymptomByIDController: ", error);
@@ -126,30 +84,30 @@ exports.GetCommonSymptomByIDController = async (req, res, next) => {
 exports.GetDoctorsController = async (req, res, next) => {
   try {
     const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const { locationId, q: query, specialty_id: specialtyId } = req.query;
+      locationId,
+      q: query,
+      specialty_id: specialtyId,
+      page,
+      limit,
+    } = req.query;
 
     let response;
 
     if (specialtyId) {
-      response = await getDoctorBySpecialtyId(
+      response = await service.getDoctorBySpecialtyIdIndexService(
         specialtyId,
         limit,
-        offset,
-        paginationInfo,
+        page,
       );
     } else if (locationId || query) {
-      response = await getDoctorByQuery(
+      response = await service.getDoctorByQueryIndexService(
         locationId,
         query,
         limit,
-        offset,
-        paginationInfo,
+        page,
       );
     } else {
-      response = await getAllDoctors(limit, offset, paginationInfo);
+      response = await service.getAllDoctorIndexService(limit, page);
     }
 
     return res.status(response.statusCode).json(response);
@@ -161,7 +119,7 @@ exports.GetDoctorsController = async (req, res, next) => {
 exports.GetDoctorByIDController = async (req, res, next) => {
   try {
     const doctorId = parseInt(req.params.id, 10);
-    const response = await getDoctorById(doctorId);
+    const response = await service.getDoctorByIdIndexService(doctorId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetDoctorByIDController: ", error);
@@ -186,11 +144,8 @@ exports.GetFaqByIdController = async (req, res, next) => {
 };
 exports.GetMedicalCouncilsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getMedicalCouncils(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await service.getMedicalCouncilsIndexService(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetMedicalCouncilsController: ", error);
@@ -200,7 +155,7 @@ exports.GetMedicalCouncilsController = async (req, res, next) => {
 exports.GetMedicalCouncilByIDController = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const response = await getMedicalCouncil(id);
+    const response = await service.getMedicalCouncilIndexService(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetMedicalCouncilByIDController: ", error);
@@ -249,11 +204,8 @@ exports.GetServiceByIDController = async (req, res, next) => {
 };
 exports.GetSpecializationsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getSpecializations(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await service.getSpecializationsIndexService(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetSpecializationsController: ", error);
@@ -263,8 +215,7 @@ exports.GetSpecializationsController = async (req, res, next) => {
 exports.GetSpecializationByIDController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const response = await getSpecializationById(id);
-
+    const response = await service.getSpecializationByIdIndexService(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetSpecializationByIDController: ", error);
@@ -273,11 +224,8 @@ exports.GetSpecializationByIDController = async (req, res, next) => {
 };
 exports.GetSpecialtiesController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getSpecialties(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await service.getSpecialtiesIndexService(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetSpecialtiesController: ", error);
@@ -287,8 +235,7 @@ exports.GetSpecialtiesController = async (req, res, next) => {
 exports.GetSpecialtyByIDController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const response = await getSpecialtyById(id);
-
+    const response = await service.getSpecialtyByIdIndexService(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetSpecialtyByIDController: ", error);
@@ -313,11 +260,8 @@ exports.GetUserTypeByIDController = async (req, res, next) => {
 };
 exports.GetTestimonialsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getTestimonials(limit, offset, paginationInfo);
+    const { page, limit } = req.query;
+    const response = await service.getTestimonialsIndexService(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetTestimonialsController: ", error);

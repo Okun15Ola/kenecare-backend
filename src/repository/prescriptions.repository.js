@@ -6,6 +6,13 @@ exports.getAppointmentPrescriptions = async (limit, offset, appointmentId) => {
   return query(optimizedQuery, [appointmentId]);
 };
 
+exports.countAppointmentPrescriptions = async (appointmentId) => {
+  const result = await query(queries.COUNT_PRESCRIPTIONS_BY_APPOINTMENT_ID, [
+    appointmentId,
+  ]);
+  return result[0];
+};
+
 exports.getAppointmentPrescriptionById = async (prescriptionId) => {
   const result = await query(queries.GET_PRESCRIPTION_BY_ID, [prescriptionId]);
   return result[0];

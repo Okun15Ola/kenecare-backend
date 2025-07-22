@@ -8,17 +8,9 @@ const {
 
 const GetPrescriptionsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
+    const { limit, page } = req.query;
     const id = parseInt(req.user.id, 10);
-    const response = await getAppointmentPrescriptions(
-      id,
-      limit,
-      offset,
-      paginationInfo,
-    );
+    const response = await getAppointmentPrescriptions(id, limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
@@ -29,7 +21,6 @@ const GetPrescriptionsController = async (req, res, next) => {
 const GetAppointmentPrescriptionController = async (req, res, next) => {
   try {
     const prescriptionId = parseInt(req.params.id, 10);
-
     const response = await getAppointmentPrescriptionById(prescriptionId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
@@ -37,18 +28,15 @@ const GetAppointmentPrescriptionController = async (req, res, next) => {
     return next(error);
   }
 };
+
 const GetAppointmentPrescriptionsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
+    const { limit, page } = req.query;
     const appointmentId = parseInt(req.params.id, 10);
     const response = await getAppointmentPrescriptions(
       appointmentId,
       limit,
-      offset,
-      paginationInfo,
+      page,
     );
     return res.status(response.statusCode).json(response);
   } catch (error) {
@@ -60,9 +48,7 @@ const GetAppointmentPrescriptionsController = async (req, res, next) => {
 const CreatePrescriptionController = async (req, res, next) => {
   try {
     const userId = req.user.id;
-
     const { appointmentId, diagnosis, medicines, comment } = req.body;
-
     const response = await createPrescription({
       userId,
       appointmentId,
@@ -76,6 +62,7 @@ const CreatePrescriptionController = async (req, res, next) => {
     return next(error);
   }
 };
+
 const UpdatePrescriptionController = async (req, res, next) => {
   try {
     const prescriptionId = parseInt(req.params.id, 10);

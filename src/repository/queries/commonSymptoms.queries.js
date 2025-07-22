@@ -4,6 +4,7 @@ module.exports = {
     FROM common_symptoms
     INNER JOIN medical_specialities ON common_symptoms.speciality_id = medical_specialities.speciality_id
   `,
+  COUNT_COMMON_SYMPTOMS: "SELECT COUNT(*) AS totalRows FROM common_symptoms;",
   GET_COMMON_SYMPTOMS_BY_ID:
     "SELECT * FROM common_symptoms WHERE symptom_id = ? LIMIT 1",
   GET_COMMON_SYMPTOMS_BY_NAME:

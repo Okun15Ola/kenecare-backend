@@ -21,17 +21,6 @@ exports.GetAllMedicalRecordsController = async (req, res, next) => {
     return next(error);
   }
 };
-// exports.VerifyDocumentPasswordController = async (req, res, next) => {
-//   try {
-//     const userId = parseInt(req.user.id, 10);
-//     const response = await verifyDocumentPassword(userId, documentPassword);
-//     return res.status(response.statusCode).json(response);
-//   } catch (error) {
-//
-//     logger.error(error);
-//     return next(error);
-//   }
-// };
 exports.GetMedicalRecordByIDController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);

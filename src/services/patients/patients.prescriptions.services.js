@@ -1,24 +1,39 @@
 const {
   getAppointmentPrescriptions,
   getAppointmentPrescriptionById,
+  countAppointmentPrescriptions,
 } = require("../../repository/prescriptions.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const {
   mapAppointmentPrescriptionRow,
 } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 
-exports.getAppointmentPrescriptions = async (
-  id,
-  limit,
-  offset,
-  paginationInfo,
-) => {
+exports.getAppointmentPrescriptions = async (id, limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "patient:prescriptions:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => countAppointmentPrescriptions(id),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No prescriptions found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
-      "patient-prescriptions:all",
+      "patient:prescriptions:all",
       limit,
       offset,
     );
@@ -33,7 +48,7 @@ exports.getAppointmentPrescriptions = async (
 
     if (!rawData?.length) {
       return Response.SUCCESS({
-        message: "No presciptions found",
+        message: "No prescriptions found",
         data: [],
       });
     }
@@ -57,7 +72,7 @@ exports.getAppointmentPrescriptions = async (
 
 exports.getAppointmentPrescriptionById = async (presId) => {
   try {
-    const cacheKey = `patient-prescriptions:${presId}`;
+    const cacheKey = `patient:prescriptions:${presId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });

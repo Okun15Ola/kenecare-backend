@@ -22,6 +22,27 @@ module.exports = {
     ORDER BY medical_appointments.appointment_id DESC 
   `,
 
+  GET_DOCTOR_APPOINTMENTS_DASHBOARD_COUNTS: `
+  SELECT
+  SUM(appointment_date > CURDATE() AND appointment_status IN ('approved', 'pending', 'started')) AS upcoming_count,
+  SUM(appointment_date = CURDATE() AND appointment_status IN ('approved', 'pending', 'started')) AS today_count,
+  SUM(appointment_date < CURDATE() AND appointment_status IN ('completed', 'canceled', 'postponed', 'referred')) AS past_count
+  FROM medical_appointments
+  INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
+  INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
+  WHERE medical_appointments.doctor_id = ?;
+  `,
+
+  COUNT_DOCTOR_APPOINTMENTS_BY_ID: `
+  SELECT COUNT(*) AS totalRows
+  FROM medical_appointments
+  INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
+  INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
+  INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
+  INNER JOIN medical_specialities AS ms ON medical_appointments.speciality_id = ms.speciality_id
+  LEFT JOIN zoom_meetings ON medical_appointments.meeting_id = zoom_meetings.meeting_id
+  WHERE medical_appointments.doctor_id = ? AND payment_status = 'success';
+`,
   GET_DOCTOR_APPOINTMENT_BY_ID: `
     ${COMMON_SELECT}
     WHERE medical_appointments.doctor_id = ? AND medical_appointments.appointment_id = ? AND payment_status = 'success'
@@ -81,6 +102,16 @@ module.exports = {
     WHERE medical_appointments.created_at BETWEEN '${startDate}' AND '${endDate}'
       AND medical_appointments.doctor_id = ? AND payment_status = 'success'
   `,
+  COUNT_APPOINTMENTS_BY_DATE: (startDate, endDate) =>
+    `
+  SELECT COUNT(*) AS totalRows
+  FROM medical_appointments
+  INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
+  INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
+  INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
+  INNER JOIN medical_specialities AS ms ON medical_appointments.speciality_id = ms.speciality_id
+  LEFT JOIN zoom_meetings ON medical_appointments.meeting_id = zoom_meetings.meeting_id
+  WHERE medical_appointments.created_at BETWEEN '${startDate}' AND '${endDate}' AND medical_appointments.doctor_id = ? AND payment_status = 'success'`,
 
   GET_APPOINTMENT_BY_DATE_AND_TIME: `
     ${COMMON_SELECT}

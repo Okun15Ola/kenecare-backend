@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const doctorAppointmentsService = require("../../../../src/services/doctors/doctor.appointments.services");
 const dbObject = require("../../../../src/repository/doctorAppointments.repository");
 const doctorsRepo = require("../../../../src/repository/doctors.repository");
@@ -11,6 +12,9 @@ const streamUtils = require("../../../../src/utils/stream.utils");
 const redisConfig = require("../../../../src/config/redis.config");
 const enumUtils = require("../../../../src/utils/enum.utils");
 const dbMapper = require("../../../../src/utils/db-mapper.utils");
+const cachingUtils = require("../../../../src/utils/caching.utils");
+
+jest.mock("../../../../src/utils/caching.utils");
 
 jest.mock("../../../../src/repository/doctorAppointments.repository");
 jest.mock("../../../../src/repository/doctors.repository");
@@ -23,6 +27,15 @@ jest.mock("../../../../src/middlewares/logger.middleware");
 jest.mock("../../../../src/utils/stream.utils");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/db-mapper.utils");
+
+jest.mock("../../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn(
+    (key, limit, offset) =>
+      `${key}${limit ? `:limit=${limit}` : ""}${offset ? `:offset=${offset}` : ""}`,
+  ),
+}));
 
 describe("doctor.appointments.services", () => {
   beforeAll(() => {

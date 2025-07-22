@@ -6,21 +6,41 @@ const {
 } = require("../utils/aws-s3.utils");
 const { generateFileName } = require("../utils/file-upload.utils");
 const { redisClient } = require("../config/redis.config");
-const { cacheKeyBulider } = require("../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../utils/caching.utils");
 const { mapSpecialityRow } = require("../utils/db-mapper.utils");
 const logger = require("../middlewares/logger.middleware");
 
-exports.getSpecialties = async (limit, offset, paginationInfo) => {
+exports.getSpecialties = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "specialties:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: repo.getSpecialtiyCount,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No specialties found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const cacheKey = cacheKeyBulider("specialties:all", limit, offset);
+
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData), paginationInfo });
     }
+
     const rawData = await repo.getAllSpecialties(limit, offset);
     if (!rawData?.length) {
-      return Response.SUCCESS({ message: "No specialities found", data: [] });
+      return Response.SUCCESS({ message: "No specialties found", data: [] });
     }
+
     const specialties = await Promise.all(rawData.map(mapSpecialityRow));
 
     await redisClient.set({
@@ -36,7 +56,7 @@ exports.getSpecialties = async (limit, offset, paginationInfo) => {
 
 exports.getSpecialtyByName = async (name) => {
   try {
-    const cacheKey = `specialties:${name}`;
+    const cacheKey = `specialty:${name}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -48,7 +68,7 @@ exports.getSpecialtyByName = async (name) => {
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
-    const specialty = mapSpecialityRow(rawData);
+    const specialty = await mapSpecialityRow(rawData);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialty),
@@ -62,7 +82,7 @@ exports.getSpecialtyByName = async (name) => {
 
 exports.getSpecialtyById = async (id) => {
   try {
-    const cacheKey = `specialties:${id}`;
+    const cacheKey = `specialty:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -74,7 +94,7 @@ exports.getSpecialtyById = async (id) => {
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
-    const specialty = mapSpecialityRow(rawData, true);
+    const specialty = await mapSpecialityRow(rawData, true);
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialty),
@@ -112,6 +132,7 @@ exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
     }
 
     await redisClient.clearCacheByPattern("specialties:*");
+    await redisClient.clearCacheByPattern("specialty:*");
 
     return Response.CREATED({ message: "Specialty Created Successfully" });
   } catch (error) {
@@ -153,7 +174,7 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
       return Response.NOT_MODIFIED({});
     }
 
-    const cacheKey = `specialties:${id}`;
+    const cacheKey = `specialty:${id}`;
     await redisClient.delete(cacheKey);
 
     return Response.SUCCESS({ message: "Specialty Updated Successfully" });
@@ -162,6 +183,7 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
     throw error;
   }
 };
+
 exports.updateSpecialtyStatus = async ({ id, status }) => {
   try {
     if (!Number.isInteger(status) || status < 0 || status > 1) {
@@ -179,7 +201,7 @@ exports.updateSpecialtyStatus = async ({ id, status }) => {
       return Response.NOT_MODIFIED({});
     }
 
-    const cacheKey = `specialties:${id}`;
+    const cacheKey = `specialty:${id}`;
     await redisClient.delete(cacheKey);
 
     return Response.SUCCESS({
@@ -204,6 +226,10 @@ exports.deleteSpecialty = async (id) => {
       logger.warn(`Failed to delete specialty for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
+
+    const cacheKey = `specialty:${id}`;
+    await redisClient.delete(cacheKey);
+    await redisClient.clearCacheByPattern("specialties:*");
 
     return Response.SUCCESS({ message: "Specialty Deleted Successfully" });
   } catch (error) {

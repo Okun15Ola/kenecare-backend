@@ -1,6 +1,5 @@
 const { v4: uuidV4 } = require("uuid");
 const moment = require("moment/moment");
-
 const {
   getAllMarketers,
   createNewMarketer,
@@ -11,6 +10,7 @@ const {
   deleteMarketerById,
   updateMarketerById,
   getMarketerByEmailVerficationToken,
+  countMarketers,
 } = require("../../repository/marketers.repository");
 const Response = require("../../utils/response.utils");
 const {
@@ -33,7 +33,11 @@ const {
   mapMarketersRow,
   mapMarketersWithDocumentRow,
 } = require("../../utils/db-mapper.utils");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 
 const generateReferralCode = ({ firstName, lastName }) => {
@@ -44,8 +48,20 @@ const generateReferralCode = ({ firstName, lastName }) => {
   return `KC-${firstPart}${lastPart}${randomNumbers}`;
 };
 
-exports.getAllMarketersService = async (limit, offset, paginationInfo) => {
+exports.getAllMarketersService = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "marketers:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: countMarketers,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No marketers found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("marketers:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {

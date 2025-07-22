@@ -3,22 +3,36 @@ const {
   getPatientAppointment,
   getPatientAppointments,
   createPatientAppointment,
+  getPatientAppointmentMetrics,
+  getPatientFollowUpMetrics,
 } = require("../../services/patients/patients.appointments.services");
 const { refineMobileNumber } = require("../../utils/time.utils");
 
 exports.GetAppointmentsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
+    const { page, limit } = req.query;
     const userId = parseInt(req.user.id, 10);
-    const response = await getPatientAppointments(
-      userId,
-      limit,
-      offset,
-      paginationInfo,
-    );
+    const response = await getPatientAppointments(userId, limit, page);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+exports.GetPatientAppointmentMetricsController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const response = await getPatientAppointmentMetrics(userId);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+exports.GetPatientFollowUpMetricsController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const response = await getPatientFollowUpMetrics(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

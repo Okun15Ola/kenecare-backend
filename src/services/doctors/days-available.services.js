@@ -20,6 +20,7 @@ exports.getDoctorAvailableDays = async (userId) => {
     if (!doctors?.length) {
       return Response.SUCCESS({
         message: "No available days found",
+        data: [],
       });
     }
 

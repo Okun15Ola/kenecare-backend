@@ -19,7 +19,11 @@ const {
   mapDoctorUserProfileRow,
 } = require("../../utils/db-mapper.utils");
 const { redisClient } = require("../../config/redis.config");
-const { cacheKeyBulider } = require("../../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   uploadFileToS3Bucket,
@@ -27,8 +31,21 @@ const {
 } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
 
-exports.getAllDoctors = async (limit, offset, paginationInfo) => {
+exports.getAllDoctors = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "doctors:count:approved";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: dbObject.getDoctorsCount,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No doctors found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const cacheKey = cacheKeyBulider("doctors:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
@@ -57,16 +74,23 @@ exports.getAllDoctors = async (limit, offset, paginationInfo) => {
     throw error;
   }
 };
-exports.getDoctorByQuery = async (
-  locationId,
-  query,
-  limit,
-  offset,
-  paginationInfo,
-) => {
+exports.getDoctorByQuery = async (locationId, query, limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "doctors:search:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => dbObject.getDoctorsQueryCount({ locationId, query }),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No doctors found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const cacheKey = cacheKeyBulider(
-      `doctor-search${locationId ? `:location=${locationId}` : ""}
+      `doctors:${locationId ? `:location=${locationId}` : ""}
       ${query ? `:query=${query}` : ""}`,
       limit,
       offset,
@@ -102,13 +126,24 @@ exports.getDoctorByQuery = async (
     throw error;
   }
 };
-exports.getDoctorBySpecialtyId = async (
-  specialityId,
-  limit,
-  offset,
-  paginationInfo,
-) => {
+
+exports.getDoctorBySpecialtyId = async (specialityId, limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "doctors:specialty:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => dbObject.getDoctorsSpecializationCount(specialityId),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No doctors available for this specialty",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
       `doctors:speciality:${specialityId}`,
       limit,
@@ -383,7 +418,7 @@ exports.updateDoctorProfile = async ({
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern("doctors:*");
+    await redisClient.delete(`doctor:${doctorId}`);
 
     return Response.SUCCESS({
       message: "Doctor profile updated successfully.",
@@ -393,6 +428,7 @@ exports.updateDoctorProfile = async ({
     throw error;
   }
 };
+
 exports.updateDoctorProfilePicture = async ({ userId, file }) => {
   try {
     if (!file) {
@@ -454,7 +490,7 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
       }
     }
 
-    await redisClient.clearCacheByPattern("doctors:*");
+    await redisClient.delete(`doctor:${doctorId}`);
     return Response.SUCCESS({
       message: "Doctor's profile picture updated successfully.",
     });

@@ -11,6 +11,7 @@ const {
   GetFollowUpByIdController,
   UpdateAppointmentFollowUpController,
   DeleteAppointmentFollowUpController,
+  GetDoctorFollowUpMetricsController,
 } = require("../../../controllers/doctors/followups.controller");
 const { limiter } = require("../../../utils/rate-limit.utils");
 const {
@@ -33,6 +34,7 @@ router.put(
   UpdateAppointmentFollowUpController,
 );
 router.get("/:id", followUpIdValidation, Validate, GetFollowUpByIdController);
+router.get("/metrics", GetDoctorFollowUpMetricsController);
 router.get(
   "/appointment/:id",
   followUpIdValidation,

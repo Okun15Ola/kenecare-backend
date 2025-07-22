@@ -32,18 +32,15 @@ describe("Doctors Council Registration Controllers", () => {
     it("should return all council registrations", async () => {
       const mockResponse = { statusCode: 200, data: [] };
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       services.getAllCouncilRegistrations.mockResolvedValue(mockResponse);
 
       await GetCouncilRegistrationController(req, res, next);
 
       expect(services.getAllCouncilRegistrations).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -52,9 +49,7 @@ describe("Doctors Council Registration Controllers", () => {
     it("should handle errors", async () => {
       const error = new Error("Test error");
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       services.getAllCouncilRegistrations.mockRejectedValue(error);
 

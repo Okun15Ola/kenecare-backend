@@ -10,11 +10,8 @@ const {
 
 exports.GetSpecializationsController = async (req, res, next) => {
   try {
-    const {
-      pagination: { limit, offset },
-      paginationInfo,
-    } = req;
-    const response = await getSpecializations(limit, offset, paginationInfo);
+    const { limit, page } = req.query;
+    const response = await getSpecializations(limit, page);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

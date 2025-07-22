@@ -18,7 +18,11 @@ const {
 const Response = require("../utils/response.utils");
 const { generateStreamUserToken } = require("../utils/stream.utils");
 const { redisClient } = require("../config/redis.config");
-const { cacheKeyBulider } = require("../utils/caching.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../utils/caching.utils");
 const { mapUserRow } = require("../utils/db-mapper.utils");
 const logger = require("../middlewares/logger.middleware");
 const { refineMobileNumber } = require("../utils/auth.utils");
@@ -35,8 +39,20 @@ const {
  * @param {Object} paginationInfo - Pagination metadata
  * @returns {Promise<Object>} Response object with users data and pagination info
  */
-exports.getUsers = async (limit, offset, paginationInfo) => {
+exports.getUsers = async (limit, page) => {
   try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "users:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: repo.countUsers,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No users found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("users:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
 
@@ -170,24 +186,12 @@ exports.getUserByEmail = async (userEmail) => {
  */
 exports.getUserByToken = async (token) => {
   try {
-    const cacheKey = `user:token:${token}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return JSON.parse(cachedData);
-    }
     const rawData = await repo.getUserByVerificationToken(token);
-
     if (!rawData) {
       logger.warn("User not found for token");
       return Response.NOT_FOUND({ message: "User not found" });
     }
-
-    const user = mapUserRow(rawData, false, true, true);
-
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(user),
-    });
+    const user = mapUserRow(rawData, false, true, true, true);
     return user;
   } catch (error) {
     logger.error("getUserByToken: ", error);
@@ -293,7 +297,6 @@ exports.verifyRegistrationOTP = async ({ token, user }) => {
       sub: userId,
     });
     const streamToken = await generateStreamUserToken(String(userId));
-    await redisClient.delete(`user:token:${token}`);
 
     return Response.SUCCESS({
       message: "Account Verified Successfully",
@@ -519,6 +522,7 @@ exports.verifyUserLoginOtp = async ({
       repo.updateUserVerificationTokenById({
         userId,
         token: null,
+        tokenExpiry: null,
       }),
       repo.updateUserAccountStatusById({
         userId,
@@ -631,12 +635,20 @@ exports.sendForgetPasswordOTP = async ({
  * @param {Object} user - User object with verification token
  * @returns {Promise<Object>} Success response or error
  */
-exports.verifyRequestedOTP = async ({
+exports.verifyForgetPasswordOTP = async (
+  token,
   verificationToken,
   accountVerified,
-  verificationTokenExpiry,
-}) => {
+  verificationExpiry,
+) => {
   try {
+    if (token !== verificationToken) {
+      logger.error("Invalid OTP");
+      return Response.BAD_REQUEST({
+        message: "Invalid OTP",
+      });
+    }
+
     if (!verificationToken || accountVerified !== STATUS.ACTIVE) {
       logger.error("verifyRequestedOTP: Missing token or unverified account");
       return Response.BAD_REQUEST({
@@ -644,13 +656,14 @@ exports.verifyRequestedOTP = async ({
       });
     }
 
-    if (verifyTokenExpiry(verificationTokenExpiry)) {
+    if (verifyTokenExpiry(verificationExpiry)) {
       logger.warn("verifyRequestedOTP: Forget password OTP expired");
       return Response.BAD_REQUEST({
         message:
           "Forget password OTP expired. Please request a new forget password OTP",
       });
     }
+
     return Response.SUCCESS({
       message: "Forget password OTP verified successfully.",
     });

@@ -31,9 +31,7 @@ describe("CommonSymptoms Controllers", () => {
     it("should return symptoms with correct status", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       const response = {
         statusCode: 200,
@@ -45,9 +43,8 @@ describe("CommonSymptoms Controllers", () => {
       await GetCommonSymptomsController(req, res, mockNext);
 
       expect(services.getCommonSymptoms).toHaveBeenCalledWith(
-        req.pagination.limit,
-        req.pagination.offset,
-        req.paginationInfo,
+        req.query.limit,
+        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(response);
@@ -56,9 +53,7 @@ describe("CommonSymptoms Controllers", () => {
     it("should handle errors", async () => {
       const res = mockRes();
       const req = {
-        query: {},
-        pagination: { limit: 10, offset: 0 },
-        paginationInfo: jest.fn(),
+        query: { limit: 10, page: 1 },
       };
       const error = new Error("fail");
       services.getCommonSymptoms.mockRejectedValue(error);

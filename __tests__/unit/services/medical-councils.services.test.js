@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const medicalCouncilService = require("../../../src/services/medical-councils.services");
 const medicalCouncilRepo = require("../../../src/repository/medical-councils.repository");
 const { redisClient } = require("../../../src/config/redis.config");
@@ -9,6 +10,13 @@ jest.mock("../../../src/repository/medical-councils.repository");
 jest.mock("../../../src/config/redis.config");
 jest.mock("../../../src/utils/db-mapper.utils");
 jest.mock("../../../src/utils/caching.utils");
+
+jest.mock("../../../src/utils/caching.utils", () => ({
+  // eslint-disable-next-line no-unused-vars
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
 
 describe("Medical Councils Service", () => {
   beforeAll(() => {
