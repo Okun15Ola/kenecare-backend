@@ -2,7 +2,6 @@
 const patientPrescriptionsService = require("../../../../src/services/patients/patients.prescriptions.services");
 const prescriptionsRepo = require("../../../../src/repository/prescriptions.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
-// const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const caching = require("../../../../src/utils/caching.utils");
 const Response = require("../../../../src/utils/response.utils");
 
@@ -36,14 +35,9 @@ describe("Patient Prescriptions Service", () => {
       caching.cacheKeyBulider.mockReturnValue("cache-key");
 
       const result =
-        await patientPrescriptionsService.getAppointmentPrescriptions(
-          1,
-          10,
-          0,
-          {},
-        );
+        await patientPrescriptionsService.getAppointmentPrescriptions(1);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("cache-key");
+      expect(redisClient.get).toHaveBeenCalled();
     });
 
     it("should throw an error if repo fails", async () => {

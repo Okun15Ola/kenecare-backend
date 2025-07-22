@@ -31,7 +31,6 @@ describe("Patient Prescriptions Controllers", () => {
       const mockResponse = { statusCode: 200, data: [{ id: 1 }] };
       const req = {
         params: { id: 1 },
-        query: { limit: 10, page: 1 },
       };
       services.getAppointmentPrescriptions.mockResolvedValue(mockResponse);
 
@@ -39,8 +38,6 @@ describe("Patient Prescriptions Controllers", () => {
 
       expect(services.getAppointmentPrescriptions).toHaveBeenCalledWith(
         req.params.id,
-        req.query.limit,
-        req.query.page,
       );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
@@ -50,7 +47,6 @@ describe("Patient Prescriptions Controllers", () => {
       const error = new Error("Test error");
       const req = {
         params: { id: 1 },
-        query: { limit: 10, page: 1 },
       };
       services.getAppointmentPrescriptions.mockRejectedValue(error);
 
