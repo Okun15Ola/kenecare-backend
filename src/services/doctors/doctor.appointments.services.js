@@ -339,6 +339,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentTime,
     });
 
+    // TODO @Mevizcode Clear Cache after appointment has been postponed
     return Response.SUCCESS({
       message: "Medical Appointment Approved Successfully",
     });
@@ -410,6 +411,7 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
         startTime: moment().format("HH:mm:ss"),
       }),
     ]);
+    // TODO @Mevizcode Clear Cache after appointment has been postponed
 
     return Response.SUCCESS({
       message: "Appointment Started Successfully",
@@ -483,6 +485,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       patientName: `${firstName} ${lastName}`,
       mobileNumber,
     });
+    // TODO @Mevizcode Clear Cache after appointment has been postponed
 
     return Response.SUCCESS({
       message: "Appointment Ended Successfully",
@@ -577,6 +580,7 @@ exports.cancelDoctorAppointment = async ({
     }
 
     // TODO Send a notification(email,sms) to the user
+    // TODO @Mevizcode Clear Cache after appointment has been postponed
 
     return Response.SUCCESS({
       message:
@@ -698,6 +702,8 @@ exports.postponeDoctorAppointment = async ({
       appointmentDate: postponedDate,
       appointmentTime: postponedTime,
     });
+
+    // TODO @Mevizcode Clear Cache after appointment has been postponed
 
     return Response.SUCCESS({
       message:
