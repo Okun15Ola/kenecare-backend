@@ -304,7 +304,7 @@ exports.createPatientAppointment = async ({
       });
     }
 
-    if (timeBooked.status === "fulfilled") {
+    if (timeBooked.status === "fulfilled" && timeBooked.value) {
       logger.warn(
         `Appointment already booked for Doctor ${doctorId} on ${appointmentDate} at ${appointmentTime}`,
       );
