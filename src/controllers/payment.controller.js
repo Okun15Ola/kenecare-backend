@@ -64,9 +64,7 @@ exports.notificationHandler = async (req, res, next) => {
 
 exports.webhookHandler = async (req, res, next) => {
   try {
-    const { data } = req.body || {}; // event
-    // const { name: eventName } = event || {};
-
+    const { data } = req.body || {};
     const {
       status,
       progress: { isCompleted },
