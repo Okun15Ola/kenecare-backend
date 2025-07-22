@@ -260,11 +260,11 @@ stop-staging: check-env
 
 .PHONY: deploy-prod
 deploy-prod: check-env
-	@echo "Deploying new production image: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
-	@ENV=production TAG=$(CURRENT_IMAGE_TAG) docker compose --env-file=$(ENV_FILE_PROD) -f $(DOCKER_COMPOSE_PROD) up -d
-	@echo "$(CURRENT_IMAGE_TAG)" > .last_deployed_image
+	@echo "🚀 MAKEFILE: Deploying new production image: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
+	@ENV=production TAG=$(CURRENT_IMAGE_TAG) docker compose --env-file=$(ENV_FILE_PROD) -f $(DOCKER_COMPOSE_PROD) up -d --force-recreate --remove-orphans
+	@echo "$(CURRENT_IMAGE_TAG)" > ~/.last_kenecare_api_deployed_image 
 	@echo "Deployment Successful!!"
-	@$(MAKE) test-deploy
+
 
 .PHONY: stop-prod
 stop-prod: check-env
@@ -287,7 +287,7 @@ rollback: check-env
 test-deploy: check-env
 	@echo "Running health check for newly deployed image: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
 	@sleep 10 # Give the service some time to start up and initialize
-	@curl -f http://localhost:8000/api/v1/health-check || ( \
+	@curl -f http://localhost:9500/api/v1/health-check || ( \
 		echo "Health check failed for $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG). Attempting rollback..."; \
 		$(MAKE) rollback; \
 		exit 1; \

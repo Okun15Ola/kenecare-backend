@@ -989,6 +989,7 @@ exports.mapTestimonialRow = async (testimonial, includeImageUrl = false) => {
   };
 };
 
+
 exports.mapSpecialityRow = async (
   speciality,
   includeTags = false,
@@ -1009,20 +1010,15 @@ exports.mapSpecialityRow = async (
       ? await getPublicFileUrlFromS3Bucket(imageUrl)
       : await getFileUrlFromS3Bucket(imageUrl);
   }
-  const mapped = {
+  return {
     specialtyId,
     specialtyName: he.decode(specialtyName),
     description: he.decode(description),
     imageUrl: imageData || null,
+    tags: includeTags ? JSON.parse(tags) : null,
     isActive,
     inputtedBy,
   };
-
-  if (includeTags) {
-    mapped.tags = tags;
-  }
-
-  return mapped;
 };
 
 exports.mapUserRow = (

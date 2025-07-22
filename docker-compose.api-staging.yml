@@ -1,18 +1,13 @@
-version: "3"
-
 services:
   api:
-    # depends_on:
-    #   - db
     image: imotechsl/kenecare-api:${ENV}
     container_name: kenecare-api-${ENV}
     ports:
       - 9000:8000
     networks:
       - kenecare-staging-net
-      # - mysql-db-net
     restart: unless-stopped
-    env_file: ./.env
+    env_file: ./.env.${ENV:-staging}
     environment:
       - DB_HOST=$DB_HOST
       - DB_USER=$DB_USER
@@ -41,15 +36,21 @@ services:
       - OM_TOKEN_URL=$OM_TOKEN_URL
       - OM_TRANSACTION_STATUS_URL=$OM_TRANSACTION_STATUS_URL
       - OM_CURRENCY=$OM_CURRENCY
-      - TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID
-      - TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
-      - TWILIO_PHONE_NUMBER=$TWILIO_PHONE_NUMBER
       - SENDGRID_API_KEY=$SENDGRID_API_KEY
       - SENDGRID_EMAIL=$SENDGRID_EMAIL
-      - SMS_HIVE_CLIENT_ID=$SMS_HIVE_CLIENT_ID
-      - SMS_HIVE_CLIENT_SECRET=$SMS_HIVE_CLIENT_SECRET
-      - SMS_HIVE_AUTH_TOKEN=$SMS_HIVE_AUTH_TOKEN
-      - SMS_HIVE_URL=$SMS_HIVE_URL
+      - SMS_HIVE_CLIENT_ID=${SMS_HIVE_CLIENT_ID}
+      - SMS_HIVE_CLIENT_SECRET=${SMS_HIVE_CLIENT_SECRET}
+      - SMS_HIVE_AUTH_TOKEN=${SMS_HIVE_AUTH_TOKEN}
+      - SMS_HIVE_URL=${SMS_HIVE_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=${REDIS_DB:-0}
+      - CACHE_TTL=${CACHE_TTL:-3600}
+      - MAX_AUTH_REQUEST=${MAX_AUTH_REQUEST:-5}
+      - MAX_OTP_REQUEST=${MAX_OTP_REQUEST:-5}
+      - MAX_FILE_UPLOAD_REQUEST=${MAX_FILE_UPLOAD_REQUEST:-5}
+      - MAX_ADMIN_REQUEST=${MAX_ADMIN_REQUEST:-5}
     volumes:
       - kenecare-app-data-staging:/usr/src/app/src/public/upload
 
