@@ -14,6 +14,7 @@ const {
   validateDate,
   validateDateTime,
 } = require("../utils/time.utils");
+const { refineMobileNumber } = require("../utils/auth.utils");
 
 exports.CreateAppointmentValidation = [
   body("patientName")
@@ -33,7 +34,10 @@ exports.CreateAppointmentValidation = [
     .bail()
     .trim()
     .escape()
-    .bail(),
+    .custom(async (patientNumber) => {
+      refineMobileNumber(patientNumber);
+      return true;
+    }),
   body("doctorId")
     .notEmpty()
     .withMessage("Doctor ID is required")
@@ -82,6 +86,16 @@ exports.CreateAppointmentValidation = [
   body("appointmentDate")
     .notEmpty()
     .withMessage("Appointment Date is required")
+    .toLowerCase()
+    .isIn([
+      "online_consultation",
+      "doctor_visit",
+      "patient_visit",
+      "online_consultation",
+      "doctor_visit",
+      "patient_visit",
+    ])
+    .withMessage("Invalid Appointment Type")
     .trim()
     .escape()
     .custom(async (date) => {
