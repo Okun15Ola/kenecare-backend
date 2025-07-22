@@ -6,7 +6,7 @@ on:
       ENV:
         description: "Environment to deploy (staging or production)"
         required: true
-        default: "staging"
+        default: "prod"
         type: choice
         options:
           - staging

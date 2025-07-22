@@ -77,10 +77,11 @@
     "start:prod": "NODE_ENV=production node src/server.js",
     "start:dev": "NODE_ENV=development nodemon src/server.js",
     "test": "jest --clearCache && jest --detectOpenHandles --runInBand",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+    "lint:fix": "eslint --fix --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install; fi",
-    "build": "webpack --mode=production --config webpack.config.prod.js"
+    "build": "webpack --mode=production --config webpack.config.prod.js",
+    "format": "prettier --write ."
   },
   "lint-staged": {
     "./src/*.{js,jsx,ts,tsx}": [
