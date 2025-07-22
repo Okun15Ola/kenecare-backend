@@ -87,10 +87,10 @@ exports.getAppointmentPrescriptionById = async (presId) => {
     }
     const prescription = mapAppointmentPrescriptionRow(rawData);
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(prescription),
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(prescription),
+    // });
 
     return Response.SUCCESS({ data: prescription });
   } catch (error) {

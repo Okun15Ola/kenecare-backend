@@ -33,7 +33,7 @@ exports.getAppointmentByMeetingId = async (meetingId) => {
 };
 
 exports.approveDoctorAppointmentById = async ({ doctorId, appointmentId }) => {
-  return query(queries.APPROVE_APPOINTMENT, [doctorId, appointmentId]);
+  return query(queries.APPROVE_APPOINTMENT, [appointmentId, doctorId]);
 };
 
 exports.updateDoctorAppointmentMeetingId = async ({

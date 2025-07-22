@@ -58,8 +58,12 @@ module.exports = {
   APPROVE_APPOINTMENT: `
     UPDATE medical_appointments
     SET appointment_status = 'approved',
-        cancelled_reason = NULL, cancelled_at = NULL, canceled_by = NULL,
-        postponed_by = NULL, postponed_date = NULL, postponed_reason = NULL
+        cancelled_reason = NULL,
+        cancelled_at = NULL,
+        canceled_by = NULL,
+        postponed_by = NULL,
+        postponed_date = NULL,
+        postponed_reason = NULL
     WHERE appointment_id = ? AND doctor_id = ?;
   `,
 

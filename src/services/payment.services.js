@@ -402,7 +402,6 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
         `Failed to cancel USSD payment for transactionID: ${transactionID}`,
         ussdCancellation.reason,
       );
-      // throw new Error("Failed to cancel payment");
     }
 
     return Response.SUCCESS({

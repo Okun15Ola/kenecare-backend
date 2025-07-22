@@ -277,6 +277,8 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       });
     }
 
+    // TODO @Mevizcode Check the appointment payment status just an extra layer of security
+
     // Extract patient id from appointment to get patient email
     const {
       patient_id: patientId,
@@ -307,13 +309,26 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       });
     }
 
-    const [, patient] = await Promise.allSettled([
+    // TODO @Mevizcode Check if the appointment was updated
+    const [updated, patient] = await Promise.allSettled([
       dbObject.approveDoctorAppointmentById({
         appointmentId,
         doctorId,
       }),
       getPatientById(patientId),
     ]);
+
+    console.log(updated.value);
+    const { affectedRows, changedRows } = updated.value;
+    if (affectedRows <= 0 && changedRows <= 0) {
+      logger.warn(
+        "Failed to approve appointment appointmentId:",
+        appointmentId,
+      );
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Something Went Wrong! Please Try Again!",
+      });
+    }
 
     const { mobile_number: mobileNumber } = patient.value;
 

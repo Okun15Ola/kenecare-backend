@@ -4,12 +4,13 @@ require("module-alias/register");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-// const path = require("path");
 const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
+// const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
+// const { encryptionKey } = require("./config/default.config");
 
 // const { authenticateAdmin } = require("./middlewares/auth.middleware");
 const {
@@ -90,6 +91,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //   authenticateAdmin,
 //   express.static(path.join(__dirname, "public/upload/media")),
 // );
+
+// fetchEncryptionKey().then(() => {
+//   console.log(encryptionKey);
+// });
 
 app.use("/api/v1/health-check", (req, res) =>
   res

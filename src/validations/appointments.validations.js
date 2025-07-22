@@ -81,21 +81,14 @@ exports.CreateAppointmentValidation = [
     .notEmpty()
     .withMessage("Appointment Type is required")
     .toLowerCase()
+    .isIn(["online_consultation", "doctor_visit", "patient_visit"])
+    .withMessage("Invalid Appointment Type")
     .trim()
     .bail(),
   body("appointmentDate")
     .notEmpty()
     .withMessage("Appointment Date is required")
     .toLowerCase()
-    .isIn([
-      "online_consultation",
-      "doctor_visit",
-      "patient_visit",
-      "online_consultation",
-      "doctor_visit",
-      "patient_visit",
-    ])
-    .withMessage("Invalid Appointment Type")
     .trim()
     .escape()
     .custom(async (date) => {

@@ -198,7 +198,7 @@ exports.updateCommonSymptom = async ({
   }
 };
 
-exports.updateCommonSymptomStatus = async ({ id, status }) => {
+exports.updateCommonSymptomStatus = async ({ id }) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
@@ -206,7 +206,6 @@ exports.updateCommonSymptomStatus = async ({ id, status }) => {
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
-    console.log(status);
     return Response.SUCCESS({
       message: "Common Symptom Status Updated Successfully",
     });
