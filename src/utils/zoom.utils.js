@@ -1,127 +1,127 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-// const axios = require("axios");
-// const qs = require("qs");
-// const crypto = require("crypto");
-const WebSocketClient = require("websocket").client;
-const logger = require("../middlewares/logger.middleware");
+// // eslint-disable-next-line import/no-extraneous-dependencies
+// // const axios = require("axios");
+// // const qs = require("qs");
+// // const crypto = require("crypto");
+// const WebSocketClient = require("websocket").client;
+// const logger = require("../middlewares/logger.middleware");
 
-const client = new WebSocketClient();
+// const client = new WebSocketClient();
 
-client.on("connect", (connection) => {
-  logger.info("WebSocket Client Connected");
-  connection.on("error", (error) => {
-    logger.error(error);
-  });
-  connection.on("close", () => {
-    logger.info("echo-protocol Connection Closed");
-  });
-  connection.on("message", (message) => {
-    if (message.type === "utf8") {
-      logger.info(`Received: '${message.utf8Data}'`);
-    }
-  });
-
-  if (connection.connected) {
-    logger.info("Connected");
-  }
-});
-
-// const {
-//   zoomAccountId,
-//   zoomClientId,
-//   zoomClientSecret,
-//   zoomAccessTokenUrl,
-//   zoomApiUrl,
-// } = require("../config/default.config");
-
-// const getZoomAccessToken = async () => {
-//   try {
-//     // const response = await axios.post(
-//     //   zoomAccessTokenUrl,
-//     //   qs.stringify({
-//     //     grant_type: "account_credentials",
-//     //     account_id: zoomAccountId,
-//     //   }),
-//     //   {
-//     //     auth: {
-//     //       username: zoomClientId,
-//     //       password: zoomClientSecret,
-//     //     },
-//     //   },
-//     // );
-
-//     // const { access_token: accessToken } = response.data;
-//     return null;
-//   } catch (error) {
+// client.on("connect", (connection) => {
+//   logger.info("WebSocket Client Connected");
+//   connection.on("error", (error) => {
 //     logger.error(error);
-//     throw error;
+//   });
+//   connection.on("close", () => {
+//     logger.info("echo-protocol Connection Closed");
+//   });
+//   connection.on("message", (message) => {
+//     if (message.type === "utf8") {
+//       logger.info(`Received: '${message.utf8Data}'`);
+//     }
+//   });
+
+//   if (connection.connected) {
+//     logger.info("Connected");
 //   }
-// };
+// });
 
-// const createZoomMeeting = async ({
-//   patientName,
-//   doctorName,
-//   appointmentDate,
-//   appointmentStartTime,
-// }) => {
-//   try {
-//     // const token = await getZoomAccessToken();
-//     // const response = await axios.post(
-//     //   `${zoomApiUrl}/meetings`,
-//     //   {
-//     //     topic: `${patientName} Meidical Appointment with Dr. ${doctorName}`,
-//     //     type: 2,
-//     //     start_time: `${appointmentDate}T${appointmentStartTime}`,
-//     //     duration: 60,
-//     //     timezone: "UTC",
-//     //     password: crypto.randomBytes(3).toString("hex"),
-//     //     agenda: "Kenecare Medical Appointment",
-//     //     settings: {
-//     //       waiting_room: false,
-//     //       join_before_host: true,
-//     //       host_video: true,
-//     //       participant_video: true,
-//     //       participant_focused_meeting: true,
-//     //     },
-//     //   },
-//     //   {
-//     //     headers: {
-//     //       Authorization: `Bearer ${token}`,
-//     //       "Content-Type": "application/json",
-//     //     },
-//     //   },
-//     // );
-//     // const {
-//     //   uuid: zoomMeetingUUID,
-//     //   id: zoomMeetingID,
-//     //   topic: zoomMeetingTopic,
-//     //   agenda: zoomMeetingAgenda,
-//     //   start_url: zoomMeetingStartURL,
-//     //   join_url: zoomMeetingJoinURL,
-//     //   password: zoomMeetingPassword,
-//     //   encrypted_password: zoomMeetingEncPassword,
-//     //   status: zoomMeetingStatus,
-//     // } = response.data;
+// // const {
+// //   zoomAccountId,
+// //   zoomClientId,
+// //   zoomClientSecret,
+// //   zoomAccessTokenUrl,
+// //   zoomApiUrl,
+// // } = require("../config/default.config");
 
-//     // return {
-//     //   zoomMeetingUUID,
-//     //   zoomMeetingID,
-//     //   zoomMeetingTopic,
-//     //   zoomMeetingAgenda,
-//     //   zoomMeetingStartURL,
-//     //   zoomMeetingJoinURL,
-//     //   zoomMeetingPassword,
-//     //   zoomMeetingEncPassword,
-//     //   zoomMeetingStatus,
-//     // };
-//     return null;
-//   } catch (error) {
-//     logger.error(error);
-//     throw error;
-//   }
-// };
+// // const getZoomAccessToken = async () => {
+// //   try {
+// //     // const response = await axios.post(
+// //     //   zoomAccessTokenUrl,
+// //     //   qs.stringify({
+// //     //     grant_type: "account_credentials",
+// //     //     account_id: zoomAccountId,
+// //     //   }),
+// //     //   {
+// //     //     auth: {
+// //     //       username: zoomClientId,
+// //     //       password: zoomClientSecret,
+// //     //     },
+// //     //   },
+// //     // );
 
-// module.exports = {
-//   createZoomMeeting,
-//   getZoomAccessToken,
-// };
+// //     // const { access_token: accessToken } = response.data;
+// //     return null;
+// //   } catch (error) {
+// //     logger.error(error);
+// //     throw error;
+// //   }
+// // };
+
+// // const createZoomMeeting = async ({
+// //   patientName,
+// //   doctorName,
+// //   appointmentDate,
+// //   appointmentStartTime,
+// // }) => {
+// //   try {
+// //     // const token = await getZoomAccessToken();
+// //     // const response = await axios.post(
+// //     //   `${zoomApiUrl}/meetings`,
+// //     //   {
+// //     //     topic: `${patientName} Meidical Appointment with Dr. ${doctorName}`,
+// //     //     type: 2,
+// //     //     start_time: `${appointmentDate}T${appointmentStartTime}`,
+// //     //     duration: 60,
+// //     //     timezone: "UTC",
+// //     //     password: crypto.randomBytes(3).toString("hex"),
+// //     //     agenda: "Kenecare Medical Appointment",
+// //     //     settings: {
+// //     //       waiting_room: false,
+// //     //       join_before_host: true,
+// //     //       host_video: true,
+// //     //       participant_video: true,
+// //     //       participant_focused_meeting: true,
+// //     //     },
+// //     //   },
+// //     //   {
+// //     //     headers: {
+// //     //       Authorization: `Bearer ${token}`,
+// //     //       "Content-Type": "application/json",
+// //     //     },
+// //     //   },
+// //     // );
+// //     // const {
+// //     //   uuid: zoomMeetingUUID,
+// //     //   id: zoomMeetingID,
+// //     //   topic: zoomMeetingTopic,
+// //     //   agenda: zoomMeetingAgenda,
+// //     //   start_url: zoomMeetingStartURL,
+// //     //   join_url: zoomMeetingJoinURL,
+// //     //   password: zoomMeetingPassword,
+// //     //   encrypted_password: zoomMeetingEncPassword,
+// //     //   status: zoomMeetingStatus,
+// //     // } = response.data;
+
+// //     // return {
+// //     //   zoomMeetingUUID,
+// //     //   zoomMeetingID,
+// //     //   zoomMeetingTopic,
+// //     //   zoomMeetingAgenda,
+// //     //   zoomMeetingStartURL,
+// //     //   zoomMeetingJoinURL,
+// //     //   zoomMeetingPassword,
+// //     //   zoomMeetingEncPassword,
+// //     //   zoomMeetingStatus,
+// //     // };
+// //     return null;
+// //   } catch (error) {
+// //     logger.error(error);
+// //     throw error;
+// //   }
+// // };
+
+// // module.exports = {
+// //   createZoomMeeting,
+// //   getZoomAccessToken,
+// // };

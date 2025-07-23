@@ -6,29 +6,38 @@ on:
       ENV:
         description: "Environment to deploy (staging or production)"
         required: true
-        default: "staging"
+        default: "prod"
         type: choice
         options:
           - staging
           - prod
 
 env:
+  # Basic Environment info
   ENV: ${{github.event.inputs.ENV || 'staging'}}
+  GH_RUN_NUMBER: ${{github.run_number}}
+  SHA: ${{ github.sha }}
+  
+  # Docker Setup
   REGISTRY: docker.io
   IMAGE_NAME: imotechsl/kenecare-api
-  IMAGE_TAG: ${{github.event.inputs.ENV}}-1.0.${{github.run_number}}
+  IMAGE_TAG: ${{github.event.inputs.ENV || 'staging'}}-1.0.${{github.run_number}}
+  OLD_IMAGE_TAG: ${{github.event.inputs.ENV || 'staging'}}-1.0.$(( $GITHUB_RUN_NUMBER - 1))
+
+  #Docker compose & Env Files
   DOCKER_COMPOSE_STAGING: docker-compose.api-staging.yml
   DOCKER_COMPOSE_PROD: docker-compose.api-prod.yml
   ENV_FILE_STAGING: .env.staging
   ENV_FILE_PROD: .env.production
   ENV_FILE: .env.${{github.event.inputs.ENV || 'staging'}}
-  GH_RUN_NUMBER: ${{github.run_number}}
+
+  # Docker hub credentials
   DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-  SHA: ${{ github.event.after }}
+
+  # health check urls
   HEALTH_CHECK_URL: http://localhost:9500/api/v1/health-check
   PRODUCTION_HEALTH_CHECK_URL: https://api.kenecare.com/api/v1/health-check
-  OLD_IMAGE_TAG: ${{github.event.inputs.ENV}}-1.0.$(($GITHUB_RUN_NUMBER-1))
 
 concurrency:
   group: "kenecare-api-${{github.workflow}}-${{ github.ref }}"
