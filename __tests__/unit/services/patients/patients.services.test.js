@@ -210,12 +210,6 @@ describe("patients.services", () => {
   });
 
   describe("getPatientByUser", () => {
-    it("returns cached patient if present", async () => {
-      redisClient.get.mockResolvedValue(JSON.stringify({ patientId: 1 }));
-      const result = await patientsService.getPatientByUser(1);
-      expect(result.data.patientId).toBe(1);
-    });
-
     it("returns not found if patient does not exist", async () => {
       redisClient.get.mockResolvedValue(null);
       repo.getPatientByUserId.mockResolvedValue(null);

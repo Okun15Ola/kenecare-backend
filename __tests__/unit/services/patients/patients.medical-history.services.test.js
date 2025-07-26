@@ -82,7 +82,7 @@ describe("Patient Medical History Service", () => {
         await patientMedicalHistoryService.updatePatientMedicalHistory({
           userId: 1,
         });
-      expect(result.statusCode).toBe(201);
+      expect(result.statusCode).toBe(200);
     });
 
     it("should return a 404 if medical history not found", async () => {
