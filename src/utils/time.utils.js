@@ -1,5 +1,13 @@
 const moment = require("moment");
 const logger = require("../middlewares/logger.middleware");
+const {
+  getAvailableDoctors,
+} = require("../repository/doctorAvailableDays.repository");
+const {
+  DELETE_SLOTS,
+  BULK_INSERT_DOCTOR_TIME_SLOTS,
+} = require("../repository/queries/doctorTimeSlot.queries");
+const { withTransaction } = require("../repository/db.connection");
 
 const SL_COUNTRY_CODE = "+232";
 
@@ -23,25 +31,25 @@ const validateNewAppointmentDate = ({ date }) => {
     throw error;
   }
 };
-const validateAppointmentPostponedDate = (date) => {
+const validateAppointmentPostponedDate = (date, originalAppointmentDate) => {
   try {
-    const submittedDate = moment(moment(date).format("YYYY-MM-DD"));
-    const currentMoment = moment(moment().format("YYYY-MM-DD"));
-    const threeDaysLater = currentMoment.clone().add(3, "days");
+    const submittedDate = moment(date, "YYYY-MM-DD", true);
+    const originalDate = moment(originalAppointmentDate, "YYYY-MM-DD", true);
 
-    // check if the date is a valid date
+    // Check if the date is a valid date
     if (!submittedDate.isValid()) {
-      throw new Error("Invalid Date format");
+      return "Invalid date format. Expected YYYY-MM-DD.";
     }
 
-    if (currentMoment.isAfter(submittedDate)) {
-      throw new Error("Postpone date must be a future date.");
+    // Postponed date must be after the original appointment date
+    if (!submittedDate.isAfter(originalDate)) {
+      return "Postpone date must be after the original appointment date.";
     }
 
+    // Postponed date must not be more than 3 days from the original appointment date
+    const threeDaysLater = originalDate.clone().add(3, "days");
     if (submittedDate.isAfter(threeDaysLater)) {
-      throw new Error(
-        "Postpone date must not be more than 3 days from today's date",
-      );
+      return "Postpone date must not be more than 3 days from the original appointment date.";
     }
 
     return null;
@@ -95,6 +103,13 @@ const validateDate = (date) => {
       "Appointment date must be today or in the future. Please choose another date.",
     );
   }
+
+  const oneMonthLater = today.clone().add(1, "month");
+  if (userDate.isAfter(oneMonthLater)) {
+    throw new Error(
+      "Appointment date cannot be more than one month from today.",
+    );
+  }
 };
 
 /**
@@ -110,7 +125,6 @@ const validateDateTime = ({ date, time }) => {
   const now = moment();
   const userDateTime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm", true);
   const today = moment().format("YYYY-MM-DD");
-  logger.error("Date: ", date, "Time: ", time);
   if (!userDateTime.isValid()) {
     throw new Error(
       "Appointment date and time must be valid (YYYY-MM-DD HH:mm)",
@@ -123,7 +137,7 @@ const validateDateTime = ({ date, time }) => {
     );
   }
 
-  // If the appointment is today, ensure it's at least 2 hours from the current time
+  // If the appointment is today, ensure it's at least 1 hours from the current time
   if (date === today) {
     const minAppointmentTime = now.add(1, "hours");
     if (userDateTime.isBefore(minAppointmentTime)) {
@@ -154,6 +168,158 @@ const verifyTokenExpiry = (value) => {
   return new Date() > new Date(value);
 };
 
+const normalizeAndValidateTime = (value) => {
+  const normalizedTime = value.trim();
+  const timeFormats = ["HH:mm:ss", "H:mm:ss", "HH:mm", "H:mm"];
+  const timeMoment = moment(normalizedTime, timeFormats, true);
+  if (!timeMoment.isValid()) {
+    throw new Error(
+      "Invalid time format. Expected formats: HH:MM:SS, H:MM:SS, HH:MM, or H:MM",
+    );
+  }
+  return timeMoment.format("HH:mm:ss");
+};
+
+const validateTimeFormat = (value) => {
+  if (!value) {
+    return true;
+  }
+  normalizeAndValidateTime(value);
+  return true;
+};
+
+const validateTimeRange = (startTime, endTime) => {
+  const start = moment(startTime, "HH:mm:ss");
+  const end = moment(endTime, "HH:mm:ss");
+  if (!start.isValid() || !end.isValid()) {
+    throw new Error("Invalid time format");
+  }
+  if (start.isSameOrAfter(end)) {
+    throw new Error("Start time must be before end time");
+  }
+
+  return true;
+};
+
+/**
+ * Generates time slots for all doctors based on their available days with breaks between slots
+ * @returns {Promise<{success: boolean, message: string, count?: number}>}
+ */
+const generateDoctorTimeSlots = async () => {
+  console.log("🕒 Starting doctor time slot generation process...");
+  const startTime = new Date();
+
+  try {
+    // Get all doctors with their available days
+    console.log("📋 Fetching doctors with available days...");
+    const availableDays = await getAvailableDoctors();
+
+    if (!availableDays?.length) {
+      console.log("⚠️ No available doctor days found in the database");
+      return { success: true, message: "No available days found" };
+    }
+
+    console.log(
+      `✅ Found ${availableDays.length} available day records for doctors`,
+    );
+    const slotValues = [];
+
+    console.log(availableDays);
+    // Loop through each doctor's available days
+    console.log("🔄 Processing each doctor's available days...");
+    availableDays.forEach((day) => {
+      const { daySlotId, doctorId, dayStartTime, dayEndTime } = {
+        daySlotId: day.daySlotId,
+        day: day.day,
+        doctorId: day.doctorId,
+        dayStartTime: day.dayStartTime,
+        dayEndTime: day.dayEndTime,
+      };
+
+      if (!dayStartTime || !dayEndTime) {
+        console.log(
+          `⏩ Skipping day_slot_id ${daySlotId} - missing start/end time`,
+        );
+        return;
+      }
+
+      console.log(
+        `👨‍⚕️ Generating slots for doctor_id: ${doctorId}, day_slot_id: ${daySlotId}`,
+      );
+      console.log(`⏰ Time range: ${dayStartTime} to ${dayEndTime}`);
+
+      // Generate slots with breaks for this day
+      const startTime = moment(dayStartTime, "HH:mm:ss");
+      const endTime = moment(dayEndTime, "HH:mm:ss");
+      let currentTime = startTime.clone();
+      let slotCount = 0;
+
+      while (currentTime.clone().add(30, "minutes").isSameOrBefore(endTime)) {
+        // Create a 30-minute slot
+        const slotEndTime = currentTime.clone().add(30, "minutes");
+
+        slotValues.push([
+          doctorId,
+          daySlotId,
+          currentTime.format("HH:mm:ss"),
+          slotEndTime.format("HH:mm:ss"),
+          1, // is_slot_available
+        ]);
+        slotCount += 1;
+
+        // Add a 10-minute break after the slot
+        currentTime = slotEndTime.clone().add(10, "minutes");
+      }
+
+      console.log(
+        `✅ Created ${slotCount} slots for this day with 10-minute breaks`,
+      );
+    });
+
+    if (slotValues.length === 0) {
+      console.log("⚠️ No slots were generated");
+      return { success: true, message: "No slots to generate" };
+    }
+
+    console.log(`📊 Total slots generated: ${slotValues.length}`);
+    console.log("💾 Starting database transaction...");
+    console.log("Slots generated: ", { slotValues });
+
+    // Clear existing slots for the upcoming week before inserting new ones
+    const result = await withTransaction(async (connection) => {
+      console.log("🗑️ Deleting existing slots...");
+      await connection.query(DELETE_SLOTS);
+
+      // Insert all generated slots
+      console.log("➕ Inserting new time slots...");
+      const [insertResult] = await connection.query(
+        BULK_INSERT_DOCTOR_TIME_SLOTS,
+        [slotValues],
+      );
+
+      return insertResult;
+    });
+
+    const endTime = new Date();
+    const executionTime = (endTime - startTime) / 1000;
+
+    console.log(
+      `✅ Successfully generated ${result.affectedRows} time slots with breaks`,
+    );
+    console.log(`⏱️ Process completed in ${executionTime.toFixed(2)} seconds`);
+
+    return {
+      success: true,
+      message: `Successfully generated ${result.affectedRows} time slots with breaks`,
+      count: result.affectedRows,
+    };
+  } catch (error) {
+    console.error("❌ ERROR generating time slots:", error);
+    logger.error("Error generating time slots:", error);
+    return { success: false, message: "Error generating time slots" };
+  }
+};
+
 module.exports = {
   validateNewAppointmentDate,
   validateAppointmentTime,
@@ -163,4 +329,8 @@ module.exports = {
   validateDateTime,
   generateTokenExpiryTime,
   verifyTokenExpiry,
+  normalizeAndValidateTime,
+  validateTimeFormat,
+  validateTimeRange,
+  generateDoctorTimeSlots,
 };

@@ -56,6 +56,11 @@ exports.updateSlotTiming = async ({
   ]);
 };
 
+exports.getSlotById = async (id) => {
+  const row = await query(queries.SELECT_SLOT_BY_ID, [id]);
+  return row[0];
+};
+
 exports.bulkMarkDayUnavailable = async (doctorId, dayOfWeek) => {
   return query(queries.BULK_MARK_DAY_UNAVAILABLE, [doctorId, dayOfWeek]);
 };
@@ -70,4 +75,8 @@ exports.deleteSlotsForDay = async (doctorId, dayOfWeek) => {
 
 exports.deleteSlotsForDoctor = async (doctorId) => {
   return query(queries.DELETE_SLOTS_FOR_DOCTOR, [doctorId]);
+};
+
+exports.deleteSlots = async () => {
+  return query(queries.DELETE_SLOTS);
 };

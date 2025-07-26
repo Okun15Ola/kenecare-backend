@@ -28,6 +28,9 @@ const dbConfig = {
 // Create a connection pool with the above config:
 const connectionPool = mysql.createPool(dbConfig);
 
+// Get the promise-based version of the pool
+const promisePool = connectionPool.promise();
+
 // Create session store using the same config:
 const sessionStore = new MySQLStore(dbConfig);
 
@@ -43,5 +46,32 @@ const query = (sql, params) => {
   });
 };
 
+/**
+ * Executes a series of queries in a transaction
+ * @param {Function} callback - Async function that takes a connection and executes queries
+ * @returns {Promise<any>} Result of the callback function
+ */
+const withTransaction = async (callback) => {
+  const connection = await promisePool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const result = await callback(connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
 // Exporting the utilities:
-module.exports = { dbConfig, sessionStore, connectionPool, query };
+module.exports = {
+  dbConfig,
+  sessionStore,
+  connectionPool,
+  query,
+  withTransaction,
+  promisePool,
+};
