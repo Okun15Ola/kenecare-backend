@@ -323,32 +323,42 @@ exports.createPatientProfile = async ({
         message: "Error Creating Patient Profile. Please Try again",
       });
     }
-    if (referralCode) {
-      const [{ value: marketer }, { value: registeredUsersCount }] =
-        await Promise.allSettled([
-          getMarketerByReferralCode(referralCode),
-          getMarketersTotalRegisteredUsers(referralCode),
-        ]);
 
-      if (marketer) {
-        const {
-          phone_number: marketerPhoneNumber,
-          first_name: marketerFirstName,
-        } = marketer;
+    // Only proceed with caching and SMS if patient profile was successfully created
+    if (affectedRows > 0) {
+      // Re-fetch patient to ensure it's not null before caching
+      const newPatient = await repo.getPatientByUserId(userId);
+      if (newPatient) {
+        await redisClient.delete(`patient:${newPatient.patient_id}:*`);
+        await redisClient.clearCacheByPattern(
+          `patients:${newPatient.patient_id}:*`,
+        );
+      }
 
-        const { total_registered: totalRegistered } = registeredUsersCount;
+      if (referralCode) {
+        const [{ value: marketer }, { value: registeredUsersCount }] =
+          await Promise.allSettled([
+            getMarketerByReferralCode(referralCode),
+            getMarketersTotalRegisteredUsers(referralCode),
+          ]);
 
-        sendMarketerUserRegisteredSMS({
-          marketerName: marketerFirstName,
-          mobileNumber: marketerPhoneNumber,
-          userPhoneNumber: userMobileNumber,
-          totalRegistered,
-        });
+        if (marketer) {
+          const {
+            phone_number: marketerPhoneNumber,
+            first_name: marketerFirstName,
+          } = marketer;
+
+          const { total_registered: totalRegistered } = registeredUsersCount;
+
+          sendMarketerUserRegisteredSMS({
+            marketerName: marketerFirstName,
+            mobileNumber: marketerPhoneNumber,
+            userPhoneNumber: userMobileNumber,
+            totalRegistered,
+          });
+        }
       }
     }
-
-    await redisClient.delete(`patient:${patient.patient_id}:*`);
-    await redisClient.clearCacheByPattern(`patients:${patient.patient_id}:*`);
 
     return Response.CREATED({
       message: "Patient profile created successfully.",
