@@ -134,7 +134,8 @@ exports.deleteDaySlotsController = async (req, res, next) => {
 exports.deleteSlotByIdController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const response = await services.deleteSlotById(id);
+    const userId = parseInt(req.user.id, 10);
+    const response = await services.deleteSlotById(id, userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

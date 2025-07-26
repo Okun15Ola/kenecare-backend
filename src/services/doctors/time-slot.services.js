@@ -3,9 +3,9 @@ const logger = require("../../middlewares/logger.middleware");
 const { getDoctorByUserId } = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
+const { doctorTimeSlot } = require("../../constants/doctor.constants");
 
 const ERROR_500 = "Something went wrong. Please try again!";
-const DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN = "doctor:*";
 
 const fetchLoggedInDoctor = async (userId) => {
   if (!userId) {
@@ -13,11 +13,21 @@ const fetchLoggedInDoctor = async (userId) => {
     return null;
   }
   try {
+    const cacheKey = `doctor:${userId}:user`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
     const doctor = await getDoctorByUserId(userId);
     if (!doctor.doctor_id) {
       logger.warn(`No doctor found for userId: ${userId}`);
       return null;
     }
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctor),
+    });
     return doctor;
   } catch (error) {
     logger.error("fetchLoggedInDoctor error:", error);
@@ -37,7 +47,7 @@ exports.getAvailableSlotsForWeek = async (userId) => {
       });
     }
 
-    const cacheKey = `doctor:${doctorId}:week-time-slots`;
+    const cacheKey = `doctor:${doctorId}:time-slot:week`;
 
     const cachedData = await redisClient.get(cacheKey);
 
@@ -79,7 +89,7 @@ exports.getAvailableSlotsForDay = async (userId, day) => {
       });
     }
 
-    const cacheKey = `doctor:${doctorId}:day-time-slots:${day}`;
+    const cacheKey = `doctor:${doctorId}:time-slot:day:${day}`;
 
     const cachedData = await redisClient.get(cacheKey);
 
@@ -121,7 +131,7 @@ exports.getBookedSlots = async (userId) => {
       });
     }
 
-    const cacheKey = `doctor:${doctorId}:booked-slots`;
+    const cacheKey = `doctor:${doctorId}:time-slot:booked-slots`;
 
     const cachedData = await redisClient.get(cacheKey);
 
@@ -181,7 +191,7 @@ exports.createDoctorTimeSlot = async (
         message: ERROR_500,
       });
     }
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({ message: "Time slot created successfully" });
   } catch (error) {
@@ -217,7 +227,7 @@ exports.createMultipleDoctorTimeSlots = async (userId, slots) => {
       return Response.INTERNAL_SERVER_ERROR({ message: ERROR_500 });
     }
 
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({ message: "Time slots created successfully" });
   } catch (error) {
@@ -245,7 +255,7 @@ exports.markSlotAvailable = async (userId, slotId) => {
       return Response.INTERNAL_SERVER_ERROR({ message: ERROR_500 });
     }
 
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({ message: "Time slot updated successfully" });
   } catch (error) {
@@ -273,7 +283,7 @@ exports.markSlotUnavailable = async (userId, slotId) => {
       return Response.INTERNAL_SERVER_ERROR({ message: ERROR_500 });
     }
 
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({ message: "Time slot updated successfully" });
   } catch (error) {
@@ -311,7 +321,7 @@ exports.updateSlotTiming = async (
       return Response.INTERNAL_SERVER_ERROR({ message: ERROR_500 });
     }
 
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({ message: "Slot timing updated successfully" });
   } catch (error) {
@@ -339,7 +349,7 @@ exports.markDaySlotsUnavailable = async (userId, day) => {
       return Response.INTERNAL_SERVER_ERROR({ message: ERROR_500 });
     }
 
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({ message: "Slot timing updated successfully" });
   } catch (error) {
@@ -348,8 +358,18 @@ exports.markDaySlotsUnavailable = async (userId, day) => {
   }
 };
 
-exports.deleteSlotById = async (id) => {
+exports.deleteSlotById = async (id, userId) => {
   try {
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+
+    if (!doctorId) {
+      logger.error("Doctor not found");
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
+      });
+    }
+
     const { affectedRows } = await repo.deleteTimeSlot(id);
 
     if (!affectedRows || affectedRows < 1) {
@@ -357,7 +377,7 @@ exports.deleteSlotById = async (id) => {
       return Response.INTERNAL_SERVER_ERROR({ message: ERROR_500 });
     }
 
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({ message: "Slot deleted successfully" });
   } catch (error) {
@@ -385,7 +405,7 @@ exports.deleteDaySlots = async (userId, day) => {
       return Response.INTERNAL_SERVER_ERROR({ message: ERROR_500 });
     }
 
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({
       message: `${day} Time slot deleted successfully`,
@@ -415,7 +435,7 @@ exports.deleteDoctorSlots = async (userId) => {
       return Response.INTERNAL_SERVER_ERROR({ message: ERROR_500 });
     }
 
-    await redisClient.clearCacheByPattern(DOCTOR_TIME_SLOT_CACHE_KEY_PATTERN);
+    await redisClient.clearCacheByPattern(doctorTimeSlot(doctorId));
 
     return Response.SUCCESS({
       message: "Doctor time slots deleted successfully",

@@ -116,7 +116,7 @@ exports.getPatientAppointments = async (userId, limit, page) => {
     }
 
     const offset = (page - 1) * limit;
-    const countCacheKey = "patient:appointments:count";
+    const countCacheKey = `patient:${patientId}:appointments:count`;
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
       countQueryFn: () => repo.countPatientAppointments({ patientId }),
