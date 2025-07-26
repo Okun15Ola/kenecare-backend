@@ -18,7 +18,7 @@ exports.getPatientMedicalHistory = async (userId) => {
     }
     const { patient_id: patientID } = patient;
 
-    const cacheKey = `patient:${patientID}-medical-history:all`;
+    const cacheKey = `patient:${patientID}:medical-history:all`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -100,7 +100,7 @@ exports.createPatientMedicalHistory = async ({
       });
     }
 
-    const cacheKey = `patient:${patientId}-medical-history:all`;
+    const cacheKey = `patient:${patientId}:medical-history:all`;
     await redisClient.delete(cacheKey);
 
     return Response.CREATED({
@@ -162,10 +162,10 @@ exports.updatePatientMedicalHistory = async ({
       return Response.NOT_MODIFIED({});
     }
 
-    const cacheKey = "patient-medicalHistory:all";
+    const cacheKey = `patient:${patientId}:medical-history:all`;
     await redisClient.delete(cacheKey);
 
-    return Response.CREATED({
+    return Response.SUCCESS({
       message: "Patient Medical Info Updated Successfully.",
     });
   } catch (error) {

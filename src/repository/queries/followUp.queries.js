@@ -8,23 +8,23 @@ module.exports = {
   `,
   COUNT_DOCTOR_FOLLOW_UPS: `
   SELECT
-  COUNT(*) AS total_count,
-  SUM(followup_status = 'completed') AS completed_count,
-  SUM(followup_status = 'canceled') AS canceled_count,
-  SUM(followup_date > CURDATE() AND followup_status = 'pending') AS upcoming_count,
-  SUM(followup_date = CURDATE() AND followup_status = 'pending') AS today_count,
-  SUM(followup_date < CURDATE() AND followup_status IN ('completed', 'canceled')) AS past_count
+  COUNT(*) AS totalFollowupCount,
+  SUM(followup_status = 'completed') AS completedFollowupCount,
+  SUM(followup_status = 'canceled') AS canceledFollowupCount,
+  SUM(followup_date > CURDATE() AND followup_status = 'pending') AS upcomingFollowupCount,
+  SUM(followup_date = CURDATE() AND followup_status = 'pending') AS todayFollowupCount,
+  SUM(followup_status IN ('completed', 'canceled')) AS pastFollowupCount
   FROM appointment_followup
   WHERE doctor_id = ?;
   `,
   COUNT_PATIENT_FOLLOW_UPS: `
   SELECT
-  COUNT(*) AS total_count,
-  SUM(followup_status = 'completed') AS completed_count,
-  SUM(followup_status = 'canceled') AS canceled_count,
-  SUM(followup_date > CURDATE() AND followup_status = 'pending') AS upcoming_count,
-  SUM(followup_date = CURDATE() AND followup_status = 'pending') AS today_count,
-  SUM(followup_date < CURDATE() AND followup_status IN ('completed', 'canceled')) AS past_count
+  COUNT(*) AS totalFollowupCount,
+  SUM(followup_status = 'completed') AS completedFollowupCount,
+  SUM(followup_status = 'canceled') AS canceledFollowupCount,
+  SUM(followup_date > CURDATE() AND followup_status = 'pending') AS upcomingFollowupCount,
+  SUM(followup_date = CURDATE() AND followup_status = 'pending') AS todayFollowupCount,
+  SUM(followup_status IN ('completed', 'canceled')) AS pastFollowupCount
   FROM appointment_followup
   WHERE appointment_id IN (
   SELECT appointment_id FROM medical_appointments WHERE patient_id = ?

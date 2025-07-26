@@ -79,7 +79,7 @@ exports.getAvailableSlotsForDay = async (userId, day) => {
       });
     }
 
-    const cacheKey = `doctor:${doctorId}:day-time-slots`;
+    const cacheKey = `doctor:${doctorId}:day-time-slots:${day}`;
 
     const cachedData = await redisClient.get(cacheKey);
 
@@ -254,7 +254,7 @@ exports.markSlotAvailable = async (userId, slotId) => {
   }
 };
 
-exports.markSlotUnvailable = async (userId, slotId) => {
+exports.markSlotUnavailable = async (userId, slotId) => {
   try {
     const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
 

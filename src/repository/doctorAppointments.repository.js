@@ -16,7 +16,6 @@ exports.getDoctorAppointmentsDashboardCount = async ({ doctorId }) => {
     doctorId,
   ]);
   return result[0];
-  //  || { upcoming_count: 0, today_count: 0, past_count: 0 };
 };
 
 exports.getDoctorAppointmentById = async ({ doctorId, appointmentId }) => {

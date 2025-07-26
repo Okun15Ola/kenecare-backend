@@ -169,6 +169,7 @@ exports.createPrescription = async ({
     });
 
     await redisClient.clearCacheByPattern("appointment-prescriptions:*");
+    await redisClient.clearCacheByPattern("patient:prescriptions:*");
 
     return Response.CREATED({
       message: "Prescription Created Successfully",

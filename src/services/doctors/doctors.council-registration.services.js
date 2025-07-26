@@ -180,6 +180,8 @@ exports.createDoctorCouncilRegistration = async ({
       }),
     ]);
 
+    await redisClient.clearCacheByPattern("doctor-council-registration:*");
+
     return Response.CREATED({
       message:
         "Medical Council Registration Successfully Submitted. Your information is awaiting approval. You will be notified by email when once your documents are approved.",
@@ -278,6 +280,8 @@ exports.updateDoctorCouncilRegistration = async ({
         doctorName: `${doctorFirstName} ${doctorLastName}`,
       }),
     ]);
+
+    await redisClient.clearCacheByPattern("doctor-council-registration:*");
 
     return Response.SUCCESS({
       message:

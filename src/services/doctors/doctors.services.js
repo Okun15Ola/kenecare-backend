@@ -418,7 +418,8 @@ exports.updateDoctorProfile = async ({
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.delete(`doctor:${doctorId}`);
+    await redisClient.delete(`doctor:user:${userId}`);
+    await redisClient.delete("doctors:*");
 
     return Response.SUCCESS({
       message: "Doctor profile updated successfully.",
@@ -490,7 +491,8 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
       }
     }
 
-    await redisClient.delete(`doctor:${doctorId}`);
+    await redisClient.delete(`doctor:user:${userId}`);
+    await redisClient.delete("doctors:*");
     return Response.SUCCESS({
       message: "Doctor's profile picture updated successfully.",
     });
@@ -528,6 +530,8 @@ exports.approveDoctorProfile = async ({ doctorId, approvedBy }) => {
       }),
     ]);
 
+    await redisClient.delete("doctors:*");
+    await redisClient.clearCacheByPattern("doctor:user:*");
     return Response.SUCCESS({
       message: "Doctor profile approved successfully.",
     });

@@ -116,7 +116,7 @@ exports.getPatientAppointments = async (userId, limit, page) => {
     }
 
     const offset = (page - 1) * limit;
-    const countCacheKey = "patient-appointments:count";
+    const countCacheKey = "patient:appointments:count";
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
       countQueryFn: () => repo.countPatientAppointments({ patientId }),
@@ -131,7 +131,7 @@ exports.getPatientAppointments = async (userId, limit, page) => {
 
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
-      `patient-appointments-${patientId}:all`,
+      `patient:${patientId}:appointments:all`,
       limit,
       offset,
     );
@@ -181,7 +181,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       });
     }
     const { patient_id: patientId } = patient;
-    const cacheKey = `patient-appointments-${patientId}:${id}`;
+    const cacheKey = `patient:${patientId}:appointments:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -234,7 +234,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
     }
 
     const { patient_id: patientId } = patient;
-    const cacheKey = `patient-appointments-by-uuid:${uuId}`;
+    const cacheKey = `patient:${patientId}:apppointments:uuid:${uuId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -403,11 +403,22 @@ exports.createPatientAppointment = async ({
             doctorAppointmentSms.reason,
         );
         await repo.deleteAppointmentById({ appointmentId });
+        await redisClient.clearCacheByPattern(
+          `patient:${patientId}:appointments:*`,
+        );
+        await redisClient.clearCacheByPattern(
+          `doctor:${doctorId}:appointments:*`,
+        );
         return Response.INTERNAL_SERVER_ERROR({
           message: "An Error Occured on our side, please try again",
         });
       }
-
+      await redisClient.clearCacheByPattern(
+        `patient:${patientId}:appointments:*`,
+      );
+      await redisClient.clearCacheByPattern(
+        `doctor:${doctorId}:appointments:*`,
+      );
       return Response.CREATED({
         message:
           "First Free Medical Appointment Booked Successfully. Thank you for choosing Kenecare",
@@ -434,6 +445,9 @@ exports.createPatientAppointment = async ({
         `Failed to get payment URL for appointment ID ${appointmentId}`,
       );
       await repo.deleteAppointmentById({ appointmentId });
+      await redisClient.clearCacheByPattern(
+        `patient:${patientId}:appointments:*`,
+      );
       return Response.INTERNAL_SERVER_ERROR({
         message: "An Error Occured on our side, please try again",
       });
@@ -463,6 +477,10 @@ exports.createPatientAppointment = async ({
       });
     }
 
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:appointments:*`,
+    );
+    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
     return Response.CREATED({
       message: "Appointment Booked Successfully. Proceed to payment.",
       data: {

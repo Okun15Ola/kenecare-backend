@@ -1,7 +1,6 @@
 const moment = require("moment");
 const dbObject = require("../../repository/doctorAppointments.repository");
 const { getDoctorByUserId } = require("../../repository/doctors.repository");
-const { getUserById } = require("../../repository/users.repository");
 const { USERTYPE, VERIFICATIONSTATUS } = require("../../utils/enum.utils");
 const Response = require("../../utils/response.utils");
 const { getPatientById } = require("../../repository/patients.repository");
@@ -9,6 +8,7 @@ const {
   appointmentApprovalSms,
   appointmentPostponedSms,
   appointmentEndedSms,
+  doctorAppointmentCancelledSms,
 } = require("../../utils/sms.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
@@ -39,7 +39,7 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
       });
     }
 
-    const cacheKey = `doctor:${doctorId}:appointment-metrics`;
+    const cacheKey = `doctor:${doctorId}:appointments:metrics`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -76,7 +76,7 @@ exports.getDoctorAppointments = async ({ userId, limit, page }) => {
     const { doctor_id: doctorId, title } = doctor;
 
     const offset = (page - 1) * limit;
-    const countCacheKey = `doctors:appointments-${doctorId}:count`;
+    const countCacheKey = `doctor:${doctorId}:appointments:count`;
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
       countQueryFn: () => dbObject.countDoctorAppointments({ doctorId }),
@@ -89,7 +89,7 @@ exports.getDoctorAppointments = async ({ userId, limit, page }) => {
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider(
-      `doctors:appointments-${doctorId}:all`,
+      `doctor:${doctorId}:appointments:all`,
       limit,
       offset,
     );
@@ -145,7 +145,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
-    const cacheKey = `doctor:appointments-${doctorId}:${id}`;
+    const cacheKey = `doctor:${doctorId}:appointments::${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -195,7 +195,7 @@ exports.getDoctorAppointmentByDateRange = async ({
     const { doctor_id: doctorId, title } = doctor;
 
     const offset = (page - 1) * limit;
-    const countCacheKey = `doctor:${doctorId}:appointments-${startDate}-${endDate}:count`;
+    const countCacheKey = `doctor:${doctorId}:appointment:${startDate}-${endDate}:count`;
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
       countQueryFn: () =>
@@ -252,7 +252,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
-      console.error("Doctor profile not found for userId:", userId);
+      logger.error("Doctor profile not found for userId:", userId);
       return Response.NOT_FOUND({
         message:
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
@@ -271,13 +271,11 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     });
 
     if (!appointment) {
-      console.warn("Appointment not found for appointmentId:", appointmentId);
+      logger.warn("Appointment not found for appointmentId:", appointmentId);
       return Response.NOT_FOUND({
         message: "Appointment Not Found! Please Try Again!",
       });
     }
-
-    // TODO @Mevizcode Check the appointment payment status just an extra layer of security
 
     // Extract patient id from appointment to get patient email
     const {
@@ -288,22 +286,22 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       appointment_date: appointmentDate,
       appointment_time: appointmentTime,
       appointment_status: appointmentStatus,
+      payment_status: paymentStatus,
     } = appointment;
 
+    if (paymentStatus !== "success") {
+      logger.warn("Appointment payment unsuccessful: ", paymentStatus);
+      return Response.BAD_REQUEST({
+        message: "Appointment payment unsuccessful",
+      });
+    }
+
     if (appointmentStatus === "approved") {
-      console.warn(
-        "Appointment already approved for appointmentId:",
-        appointmentId,
-      );
       return Response.SUCCESS({
         message: "Appointment has already been approved",
       });
     }
     if (appointmentStatus === "started") {
-      console.warn(
-        "Appointment already started for appointmentId:",
-        appointmentId,
-      );
       return Response.SUCCESS({
         message: "Appointment meeting has already started",
       });
@@ -339,7 +337,10 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentTime,
     });
 
-    // TODO @Mevizcode Clear Cache after appointment has been postponed
+    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:appointments:*`,
+    );
     return Response.SUCCESS({
       message: "Medical Appointment Approved Successfully",
     });
@@ -411,7 +412,11 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
         startTime: moment().format("HH:mm:ss"),
       }),
     ]);
-    // TODO @Mevizcode Clear Cache after appointment has been postponed
+
+    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:appointments:*`,
+    );
 
     return Response.SUCCESS({
       message: "Appointment Started Successfully",
@@ -485,7 +490,11 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       patientName: `${firstName} ${lastName}`,
       mobileNumber,
     });
-    // TODO @Mevizcode Clear Cache after appointment has been postponed
+
+    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:appointments:*`,
+    );
 
     return Response.SUCCESS({
       message: "Appointment Ended Successfully",
@@ -502,31 +511,20 @@ exports.cancelDoctorAppointment = async ({
   cancelReason,
 }) => {
   try {
-    const user = await getUserById(userId);
-
-    if (!user) {
-      logger.error("User not found for userId:", userId);
-      return Response.NOT_FOUND({ message: "User Not Found" });
-    }
-
-    const { user_type: userType } = user;
-
-    if (userType !== USERTYPE.DOCTOR) {
-      logger.error("Unauthorized access attempt by userId:", userId);
-      return Response.UNAUTHORIZED({ message: "Unauthorized access" });
-    }
-
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
-      logger.error("Doctor profile not found for userId:", userId);
+      logger.error(`Doctor profile not found for userId: ${userId}`);
       return Response.NOT_FOUND({
         message:
           "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
       });
     }
-    const { is_profile_approved: isProfileApproved, doctor_id: doctorId } =
-      doctor;
+    const {
+      is_profile_approved: isProfileApproved,
+      doctor_id: doctorId,
+      mobile_number: mobileNumber,
+    } = doctor;
 
     if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
       logger.error("Doctor's profile not approved for userId:", userId);
@@ -547,10 +545,39 @@ exports.cancelDoctorAppointment = async ({
     }
 
     // Extract patient id from appointment to get patient email
-    const { appointment_status: appointmentStatus } = rawData;
+    const {
+      appointment_status: appointmentStatus,
+      appointment_date: appointmentDate,
+      appointment_time: appointmentTime,
+      patient_name_on_prescription: patientNameOnPrescription,
+      doctor_last_name: doctorLastName,
+      patient_id: patientId,
+    } = rawData;
 
-    // patient_id: patientId,
-    // console.log(patientId);
+    const now = moment();
+    const appointmentDateTime = moment(
+      `${appointmentDate} ${appointmentTime}`,
+      "YYYY-MM-DD HH:mm:ss",
+    );
+
+    // check if appointment date is past
+    if (appointmentDateTime.isBefore(now)) {
+      logger.warn(`Appointment is already in the past: ${appointmentDateTime}`);
+      return Response.BAD_REQUEST({
+        message: "You cannot cancel a past appointment",
+      });
+    }
+
+    const hoursDiff = appointmentDateTime.diff(now, "hours");
+
+    if (hoursDiff < 24) {
+      logger.warn(`Appointment too close to cancel: ${hoursDiff}h remaining`);
+      return Response.BAD_REQUEST({
+        message:
+          "Appointments can only be cancelled at least 24 hours in advance",
+      });
+    }
+
     if (appointmentStatus === "canceled") {
       logger.warn(
         "Appointment already canceled for appointmentId:",
@@ -558,9 +585,6 @@ exports.cancelDoctorAppointment = async ({
       );
       return Response.NOT_MODIFIED();
     }
-
-    // TODO Check the appointment date and time
-    // TODO Appointment's can only be cancelled 24 hours before the appointment date
 
     // UPDATE appointment status to 'approved'
     const { affectedRows } = await dbObject.cancelDoctorAppointmentById({
@@ -579,8 +603,18 @@ exports.cancelDoctorAppointment = async ({
       });
     }
 
-    // TODO Send a notification(email,sms) to the user
-    // TODO @Mevizcode Clear Cache after appointment has been postponed
+    await doctorAppointmentCancelledSms({
+      mobileNumber,
+      doctorName: `Dr. ${doctorLastName}`,
+      patientNameOnPrescription,
+      appointmentDate,
+      appointmentTime,
+      cancelReason,
+    });
+    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:appointments:*`,
+    );
 
     return Response.SUCCESS({
       message:
@@ -600,27 +634,13 @@ exports.postponeDoctorAppointment = async ({
   postponedTime,
 }) => {
   try {
-    const user = await getUserById(userId);
-
-    if (!user) {
-      logger.error("User not found for userId:", userId);
-      return Response.NOT_FOUND({ message: "User Not Found" });
-    }
-
-    const { user_type: userType } = user;
-
-    if (userType !== USERTYPE.DOCTOR) {
-      logger.error("Unauthorized access attempt by userId:", userId);
-      return Response.UNAUTHORIZED({ message: "Unauthorized access" });
-    }
-
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
       logger.error("Doctor profile not found for userId:", userId);
-      return Response.UNAUTHORIZED({
+      return Response.NOT_FOUND({
         message:
-          "Unauthorized Access. This action can only be performed by a doctor",
+          "Doctor Profile Not Found. Please Register As a Doctor and Create a Doctor's Profile",
       });
     }
     const { doctor_id: doctorId } = doctor;
@@ -638,21 +658,12 @@ exports.postponeDoctorAppointment = async ({
     }
     const {
       patient_id: patientId,
-      appointment_status: appointmentStatus,
       patient_name_on_prescription: patientNameOnPrescription,
       first_name: patientFirstName,
       last_name: patientLastName,
       doctor_first_name: doctorFirstName,
       doctor_last_name: doctorLastName,
     } = rawData;
-
-    if (appointmentStatus === "postponed") {
-      logger.warn(
-        "Appointment already postponed for appointmentId:",
-        appointmentId,
-      );
-      return Response.NOT_MODIFIED();
-    }
 
     // check if the date and time has already been booked
     const timeSlotBooked = await dbObject.getDoctorAppointByDateAndTime({
@@ -675,7 +686,7 @@ exports.postponeDoctorAppointment = async ({
     }
     const { mobile_number: mobileNumber } = await getPatientById(patientId);
     // UPDATE appointment status to 'approved'
-    const { affectedRows } = await dbObject.postponeDoctorAppointmentById({
+    const result = await dbObject.postponeDoctorAppointmentById({
       doctorId,
       appointmentId,
       postponedReason,
@@ -683,12 +694,12 @@ exports.postponeDoctorAppointment = async ({
       postponedTime,
     });
 
-    if (!affectedRows || affectedRows < 1) {
+    if (!result || (result.affectedRows === 0 && result.changedRows === 0)) {
       logger.error(
         "Failed to postpone appointment for appointmentId:",
         appointmentId,
       );
-      return Response.BAD_REQUEST({
+      return Response.INTERNAL_SERVER_ERROR({
         message: "Failed to postpone appointment. Please try again later.",
       });
     }
@@ -703,7 +714,10 @@ exports.postponeDoctorAppointment = async ({
       appointmentTime: postponedTime,
     });
 
-    // TODO @Mevizcode Clear Cache after appointment has been postponed
+    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:appointments:*`,
+    );
 
     return Response.SUCCESS({
       message:

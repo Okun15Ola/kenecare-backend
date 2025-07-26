@@ -11,7 +11,7 @@ const logger = require("../../middlewares/logger.middleware");
 
 exports.getAppointmentPrescriptions = async (id) => {
   try {
-    const cacheKey = `patient:appointment:prescriptions:${id}`;
+    const cacheKey = `patient:prescriptions:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
@@ -58,11 +58,6 @@ exports.getAppointmentPrescriptionById = async (presId) => {
       });
     }
     const prescription = mapAppointmentPrescriptionRow(rawData);
-
-    // await redisClient.set({
-    //   key: cacheKey,
-    //   value: JSON.stringify(prescription),
-    // });
 
     return Response.SUCCESS({ data: prescription });
   } catch (error) {

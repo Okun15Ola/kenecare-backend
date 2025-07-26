@@ -10,12 +10,6 @@ const logger = require("../../middlewares/logger.middleware");
 
 exports.getDoctorSharedMedicalDocuments = async (userId) => {
   try {
-    const cacheKey = `doctor:shared-medical-documents:${userId}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
-
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
@@ -24,6 +18,11 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
     }
 
     const { doctor_id: doctorId, title } = doctor;
+    const cacheKey = `doctor:${doctorId}:documents`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
 
     const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
 
@@ -49,12 +48,6 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
 };
 exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
   try {
-    const cacheKey = `doctor:shared-medical-documents:${sharedDocId}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
-
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
@@ -62,6 +55,12 @@ exports.getDoctorSharedMedicalDocument = async ({ userId, sharedDocId }) => {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
     const { doctor_id: doctorId, title } = doctor;
+
+    const cacheKey = `doctor:${doctorId}:documents:${sharedDocId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
 
     const document = await getDoctorSharedMedicalDocumentById({
       doctorId,
