@@ -224,6 +224,12 @@ exports.PostponeAppointmentValidation = [
     .custom(async (value, { req }) => {
       const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
 
+      if (!doctorId) {
+        throw new Error(
+          "Unauthorized Access. This action can only be performed by a doctor",
+        );
+      }
+
       const data = await getDoctorAppointmentById({
         doctorId,
         appointmentId: value,
@@ -233,18 +239,52 @@ exports.PostponeAppointmentValidation = [
         throw new Error("Appointment Not Found");
       }
 
+      const {
+        appointment_status: appointmentStatus,
+        appointment_date: appointmentDate,
+        appointment_time: appointmentTime,
+      } = data;
+
+      req.appointmentDate = appointmentDate;
+
+      if (appointmentStatus === "postponed") {
+        throw new Error("Appointment already postponed to a future date");
+      }
+
+      const now = moment();
+      const appointmentDateTime = moment(
+        `${appointmentDate} ${appointmentTime}`,
+        "YYYY-MM-DD HH:mm:ss",
+      );
+
+      if (appointmentDateTime.isBefore(now)) {
+        throw new Error("You cannot postpone a past appointment");
+      }
+
+      const hoursDiff = appointmentDateTime.diff(now, "hours");
+
+      if (hoursDiff < 24) {
+        throw new Error(
+          "Appointment can only be postponed at least 48 hours in advance",
+        );
+      }
+
       return true;
     }),
   body("postponedDate")
     .notEmpty()
     .withMessage("New Appointment Date is required")
     .bail()
-    .custom(async (value) => {
-      const error = validateAppointmentPostponedDate(value);
+    .custom(async (value, { req }) => {
+      const error = validateAppointmentPostponedDate(
+        value,
+        req.appointmentDate,
+      );
       if (error) {
         throw new Error(error);
       }
 
+      req.appointmentDate = null;
       return true;
     }),
 
