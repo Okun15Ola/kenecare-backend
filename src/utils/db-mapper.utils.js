@@ -197,7 +197,7 @@ exports.mapBlogRow = async (blog, includeImageUrl) => {
     author,
     featured,
     isActive,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 };
 
@@ -496,7 +496,7 @@ exports.mapDoctorAppointmentRow = (doctorAppointment, title) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 };
 
@@ -617,7 +617,7 @@ exports.mapDoctorSharedMedicalDocs = async (
     patientName: `${patientFirstName} ${patientLastName}`,
     doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
     note,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
   if (includeDocumentUrl && documentUUID !== null) {
     const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
@@ -695,7 +695,7 @@ exports.mapPatientAppointments = (appointment) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 };
 
@@ -763,8 +763,8 @@ exports.mapAppointmentPrescriptionRow = (prescription) => {
     diagnosis: decryptedDiagnosis,
     medicines: medicinesParsed,
     comment: decryptedComment,
-    createdAt: moment(dateCreated).format("YYYY-MM-DD"),
-    updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
+    createdAt: dateCreated,
+    updatedAt: dateUpdated,
   };
 };
 
@@ -966,7 +966,7 @@ exports.mapPatientAppointment = (appointment) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 };
 
@@ -1109,7 +1109,7 @@ exports.mapPatientMedicalDocumentRow = async (
     patientName: `${patientFirstName} ${patientLastName}`,
     doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
     note,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 
   if (includeDocumentUrl) {

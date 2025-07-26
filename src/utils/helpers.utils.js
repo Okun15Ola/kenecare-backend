@@ -1,8 +1,12 @@
+// const moment = require("moment");
 const { USERTYPE } = require("./enum.utils");
 const { createOrUpdateStreamUser } = require("./stream.utils");
 const { getPatientByUserId } = require("../repository/patients.repository");
 const { getFileUrlFromS3Bucket } = require("./aws-s3.utils");
 const { getDoctorByUserId } = require("../repository/doctors.repository");
+// const {
+//   getAvailableDoctors,
+// } = require("../repository/doctorAvailableDays.repository");
 const logger = require("../middlewares/logger.middleware");
 /**
  * Creates or updates a Stream user profile for a given user type and user ID.
