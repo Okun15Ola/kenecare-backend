@@ -1284,3 +1284,28 @@ exports.mapApiClientsRow = (client) => {
     updatedAt,
   };
 };
+
+exports.mapApiKeyRow = (key) => {
+  const {
+    key_uuid: keyUuid,
+    name: clientName,
+    website,
+    api_key: apiKey,
+    is_active: isActive,
+    expires_at: expiresAt,
+    last_used_at: lastUsed,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  } = key;
+  return {
+    keyUuid,
+    clientName,
+    website: website ? he.decode(website) : null,
+    apiKey,
+    isActive,
+    expiresAt,
+    lastUsed,
+    createdAt,
+    updatedAt,
+  };
+};

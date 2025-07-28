@@ -10,6 +10,8 @@ const {
 
 router.use(authenticateAdmin, adminLimiter);
 
+router.get("/", apiKeyController.getAllApiKeyController);
+
 router.post(
   "/",
   createKeyValidations,

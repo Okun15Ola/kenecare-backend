@@ -33,3 +33,13 @@ exports.extendApiKeyExpiryController = async (req, res, next) => {
     return next(error);
   }
 };
+
+exports.getAllApiKeyController = async (req, res, next) => {
+  try {
+    const response = await apiKeyService.getAllApiKeyService();
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};

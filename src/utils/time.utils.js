@@ -206,27 +206,16 @@ const validateTimeRange = (startTime, endTime) => {
  * @returns {Promise<{success: boolean, message: string, count?: number}>}
  */
 const generateDoctorTimeSlots = async () => {
-  console.log("🕒 Starting doctor time slot generation process...");
-  const startTime = new Date();
-
   try {
     // Get all doctors with their available days
-    console.log("📋 Fetching doctors with available days...");
     const availableDays = await getAvailableDoctors();
 
     if (!availableDays?.length) {
-      console.log("⚠️ No available doctor days found in the database");
       return { success: true, message: "No available days found" };
     }
 
-    console.log(
-      `✅ Found ${availableDays.length} available day records for doctors`,
-    );
     const slotValues = [];
 
-    console.log(availableDays);
-    // Loop through each doctor's available days
-    console.log("🔄 Processing each doctor's available days...");
     availableDays.forEach((day) => {
       const { daySlotId, doctorId, dayStartTime, dayEndTime } = {
         daySlotId: day.daySlotId,
@@ -237,22 +226,13 @@ const generateDoctorTimeSlots = async () => {
       };
 
       if (!dayStartTime || !dayEndTime) {
-        console.log(
-          `⏩ Skipping day_slot_id ${daySlotId} - missing start/end time`,
-        );
         return;
       }
-
-      console.log(
-        `👨‍⚕️ Generating slots for doctor_id: ${doctorId}, day_slot_id: ${daySlotId}`,
-      );
-      console.log(`⏰ Time range: ${dayStartTime} to ${dayEndTime}`);
 
       // Generate slots with breaks for this day
       const startTime = moment(dayStartTime, "HH:mm:ss");
       const endTime = moment(dayEndTime, "HH:mm:ss");
       let currentTime = startTime.clone();
-      let slotCount = 0;
 
       while (currentTime.clone().add(30, "minutes").isSameOrBefore(endTime)) {
         // Create a 30-minute slot
@@ -265,33 +245,21 @@ const generateDoctorTimeSlots = async () => {
           slotEndTime.format("HH:mm:ss"),
           1, // is_slot_available
         ]);
-        slotCount += 1;
 
         // Add a 10-minute break after the slot
         currentTime = slotEndTime.clone().add(10, "minutes");
       }
-
-      console.log(
-        `✅ Created ${slotCount} slots for this day with 10-minute breaks`,
-      );
     });
 
     if (slotValues.length === 0) {
-      console.log("⚠️ No slots were generated");
       return { success: true, message: "No slots to generate" };
     }
 
-    console.log(`📊 Total slots generated: ${slotValues.length}`);
-    console.log("💾 Starting database transaction...");
-    console.log("Slots generated: ", { slotValues });
-
     // Clear existing slots for the upcoming week before inserting new ones
     const result = await withTransaction(async (connection) => {
-      console.log("🗑️ Deleting existing slots...");
       await connection.query(DELETE_SLOTS);
 
       // Insert all generated slots
-      console.log("➕ Inserting new time slots...");
       const [insertResult] = await connection.query(
         BULK_INSERT_DOCTOR_TIME_SLOTS,
         [slotValues],
@@ -299,14 +267,6 @@ const generateDoctorTimeSlots = async () => {
 
       return insertResult;
     });
-
-    const endTime = new Date();
-    const executionTime = (endTime - startTime) / 1000;
-
-    console.log(
-      `✅ Successfully generated ${result.affectedRows} time slots with breaks`,
-    );
-    console.log(`⏱️ Process completed in ${executionTime.toFixed(2)} seconds`);
 
     return {
       success: true,

@@ -19,4 +19,6 @@ module.exports = {
     "SELECT c.* FROM api_clients c JOIN api_keys k ON c.client_id = k.client_id WHERE k.api_key = ? AND k.is_active = 1 AND c.status = 'active' AND (k.expires_at IS NULL OR k.expires_at > NOW());",
   COUNT_ACTIVE_KEYS_BY_ENVIRONMENT:
     "SELECT COUNT(*) AS keyCount FROM api_keys WHERE client_id = ? AND api_key LIKE CONCAT(?, '%') AND is_active = 1;",
+  GET_ALL_API_KEYS:
+    "SELECT k.*, c.name, c.website FROM api_keys k JOIN api_clients c ON k.client_id =  c.client_id;",
 };

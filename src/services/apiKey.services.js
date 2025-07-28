@@ -7,6 +7,8 @@ const {
   getKeyPrefix,
   generateApiKeyAndSecret,
 } = require("../utils/auth.utils");
+const { redisClient } = require("../config/redis.config");
+const { mapApiKeyRow } = require("../utils/db-mapper.utils");
 
 const MAX_KEYS_PER_ENVIRONMENT = 5;
 
@@ -44,6 +46,7 @@ exports.createApiKeyService = async (clientId) => {
         message: "Something went wrong. Please try again",
       });
     }
+    await redisClient.delete("api-keys:all");
     return Response.CREATED({
       data: {
         apiKey,
@@ -66,6 +69,7 @@ exports.deactivateApiKeyService = async (keyUuid) => {
         message: "Something went wrong. Please try again.",
       });
     }
+    await redisClient.delete("api-keys:all");
     return Response.SUCCESS({ message: "Api Key Deactivated" });
   } catch (error) {
     logger.error("deactivateApiKeyService: ", error);
@@ -87,9 +91,40 @@ exports.extendApiKeyService = async (keyUuid) => {
         message: "Something went wrong. Please try again.",
       });
     }
+
+    await redisClient.delete("api-keys:all");
     return Response.SUCCESS({ message: "Api Key Expiry extended" });
   } catch (error) {
     logger.error("deactivateApiKeyService: ", error);
+    throw error;
+  }
+};
+
+exports.getAllApiKeyService = async () => {
+  try {
+    const cachekey = "api-keys:all";
+    const cachedData = await redisClient.get(cachekey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
+    const data = await apiKeyRepository.getAllApiKeys();
+
+    if (!data?.length) {
+      return Response.SUCCESS({
+        message: "No Api Keys Found.",
+      });
+    }
+
+    const keys = data.map(mapApiKeyRow);
+
+    await redisClient.set({
+      key: cachekey,
+      value: JSON.stringify(keys),
+    });
+    return Response.SUCCESS({ keys });
+  } catch (error) {
+    logger.error("getAllApiKeyService: ", error);
     throw error;
   }
 };

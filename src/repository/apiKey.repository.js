@@ -44,10 +44,13 @@ exports.validateApiKey = async (key) => {
 };
 
 exports.countActiveKeysByEnvironment = async (clientId, environmentPrefix) => {
-  console.log(clientId, environmentPrefix);
   const row = await query(queries.COUNT_ACTIVE_KEYS_BY_ENVIRONMENT, [
     clientId,
     environmentPrefix,
   ]);
   return row[0];
+};
+
+exports.getAllApiKeys = async () => {
+  return query(queries.GET_ALL_API_KEYS);
 };

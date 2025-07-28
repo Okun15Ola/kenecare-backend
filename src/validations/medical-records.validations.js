@@ -113,7 +113,6 @@ exports.ShareMedicalDocumentValidation = [
         hashedPassword: password,
       });
       if (!isMatch) {
-        console.log("Wrong password");
         throw new Error("Error Sharing Medical Document. Incorrect Password");
       }
       return true;

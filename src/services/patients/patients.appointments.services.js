@@ -87,8 +87,6 @@ exports.getPatientFollowUpMetrics = async (userId) => {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
-    console.log("Fetching follow-up metrics for patient:", patientId);
-
     const data = await countPatientFollowUp(patientId);
 
     await redisClient.set({

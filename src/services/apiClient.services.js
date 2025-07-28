@@ -79,9 +79,9 @@ exports.getAllApiClientService = async () => {
       key: cachekey,
       value: JSON.stringify(clients),
     });
-    return Response.SUCCESS({ data });
+    return Response.SUCCESS({ clients });
   } catch (error) {
-    logger.error("deleteApiClientService: ", error);
+    logger.error("getAllApiClientService: ", error);
     throw error;
   }
 };

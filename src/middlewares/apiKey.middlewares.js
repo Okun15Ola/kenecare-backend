@@ -12,7 +12,6 @@ exports.authenticateClient = async (req, res, next) => {
 
     // Check if credentials are provided
     if (!apiKey || !apiSecret) {
-      console.log("No api key or secret");
       logger.warn(
         `Authentication attempt without proper credentials from ${req.ip}`,
       );
