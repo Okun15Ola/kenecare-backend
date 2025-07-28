@@ -24,7 +24,7 @@ exports.GetAllMedicalRecordsController = async (req, res, next) => {
 exports.GetMedicalRecordByIDController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const docId = parseInt(req.params.id, 10);
+    const docId = parseInt(req.body.id, 10);
     const response = await getPatientMedicalDocument({ docId, userId });
     return res.status(response.statusCode).json(response);
   } catch (error) {
@@ -71,10 +71,10 @@ exports.UpdateMedicalRecordByIdController = async (req, res, next) => {
   }
 };
 
-exports.DeletemedicaRecordByIdController = async (req, res, next) => {
+exports.DeleteMedicalRecordByIdController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const docId = parseInt(req.params.id, 10);
+    const docId = parseInt(req.body.id, 10);
     const response = await deletePatientMedicalDocument({
       documentId: docId,
       userId,
@@ -157,7 +157,6 @@ exports.UpdateSharedMedicalDocumentByIdController = async (req, res, next) => {
 exports.DeleteSharedMedicalDocumentByIdController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-
     const documentId = parseInt(req.params.id, 10);
 
     const response = await deletePatientSharedMedicalDocument({
