@@ -27,6 +27,15 @@ module.exports = {
       END
   `,
 
+  SELECT_ALL_AVAILABLE_DOCTORS: `
+  SELECT day_slot_id AS daySlotId, doctor_id AS doctorId, day_of_week AS day, day_start_time AS dayStartTime, day_end_time AS dayEndTime
+  FROM doctor_available_days
+  WHERE is_available = 1;
+  `,
+
+  SELECT_AVAILABLE_DAY_BY_ID:
+    "SELECT * FROM doctor_available_days WHERE day_slot_id = ? AND is_available = 1;",
+
   SELECT_SPECIFIC_DAY_AVAILABILITY: `
     SELECT day_slot_id, day_start_time, day_end_time, is_available
     FROM doctor_available_days

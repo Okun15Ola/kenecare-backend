@@ -25,9 +25,11 @@ module.exports = {
 
   GET_PATIENT_APPOINTMENTS_DASHBOARD_COUNTS: `
   SELECT
-  SUM(appointment_date > CURDATE() AND appointment_status IN ('approved', 'pending', 'started')) AS upcoming_count,
-  SUM(appointment_date = CURDATE() AND appointment_status IN ('approved', 'pending', 'started')) AS today_count,
-  SUM(appointment_date < CURDATE() AND appointment_status IN ('completed', 'canceled', 'postponed', 'referred')) AS past_count
+  SUM(appointment_status = 'completed') AS completed_count,
+  SUM(appointment_status = 'canceled') AS canceledAppointmentCount,
+  SUM(appointment_date > CURDATE() AND appointment_status IN ('pending')) AS pendingAppointmentCount,
+  SUM(appointment_date = CURDATE() AND appointment_status IN ('approved', 'pending', 'started')) AS todayAppointmentCount,
+  SUM(appointment_status = 'postponed') AS postponeAppointmentCount
   FROM medical_appointments
   INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
   INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id

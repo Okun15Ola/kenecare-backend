@@ -1259,6 +1259,32 @@ INSERT INTO `zoom_meetings` VALUES (1,'78518927238','TW/Ng4dcTe6lpjUTJpnnSw==','
 /*!40000 ALTER TABLE `zoom_meetings` ENABLE KEYS */;
 UNLOCK TABLES;
 
+CREATE TABLE `api_clients` (
+  `client_id` INT PRIMARY KEY AUTO_INCREMENT,
+  `client_uuid` CHAR(36) UNIQUE NOT NULL,
+  `name` VARCHAR(100) NOT NULL,
+  `description` TEXT,
+  `contact_email` VARCHAR(255) NULL,
+  `contact_phone` VARCHAR(50) NULL,
+  `website` VARCHAR(255),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE `api_keys` (
+  `key_id` INT PRIMARY KEY AUTO_INCREMENT,
+  `key_uuid` CHAR(36) UNIQUE NOT NULL,
+  `client_id` INT NOT NULL,
+  `api_key` VARCHAR(64) UNIQUE NOT NULL,
+  `api_secret` VARCHAR(128) NOT NULL,
+  `is_active` TINYINT(1) DEFAULT 1,
+  `expires_at` TIMESTAMP NULL,
+  `last_used_at` TIMESTAMP NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`client_id`) REFERENCES `api_clients`(`client_id`) ON DELETE CASCADE
+);
+
 --
 -- Dumping events for database 'db_kenecare'
 --

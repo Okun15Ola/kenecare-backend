@@ -11,7 +11,7 @@ exports.getDoctorAvailableDays = async (userId) => {
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
-    const cacheKey = `doctor:${doctorId}:availableDays`;
+    const cacheKey = `doctor:${userId}:availableDays`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -51,7 +51,7 @@ exports.getDoctorSpecifyDayAvailabilty = async (userId, day) => {
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
-    const cacheKey = `doctor:${doctorId}:day:${day}`;
+    const cacheKey = `doctor:${userId}:day:${day}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -86,7 +86,7 @@ exports.getDoctorSpecifyDayAvailabilty = async (userId, day) => {
 
 exports.getDoctorsAvailableOnSpecifyDay = async (dayOfWeek) => {
   try {
-    const cacheKey = `doctors-available-on:${dayOfWeek}`;
+    const cacheKey = `doctors:available-on:${dayOfWeek}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -145,7 +145,8 @@ exports.createDoctorSingleDayAvailability = async (
       });
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:*`);
+    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
+    await redisClient.clearCacheByPattern("doctors:available-on:*");
 
     return Response.SUCCESS({
       message: `Doctor ${dayOfWeek} availability created successfully`,
@@ -179,8 +180,8 @@ exports.createDoctorMultipleDaysAvailability = async ({ userId, days }) => {
         message: "Failed to create multiple days availability",
       });
     }
-
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:*`);
+    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
+    await redisClient.clearCacheByPattern("doctors:available-on:*");
 
     return Response.SUCCESS({
       message: "Doctor availability for multiple days created successfully",
@@ -222,7 +223,8 @@ exports.updateDoctorWeekendAvailability = async (
       });
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:*`);
+    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
+    await redisClient.clearCacheByPattern("doctors:available-on:*");
 
     return Response.SUCCESS({
       message: "Doctor weekend availability updated successfully",
@@ -256,7 +258,8 @@ exports.updateDoctorWorkHoursAvailability = async (
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:*`);
+    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
+    await redisClient.clearCacheByPattern("doctors:available-on:*");
 
     return Response.SUCCESS({
       message: "Doctor working hours updated successfully",
@@ -288,7 +291,8 @@ exports.updateDoctorDayAvailability = async (
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:*`);
+    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
+    await redisClient.clearCacheByPattern("doctors:available-on:*");
 
     return Response.SUCCESS({
       message: "Doctor working days updated successfully",
@@ -322,7 +326,8 @@ exports.updateDoctorMultipleWorkHoursAvailability = async (
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:*`);
+    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
+    await redisClient.clearCacheByPattern("doctors:available-on:*");
 
     return Response.SUCCESS({
       message: "Doctor working days updated successfully",
@@ -346,8 +351,8 @@ exports.deleteDoctorSpecificDayAvailability = async (userId, dayOfWeek) => {
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:*`);
-
+    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
+    await redisClient.clearCacheByPattern("doctors:available-on:*");
     return Response.SUCCESS({
       message: `Doctor's ${dayOfWeek} availability deleted successfully`,
     });
@@ -370,7 +375,8 @@ exports.deleteDoctorAllDaysAvailability = async (userId) => {
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:*`);
+    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
+    await redisClient.clearCacheByPattern("doctors:available-on:*");
 
     return Response.SUCCESS({
       message: "Doctor's all days availability deleted successfully",

@@ -32,7 +32,6 @@ exports.GetPatientAppointmentMetricsController = async (req, res, next) => {
 exports.GetPatientFollowUpMetricsController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    console.log("User ID:", userId);
     const response = await getPatientFollowUpMetrics(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {

@@ -12,7 +12,7 @@ module.exports = {
     WHERE patient_id = ? LIMIT 1;
   `,
   GET_PATIENT_BY_USER_ID: `
-    SELECT patient_id, first_name, middle_name, last_name, gender, dob, booked_first_appointment, patients.user_id, mobile_number, email, notification_token, profile_pic_url, user_type, is_account_active
+    SELECT patient_id, first_name, middle_name, last_name, gender, dob, booked_first_appointment, patients.user_id, mobile_number, email, notification_token, profile_pic_url, user_type, is_account_active, is_online
     FROM patients
     INNER JOIN users ON patients.user_id = users.user_id
     WHERE patients.user_id = ? LIMIT 1;

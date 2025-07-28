@@ -32,7 +32,7 @@ describe("Patient Documents Service", () => {
       const result =
         await patientDocumentsService.getPatientMedicalDocuments(1);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("patient-documents-1:all");
+      expect(redisClient.get).toHaveBeenCalledWith("patient:1:documents:all");
     });
 
     it("should return a 404 if patient not found", async () => {

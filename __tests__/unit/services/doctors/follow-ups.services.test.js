@@ -233,7 +233,7 @@ describe("follow-ups.services", () => {
       const result =
         await followUpsService.updateAppointmentFollowUpService(params);
       expect(result).toBe("success");
-      expect(redisClient.delete).toHaveBeenCalled();
+      expect(redisClient.clearCacheByPattern).toHaveBeenCalled();
     });
   });
 
@@ -392,7 +392,7 @@ describe("follow-ups.services", () => {
       const result =
         await followUpsService.deleteAppointmentFollowUpService(params);
       expect(result).toBe("success");
-      expect(redisClient.delete).toHaveBeenCalled();
+      expect(redisClient.clearCacheByPattern).toHaveBeenCalled();
     });
   });
 });

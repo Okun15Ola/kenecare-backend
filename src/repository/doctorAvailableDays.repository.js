@@ -13,6 +13,15 @@ exports.getSpecificDayAvailability = async (doctorId, dayOfWeek) => {
   return row[0];
 };
 
+exports.getAvailableDoctors = async () => {
+  return query(queries.SELECT_ALL_AVAILABLE_DOCTORS);
+};
+
+exports.getAvailableDayById = async (id) => {
+  const row = await query(queries.SELECT_AVAILABLE_DAY_BY_ID, [id]);
+  return row[0];
+};
+
 exports.getDoctorsAvailableOnDay = async (dayOfWeek) => {
   return query(queries.SELECT_DOCTORS_AVAILABLE_ON_DAY, [dayOfWeek]);
 };

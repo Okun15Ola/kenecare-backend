@@ -197,7 +197,7 @@ exports.mapBlogRow = async (blog, includeImageUrl) => {
     author,
     featured,
     isActive,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 };
 
@@ -496,7 +496,7 @@ exports.mapDoctorAppointmentRow = (doctorAppointment, title) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 };
 
@@ -617,7 +617,7 @@ exports.mapDoctorSharedMedicalDocs = async (
     patientName: `${patientFirstName} ${patientLastName}`,
     doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
     note,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
   if (includeDocumentUrl && documentUUID !== null) {
     const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
@@ -695,7 +695,7 @@ exports.mapPatientAppointments = (appointment) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 };
 
@@ -753,6 +753,7 @@ exports.mapAppointmentPrescriptionRow = (prescription) => {
     try {
       medicinesParsed = JSON.parse(decryptedMedicines);
     } catch (e) {
+      console.error(e);
       medicinesParsed = null;
     }
   }
@@ -763,8 +764,8 @@ exports.mapAppointmentPrescriptionRow = (prescription) => {
     diagnosis: decryptedDiagnosis,
     medicines: medicinesParsed,
     comment: decryptedComment,
-    createdAt: moment(dateCreated).format("YYYY-MM-DD"),
-    updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
+    createdAt: dateCreated,
+    updatedAt: dateUpdated,
   };
 };
 
@@ -792,6 +793,7 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     email,
     user_type: userType,
     is_account_active: isAccountActive,
+    is_online: isOnline,
   } = doctor;
 
   let profilePicData = null;
@@ -834,6 +836,7 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     email,
     userType,
     isAccountActive,
+    isOnline,
     doctorAvailableDays,
   };
 };
@@ -858,6 +861,7 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     is_profile_approved: isProfileApproved,
     mobile_number: mobileNumber,
     email,
+    is_online: isOnline,
     user_id: userId,
     user_type: userType,
   } = doctor;
@@ -893,6 +897,7 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     city,
     yearOfExperience,
     isProfileApproved,
+    isOnline,
     doctorAvailableDays,
   };
 };
@@ -966,7 +971,7 @@ exports.mapPatientAppointment = (appointment) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 };
 
@@ -981,7 +986,7 @@ exports.mapTestimonialRow = async (testimonial, includeImageUrl = false) => {
     is_approved: isApproved,
     approved_by: approvedBy,
   } = testimonial;
-  let imageData = null;
+  let imageData;
   if (!patientPic) {
     imageData = null;
   } else if (includeImageUrl) {
@@ -1109,7 +1114,7 @@ exports.mapPatientMedicalDocumentRow = async (
     patientName: `${patientFirstName} ${patientLastName}`,
     doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
     note,
-    createdAt: moment(createdAt).format("YYYY-MM-DD"),
+    createdAt,
   };
 
   if (includeDocumentUrl) {
@@ -1242,6 +1247,7 @@ exports.mapPrescriptionRow = (
       try {
         medicinesParsed = JSON.parse(decryptedMedicines);
       } catch (e) {
+        console.error(e);
         medicinesParsed = null;
       }
     }
@@ -1253,4 +1259,53 @@ exports.mapPrescriptionRow = (
   }
 
   return mapped;
+};
+
+exports.mapApiClientsRow = (client) => {
+  const {
+    // client_id: clientId,
+    client_uuid: clientUuid,
+    name: clientName,
+    description: clientDescription,
+    contact_email: clientEmail,
+    contact_phone: clientPhone,
+    website: clientWebsite,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  } = client;
+  return {
+    clientUuid,
+    clientName,
+    clientDescription: clientDescription || null,
+    clientEmail: clientEmail || null,
+    clientPhone: clientPhone || null,
+    clientWebsite: clientWebsite ? he.decode(clientWebsite) : null,
+    createdAt,
+    updatedAt,
+  };
+};
+
+exports.mapApiKeyRow = (key) => {
+  const {
+    key_uuid: keyUuid,
+    name: clientName,
+    website,
+    api_key: apiKey,
+    is_active: isActive,
+    expires_at: expiresAt,
+    last_used_at: lastUsed,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  } = key;
+  return {
+    keyUuid,
+    clientName,
+    website: website ? he.decode(website) : null,
+    apiKey,
+    isActive,
+    expiresAt,
+    lastUsed,
+    createdAt,
+    updatedAt,
+  };
 };

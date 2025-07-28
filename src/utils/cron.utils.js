@@ -3,6 +3,7 @@ const moment = require("moment");
 const {
   getAppointments,
 } = require("../repository/adminAppointments.repository");
+const { generateDoctorTimeSlots } = require("./time.utils");
 const logger = require("../middlewares/logger.middleware");
 const { redisClient } = require("../config/redis.config");
 
@@ -76,17 +77,18 @@ const getAllAppointments = async () => {
     throw error;
   }
 };
-let cronJobInstance;
+let appointmentCronJobInstance;
+let timeSlotCronInstance;
 
 module.exports = {
-  startCron: () => {
-    if (cronJobInstance) {
+  startAppointmentCron: () => {
+    if (appointmentCronJobInstance) {
       logger.info("Cron job is already running...");
       console.info("Cron job is already running...");
       return;
     }
 
-    cronJobInstance = new CronJob(
+    appointmentCronJobInstance = new CronJob(
       "*/5 * * * *",
       async () => {
         try {
@@ -106,13 +108,65 @@ module.exports = {
     logger.info("Cron job started successfully");
   },
 
-  stopCron: () => {
-    if (cronJobInstance) {
-      cronJobInstance.stop();
-      cronJobInstance = null;
+  stopAppointmentCron: () => {
+    if (appointmentCronJobInstance) {
+      appointmentCronJobInstance.stop();
+      appointmentCronJobInstance = null;
       logger.info("Cron job stopped");
     } else {
       logger.info("No active cron job to stop");
+    }
+  },
+
+  // New time slot cron functions
+  startTimeSlotCron: () => {
+    if (timeSlotCronInstance) {
+      logger.info("Time slot cron job is already running...");
+      console.info("Time slot cron job is already running...");
+      return;
+    }
+
+    // Run every Sunday at 12:00 AM
+    timeSlotCronInstance = new CronJob(
+      "0 0 * * 0",
+      async () => {
+        try {
+          logger.info("Running doctor time slot generation job...");
+          console.info("Running doctor time slot generation job...");
+
+          const result = await generateDoctorTimeSlots();
+
+          if (result.success) {
+            logger.info(`Time slot generation completed: ${result.message}`);
+            console.info(`Time slot generation completed: ${result.message}`);
+          } else {
+            logger.error(`Time slot generation failed: ${result.message}`);
+            console.error(`Time slot generation failed: ${result.message}`);
+          }
+        } catch (error) {
+          logger.error("Error in time slot cron job:", error);
+          console.error("Error in time slot cron job:", error);
+        }
+      },
+      null,
+      false, // prevent auto start
+      "UTC",
+    );
+
+    timeSlotCronInstance.start();
+    logger.info("Time slot cron job started successfully");
+    console.info("Time slot cron job started successfully");
+  },
+
+  stopTimeSlotCron: () => {
+    if (timeSlotCronInstance) {
+      timeSlotCronInstance.stop();
+      timeSlotCronInstance = null;
+      logger.info("Time slot cron job stopped");
+      console.info("Time slot cron job stopped");
+    } else {
+      logger.info("No active time slot cron job to stop");
+      console.info("No active time slot cron job to stop");
     }
   },
 };

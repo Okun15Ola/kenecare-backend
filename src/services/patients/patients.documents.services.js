@@ -35,7 +35,7 @@ exports.getPatientMedicalDocuments = async (userId) => {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
     const { patient_id: patientId } = patient;
-    const cacheKey = `patient-documents-${patientId}:all`;
+    const cacheKey = `patient:${patientId}:documents:all`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -65,12 +65,6 @@ exports.getPatientMedicalDocuments = async (userId) => {
 
 exports.getPatientMedicalDocument = async ({ userId, docId }) => {
   try {
-    const cacheKey = `patient-documents:${docId}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
-
     const patient = await getPatientByUserId(userId);
 
     if (!patient) {
@@ -79,6 +73,11 @@ exports.getPatientMedicalDocument = async ({ userId, docId }) => {
     }
 
     const { patient_id: patientId } = patient;
+    const cacheKey = `patient:${patientId}:documents:${docId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
     const rawData = await getPatientMedicalDocumentByDocumentId({
       documentId: docId,
       patientId,
@@ -164,7 +163,7 @@ exports.createPatientMedicalDocument = async ({
     }
 
     // clear cache
-    await redisClient.clearCacheByPattern(`patient-documents-${patientId}:*`);
+    await redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`);
 
     // send response to user
     return Response.CREATED({
@@ -243,8 +242,8 @@ exports.updatePatientMedicalDocument = async ({
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`patient-documents-${patientId}:*`);
-    await redisClient.delete(`patient-documents:${docId}`);
+    await redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`);
+    await redisClient.delete(`patient:${patientId}:documents:${docId}`);
 
     // send response to user
     return Response.CREATED({
@@ -284,7 +283,8 @@ exports.deletePatientMedicalDocument = async ({ userId, documentId }) => {
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.delete(`patient-documents:${documentId}`);
+    await redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`);
+    await redisClient.delete(`patient:${patientId}:documents:${documentId}`);
 
     return Response.SUCCESS({
       message: "Medical Document Deleted Successfully",
@@ -366,6 +366,12 @@ exports.createPatientSharedMedicalDocument = async ({
       mobileNumber: doctorMobileNumber,
       patientName: `${firstName} ${lastName}`,
     });
+
+    await Promise.all([
+      redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:documents:*`),
+      redisClient.delete(`patient:${patientId}:documents:${documentId}`),
+    ]);
 
     return Response.SUCCESS({
       message: "Medical Document Shared Successfully",
@@ -460,8 +466,11 @@ exports.deletePatientSharedMedicalDocument = async ({ userId, documentId }) => {
         message: "Shared Medical Document Not Found",
       });
     }
-
-    await redisClient.delete(`patient-shared-documents:${documentId}`);
+    await Promise.all([
+      redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`),
+      redisClient.clearCacheByPattern("doctor:*:documents:*"),
+      redisClient.delete(`patient:${patientId}:documents:${documentId}`),
+    ]);
 
     return Response.SUCCESS({
       message: "Shared Medical Document Deleted Successfully",

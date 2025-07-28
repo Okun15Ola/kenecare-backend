@@ -46,24 +46,29 @@ const createOrUpdateStreamUser = async ({
 };
 
 const createStreamCall = async (call) => {
-  const { callType, callID, userId, appointmentId } = call;
-  const streamCall = client.video.call(callType, callID);
-  streamCall.getOrCreate({
-    members_limit: 2,
-    // Ring and Notify cannot be both true
-    // notify: true,
-    // ring: true,
-    video: true,
-    data: {
-      created_by_id: userId.toString(),
-      custom: {
-        appointmentId,
+  try {
+    const { callType, callID, userId, appointmentId, members } = call;
+    const streamCall = client.video.call(callType, callID);
+    return await streamCall.getOrCreate({
+      members_limit: members?.length || 2,
+      // Ring and Notify cannot be both true
+      // notify: true,
+      // ring: true,
+      video: true,
+      data: {
+        members,
+        created_by_id: userId.toString(),
+        custom: {
+          appointmentId,
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    logger.error("CREATE_STREAM_CALL_ERROR: ", error);
+    console.error("CREATE_STREAM_CALL_ERROR: ", error);
+    throw error;
+  }
 };
-// const getStreamCall = async (call) => {};
-// const updateStreamCall = async (call) => {};
 
 module.exports = {
   createOrUpdateStreamUser,

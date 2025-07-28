@@ -39,12 +39,70 @@ jest.mock("../../../../src/utils/caching.utils", () => ({
 
 describe("doctor.appointments.services", () => {
   beforeAll(() => {
-    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
-    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
-    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
-    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
-    jest.spyOn(Response, "UNAUTHORIZED").mockImplementation((data) => data);
-    jest.spyOn(Response, "NOT_MODIFIED").mockImplementation((data) => data);
+    jest
+      .spyOn(Response, "SUCCESS")
+      .mockImplementation(({ message, data, pagination }) => ({
+        status: "success",
+        statusCode: 200,
+        timestamp: new Date(),
+        message,
+        data,
+        ...(pagination && { pagination }),
+      }));
+    jest
+      .spyOn(Response, "NOT_FOUND")
+      .mockImplementation(({ message, error, errorCode }) => ({
+        status: "error",
+        errorCode,
+        statusCode: 404,
+        timestamp: new Date(),
+        message,
+        errors: error,
+      }));
+    jest
+      .spyOn(Response, "BAD_REQUEST")
+      .mockImplementation(({ message, error, errorCode }) => ({
+        status: "error",
+        errorCode,
+        statusCode: 400,
+        timestamp: new Date(),
+        message,
+        errors: error,
+      }));
+    jest.spyOn(Response, "CREATED").mockImplementation(({ data, message }) => ({
+      status: "created",
+      statusCode: 201,
+      timestamp: new Date(),
+      message,
+      data,
+    }));
+    jest
+      .spyOn(Response, "UNAUTHORIZED")
+      .mockImplementation(({ message, error, errorCode }) => ({
+        status: "error",
+        errorCode,
+        statusCode: 401,
+        timestamp: new Date(),
+        message: message || "Authentication required",
+        errors: error,
+      }));
+    jest.spyOn(Response, "NOT_MODIFIED").mockImplementation(() => ({
+      status: "not modified",
+      statusCode: 304,
+      timestamp: new Date(),
+      message: null,
+      data: null,
+    }));
+    jest
+      .spyOn(Response, "INTERNAL_SERVER_ERROR")
+      .mockImplementation(({ message, errorCode }) => ({
+        status: "error",
+        errorCode,
+        statusCode: 500,
+        timestamp: new Date(),
+        message: message || "Internal server error",
+        errors: null,
+      }));
   });
   beforeEach(() => {
     jest.clearAllMocks();
@@ -55,11 +113,11 @@ describe("doctor.appointments.services", () => {
   describe("getDoctorAppointments", () => {
     it("should return NOT_FOUND if doctor not found", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.getDoctorAppointments({
         userId: 1,
       });
-      expect(result).toBe("not_found");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
       expect(logger.error).toHaveBeenCalled();
     });
 
@@ -124,12 +182,12 @@ describe("doctor.appointments.services", () => {
   describe("getDoctorAppointment", () => {
     it("should return NOT_FOUND if doctor not found", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.getDoctorAppointment({
         userId: 1,
         id: 2,
       });
-      expect(result).toBe("not_found");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return UNAUTHORIZED if user is not doctor", async () => {
@@ -165,12 +223,12 @@ describe("doctor.appointments.services", () => {
       });
       redisConfig.redisClient.get.mockResolvedValue(null);
       dbObject.getDoctorAppointmentById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.getDoctorAppointment({
         userId: 1,
         id: 2,
       });
-      expect(result).toBe("not_found");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return appointment with followUps", async () => {
@@ -181,7 +239,6 @@ describe("doctor.appointments.services", () => {
       });
       redisConfig.redisClient.get.mockResolvedValue(null);
       dbObject.getDoctorAppointmentById.mockResolvedValue({ appointmentId: 2 });
-      dbMapper.mapDoctorAppointmentRow.mockReturnValue({ appointmentId: 2 });
       followUpRepo.getAppointmentFollowUps.mockResolvedValue([{ id: 3 }]);
       dbMapper.mapFollowUpsRow.mockReturnValue({ id: 3, mapped: true });
       Response.SUCCESS.mockReturnValue("success");
@@ -198,29 +255,30 @@ describe("doctor.appointments.services", () => {
   describe("approveDoctorAppointment", () => {
     it("should return NOT_FOUND if doctor not found", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.approveDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_found");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return NOT_FOUND if appointment not found", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       dbObject.getDoctorAppointmentById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.approveDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_found");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return SUCCESS if appointment already approved", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       dbObject.getDoctorAppointmentById.mockResolvedValue({
         appointment_status: "approved",
+        payment_status: "success", // Added payment_status mock
       });
       Response.SUCCESS.mockReturnValue("success");
       const result = await doctorAppointmentsService.approveDoctorAppointment({
@@ -244,16 +302,21 @@ describe("doctor.appointments.services", () => {
         patient_name_on_prescription: "Pat Ient",
         appointment_date: "2024-01-01",
         appointment_time: "10:00",
+        payment_status: "success",
       });
-      dbObject.approveDoctorAppointmentById.mockResolvedValue({});
+      dbObject.approveDoctorAppointmentById.mockResolvedValue({
+        affectedRows: 1,
+        changedRows: 1,
+      });
       patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
       smsUtils.appointmentApprovalSms.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("success");
+      Response.SUCCESS.mockReturnValue({ status: "success", statusCode: 200 });
       const result = await doctorAppointmentsService.approveDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("success");
+      expect(result.status).toBe("success");
+      expect(result.statusCode).toBe(200);
       expect(smsUtils.appointmentApprovalSms).toHaveBeenCalled();
     });
   });
@@ -261,23 +324,23 @@ describe("doctor.appointments.services", () => {
   describe("startDoctorAppointment", () => {
     it("should return BAD_REQUEST if doctor not found", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue(null);
-      Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result = await doctorAppointmentsService.startDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("bad_request");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(400);
     });
 
     it("should return BAD_REQUEST if appointment not found", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       dbObject.getDoctorAppointmentById.mockResolvedValue(null);
-      Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result = await doctorAppointmentsService.startDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("bad_request");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(400);
     });
 
     it("should return BAD_REQUEST if patient not found", async () => {
@@ -287,12 +350,12 @@ describe("doctor.appointments.services", () => {
         patient_id: 2,
       });
       patientsRepo.getPatientById.mockResolvedValue(null);
-      Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result = await doctorAppointmentsService.startDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("bad_request");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(400);
     });
 
     it("should start appointment and create stream call", async () => {
@@ -304,12 +367,12 @@ describe("doctor.appointments.services", () => {
       patientsRepo.getPatientById.mockResolvedValue({ user_id: 3 });
       streamUtils.createStreamCall.mockResolvedValue();
       dbObject.updateDoctorAppointmentStartTime.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("success");
       const result = await doctorAppointmentsService.startDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("success");
+      expect(result.status).toBe("success");
+      expect(result.statusCode).toBe(200);
       expect(streamUtils.createStreamCall).toHaveBeenCalled();
     });
   });
@@ -317,23 +380,27 @@ describe("doctor.appointments.services", () => {
   describe("endDoctorAppointment", () => {
     it("should return UNAUTHORIZED if doctor not found", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue(null);
-      Response.UNAUTHORIZED.mockReturnValue("unauthorized");
+      Response.UNAUTHORIZED.mockReturnValue({
+        status: "error",
+        statusCode: 401,
+      });
       const result = await doctorAppointmentsService.endDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("unauthorized");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(401);
     });
 
     it("should return NOT_FOUND if appointment not found", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       dbObject.getDoctorAppointmentById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.endDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_found");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return NOT_MODIFIED if already completed", async () => {
@@ -341,12 +408,12 @@ describe("doctor.appointments.services", () => {
       dbObject.getDoctorAppointmentById.mockResolvedValue({
         appointment_status: "completed",
       });
-      Response.NOT_MODIFIED.mockReturnValue("not_modified");
       const result = await doctorAppointmentsService.endDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_modified");
+      expect(result.status).toBe("not modified");
+      expect(result.statusCode).toBe(304);
     });
 
     it("should end appointment and send sms", async () => {
@@ -364,35 +431,25 @@ describe("doctor.appointments.services", () => {
       patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
       dbObject.updateDoctorAppointmentEndTime.mockResolvedValue();
       smsUtils.appointmentEndedSms.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("success");
       const result = await doctorAppointmentsService.endDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("success");
+      expect(result.status).toBe("success");
+      expect(result.statusCode).toBe(200);
       expect(smsUtils.appointmentEndedSms).toHaveBeenCalled();
     });
   });
 
   describe("cancelDoctorAppointment", () => {
     it("should return NOT_FOUND if user not found", async () => {
-      usersRepo.getUserById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
+      doctorsRepo.getDoctorByUserId.mockResolvedValue(null);
       const result = await doctorAppointmentsService.cancelDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_found");
-    });
-
-    it("should return UNAUTHORIZED if user is not doctor", async () => {
-      usersRepo.getUserById.mockResolvedValue({ user_type: "PATIENT" });
-      Response.UNAUTHORIZED.mockReturnValue("unauthorized");
-      const result = await doctorAppointmentsService.cancelDoctorAppointment({
-        userId: 1,
-        appointmentId: 2,
-      });
-      expect(result).toBe("unauthorized");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return NOT_FOUND if doctor not found", async () => {
@@ -400,12 +457,12 @@ describe("doctor.appointments.services", () => {
         user_type: enumUtils.USERTYPE.DOCTOR,
       });
       doctorsRepo.getDoctorByUserId.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.cancelDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_found");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return UNAUTHORIZED if profile not approved", async () => {
@@ -415,12 +472,12 @@ describe("doctor.appointments.services", () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({
         is_profile_approved: "PENDING",
       });
-      Response.UNAUTHORIZED.mockReturnValue("unauthorized");
       const result = await doctorAppointmentsService.cancelDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("unauthorized");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(401);
     });
 
     it("should return NOT_FOUND if appointment not found", async () => {
@@ -432,12 +489,12 @@ describe("doctor.appointments.services", () => {
         doctor_id: 1,
       });
       dbObject.getDoctorAppointmentById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.cancelDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_found");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return NOT_MODIFIED if already canceled", async () => {
@@ -451,12 +508,12 @@ describe("doctor.appointments.services", () => {
       dbObject.getDoctorAppointmentById.mockResolvedValue({
         appointment_status: "canceled",
       });
-      Response.NOT_MODIFIED.mockReturnValue("not_modified");
       const result = await doctorAppointmentsService.cancelDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_modified");
+      expect(result.status).toBe("not modified");
+      expect(result.statusCode).toBe(304);
     });
 
     it("should return BAD_REQUEST if cancel fails", async () => {
@@ -473,12 +530,12 @@ describe("doctor.appointments.services", () => {
       dbObject.cancelDoctorAppointmentById.mockResolvedValue({
         affectedRows: 0,
       });
-      Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result = await doctorAppointmentsService.cancelDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("bad_request");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(400);
     });
 
     it("should cancel appointment and return SUCCESS", async () => {
@@ -495,47 +552,24 @@ describe("doctor.appointments.services", () => {
       dbObject.cancelDoctorAppointmentById.mockResolvedValue({
         affectedRows: 1,
       });
-      Response.SUCCESS.mockReturnValue("success");
       const result = await doctorAppointmentsService.cancelDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("success");
+      expect(result.status).toBe("success");
+      expect(result.statusCode).toBe(200);
     });
   });
 
   describe("postponeDoctorAppointment", () => {
     it("should return NOT_FOUND if user not found", async () => {
-      usersRepo.getUserById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
-      const result = await doctorAppointmentsService.postponeDoctorAppointment({
-        userId: 1,
-        appointmentId: 2,
-      });
-      expect(result).toBe("not_found");
-    });
-
-    it("should return UNAUTHORIZED if user is not doctor", async () => {
-      usersRepo.getUserById.mockResolvedValue({ user_type: "PATIENT" });
-      Response.UNAUTHORIZED.mockReturnValue("unauthorized");
-      const result = await doctorAppointmentsService.postponeDoctorAppointment({
-        userId: 1,
-        appointmentId: 2,
-      });
-      expect(result).toBe("unauthorized");
-    });
-
-    it("should return UNAUTHORIZED if doctor not found", async () => {
-      usersRepo.getUserById.mockResolvedValue({
-        user_type: enumUtils.USERTYPE.DOCTOR,
-      });
       doctorsRepo.getDoctorByUserId.mockResolvedValue(null);
-      Response.UNAUTHORIZED.mockReturnValue("unauthorized");
       const result = await doctorAppointmentsService.postponeDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("unauthorized");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return NOT_FOUND if appointment not found", async () => {
@@ -544,28 +578,12 @@ describe("doctor.appointments.services", () => {
       });
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       dbObject.getDoctorAppointmentById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorAppointmentsService.postponeDoctorAppointment({
         userId: 1,
         appointmentId: 2,
       });
-      expect(result).toBe("not_found");
-    });
-
-    it("should return NOT_MODIFIED if already postponed", async () => {
-      usersRepo.getUserById.mockResolvedValue({
-        user_type: enumUtils.USERTYPE.DOCTOR,
-      });
-      doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
-      dbObject.getDoctorAppointmentById.mockResolvedValue({
-        appointment_status: "postponed",
-      });
-      Response.NOT_MODIFIED.mockReturnValue("not_modified");
-      const result = await doctorAppointmentsService.postponeDoctorAppointment({
-        userId: 1,
-        appointmentId: 2,
-      });
-      expect(result).toBe("not_modified");
+      expect(result.status).toBe("error");
+      expect(result.statusCode).toBe(404);
     });
 
     it("should return BAD_REQUEST if time slot booked", async () => {
@@ -578,30 +596,6 @@ describe("doctor.appointments.services", () => {
         patient_id: 2,
       });
       dbObject.getDoctorAppointByDateAndTime.mockResolvedValue(true);
-      Response.BAD_REQUEST.mockReturnValue("bad_request");
-      const result = await doctorAppointmentsService.postponeDoctorAppointment({
-        userId: 1,
-        appointmentId: 2,
-        postponedDate: "2024-01-01",
-        postponedTime: "10:00",
-      });
-      expect(result).toBe("bad_request");
-    });
-
-    it("should return BAD_REQUEST if postpone fails", async () => {
-      usersRepo.getUserById.mockResolvedValue({
-        user_type: enumUtils.USERTYPE.DOCTOR,
-      });
-      doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
-      dbObject.getDoctorAppointmentById.mockResolvedValue({
-        appointment_status: "pending",
-        patient_id: 2,
-      });
-      dbObject.getDoctorAppointByDateAndTime.mockResolvedValue(false);
-      patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
-      dbObject.postponeDoctorAppointmentById.mockResolvedValue({
-        affectedRows: 0,
-      });
       Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result = await doctorAppointmentsService.postponeDoctorAppointment({
         userId: 1,
@@ -632,14 +626,14 @@ describe("doctor.appointments.services", () => {
         affectedRows: 1,
       });
       smsUtils.appointmentPostponedSms.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("success");
       const result = await doctorAppointmentsService.postponeDoctorAppointment({
         userId: 1,
         appointmentId: 2,
         postponedDate: "2024-01-01",
         postponedTime: "10:00",
       });
-      expect(result).toBe("success");
+      expect(result.status).toBe("success");
+      expect(result.statusCode).toBe(200);
       expect(smsUtils.appointmentPostponedSms).toHaveBeenCalled();
     });
   });

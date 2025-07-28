@@ -116,7 +116,7 @@ exports.getDoctorsPatientsHasMet = async (userId) => {
 
 exports.getPatientById = async (id) => {
   try {
-    const cacheKey = `patients:${id}`;
+    const cacheKey = `patient:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -160,7 +160,7 @@ exports.getPatientById = async (id) => {
 exports.getPatientsTestimonial = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "patient-testimonials:count";
+    const countCacheKey = "patient:testimonials:count";
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
       countQueryFn: countTestimonial,
@@ -174,7 +174,7 @@ exports.getPatientsTestimonial = async (limit, page) => {
     }
 
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
-    const cacheKey = cacheKeyBulider("patient-testimonials:all", limit, offset);
+    const cacheKey = cacheKeyBulider("patient:testimonials:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
@@ -206,12 +206,6 @@ exports.getPatientsTestimonial = async (limit, page) => {
 
 exports.getPatientByUser = async (id) => {
   try {
-    const cacheKey = `patients-user:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
-
     const rawData = await repo.getPatientByUserId(id);
     if (!rawData) {
       logger.warn(`Patient Profile Not Found for User ID: ${id}`);
@@ -229,6 +223,12 @@ exports.getPatientByUser = async (id) => {
         `Unauthorized access attempt for user ID: ${id} on patient profile ID: ${patient.patientId}`,
       );
       return Response.FORBIDDEN({ message: "Unauthorized account access." });
+    }
+
+    const cacheKey = `patient:${patient.patientId}:user:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
     const medicalRecord = await repo.getPatientMedicalInfoByPatientId(
@@ -323,27 +323,40 @@ exports.createPatientProfile = async ({
         message: "Error Creating Patient Profile. Please Try again",
       });
     }
-    if (referralCode) {
-      const [{ value: marketer }, { value: registeredUsersCount }] =
-        await Promise.allSettled([
-          getMarketerByReferralCode(referralCode),
-          getMarketersTotalRegisteredUsers(referralCode),
-        ]);
 
-      if (marketer) {
-        const {
-          phone_number: marketerPhoneNumber,
-          first_name: marketerFirstName,
-        } = marketer;
+    // Only proceed with caching and SMS if patient profile was successfully created
+    if (affectedRows > 0) {
+      // Re-fetch patient to ensure it's not null before caching
+      const newPatient = await repo.getPatientByUserId(userId);
+      if (newPatient) {
+        await redisClient.delete(`patient:${newPatient.patient_id}:*`);
+        await redisClient.clearCacheByPattern(
+          `patients:${newPatient.patient_id}:*`,
+        );
+      }
 
-        const { total_registered: totalRegistered } = registeredUsersCount;
+      if (referralCode) {
+        const [{ value: marketer }, { value: registeredUsersCount }] =
+          await Promise.allSettled([
+            getMarketerByReferralCode(referralCode),
+            getMarketersTotalRegisteredUsers(referralCode),
+          ]);
 
-        sendMarketerUserRegisteredSMS({
-          marketerName: marketerFirstName,
-          mobileNumber: marketerPhoneNumber,
-          userPhoneNumber: userMobileNumber,
-          totalRegistered,
-        });
+        if (marketer) {
+          const {
+            phone_number: marketerPhoneNumber,
+            first_name: marketerFirstName,
+          } = marketer;
+
+          const { total_registered: totalRegistered } = registeredUsersCount;
+
+          sendMarketerUserRegisteredSMS({
+            marketerName: marketerFirstName,
+            mobileNumber: marketerPhoneNumber,
+            userPhoneNumber: userMobileNumber,
+            totalRegistered,
+          });
+        }
       }
     }
 
@@ -416,6 +429,9 @@ exports.createPatientMedicalInfo = async ({
       });
     }
 
+    await redisClient.delete(`patient:${patientId}:*`);
+    await redisClient.clearCacheByPattern(`patients:${patientId}:*`);
+
     return Response.CREATED({
       message: "Patient Medical Info Created Successfully.",
     });
@@ -464,6 +480,9 @@ exports.updatePatientProfile = async ({
       );
       return Response.NOT_MODIFIED({});
     }
+
+    await redisClient.delete(`patient:${patientId}:*`);
+    await redisClient.clearCacheByPattern(`patients:${patientId}:*`);
 
     return Response.SUCCESS({
       message: "Patient profile updated successfully.",
@@ -521,6 +540,9 @@ exports.updatePatientProfilePicture = async ({ userId, file }) => {
         );
       }
     }
+
+    await redisClient.clearCacheByPattern("patient:*");
+    await redisClient.clearCacheByPattern("patients:*");
 
     return Response.SUCCESS({
       message: "Patient's profile picture updated successfully.",

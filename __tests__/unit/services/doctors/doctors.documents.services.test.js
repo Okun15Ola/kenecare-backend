@@ -18,6 +18,8 @@ describe("doctors.documents.services", () => {
     jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
     jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
     jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    redisConfig.redisClient.get = jest.fn();
+    redisConfig.redisClient.set = jest.fn();
   });
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,9 +30,10 @@ describe("doctors.documents.services", () => {
     const doctor = { doctor_id: "doc-1", title: "Dr." };
     const rawDocs = [{ id: 1 }, { id: 2 }];
     const mappedDocs = [{ mapped: 1 }, { mapped: 2 }];
-    const cacheKey = `doctor:shared-medical-documents:${userId}`;
+    const cacheKey = `doctor:${doctor.doctor_id}:documents`;
 
     it("returns cached data if present", async () => {
+      doctorsRepository.getDoctorByUserId.mockResolvedValue(doctor);
       redisConfig.redisClient.get.mockResolvedValue(JSON.stringify(mappedDocs));
       Response.SUCCESS.mockReturnValue({ success: true, data: mappedDocs });
 
@@ -126,7 +129,7 @@ describe("doctors.documents.services", () => {
     const doctor = { doctor_id: "doc-1", title: "Dr." };
     const document = { id: 1 };
     const mappedDocument = { mapped: 1 };
-    const cacheKey = `doctor:shared-medical-documents:${sharedDocId}`;
+    const cacheKey = `doctor:${doctor.doctor_id}:documents:${sharedDocId}`;
 
     it("returns cached data if present", async () => {
       redisConfig.redisClient.get.mockResolvedValue(

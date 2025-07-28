@@ -142,7 +142,7 @@ exports.createFollowUp = async ({
       followUpTime,
     });
 
-    await redisClient.clearCacheByPattern("doctor-appointment-follow-up:*");
+    await redisClient.clearCacheByPattern("doctor:*");
 
     return Response.CREATED({
       message: "Appointment Follow-up created successfully",
@@ -241,9 +241,7 @@ exports.updateAppointmentFollowUpService = async ({
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.delete(
-      `doctor-appointment-follow-up-by-id:${followUpId}`,
-    );
+    await redisClient.clearCacheByPattern("doctor:*");
 
     return Response.SUCCESS({
       message: "Appointment Follow-up updated successfully",
@@ -259,12 +257,11 @@ exports.getAllAppointmentFollowupService = async ({
   appointmentId,
 }) => {
   try {
-    const cacheKey = `doctor-appointment-follow-up:${userId}`;
+    const cacheKey = `doctor:appointment:follow-up:${userId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
-
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
@@ -287,7 +284,8 @@ exports.getAllAppointmentFollowupService = async ({
         `Unauthorized action: Appointment with id ${appointmentId} does not belong to doctorId: ${doctorId}`,
       );
       return Response.UNAUTHORIZED({
-        message: "UnAuthorized Action.",
+        message:
+          "You don't have permission to access this appointment. This appointment either doesn't exist or belongs to another doctor.",
       });
     }
 
@@ -314,7 +312,7 @@ exports.getAllAppointmentFollowupService = async ({
 
 exports.getFollowUpByIdService = async ({ userId, id }) => {
   try {
-    const cacheKey = `doctor-appointment-follow-up-by-id:${id}`;
+    const cacheKey = `doctor:appointment:follow-up:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -397,9 +395,7 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
     }
 
     // Invalidate cache
-    await redisClient.delete(
-      `doctor-appointment-follow-up-by-id:${followUpId}`,
-    );
+    await redisClient.clearCacheByPattern("doctor:*");
 
     return Response.SUCCESS({
       message: "Appointment Follow-up Deleted Successfully",

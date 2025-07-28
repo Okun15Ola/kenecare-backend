@@ -303,6 +303,32 @@ const appointmentPostponedSms = async ({
   }
 };
 
+const doctorAppointmentCancelledSms = async ({
+  mobileNumber,
+  doctorName,
+  patientNameOnPrescription,
+  appointmentDate,
+  appointmentTime,
+  cancelReason,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Dear Dr. ${doctorName}, your appointment with  Patient: ${patientNameOnPrescription.toUpperCase()} has been cancelled.\n\nDate: ${appointmentDate}\nTime: ${appointmentTime}\nReason: ${cancelReason}\n\nKENECARE`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+
 const appointmentBookedSms = async ({
   mobileNumber,
   patientName,
@@ -448,6 +474,7 @@ module.exports = {
   appointmentStartedSms,
   appointmentEndedSms,
   appointmentPostponedSms,
+  doctorAppointmentCancelledSms,
   appointmentBookedSms,
   doctorAppointmentBookedSms,
   doctorProfileApprovalSms,
