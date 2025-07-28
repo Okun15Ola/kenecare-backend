@@ -51,6 +51,7 @@ MAX_API_CLIENT_REQUEST=
 PAYMENT_CANCEL_URL=/api/v1/payments/cancel
 PAYMENT_RETURN_URL=/api/v1/payments/return
 
-ALLOWED_ORIGINS="https://kenecare.com,https://app.kenecare.com,https://admin.kenecare.com,https://www.kenecare.com,https://api.sierrahive.com,https://api.monime.io"
-ALLOWED_HEADERS="Content-Type,Authorization,X-API-Key,X-API-Secret,X-Requested-With,Accept,Origin,Cache-Control,X-Request-ID"
+ALLOWED_ORIGINS=
+ALLOWED_HEADERS=
 
+MAX_API_CLIENT_REQUEST=
