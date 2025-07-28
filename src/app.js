@@ -104,24 +104,6 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(
-//   "/user-profile",
-//   express.static(path.join(__dirname, "public/upload/profile_pics")),
-// );
-
-// app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
-
-// app.use(
-//   "/docs/admin",
-//   authenticateAdmin,
-//   express.static(path.join(__dirname, "public/upload/media")),
-// );
-
-// fetchEncryptionKey().then(() => {
-//   console.log(encryptionKey);
-// });
-
-app.use(authenticateClient);
 
 app.use("/api/v1/health-check", (req, res) =>
   res
@@ -131,11 +113,12 @@ app.use("/api/v1/health-check", (req, res) =>
     ),
 );
 
-app.use(logUserInteraction);
-app.use("/api/v1", indexRouter);
-
 // API DOCS ROUTE
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+app.use(authenticateClient);
+app.use(logUserInteraction);
+app.use("/api/v1", indexRouter);
 
 // AUTH ROUTES
 app.use("/api/v1/auth", authRouter);
