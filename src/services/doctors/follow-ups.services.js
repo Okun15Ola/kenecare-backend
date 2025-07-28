@@ -284,7 +284,8 @@ exports.getAllAppointmentFollowupService = async ({
         `Unauthorized action: Appointment with id ${appointmentId} does not belong to doctorId: ${doctorId}`,
       );
       return Response.UNAUTHORIZED({
-        message: "UnAuthorized Action.",
+        message:
+          "You don't have permission to access this appointment. This appointment either doesn't exist or belongs to another doctor.",
       });
     }
 

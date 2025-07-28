@@ -18,7 +18,7 @@ module.exports = {
   dbName: env.DB_NAME,
   dbPort: env.DB_PORT,
   dbConnectionLimit: env.DB_CONNECTION_LIMIT,
-  encryptionKey: env.ENCRYPTION_KEY,
+  encryptionKey: env.ENCRYPTION_KEY, // TODO: add to env
   sessionSecret: env.SESSION_SECRET,
   patientJwtSecret: env.PATIENTS_JWT_SECRET,
   jwtIssuer: env.JWT_ISSUER,
@@ -51,4 +51,6 @@ module.exports = {
   maxRequest: parseInt(env.MAX_REQUEST, 10),
   maxFileUploadRequest: parseInt(env.MAX_FILE_UPLOAD_REQUEST, 10),
   maxAdminRequest: parseInt(env.MAX_ADMIN_REQUEST, 10),
+  allowOrigins: env.ALLOWED_ORIGINS,
+  allowHeaders: env.ALLOWED_HEADERS,
 };

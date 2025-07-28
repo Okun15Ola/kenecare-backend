@@ -4,12 +4,12 @@ const {
   GetMedicalRecordByIDController,
   CreateMedicalRecordController,
   UpdateMedicalRecordByIdController,
-  DeletemedicaRecordByIdController,
+  DeleteMedicalRecordByIdController,
 } = require("../../../controllers/patients/medical-record.controller");
 const { AWSUploader } = require("../../../utils/file-upload.utils");
 const {
   CreateNewMedicalRecordValidation,
-  MedicalRecordIdValidation,
+  VerifyPatientMedicalDocumentPasswordValidation,
 } = require("../../../validations/medical-records.validations");
 const { Validate } = require("../../../validations/validate");
 const { limiter } = require("../../../utils/rate-limit.utils");
@@ -21,9 +21,10 @@ const {
 router.use(authenticateUser, limiter, authorizePatient); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
 router.get("/", GetAllMedicalRecordsController);
-router.get(
-  "/:id",
-  MedicalRecordIdValidation,
+
+router.post(
+  "/verify-medical-document",
+  VerifyPatientMedicalDocumentPasswordValidation,
   Validate,
   GetMedicalRecordByIDController,
 );
@@ -36,18 +37,19 @@ router.post(
   CreateMedicalRecordController,
 );
 
+router.post(
+  "/delete-medical-document",
+  VerifyPatientMedicalDocumentPasswordValidation,
+  Validate,
+  DeleteMedicalRecordByIdController,
+);
+
 router.put(
   "/:id",
   AWSUploader.single("medicalDocument"),
   CreateNewMedicalRecordValidation,
   Validate,
   UpdateMedicalRecordByIdController,
-);
-router.delete(
-  "/:id",
-  MedicalRecordIdValidation,
-  Validate,
-  DeletemedicaRecordByIdController,
 );
 
 module.exports = router;

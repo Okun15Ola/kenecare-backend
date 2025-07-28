@@ -9,7 +9,7 @@ const {
   GetMedicalRecordByIDController,
   CreateMedicalRecordController,
   UpdateMedicalRecordByIdController,
-  DeletemedicaRecordByIdController,
+  DeleteMedicalRecordByIdController,
   ShareMedicalDocumentController,
   GetAllSharedMedicalDocumentsController,
   GetSharedMedicalDocumentByIDController,
@@ -26,7 +26,7 @@ describe("Patient Medical Record Controllers", () => {
     req = {
       user: { id: "1" },
       params: { id: "2" },
-      body: {},
+      body: { id: 1, password: "1234" },
       file: undefined,
     };
     res = {
@@ -70,7 +70,7 @@ describe("Patient Medical Record Controllers", () => {
       await GetMedicalRecordByIDController(req, res, next);
 
       expect(services.getPatientMedicalDocument).toHaveBeenCalledWith({
-        docId: 2,
+        docId: 1,
         userId: 1,
       });
       expect(res.status).toHaveBeenCalledWith(200);
@@ -148,13 +148,13 @@ describe("Patient Medical Record Controllers", () => {
     });
   });
 
-  describe("DeletemedicaRecordByIdController", () => {
+  describe("DeleteMedicalRecordByIdController", () => {
     it("should delete a medical record", async () => {
-      req.params.id = "7";
+      req.body.id = "7";
       const mockResponse = { statusCode: 200, data: { id: 7 } };
       services.deletePatientMedicalDocument.mockResolvedValue(mockResponse);
 
-      await DeletemedicaRecordByIdController(req, res, next);
+      await DeleteMedicalRecordByIdController(req, res, next);
 
       expect(services.deletePatientMedicalDocument).toHaveBeenCalledWith({
         documentId: 7,
@@ -168,7 +168,7 @@ describe("Patient Medical Record Controllers", () => {
       const error = new Error("Test error");
       services.deletePatientMedicalDocument.mockRejectedValue(error);
 
-      await DeletemedicaRecordByIdController(req, res, next);
+      await DeleteMedicalRecordByIdController(req, res, next);
 
       expect(logger.error).toHaveBeenCalledWith(error);
       expect(next).toHaveBeenCalledWith(error);

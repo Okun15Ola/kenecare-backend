@@ -9,6 +9,8 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
+const { allowHeaders, allowOrigins } = require("./config/default.config");
+const { authenticateClient } = require("./middlewares/apiKey.middlewares");
 // const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
 // const { encryptionKey } = require("./config/default.config");
 
@@ -67,10 +69,31 @@ const adminMedicalCouncilRouter = require("./routes/api/admin/medical-council.ro
 const adminPatientsRouter = require("./routes/api/admin/patients.routes");
 const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes");
 const adminMarketersRouter = require("./routes/api/admin/marketers.routes");
+const adminApiClientRouter = require("./routes/api/apiClient.routes");
+const adminApiKeyRouter = require("./routes/api/apiKey.routes");
+
+// Replace your current CORS setup with this more secure configuration
+const corsOptions = {
+  origin(origin, callback) {
+    const allowedOrigins = allowOrigins.split(",");
+
+    // Allow mobile apps (null origin) and whitelisted domains
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: allowHeaders.split(","),
+  exposedHeaders: ["Content-Disposition"], // For file downloads if needed
+  credentials: true,
+  maxAge: 86400, // Cache preflight for 24 hours
+};
 
 const app = express();
 app.disable("x-powered-by");
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(
   helmet({
     hidePoweredBy: true,
@@ -97,6 +120,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // fetchEncryptionKey().then(() => {
 //   console.log(encryptionKey);
 // });
+
+app.use(authenticateClient);
 
 app.use("/api/v1/health-check", (req, res) =>
   res
@@ -162,6 +187,8 @@ app.use("/api/v1/admin/council-regsitrations", adminCouncilRegistrationRouter);
 app.use("/api/v1/admin/withdrawals", adminWithdrawalsRoute);
 app.use("/api/v1/admin/marketers", adminMarketersRouter);
 app.use("/api/v1/marketers", adminMarketersRouter);
+app.use("/api/v1/api-clients", adminApiClientRouter);
+app.use("/api/v1/api-keys", adminApiKeyRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {

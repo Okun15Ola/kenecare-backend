@@ -1,6 +1,6 @@
 module.exports = {
   GET_ALL_DOCTORS: `
-    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, latitude, longitude, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
+    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, latitude, longitude, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active, is_online
     FROM doctors
     INNER JOIN users ON doctors.user_id = users.user_id
     INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
@@ -12,7 +12,7 @@ module.exports = {
   SEARCH_DOCTOR_BY_QUERY: `
   SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url,
          doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, latitude, longitude,
-         years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
+         years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active, is_online
   FROM doctors
   INNER JOIN users ON doctors.user_id = users.user_id
   INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
@@ -43,7 +43,7 @@ module.exports = {
   AND is_profile_approved = 1;
   `,
   GET_DOCTOR_BY_ID: `
-    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
+    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active, is_online
     FROM doctors
     INNER JOIN users ON doctors.user_id = users.user_id
     INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
@@ -51,7 +51,7 @@ module.exports = {
     WHERE doctor_id = ? AND is_profile_approved = 1 LIMIT 1;
   `,
   GET_DOCTOR_BY_USER_ID: `
-    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, notification_token, mobile_number, email, user_type, is_account_active
+    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, notification_token, mobile_number, email, user_type, is_account_active, is_online
     FROM doctors
     INNER JOIN users ON doctors.user_id = users.user_id
     INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
@@ -63,7 +63,7 @@ module.exports = {
   GET_DOCTORS_COUNT_BY_CITY:
     "SELECT COUNT(*) AS totalRows FROM doctors WHERE city_id = ? AND is_profile_approved = 1;",
   GET_DOCTOR_BY_SPECIALIZATION_ID: `
-    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active
+    SELECT doctor_id, title, first_name, middle_name, last_name, gender, professional_summary, profile_pic_url, doctors.specialization_id, speciality_name, qualifications, consultation_fee, city_name, years_of_experience, is_profile_approved, doctors.user_id, mobile_number, email, user_type, is_account_active, is_online
     FROM doctors
     INNER JOIN users ON doctors.user_id = users.user_id
     INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id

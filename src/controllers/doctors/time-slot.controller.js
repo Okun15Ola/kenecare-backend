@@ -16,7 +16,6 @@ exports.getDoctorAvailableDaySlotsController = async (req, res, next) => {
   try {
     const id = parseInt(req.user.id, 10);
     const { day } = req.params;
-    console.log(day);
     const response = await services.getAvailableSlotsForDay(id, day);
     return res.status(response.statusCode).json(response);
   } catch (error) {
