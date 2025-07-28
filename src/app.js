@@ -140,6 +140,10 @@ app.use("/api/v1", indexRouter);
 // API DOCS ROUTE
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+app.use(authenticateClient);
+app.use(logUserInteraction);
+app.use("/api/v1", indexRouter);
+
 // AUTH ROUTES
 app.use("/api/v1/auth", authRouter);
 

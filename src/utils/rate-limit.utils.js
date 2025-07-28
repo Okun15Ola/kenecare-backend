@@ -52,9 +52,9 @@ const createLimiter = (
         case "user":
           key = req.user?.userId ? `user-${req.user.userId}` : req.ip;
           break;
-        case "apiKey":
-          key = req.apiKey ? `key-${req.apiKey}` : req.ip;
-          break;
+        // case "apiKey":
+        //   key = req.apiKey ? `key-${req.apiKey}` : req.ip;
+        //   break;
         default:
           key = req.ip;
       }

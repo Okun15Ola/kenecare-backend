@@ -397,13 +397,15 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       callID: appointmentUUID,
       userId,
       members: [
-        { user_id: userId.toString() },
-        { user_id: patientUserId.toString() },
+        { role: "host", user_id: userId.toString() },
+        { role: "user", user_id: patientUserId.toString() },
       ],
       appointmentId,
     };
 
-    await createStreamCall(call);
+    await createStreamCall(call).catch((error) => {
+      throw error;
+    });
 
     await Promise.allSettled([
       getPatientById(patientId),
