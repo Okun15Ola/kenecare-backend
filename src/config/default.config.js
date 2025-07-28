@@ -51,6 +51,7 @@ module.exports = {
   maxRequest: parseInt(env.MAX_REQUEST, 10),
   maxFileUploadRequest: parseInt(env.MAX_FILE_UPLOAD_REQUEST, 10),
   maxAdminRequest: parseInt(env.MAX_ADMIN_REQUEST, 10),
+  maxApiClientRequest: parseInt(env.MAX_API_CLIENT_REQUEST, 10),
   allowOrigins: env.ALLOWED_ORIGINS,
   allowHeaders: env.ALLOWED_HEADERS,
 };

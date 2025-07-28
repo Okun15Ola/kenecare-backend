@@ -11,6 +11,7 @@ const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
 const { allowHeaders, allowOrigins } = require("./config/default.config");
 const { authenticateClient } = require("./middlewares/apiKey.middlewares");
+const { apiClientLimiter } = require("./utils/rate-limit.utils");
 // const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
 // const { encryptionKey } = require("./config/default.config");
 
@@ -121,8 +122,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //   console.log(encryptionKey);
 // });
 
-app.use(authenticateClient);
-
 app.use("/api/v1/health-check", (req, res) =>
   res
     .status(200)
@@ -131,6 +130,10 @@ app.use("/api/v1/health-check", (req, res) =>
     ),
 );
 
+app.use("/api/v1/api-clients", adminApiClientRouter);
+app.use("/api/v1/api-keys", adminApiKeyRouter);
+
+app.use(authenticateClient, apiClientLimiter);
 app.use(logUserInteraction);
 app.use("/api/v1", indexRouter);
 
@@ -187,8 +190,6 @@ app.use("/api/v1/admin/council-regsitrations", adminCouncilRegistrationRouter);
 app.use("/api/v1/admin/withdrawals", adminWithdrawalsRoute);
 app.use("/api/v1/admin/marketers", adminMarketersRouter);
 app.use("/api/v1/marketers", adminMarketersRouter);
-app.use("/api/v1/api-clients", adminApiClientRouter);
-app.use("/api/v1/api-keys", adminApiKeyRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {

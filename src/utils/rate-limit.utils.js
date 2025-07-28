@@ -9,6 +9,7 @@ const {
   maxOtpRequest,
   maxFileUploadRequest,
   maxAdminRequest,
+  maxApiClientRequest,
 } = require("../config/default.config");
 
 const defaultHandler = (req, res, next, options) => {
@@ -80,6 +81,11 @@ const otpLimiter = createLimiter(maxOtpRequest, 5 * 60 * 1000, "ip");
 const uploadLimiter = createLimiter(maxFileUploadRequest, 60 * 1000, "user");
 const limiter = createLimiter(maxRequest, 60 * 1000, "user");
 const adminLimiter = createLimiter(maxAdminRequest, 60 * 1000, "user");
+const apiClientLimiter = createLimiter(
+  maxApiClientRequest,
+  60 * 1000,
+  "apiKey",
+);
 
 module.exports = {
   authLimiter,
@@ -87,4 +93,5 @@ module.exports = {
   uploadLimiter,
   limiter,
   adminLimiter,
+  apiClientLimiter,
 };

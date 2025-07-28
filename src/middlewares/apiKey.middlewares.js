@@ -59,6 +59,7 @@ exports.authenticateClient = async (req, res, next) => {
       logger.error(`Failed to update last_used_at for key ${apiKey}: ${error}`);
     });
 
+    req.apiKey = apiKey; // Set this for rate limiting
     return next();
   } catch (error) {
     return res.status(401).json(
