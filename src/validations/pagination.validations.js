@@ -1,4 +1,5 @@
 const { query } = require("express-validator");
+const { maxLimit } = require("../config/default.config");
 
 exports.paginationValidation = [
   query("page")
@@ -8,7 +9,7 @@ exports.paginationValidation = [
     .toInt(),
   query("limit")
     .default(10)
-    .isInt({ min: 1, max: 100 })
-    .withMessage("Limit must be a number between 1 and 100")
+    .isInt({ min: 1, max: maxLimit })
+    .withMessage(`Limit must be a number between 1 and ${maxLimit}`)
     .toInt(),
 ];
