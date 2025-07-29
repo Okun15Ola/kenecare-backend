@@ -231,7 +231,7 @@ describe("Patient Medical Record Controllers", () => {
 
   describe("GetSharedMedicalDocumentByIDController", () => {
     it("should return shared medical document by id", async () => {
-      req.params.id = "11";
+      req.body.id = "11";
       const mockResponse = { statusCode: 200, data: { id: 11 } };
       services.getPatientSharedMedicalDocument.mockResolvedValue(mockResponse);
 
@@ -289,7 +289,7 @@ describe("Patient Medical Record Controllers", () => {
 
   describe("DeleteSharedMedicalDocumentByIdController", () => {
     it("should delete shared medical document", async () => {
-      req.params.id = "13";
+      req.body.id = "13";
       const mockResponse = { statusCode: 200, data: { id: 13 } };
       services.deletePatientSharedMedicalDocument.mockResolvedValue(
         mockResponse,

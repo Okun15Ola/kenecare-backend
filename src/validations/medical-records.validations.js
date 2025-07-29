@@ -226,8 +226,54 @@ exports.VerifyPatientMedicalDocumentPasswordValidation = [
       if (!patient) {
         throw new Error("Unauthorized Action. Please Try again");
       }
-      // const { patient_id: patientId } = patient;
       const document = await getPatientMedicalDocumentById(docId);
+      if (!document) {
+        throw new Error("Specified Document Not Found");
+      }
+      return true;
+    }),
+  body("password")
+    .notEmpty()
+    .withMessage("Password is required")
+    .bail()
+    .trim()
+    .escape()
+    .custom(async (password, { req }) => {
+      const user = await getUserById(req.user.id);
+      if (!user) {
+        throw new Error(
+          "Authentication failed. Please verify your password and try again.",
+        );
+      }
+
+      const { password: hashedPassword } = user;
+      const isMatch = await comparePassword({
+        plainPassword: password,
+        hashedPassword,
+      });
+
+      if (!isMatch) {
+        throw new Error(
+          "Authentication failed. Please verify your password and try again.",
+        );
+      }
+      return true;
+    }),
+];
+
+exports.VerifyPatientSharedDocPasswordValidation = [
+  body("id")
+    .notEmpty()
+    .withMessage("Document ID is Required")
+    .bail()
+    .custom(async (value, { req }) => {
+      const userId = parseInt(req.user.id, 10);
+      const sharedDocumentId = parseInt(value, 10);
+      const patient = await getPatientByUserId(userId);
+      if (!patient) {
+        throw new Error("Unauthorized Action. Please Try again");
+      }
+      const document = await getPatientMedicalDocumentById(sharedDocumentId);
       if (!document) {
         throw new Error("Specified Document Not Found");
       }

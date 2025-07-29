@@ -402,7 +402,7 @@ exports.getPatientSharedMedicalDocuments = async (userId) => {
     }
 
     const data = await Promise.all(
-      rawData.map((doc) => mapPatientMedicalDocumentRow(doc, true)),
+      rawData.map((doc) => mapPatientMedicalDocumentRow(doc)),
     );
     return Response.SUCCESS({ data });
   } catch (error) {
