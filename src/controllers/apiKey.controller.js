@@ -3,8 +3,13 @@ const logger = require("../middlewares/logger.middleware");
 
 exports.createApiKeycontroller = async (req, res, next) => {
   try {
-    const { clientId } = req.body;
-    const response = await apiKeyService.createApiKeyService(clientId);
+    const { clientId, name, description, environment } = req.body;
+    const response = await apiKeyService.createApiKeyService(
+      clientId,
+      name,
+      description,
+      environment,
+    );
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

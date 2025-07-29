@@ -3,26 +3,27 @@ const moment = require("moment");
 const Response = require("../utils/response.utils");
 const logger = require("../middlewares/logger.middleware");
 const apiKeyRepository = require("../repository/apiKey.repository");
-const {
-  getKeyPrefix,
-  generateApiKeyAndSecret,
-} = require("../utils/auth.utils");
+const { generateApiKeyAndSecret } = require("../utils/auth.utils");
 const { redisClient } = require("../config/redis.config");
 const { mapApiKeyRow } = require("../utils/db-mapper.utils");
 
 const MAX_KEYS_PER_ENVIRONMENT = 5;
 
-exports.createApiKeyService = async (clientId) => {
+exports.createApiKeyService = async (
+  clientId,
+  name,
+  description,
+  environment,
+) => {
   try {
-    const environmentPrefix = getKeyPrefix();
     const { keyCount } = await apiKeyRepository.countActiveKeysByEnvironment(
       clientId,
-      environmentPrefix,
+      environment,
     );
 
     if (keyCount >= MAX_KEYS_PER_ENVIRONMENT) {
       logger.warn(
-        `Client ${clientId} attempted to exceed key limit in ${environmentPrefix} environment`,
+        `Client ${clientId} attempted to exceed key limit in ${environment} environment`,
       );
       return Response.BAD_REQUEST({
         message: `Maximum limit of ${MAX_KEYS_PER_ENVIRONMENT} API keys reached for this environment. Please revoke unused keys before creating new ones.`,
@@ -31,10 +32,13 @@ exports.createApiKeyService = async (clientId) => {
     const keyUuid = uuidv4();
     const expiresAt = moment().add(1, "year").format("YYYY-MM-DD HH:mm:ss");
     const { apiKey, apiSecret, hashedApiSecret } =
-      await generateApiKeyAndSecret();
+      await generateApiKeyAndSecret(environment);
     const { insertId } = await apiKeyRepository.createApiKey(
       keyUuid,
       clientId,
+      name,
+      description,
+      environment,
       apiKey,
       hashedApiSecret,
       expiresAt,
