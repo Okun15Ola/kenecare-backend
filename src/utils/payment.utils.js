@@ -34,7 +34,7 @@ const getPaymentUSSD = async ({ orderId, amount }) => {
       mode: "oneTime",
       isActive: true,
       amount: { currency: "SLE", value: finalAmount },
-      duration: "3m",
+      duration: "5m",
       metadata: {
         orderId,
         idempotencyKey,
