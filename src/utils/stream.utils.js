@@ -53,7 +53,7 @@ const createStreamCall = async (call) => {
       members_limit: members?.length || 2,
       // Ring and Notify cannot be both true
       // notify: true,
-      // ring: true,
+      ring: true,
       video: true,
       data: {
         members,
