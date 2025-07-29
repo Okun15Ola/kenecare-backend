@@ -209,13 +209,13 @@ describe("users.service", () => {
       expect(result.mapped).toBe(true);
     });
 
-    it("returns NOT_FOUND if user not found", async () => {
+    it("returns null if user not found", async () => {
       redisClient.get.mockResolvedValue(null);
       getUserById.mockResolvedValue(null);
 
       const result = await usersService.getUserById(3);
 
-      expect(result.statusCode).toBe(404);
+      expect(result).toBe(null);
     });
   });
 

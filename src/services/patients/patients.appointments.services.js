@@ -1,4 +1,5 @@
 const moment = require("moment");
+const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const logger = require("../../middlewares/logger.middleware");
 const repo = require("../../repository/patientAppointments.repository");
@@ -274,6 +275,32 @@ exports.createPatientAppointment = async ({
 }) => {
   let appointmentId = null;
   try {
+    // create a hash of the request
+    const requestHash = crypto
+      .createHash("sha256")
+      .update(
+        `${userId}:${doctorId}:${appointmentDate}:${appointmentTime}:${patientName}`,
+      )
+      .digest("hex");
+
+    // check if we've seen this request recently
+    const idempotencyCacheKey = `appointment:idempotency:${requestHash}`;
+    const existingRequest = await redisClient.get(idempotencyCacheKey);
+
+    if (existingRequest) {
+      logger.warn(`Duplicate appointment request detected: ${requestHash}`);
+      return Response.BAD_REQUEST({
+        message:
+          "It appears you've already submitted this appointment request. Please check your appointments.",
+      });
+    }
+
+    await redisClient.set({
+      key: idempotencyCacheKey,
+      value: Date.now().toString(),
+      expiry: 1800, // 30 mins
+    });
+
     // Parallel validation - Get patient, doctor, and check availability
     const [patient, doctor, timeBooked] = await Promise.allSettled([
       getPatientByUserId(userId),

@@ -56,14 +56,7 @@ describe("GetUserByEmail - Unit Tests", () => {
 
     const result = await userService.getUserByEmail("notfound@example.com");
 
-    expect(result).toEqual({
-      errorCode: undefined,
-      errors: undefined,
-      message: "User not found",
-      status: "error",
-      statusCode: 404,
-      timestamp: expect.any(Date),
-    });
+    expect(result).toEqual(null);
     expect(dbObject.getUserByEmail).toHaveBeenCalledWith(
       "notfound@example.com",
     );

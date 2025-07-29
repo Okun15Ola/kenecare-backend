@@ -948,3 +948,5 @@ ALTER TABLE api_keys ADD COLUMN description TEXT;
 -- Add the environment enum column
 ALTER TABLE api_keys ADD COLUMN environment ENUM('development', 'staging', 'production', 'testing') 
 NOT NULL DEFAULT 'development';
+
+-- ALTER TABLE medical_appointments ADD UNIQUE INDEX doctor_time_unique (doctor_id, appointment_date, appointment_time);
