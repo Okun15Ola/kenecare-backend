@@ -2,6 +2,7 @@ const { param, query } = require("express-validator");
 const { getDoctorById } = require("../repository/doctors.repository");
 const { getSpecialtiyById } = require("../repository/specialities.repository");
 const { getCityById } = require("../repository/cities.repository");
+const { maxLimit } = require("../config/default.config");
 
 exports.doctorIdValidation = [
   param("id")
@@ -70,7 +71,9 @@ exports.doctorPaginationValidation = [
     .toInt(),
   query("limit")
     .default(10)
-    .isInt({ min: 1, max: 100 })
-    .withMessage("Limit must be a number between 1 and 100")
+    .isInt({ min: 1, max: parseInt(maxLimit, 10) })
+    .withMessage(
+      `Limit must be a number between 1 and ${parseInt(maxLimit, 10)}`,
+    )
     .toInt(),
 ];

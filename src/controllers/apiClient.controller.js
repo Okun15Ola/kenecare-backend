@@ -8,7 +8,7 @@ exports.createClientController = async (req, res, next) => {
       clientName,
       description,
       email,
-      phone,
+      phone || null,
       website,
     );
     return res.status(response.statusCode).json(response);

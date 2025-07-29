@@ -4,6 +4,9 @@ const queries = require("./queries/apiKeys.queries");
 exports.createApiKey = async (
   keyUuid,
   clientId,
+  name,
+  description,
+  environment,
   apiKey,
   apiSecret,
   expiresAt,
@@ -11,6 +14,9 @@ exports.createApiKey = async (
   return query(queries.ADD_API_KEY, [
     keyUuid,
     clientId,
+    name,
+    description,
+    environment,
     apiKey,
     apiSecret,
     expiresAt,
@@ -43,10 +49,10 @@ exports.validateApiKey = async (key) => {
   return query(queries.VALIDATE_API_KEY, [key]);
 };
 
-exports.countActiveKeysByEnvironment = async (clientId, environmentPrefix) => {
+exports.countActiveKeysByEnvironment = async (clientId, environment) => {
   const row = await query(queries.COUNT_ACTIVE_KEYS_BY_ENVIRONMENT, [
     clientId,
-    environmentPrefix,
+    environment,
   ]);
   return row[0];
 };

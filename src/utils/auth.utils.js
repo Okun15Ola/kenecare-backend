@@ -15,7 +15,6 @@ const {
 const logger = require("../middlewares/logger.middleware");
 const { redisClient } = require("../config/redis.config");
 const { generateTokenExpiryTime } = require("./time.utils");
-const { nodeEnv } = require("../config/default.config");
 const { sendAuthTokenSMS } = require("./sms.utils");
 const Response = require("./response.utils");
 
@@ -340,7 +339,7 @@ const refineMobileNumber = (mobileNumber) => {
   return `${SL_COUNTRY_CODE}${normalized}`;
 };
 
-const getKeyPrefix = () => {
+const getKeyPrefix = (env) => {
   const keyPrefix = {
     production: "KC_LIVE_",
     development: "KC_DEV_",
@@ -349,7 +348,7 @@ const getKeyPrefix = () => {
   };
 
   let prefix = null;
-  switch (nodeEnv) {
+  switch (env) {
     case "development":
       prefix = keyPrefix.development;
       break;
@@ -365,8 +364,8 @@ const getKeyPrefix = () => {
   return prefix;
 };
 
-const generateApiKeyAndSecret = async () => {
-  const environmentPrefix = getKeyPrefix();
+const generateApiKeyAndSecret = async (env) => {
+  const environmentPrefix = getKeyPrefix(env);
   const randomPart = crypto.randomBytes(16).toString("hex");
   const apiSecret = crypto.randomBytes(64).toString("hex");
   const hashedApiSecret = await bcryptjs.hash(apiSecret, 10);

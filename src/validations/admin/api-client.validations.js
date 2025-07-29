@@ -42,12 +42,7 @@ exports.createClientValidations = [
     .withMessage("Must provide a valid email address")
     .normalizeEmail(),
 
-  body("phone")
-    .optional()
-    .trim()
-    .isMobilePhone("any", { strictMode: false })
-    .withMessage("Must provide a valid phone number")
-    .escape(),
+  body("phone").optional().trim().escape(),
 
   body("website")
     .optional()

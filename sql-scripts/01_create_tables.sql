@@ -926,3 +926,25 @@ CREATE TABLE `api_keys` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`client_id`) REFERENCES `api_clients`(`client_id`) ON DELETE CASCADE
 );
+
+ALTER TABLE `users`
+  ADD COLUMN `expiry_time` TIMESTAMP NULL DEFAULT NULL COMMENT 'Expiry time for tokens or account',
+  ADD COLUMN `is_deleted` TINYINT(1) DEFAULT 0 COMMENT '0 - Active, 1 - Soft Deleted',
+  ADD COLUMN `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT 'Soft delete timestamp',
+  ADD KEY `idx_is_deleted` (`is_deleted`);
+
+UPDATE `users`
+SET
+  `expiry_time` = NULL,
+  `is_deleted` = 0,
+  `deleted_at` = NULL;
+
+-- Add the name column
+ALTER TABLE api_keys ADD COLUMN name VARCHAR(100) NOT NULL;
+
+-- Add the description column
+ALTER TABLE api_keys ADD COLUMN description TEXT;
+
+-- Add the environment enum column
+ALTER TABLE api_keys ADD COLUMN environment ENUM('development', 'staging', 'production', 'testing') 
+NOT NULL DEFAULT 'development';

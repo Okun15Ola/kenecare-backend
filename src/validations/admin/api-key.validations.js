@@ -33,4 +33,22 @@ exports.createKeyValidations = [
       }
       return true;
     }),
+  body("name")
+    .notEmpty()
+    .withMessage("API key name is required")
+    .bail()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage("Name cannot exceed 100 characters")
+    .escape(),
+  body("description").optional().trim().escape(),
+  body("environment")
+    .notEmpty()
+    .withMessage("Environment is required")
+    .trim()
+    .isIn(["development", "staging", "production", "testing"])
+    .withMessage(
+      "Environment must be one of: development, staging, production, testing",
+    )
+    .default("development"),
 ];

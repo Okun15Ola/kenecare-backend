@@ -91,11 +91,14 @@ const refineMobileNumber = (mobileNumber) => {
  * @throws {Error} If the date is invalid or in the past.
  */
 const validateDate = (date) => {
-  const today = moment().format("YYYY-MM-DD");
+  // const today = moment().format("YYYY-MM-DD");
+  const today = moment().startOf("day"); // Keep as a Moment object
   const userDate = moment(date, "YYYY-MM-DD", true);
 
   if (!userDate.isValid()) {
-    throw new Error("Appointment date must be a valid date (YYYY-MM-DD)");
+    throw new Error(
+      "Appointment date must be a valid date format (YYYY-MM-DD)",
+    );
   }
 
   if (userDate.isBefore(today)) {
@@ -106,9 +109,7 @@ const validateDate = (date) => {
 
   const oneMonthLater = today.clone().add(1, "month");
   if (userDate.isAfter(oneMonthLater)) {
-    throw new Error(
-      "Appointment date cannot be more than one month from today.",
-    );
+    throw new Error("Appointment date cannot be more than a month from today.");
   }
 };
 

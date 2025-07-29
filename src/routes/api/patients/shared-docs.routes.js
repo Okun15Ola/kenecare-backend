@@ -8,7 +8,7 @@ const {
 } = require("../../../controllers/patients/medical-record.controller");
 const {
   ShareMedicalDocumentValidation,
-  GetPatientSharedMedicalDocumentValidation,
+  VerifyPatientSharedDocPasswordValidation,
 } = require("../../../validations/medical-records.validations");
 const { Validate } = require("../../../validations/validate");
 const { limiter } = require("../../../utils/rate-limit.utils");
@@ -21,11 +21,11 @@ router.use(authenticateUser, limiter, authorizePatient); // Authentication middl
 
 router.get("/", GetAllSharedMedicalDocumentsController);
 
-router.get(
-  "/:id",
-  GetPatientSharedMedicalDocumentValidation,
+router.post(
+  "/delete-shared-document",
+  VerifyPatientSharedDocPasswordValidation,
   Validate,
-  GetSharedMedicalDocumentByIDController,
+  DeleteSharedMedicalDocumentByIdController,
 );
 
 router.post(
@@ -34,17 +34,19 @@ router.post(
   Validate,
   ShareMedicalDocumentController,
 );
+
+router.post(
+  "/verify-shared-doc-password",
+  VerifyPatientSharedDocPasswordValidation,
+  Validate,
+  GetSharedMedicalDocumentByIDController,
+);
+
 router.put(
   "/:id",
   ShareMedicalDocumentValidation,
   Validate,
   UpdateSharedMedicalDocumentByIdController,
-);
-router.delete(
-  "/:id",
-  GetPatientSharedMedicalDocumentValidation,
-  Validate,
-  DeleteSharedMedicalDocumentByIdController,
 );
 
 module.exports = router;
