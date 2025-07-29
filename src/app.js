@@ -9,7 +9,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
-const { allowHeaders, allowOrigins } = require("./config/default.config");
+// const { allowHeaders, allowOrigins } = require("./config/default.config");
 const { authenticateClient } = require("./middlewares/apiKey.middlewares");
 const { apiClientLimiter } = require("./utils/rate-limit.utils");
 // const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
@@ -74,27 +74,27 @@ const adminApiClientRouter = require("./routes/api/apiClient.routes");
 const adminApiKeyRouter = require("./routes/api/apiKey.routes");
 
 // Replace your current CORS setup with this more secure configuration
-const corsOptions = {
-  origin(origin, callback) {
-    const allowedOrigins = allowOrigins.split(",");
+// const corsOptions = {
+//   origin(origin, callback) {
+//     const allowedOrigins = allowOrigins.split(",");
 
-    // Allow mobile apps (null origin) and whitelisted domains
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: allowHeaders.split(","),
-  exposedHeaders: ["Content-Disposition"], // For file downloads if needed
-  credentials: true,
-  maxAge: 86400, // Cache preflight for 24 hours
-};
+//     // Allow mobile apps (null origin) and whitelisted domains
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+//   allowedHeaders: allowHeaders.split(","),
+//   exposedHeaders: ["Content-Disposition"], // For file downloads if needed
+//   credentials: true,
+//   maxAge: 86400, // Cache preflight for 24 hours
+// };
 
 const app = express();
 app.disable("x-powered-by");
-app.use(cors(corsOptions));
+app.use(cors()); // corsOptions
 app.use(
   helmet({
     hidePoweredBy: true,
