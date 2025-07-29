@@ -56,7 +56,7 @@ module.exports = {
     INNER JOIN users ON doctors.user_id = users.user_id
     INNER JOIN medical_specialities ON doctors.specialization_id = medical_specialities.speciality_id
     INNER JOIN cities ON doctors.city_id = cities.city_id
-    WHERE doctors.user_id = ? AND is_profile_approved = 1 LIMIT 1;
+    WHERE doctors.user_id = ? LIMIT 1;
   `,
   GET_DOCTOR_BY_CITY_ID:
     "SELECT * FROM doctors WHERE city_id = ? AND is_profile_approved = 1",
