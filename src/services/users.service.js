@@ -100,7 +100,7 @@ exports.getUserById = async (id) => {
 
     if (!rawData) {
       logger.warn("User not found for ID");
-      return Response.NOT_FOUND({ message: "User not found" });
+      return null;
     }
 
     const user = mapUserRow(rawData, true);
@@ -131,7 +131,7 @@ exports.getUserByMobileNumber = async (number) => {
     const rawData = await repo.getUserByMobileNumber(number);
     if (!rawData) {
       logger.warn("User not found for mobile number");
-      return Response.NOT_FOUND({ message: "User not found" });
+      return null;
     }
 
     const user = mapUserRow(rawData, true);
@@ -163,7 +163,7 @@ exports.getUserByEmail = async (userEmail) => {
 
     if (!rawData) {
       logger.warn("User not found for email");
-      return Response.NOT_FOUND({ message: "User not found" });
+      return null;
     }
 
     const user = mapUserRow(rawData, true);
@@ -189,7 +189,7 @@ exports.getUserByToken = async (token) => {
     const rawData = await repo.getUserByVerificationToken(token);
     if (!rawData) {
       logger.warn("User not found for token");
-      return Response.NOT_FOUND({ message: "User not found" });
+      return null;
     }
     const user = mapUserRow(rawData, false, true, true, true);
     return user;
