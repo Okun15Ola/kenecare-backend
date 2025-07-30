@@ -300,3 +300,14 @@ exports.PostponeAppointmentValidation = [
       return true;
     }),
 ];
+
+/**
+ * Validation for appointment ID parameter
+ */
+exports.AppointmentIdValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Appointment ID is required")
+    .isInt({ gt: 0, allow_leading_zeroes: false })
+    .trim(),
+];

@@ -8,6 +8,7 @@ const {
 } = require("../../../controllers/patients/appointments.controller");
 const {
   CreateAppointmentValidation,
+  AppointmentIdValidation,
 } = require("../../../validations/appointments.validations");
 const { Validate } = require("../../../validations/validate");
 const { limiter } = require("../../../utils/rate-limit.utils");
@@ -24,7 +25,12 @@ router.use(authenticateUser, limiter, authorizePatient); // Authentication middl
 router.get("/metrics", GetPatientAppointmentMetricsController);
 router.get("/follow-up/metrics", GetPatientFollowUpMetricsController);
 router.get("/", paginationValidation, Validate, GetAppointmentsController);
-router.get("/:id", GetAppointmentsByIDController);
+router.get(
+  "/:id",
+  AppointmentIdValidation,
+  Validate,
+  GetAppointmentsByIDController,
+);
 
 router.post(
   "/",
