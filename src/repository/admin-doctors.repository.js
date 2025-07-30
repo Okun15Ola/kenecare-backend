@@ -9,6 +9,11 @@ exports.getAllDoctors = async (limit, offset) => {
   return query(optimizedQuery);
 };
 
+exports.getAllMedicalCouncilRegistrationCount = async () => {
+  const row = await query(queries.GET_DOCTOR_COUNCIL_REGISTRATION_COUNT);
+  return row[0];
+};
+
 exports.countDoctors = async () => {
   const row = await query(queries.COUNT_DOCTORS);
   return row[0];
