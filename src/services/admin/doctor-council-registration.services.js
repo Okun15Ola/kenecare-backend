@@ -1,4 +1,4 @@
-const dbObject = require("../../repository/doctors.repository");
+const dbObject = require("../../repository/admin-doctors.repository");
 const Response = require("../../utils/response.utils");
 const {
   doctorCouncilRegistrationApprovedEmail,
