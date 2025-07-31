@@ -39,24 +39,54 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
       });
     }
 
-    const cacheKey = `doctor:${doctorId}:appointments:metrics`;
-    const cachedData = await redisClient.get(cacheKey);
+    const dashboardCacheKey = `doctor:${doctorId}:appointments:dashboard:metrics`;
+
+    const cachedData = await redisClient.get(dashboardCacheKey);
+
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+      });
     }
 
-    const data = await dbObject.getDoctorAppointmentsDashboardCount({
-      doctorId,
+    const [dashboardMetrics, monthlyMetrics] = await Promise.all([
+      dbObject.getDoctorAppointmentsDashboardMetrics({ doctorId }),
+      dbObject.getDoctorAppointmentsDashboardMonthlyMetrics({ doctorId }),
+    ]);
+
+    const responseData = {
+      todayAppointments: {
+        completed: dashboardMetrics.today_completed_count,
+        today: dashboardMetrics.today_upcoming_count,
+        canceled: dashboardMetrics.today_canceled_count,
+      },
+      totalAppointments: {
+        total: dashboardMetrics.total_appointment_count,
+        pending: dashboardMetrics.total_pending_count,
+        postponed: dashboardMetrics.total_postponed_count,
+        completed: dashboardMetrics.total_completed_count,
+        canceled: dashboardMetrics.total_canceled_count,
+        approved: dashboardMetrics.total_approved_count,
+      },
+      futureAppointments: {
+        upcoming: dashboardMetrics.future_approved_count,
+        pending: dashboardMetrics.future_pending_count,
+        future: dashboardMetrics.future_canceled_count,
+      },
+      // pastAppointments: {
+      //   pending: dashboardMetrics.past_pending_count,
+      // },
+      thisYearMonthlyMetrics: monthlyMetrics,
+    };
+
+    redisClient.set({
+      key: dashboardCacheKey,
+      value: JSON.stringify(responseData),
     });
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(data),
-    });
-
-    return Response.SUCCESS({ data });
+    return Response.SUCCESS({ data: responseData });
   } catch (error) {
-    logger.error("getDoctorAppointmentCounts: ", error);
+    logger.error("getDoctorAppointmentMetrics: ", error);
     throw error;
   }
 };

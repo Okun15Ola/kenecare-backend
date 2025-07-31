@@ -11,11 +11,16 @@ exports.countDoctorAppointments = async ({ doctorId }) => {
   return row[0];
 };
 
-exports.getDoctorAppointmentsDashboardCount = async ({ doctorId }) => {
-  const result = await query(queries.GET_DOCTOR_APPOINTMENTS_DASHBOARD_COUNTS, [
-    doctorId,
-  ]);
+exports.getDoctorAppointmentsDashboardMetrics = async ({ doctorId }) => {
+  const result = await query(
+    queries.GET_DOCTOR_APPOINTMENTS_DASHBOARD_METRICS,
+    [doctorId],
+  );
   return result[0];
+};
+
+exports.getDoctorAppointmentsDashboardMonthlyMetrics = async ({ doctorId }) => {
+  return query(queries.GET_DOCTOR_MONTHLY_APPOINTMENT_METRICS, [doctorId]);
 };
 
 exports.getDoctorAppointmentById = async ({ doctorId, appointmentId }) => {
@@ -64,6 +69,10 @@ exports.cancelDoctorAppointmentById = async ({
     appointmentId,
     doctorId,
   ]);
+};
+
+exports.batchUpdateEndTimeForOpenAppointments = async (endTime) => {
+  return query(queries.BATCH_UPDATE_END_TIME, [endTime]);
 };
 
 exports.postponeDoctorAppointmentById = async ({
