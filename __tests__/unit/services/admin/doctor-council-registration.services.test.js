@@ -1,13 +1,13 @@
 /* eslint-disable no-unused-vars */
 const doctorCouncilRegistrationService = require("../../../../src/services/admin/doctor-council-registration.services");
-const doctorsRepo = require("../../../../src/repository/doctors.repository");
+const doctorsRepo = require("../../../../src/repository/admin-doctors.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
 const emailUtils = require("../../../../src/utils/email.utils");
 const cachingUtils = require("../../../../src/utils/caching.utils");
+const Response = require("../../../../src/utils/response.utils");
 
 jest.mock("../../../../src/utils/caching.utils");
-
-jest.mock("../../../../src/repository/doctors.repository");
+jest.mock("../../../../src/repository/admin-doctors.repository");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/email.utils");
 jest.mock("../../../../src/utils/db-mapper.utils");
@@ -19,7 +19,17 @@ jest.mock("../../../../src/utils/caching.utils", () => ({
 }));
 
 describe("Doctor Council Registration Service", () => {
-  afterEach(() => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    jest
+      .spyOn(Response, "INTERNAL_SERVER_ERROR")
+      .mockImplementation((data) => data);
+    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_MODIFIED").mockImplementation((data) => data);
+  });
+  beforeEach(() => {
     jest.clearAllMocks();
   });
 
@@ -36,7 +46,7 @@ describe("Doctor Council Registration Service", () => {
 
     it("should return a 200 if no registrations are found", async () => {
       redisClient.get.mockResolvedValue(null);
-      doctorsRepo.getAllMedicalCouncilRegistration.mockResolvedValue(null);
+      doctorsRepo.getAllMedicalCouncilRegistration.mockResolvedValue([]);
 
       const result =
         await doctorCouncilRegistrationService.getAllCouncilRegistrations();

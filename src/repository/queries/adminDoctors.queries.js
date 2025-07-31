@@ -148,6 +148,14 @@ module.exports = {
     WHERE dcr.council_registration_id = ? 
     LIMIT 1
   `,
+  GET_DOCTOR_COUNCIL_REGISTRATION_BY_REG_NUMBER: `
+    SELECT council_registration_id, doctors_council_registration.doctor_id, first_name, last_name, doctors.specialization_id, speciality_name, profile_pic_url, council_name, years_of_experience, is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, verified_by, doctors_council_registration.created_at
+    FROM doctors_council_registration
+    INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id
+    INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id
+    INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id
+    WHERE registration_number = ? LIMIT 1;
+  `,
 
   CREATE_DOCTOR: `
     INSERT INTO doctors (user_id, title, first_name, middle_name, last_name, gender, professional_summary, specialization_id, qualifications, consultation_fee, city_id, years_of_experience)
