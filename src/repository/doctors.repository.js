@@ -48,7 +48,7 @@ exports.getDoctorByUserId = async (userId) => {
   return result[0];
 };
 exports.getDoctorsByCityId = async (cityId, limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_BY_CITY_ID} LIMIT ${limit} OFFSET ${offset};`;
+  const optimizedQuery = `${queries.GET_DOCTORS_BY_CITY_ID} LIMIT ${limit} OFFSET ${offset};`;
   return query(optimizedQuery, [cityId]);
 };
 exports.getDoctorsCityCount = async (cityId) => {
@@ -60,21 +60,21 @@ exports.getDoctorsBySpecializationId = async (
   limit,
   offset,
 ) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_BY_SPECIALIZATION_ID} LIMIT ${limit} OFFSET ${offset};`;
+  const optimizedQuery = `${queries.GET_DOCTORS_BY_SPECIALIZATION_ID} LIMIT ${limit} OFFSET ${offset};`;
   return query(optimizedQuery, [specializationId]);
 };
 exports.getDoctorsSpecializationCount = async (specializationId) => {
-  const row = await query(queries.GET_DOCTOR_BY_SPECIALIZATION_ID_COUNT, [
+  const row = await query(queries.GET_DOCTORS_BY_SPECIALIZATION_ID_COUNT, [
     specializationId,
   ]);
   return row[0];
 };
 exports.getDoctorsByHospitalId = async (hospitalId, limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_BY_HOSPITAL_ID} LIMIT ${limit} OFFSET ${offset};`;
+  const optimizedQuery = `${queries.GET_DOCTORS_BY_HOSPITAL_ID} LIMIT ${limit} OFFSET ${offset};`;
   return query(optimizedQuery, [hospitalId]);
 };
 exports.getDoctorsHospitalCount = async (hospitalId) => {
-  const row = await query(queries.GET_DOCTOR_BY_HOSPITAL_ID_COUNT, [
+  const row = await query(queries.GET_DOCTORS_BY_HOSPITAL_ID_COUNT, [
     hospitalId,
   ]);
   return row[0];
@@ -225,24 +225,24 @@ exports.approveDoctorProfileByDoctorId = async ({ doctorId, approvedBy }) => {
   return query(queries.APPROVE_DOCTOR_PROFILE, [approvedBy, doctorId]);
 };
 
-exports.approveDoctorMedicalCouncilRegistrationById = async ({
-  registrationId,
-  approvedBy,
-}) => {
-  return query(queries.APPROVE_DOCTOR_COUNCIL_REGISTRATION, [
-    approvedBy,
-    registrationId,
-  ]);
-};
+// exports.approveDoctorMedicalCouncilRegistrationById = async ({
+//   registrationId,
+//   approvedBy,
+// }) => {
+//   return query(queries.APPROVE_DOCTOR_COUNCIL_REGISTRATION, [
+//     approvedBy,
+//     registrationId,
+//   ]);
+// };
 
-exports.rejectDoctorMedicalCouncilRegistrationById = async ({
-  registrationId,
-  rejectionReason,
-  approvedBy,
-}) => {
-  return query(queries.REJECT_DOCTOR_COUNCIL_REGISTRATION, [
-    rejectionReason,
-    approvedBy,
-    registrationId,
-  ]);
-};
+// exports.rejectDoctorMedicalCouncilRegistrationById = async ({
+//   registrationId,
+//   rejectionReason,
+//   approvedBy,
+// }) => {
+//   return query(queries.REJECT_DOCTOR_COUNCIL_REGISTRATION, [
+//     rejectionReason,
+//     approvedBy,
+//     registrationId,
+//   ]);
+// };

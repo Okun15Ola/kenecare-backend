@@ -82,21 +82,6 @@ exports.createDoctorCouncilRegistration = async ({
         message: "Please upload medical council registration certificate.",
       });
     }
-    const user = await getUserById(userId);
-    if (!user) {
-      logger.error(`User not found for userId: ${userId}`);
-      return Response.NOT_FOUND({
-        message: "Error Creating Doctor Profile, please try again!",
-      });
-    }
-    const { user_type: userType } = user;
-
-    if (userType !== USERTYPE.DOCTOR) {
-      logger.error(
-        `Unauthorized action by userId: ${userId}. User type: ${userType}`,
-      );
-      return Response.FORBIDDEN({});
-    }
     const doctor = await dbObject.getDoctorByUserId(userId);
     if (!doctor) {
       logger.error(

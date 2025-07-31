@@ -1,4 +1,5 @@
 // const moment = require("moment");
+const { body } = require("express-validator");
 const { USERTYPE } = require("./enum.utils");
 const { createOrUpdateStreamUser } = require("./stream.utils");
 const { getPatientByUserId } = require("../repository/patients.repository");
@@ -47,6 +48,42 @@ const createStreamUserProfile = async (userType, userId) => {
   }
 };
 
+/**
+ * Validator for boolean fields that accepts true/false, 0/1, '0'/'1'
+ * but normalizes to 0/1 format for MySQL storage
+ *
+ * @param {string} fieldName - Name of the field to validate
+ * @param {string} [message] - Custom error message
+ * @returns {Object} Express validator chain
+ */
+const binaryBooleanValidator = (
+  fieldName,
+  message = "Field must be a boolean value (true/false or 0/1)",
+) => {
+  return body(fieldName)
+    .optional()
+    .custom((value) => {
+      // Accept true/false, 0/1, '0'/'1' as valid values
+      return (
+        value === true ||
+        value === false ||
+        value === 0 ||
+        value === 1 ||
+        value === "0" ||
+        value === "1"
+      );
+    })
+    .withMessage(message)
+    .customSanitizer((value) => {
+      // Normalize to 0/1 for database
+      if (value === true || value === 1 || value === "1") {
+        return 1;
+      }
+      return 0;
+    });
+};
+
 module.exports = {
   createStreamUserProfile,
+  binaryBooleanValidator,
 };

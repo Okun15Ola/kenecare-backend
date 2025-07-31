@@ -794,6 +794,7 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     user_type: userType,
     is_account_active: isAccountActive,
     is_online: isOnline,
+    registration_status: councilRegistrationStatus,
   } = doctor;
 
   let profilePicData = null;
@@ -837,6 +838,7 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     userType,
     isAccountActive,
     isOnline,
+    councilRegistrationStatus,
     doctorAvailableDays,
   };
 };
@@ -864,6 +866,7 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     is_online: isOnline,
     user_id: userId,
     user_type: userType,
+    registration_status: councilRegistrationStatus,
   } = doctor;
   const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
   const mappedAvailableDays =
@@ -898,6 +901,7 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     yearOfExperience,
     isProfileApproved,
     isOnline,
+    councilRegistrationStatus,
     doctorAvailableDays,
   };
 };
