@@ -275,32 +275,6 @@ exports.createPatientAppointment = async ({
 }) => {
   let appointmentId = null;
   try {
-    // create a hash of the request
-    const requestHash = crypto
-      .createHash("sha256")
-      .update(
-        `${userId}:${doctorId}:${appointmentDate}:${appointmentTime}:${patientName}`,
-      )
-      .digest("hex");
-
-    // check if we've seen this request recently
-    const idempotencyCacheKey = `appointment:idempotency:${requestHash}`;
-    const existingRequest = await redisClient.get(idempotencyCacheKey);
-
-    if (existingRequest) {
-      logger.warn(`Duplicate appointment request detected: ${requestHash}`);
-      return Response.BAD_REQUEST({
-        message:
-          "It appears you've already submitted this appointment request. Please check your appointments.",
-      });
-    }
-
-    await redisClient.set({
-      key: idempotencyCacheKey,
-      value: Date.now().toString(),
-      expiry: 1800, // 30 mins
-    });
-
     // Parallel validation - Get patient, doctor, and check availability
     const [patient, doctor, timeBooked] = await Promise.allSettled([
       getPatientByUserId(userId),
@@ -338,6 +312,32 @@ exports.createPatientAppointment = async ({
           "An appointment has already been booked for the specified time. Please choose a new appointment time",
       });
     }
+
+    // create a hash of the request
+    const requestHash = crypto
+      .createHash("sha256")
+      .update(
+        `${userId}:${doctorId}:${appointmentDate}:${appointmentTime}:${patientName}`,
+      )
+      .digest("hex");
+
+    // check if we've seen this request recently
+    const idempotencyCacheKey = `appointment:idempotency:${requestHash}`;
+    const existingRequest = await redisClient.get(idempotencyCacheKey);
+
+    if (existingRequest) {
+      logger.warn(`Duplicate appointment request detected: ${requestHash}`);
+      return Response.BAD_REQUEST({
+        message:
+          "It appears you've already submitted this appointment request. Please check your appointments.",
+      });
+    }
+
+    await redisClient.set({
+      key: idempotencyCacheKey,
+      value: Date.now().toString(),
+      expiry: 1800, // 30 mins // TODO reduce expiry time, 30 mins is too long
+    });
 
     const {
       patient_id: patientId,
