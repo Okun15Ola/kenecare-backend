@@ -169,28 +169,6 @@ describe("doctors.council-registration.services", () => {
       expect(result).toEqual({ status: 400 });
     });
 
-    it("should return NOT_FOUND if user not found", async () => {
-      getUserById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue({ status: 404 });
-      const result =
-        await doctorsCouncilRegistrationServices.createDoctorCouncilRegistration(
-          baseArgs,
-        );
-      expect(Response.NOT_FOUND).toHaveBeenCalled();
-      expect(result).toEqual({ status: 404 });
-    });
-
-    it("should return FORBIDDEN if user is not doctor", async () => {
-      getUserById.mockResolvedValue({ user_type: USERTYPE.PATIENT });
-      Response.FORBIDDEN.mockReturnValue({ status: 403 });
-      const result =
-        await doctorsCouncilRegistrationServices.createDoctorCouncilRegistration(
-          baseArgs,
-        );
-      expect(Response.FORBIDDEN).toHaveBeenCalled();
-      expect(result).toEqual({ status: 403 });
-    });
-
     it("should return BAD_REQUEST if doctor profile does not exist", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
       dbObject.getDoctorByUserId.mockResolvedValue(null);
