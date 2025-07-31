@@ -1,13 +1,10 @@
-// const moment = require("moment");
 const { body } = require("express-validator");
 const { USERTYPE } = require("./enum.utils");
 const { createOrUpdateStreamUser } = require("./stream.utils");
 const { getPatientByUserId } = require("../repository/patients.repository");
 const { getFileUrlFromS3Bucket } = require("./aws-s3.utils");
 const { getDoctorByUserId } = require("../repository/doctors.repository");
-// const {
-//   getAvailableDoctors,
-// } = require("../repository/doctorAvailableDays.repository");
+const { redisClient } = require("../config/redis.config");
 const logger = require("../middlewares/logger.middleware");
 /**
  * Creates or updates a Stream user profile for a given user type and user ID.
@@ -83,7 +80,36 @@ const binaryBooleanValidator = (
     });
 };
 
+const fetchLoggedInDoctor = async (userId) => {
+  if (!userId) {
+    logger.error("fetchLoggedInDoctor: userId is required");
+    return null;
+  }
+  try {
+    const cacheKey = `doctor:${userId}:user`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+    const doctor = await getDoctorByUserId(userId);
+    if (!doctor.doctor_id) {
+      logger.warn(`No doctor found for userId: ${userId}`);
+      return null;
+    }
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(doctor),
+    });
+    return doctor;
+  } catch (error) {
+    logger.error("fetchLoggedInDoctor error:", error);
+    return null;
+  }
+};
+
 module.exports = {
   createStreamUserProfile,
   binaryBooleanValidator,
+  fetchLoggedInDoctor,
 };
