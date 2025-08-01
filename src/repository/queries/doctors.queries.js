@@ -155,7 +155,7 @@ module.exports = {
     INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id
     INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id
     INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id
-    WHERE registration_number = ? AND is_profile_approved = 1 LIMIT 1;
+    WHERE registration_number = ? LIMIT 1;
   `,
   CREATE_DOCTOR: `
     INSERT INTO doctors (user_id, title, first_name, middle_name, last_name, gender, professional_summary, specialization_id, qualifications, consultation_fee, city_id, years_of_experience)
@@ -176,5 +176,5 @@ module.exports = {
     WHERE doctor_id = ? AND is_profile_approved = 1;
   `,
   UPDATE_DOCTOR_PROFILE_PICTURE:
-    "UPDATE doctors SET profile_pic_url = ? WHERE doctor_id = ? AND is_profile_approved = 1",
+    "UPDATE doctors SET profile_pic_url = ? WHERE doctor_id = ? LIMIT 1",
 };

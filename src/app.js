@@ -94,7 +94,7 @@ const corsOptions = {
 
 const app = express();
 app.disable("x-powered-by");
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // corsOptions
 app.use(
   helmet({
     hidePoweredBy: true,
@@ -105,10 +105,6 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// fetchEncryptionKey().then(() => {
-//   console.log(encryptionKey);
-// });
 
 app.use("/api/v1/health-check", (req, res) =>
   res

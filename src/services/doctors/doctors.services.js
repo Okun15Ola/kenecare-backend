@@ -30,6 +30,7 @@ const {
   deleteFileFromS3Bucket,
 } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
+const { nodeEnv } = require("../../config/default.config");
 
 exports.getAllDoctors = async (limit, page) => {
   try {
@@ -315,10 +316,14 @@ exports.createDoctorProfile = async ({
       });
     }
 
-    // Send Email to admins
-    await adminDoctorProfileRegistrationEmail({
-      doctorName: `${firstName} ${middleName} ${lastName}`,
-    });
+    if (nodeEnv !== "development") {
+      // Send Email to admins
+      await adminDoctorProfileRegistrationEmail({
+        doctorName: `${firstName} ${middleName} ${lastName}`,
+      });
+    } else {
+      console.log("Simulate Sending Email");
+    }
 
     const hashedPin = await hashUsersPassword("1234");
     await createDoctorWallet({
@@ -451,6 +456,7 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
       const { buffer, mimetype } = file;
       newImageUrl = `profile_pic_${generateFileName(file)}`;
 
+      // TODO Add a check for the nodeEnv, if it is in development, let us save files locally, if it is in staging or prod then we can upload to S3
       await uploadFileToS3Bucket({
         fileName: newImageUrl,
         buffer,
@@ -469,12 +475,15 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
       doctorId,
       imageUrl: newImageUrl,
     });
+    console.log(affectedRows);
 
     if (!affectedRows || affectedRows < 1) {
       logger.error(
         `Failed to update profile picture for doctorId: ${doctorId}`,
       );
-      return Response.NOT_MODIFIED({});
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Uploading Profile Picture. Please Try again!",
+      });
     }
 
     if (oldProfilePicUrl) {
@@ -498,6 +507,7 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
     });
   } catch (error) {
     logger.error("updateDoctorProfilePicture: ", error);
+    console.error(error);
     throw error;
   }
 };

@@ -16,9 +16,9 @@ const {
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
 
-router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+router.use(authenticateUser, limiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
-router.get("/profile", GetDoctorProfileController);
+router.get("/profile", authorizeDoctor, GetDoctorProfileController);
 router.post(
   "/profile",
   createDoctorProfileValidations,
@@ -27,6 +27,7 @@ router.post(
 );
 router.put(
   "/profile/",
+  authorizeDoctor,
   createDoctorProfileValidations,
   Validate,
   UpdateDoctorProfileByIdController,

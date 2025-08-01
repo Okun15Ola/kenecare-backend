@@ -164,6 +164,7 @@ const UpdateDoctorProfilePictureController = async (req, res, next) => {
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
+    console.error(error);
     return next(error);
   }
 };

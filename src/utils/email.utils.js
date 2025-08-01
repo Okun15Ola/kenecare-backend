@@ -1,12 +1,11 @@
 const sendGrid = require("@sendgrid/mail");
 const logger = require("../middlewares/logger.middleware");
-
 const {
   sendGridApiKey,
   sendGridSenderEmail,
   apiBaseURL,
 } = require("../config/default.config");
-const { kenecareAdminEmail } = require("../config/default.config");
+const { kenecareAdminEmail, nodeEnv } = require("../config/default.config");
 
 sendGrid.setApiKey(sendGridApiKey);
 
@@ -43,9 +42,13 @@ const newPatientAppointmentEmail = async ({
     <p>If you need to reschedule or have any questions regarding your appointment, please feel free to contact our office at 88 Pademba Road or send an email to support@kenecare.com. We kindly ask that you login at least 15 minutes before your scheduled appointment </p> 
     <p>Thank you for choosing Kenecare (SL) for your healthcare needs. We value your trust in us and are committed to making your experience as comfortable and efficient as possible.</p>`,
     };
-    await sendGrid.send(message).catch((err) => {
-      throw err;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -80,9 +83,13 @@ const newDoctorAppointmentEmail = async ({
     <p>If, for any reason, you are unable to attend to this appointment, or if there are any changes, please <a href="https://doctor.kenecare.com/login">click here to login to your dashboard</a> and notify the patient at your earliest convenience.</p>
     <p>Thank you for your dedication to providing excellent patient care on Kenecare (SL).</p>`,
     };
-    await sendGrid.send(message).catch((err) => {
-      throw err;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -102,9 +109,13 @@ const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
     <p>The approval process is expected to take 48 hours or less. Once approved, the doctor will be eligible to receive appointments from users seeking healthcare services.</p>
     `,
     };
-    await sendGrid.send(message).catch((error) => {
-      if (error) throw error;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -123,9 +134,13 @@ const adminDoctorProfileRegistrationEmail = async ({ doctorName }) => {
     <p>The approval process is expected to take 48 hours or less. Once approved, the doctor will be eligible to receive appointments from users seeking healthcare services.</p>
     `,
     };
-    await sendGrid.send(message).catch((error) => {
-      if (error) throw error;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -167,9 +182,13 @@ const adminWithdrawalRequestEmail = async ({
     </ul>
     `,
     };
-    await sendGrid.send(message).catch((error) => {
-      if (error) throw error;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -199,9 +218,13 @@ const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
     
     `,
     };
-    await sendGrid.send(message).catch((err) => {
-      throw err;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -232,9 +255,13 @@ const doctorCouncilRegistrationApprovedEmail = async ({
     
     `,
     };
-    await sendGrid.send(message).catch((err) => {
-      throw err;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -268,9 +295,13 @@ const doctorCouncilRegistrationRejectedEmail = async ({
     
     `,
     };
-    await sendGrid.send(message).catch((error) => {
-      if (error) throw error;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -314,9 +345,13 @@ const patientAppointmentApprovalEmail = async ({
     
     `,
     };
-    await sendGrid.send(message).catch((error) => {
-      if (error) throw error;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -338,9 +373,13 @@ const paymentCanceledPatientAppointmentEmail = async ({
     <br />
     <p>Thank you for choosing Kenecare for your healthcare needs. We value your trust in us and are committed to making your experience as comfortable and efficient as possible.</p>`,
     };
-    await sendGrid.send(message).catch((error) => {
-      if (error) throw error;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -363,9 +402,13 @@ const marketerEmailVerificationToken = async ({
     
     `,
     };
-    await sendGrid.send(message).catch((error) => {
-      if (error) throw error;
-    });
+    if (nodeEnv !== "development") {
+      await sendGrid.send(message).catch((err) => {
+        throw err;
+      });
+    } else {
+      console.log("SIMULATING EMAIL: ", message);
+    }
   } catch (error) {
     logger.error(error);
     throw error;

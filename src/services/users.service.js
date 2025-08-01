@@ -465,6 +465,7 @@ exports.requestUserLoginOtp = async ({ userId, mobileNumber }) => {
   try {
     const token = generateVerificationToken();
     const tokenExpiry = generateTokenExpiryTime(15);
+    console.log("AUTH TOKEN: ", token);
     const [updateResult, smsResult] = await Promise.allSettled([
       repo.updateUserVerificationTokenById({ userId, token, tokenExpiry }),
       sendAuthTokenSMS({ token, mobileNumber }),

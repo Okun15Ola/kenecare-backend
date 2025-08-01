@@ -37,7 +37,7 @@ const uploadFileToS3Bucket = async ({ fileName, buffer, mimetype }) => {
     }
     return null;
   } catch (error) {
-    logger.error(error);
+    logger.error("Upload File TO S3 Error: ", error);
     throw error;
   }
 };
@@ -55,7 +55,7 @@ const getFileUrlFromS3Bucket = async (fileName) => {
       expiresIn: 86400,
     });
   } catch (error) {
-    logger.error(error);
+    logger.error("Get File URL From S3 Error: ", error);
     throw error;
   }
 };
@@ -72,7 +72,7 @@ const getPublicFileUrlFromS3Bucket = async (fileName) => {
       expiresIn: 259200,
     });
   } catch (error) {
-    logger.error(error);
+    logger.error("Get Public File From S3 Error: ", error);
     throw error;
   }
 };
@@ -88,7 +88,7 @@ const getObjectFromS3Bucket = async (fileName) => {
 
     return await response.Body.transformToByteArray();
   } catch (error) {
-    logger.error(error);
+    logger.error("Get Object From S3 Error: ", error);
     throw error;
   }
 };
@@ -101,7 +101,7 @@ const deleteFileFromS3Bucket = async (fileName) => {
     const command = new DeleteObjectCommand(params);
     return await s3Client.send(command);
   } catch (error) {
-    logger.error(error);
+    logger.error("Delete File From S3 Error: ", error);
     throw error;
   }
 };
