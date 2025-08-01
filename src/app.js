@@ -9,13 +9,12 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
-// const { allowHeaders, allowOrigins } = require("./config/default.config");
+const { allowHeaders, allowOrigins } = require("./config/default.config");
 const { authenticateClient } = require("./middlewares/apiKey.middlewares");
 const { apiClientLimiter } = require("./utils/rate-limit.utils");
 // const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
 // const { encryptionKey } = require("./config/default.config");
 
-// const { authenticateAdmin } = require("./middlewares/auth.middleware");
 const {
   NOT_FOUND,
   INTERNAL_SERVER_ERROR,
@@ -40,6 +39,7 @@ const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.
 const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.routes");
 const doctorsFollowUpRouter = require("./routes/api/doctors/followups.routes");
 const doctorsTimeSlotRouter = require("./routes/api/doctors/time-slot.routes");
+const doctorFaqRouter = require("./routes/api/doctors/doctor-faqs.routes");
 
 // PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
@@ -74,27 +74,27 @@ const adminApiClientRouter = require("./routes/api/apiClient.routes");
 const adminApiKeyRouter = require("./routes/api/apiKey.routes");
 
 // Replace your current CORS setup with this more secure configuration
-// const corsOptions = {
-//   origin(origin, callback) {
-//     const allowedOrigins = allowOrigins.split(",");
+const corsOptions = {
+  origin(origin, callback) {
+    const allowedOrigins = allowOrigins.split(",");
 
-//     // Allow mobile apps (null origin) and whitelisted domains
-//     if (!origin || allowedOrigins.includes(origin)) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error("Not allowed by CORS"));
-//     }
-//   },
-//   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-//   allowedHeaders: allowHeaders.split(","),
-//   exposedHeaders: ["Content-Disposition"], // For file downloads if needed
-//   credentials: true,
-//   maxAge: 86400, // Cache preflight for 24 hours
-// };
+    // Allow mobile apps (null origin) and whitelisted domains
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: allowHeaders.split(","),
+  exposedHeaders: ["Content-Disposition"], // For file downloads if needed
+  credentials: true,
+  maxAge: 86400, // Cache preflight for 24 hours
+};
 
 const app = express();
 app.disable("x-powered-by");
-app.use(cors()); // corsOptions
+app.use(cors(corsOptions));
 app.use(
   helmet({
     hidePoweredBy: true,
@@ -105,18 +105,6 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(
-//   "/user-profile",
-//   express.static(path.join(__dirname, "public/upload/profile_pics")),
-// );
-
-// app.use("/images", express.static(path.join(__dirname, "public/upload/media")));
-
-// app.use(
-//   "/docs/admin",
-//   authenticateAdmin,
-//   express.static(path.join(__dirname, "public/upload/media")),
-// );
 
 // fetchEncryptionKey().then(() => {
 //   console.log(encryptionKey);
@@ -160,6 +148,7 @@ app.use(
 app.use("/api/v1/doctors/appointments", doctorsAppointmentRouter);
 app.use("/api/v1/doctors/follow-ups", doctorsFollowUpRouter);
 app.use("/api/v1/doctors/slots", doctorsTimeSlotRouter);
+app.use("/api/v1/doctors/faqs", doctorFaqRouter);
 
 // PATIENT'S ROUTES
 app.use("/api/v1/patients", patientsProfileRouter);

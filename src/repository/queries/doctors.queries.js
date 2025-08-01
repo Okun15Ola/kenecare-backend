@@ -73,8 +73,16 @@ module.exports = {
     LIMIT 1
   `,
   GET_DOCTOR_BY_USER_ID: `
-    SELECT ${DOCTOR_COLUMNS}, u.notification_token
-    ${DOCTOR_JOINS}
+    SELECT d.doctor_id, d.title, d.first_name, d.middle_name, d.last_name, 
+    d.gender, d.professional_summary, d.profile_pic_url, 
+    d.specialization_id, ms.speciality_name, d.qualifications, 
+    d.consultation_fee, c.city_name, c.latitude, c.longitude, 
+    d.years_of_experience, d.is_profile_approved, d.user_id, 
+    u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online , u.notification_token
+    FROM doctors d
+    INNER JOIN users u ON d.user_id = u.user_id
+    INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
+    INNER JOIN cities c ON d.city_id = c.city_id  
     WHERE d.user_id = ?
     LIMIT 1
   `,

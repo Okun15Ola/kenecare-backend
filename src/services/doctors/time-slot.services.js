@@ -1,39 +1,11 @@
 const repo = require("../../repository/doctorTimeSlot.repository");
 const logger = require("../../middlewares/logger.middleware");
-const { getDoctorByUserId } = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
 const { doctorTimeSlot } = require("../../constants/doctor.constants");
+const { fetchLoggedInDoctor } = require("../../utils/helpers.utils");
 
 const ERROR_500 = "Something went wrong. Please try again!";
-
-const fetchLoggedInDoctor = async (userId) => {
-  if (!userId) {
-    logger.error("fetchLoggedInDoctor: userId is required");
-    return null;
-  }
-  try {
-    const cacheKey = `doctor:${userId}:user`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return JSON.parse(cachedData);
-    }
-    const doctor = await getDoctorByUserId(userId);
-    if (!doctor.doctor_id) {
-      logger.warn(`No doctor found for userId: ${userId}`);
-      return null;
-    }
-
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(doctor),
-    });
-    return doctor;
-  } catch (error) {
-    logger.error("fetchLoggedInDoctor error:", error);
-    return null;
-  }
-};
 
 exports.getAvailableSlotsForWeek = async (userId) => {
   try {

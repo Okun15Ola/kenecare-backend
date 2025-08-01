@@ -3,6 +3,9 @@ const moment = require("moment");
 const {
   getAppointments,
 } = require("../repository/adminAppointments.repository");
+const {
+  batchUpdateEndTimeForOpenAppointments,
+} = require("../repository/doctorAppointments.repository");
 const { generateDoctorTimeSlots } = require("./time.utils");
 const logger = require("../middlewares/logger.middleware");
 const { redisClient } = require("../config/redis.config");
@@ -24,9 +27,7 @@ const getAllAppointments = async () => {
     if (cachedData) {
       appointments = JSON.parse(cachedData);
     } else {
-      const limit = 1;
-      const offset = 30;
-      appointments = await getAppointments(limit, offset);
+      appointments = await getAppointments();
       await redisClient.set({
         key: cacheKey,
         expiry: 600,
@@ -79,6 +80,7 @@ const getAllAppointments = async () => {
 };
 let appointmentCronJobInstance;
 let timeSlotCronInstance;
+let autoEndAppointmentCronInstance;
 
 module.exports = {
   startAppointmentCron: () => {
@@ -167,6 +169,65 @@ module.exports = {
     } else {
       logger.info("No active time slot cron job to stop");
       console.info("No active time slot cron job to stop");
+    }
+  },
+
+  startAutoEndAppointmentCron: () => {
+    if (autoEndAppointmentCronInstance) {
+      logger.info("Auto-end appointment cron job is already running...");
+      console.info("Auto-end appointment cron job is already running...");
+      return;
+    }
+
+    // Run daily at 1:00 AM
+    autoEndAppointmentCronInstance = new CronJob(
+      "0 1 * * *",
+      async () => {
+        try {
+          logger.info("Running auto-end appointment job...");
+          console.info("Running auto-end appointment job...");
+
+          // Format current time for end_time
+          const currentTime = moment().format("HH:mm:ss");
+          const result =
+            await batchUpdateEndTimeForOpenAppointments(currentTime);
+
+          // Check if the query was successful
+          if (result?.affectedRows) {
+            logger.info(
+              `Successfully auto-closed ${result?.affectedRows} open appointments`,
+            );
+            console.info(
+              `Successfully auto-closed ${result?.affectedRows} open appointments`,
+            );
+          } else {
+            logger.info("No open appointments found to auto-close");
+            console.info("No open appointments found to auto-close");
+          }
+        } catch (error) {
+          logger.error("Error in auto-end appointment cron job:", error);
+          console.error("Error in auto-end appointment cron job:", error);
+        }
+      },
+      null,
+      false, // prevent auto start
+      "UTC",
+    );
+
+    autoEndAppointmentCronInstance.start();
+    logger.info("Auto-end appointment cron job started successfully");
+    console.info("Auto-end appointment cron job started successfully");
+  },
+
+  stopAutoEndAppointmentCron: () => {
+    if (autoEndAppointmentCronInstance) {
+      autoEndAppointmentCronInstance.stop();
+      autoEndAppointmentCronInstance = null;
+      logger.info("Auto-end appointment cron job stopped");
+      console.info("Auto-end appointment cron job stopped");
+    } else {
+      logger.info("Auto-end appointment cron job to stop");
+      console.info("Auto-end appointment cron job to stop");
     }
   },
 };

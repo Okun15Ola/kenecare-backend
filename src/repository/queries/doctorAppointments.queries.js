@@ -22,16 +22,66 @@ module.exports = {
     ORDER BY medical_appointments.appointment_id DESC 
   `,
 
-  GET_DOCTOR_APPOINTMENTS_DASHBOARD_COUNTS: `
+  GET_DOCTOR_APPOINTMENTS_DASHBOARD_METRICS: `
   SELECT
-  SUM(appointment_date > CURDATE() AND appointment_status IN ('pending')) AS pendingAppointmentCount,
-  SUM(appointment_date = CURDATE() AND appointment_status IN ('approved', 'pending', 'started')) AS todayAppointmentCount,
-  SUM(appointment_status = 'postponed') AS postponeAppointmentCount
-  FROM medical_appointments
-  INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
-  INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
-  WHERE medical_appointments.doctor_id = ?;
-  `,
+    -- Today's metrics
+    COUNT(CASE WHEN ma.appointment_date = CURDATE() AND ma.appointment_status = 'completed' THEN 1 END) AS today_completed_count,
+    COUNT(CASE WHEN ma.appointment_date = CURDATE() AND ma.appointment_status = 'canceled' THEN 1 END) AS today_canceled_count,
+    COUNT(CASE WHEN ma.appointment_date = CURDATE() AND TIMESTAMP(ma.appointment_date, ma.appointment_time) > NOW() 
+              AND ma.appointment_status IN ('approved', 'pending', 'started') THEN 1 END) AS today_upcoming_count,
+    
+    -- Total appointments metrics
+    COUNT(*) AS total_appointment_count,
+    COUNT(CASE WHEN ma.appointment_date > CURDATE() AND ma.appointment_status = 'approved' THEN 1 END) AS future_approved_count,
+    COUNT(CASE WHEN ma.appointment_status = 'pending' THEN 1 END) AS total_pending_count,
+    COUNT(CASE WHEN ma.appointment_date > CURDATE() AND ma.appointment_status = 'pending' THEN 1 END) AS future_pending_count,
+    COUNT(CASE WHEN ma.appointment_date > CURDATE() AND ma.appointment_status = 'canceled' THEN 1 END) AS future_canceled_count,
+    -- COUNT(CASE WHEN ma.appointment_date < CURDATE() AND ma.appointment_status = 'pending' THEN 1 END) AS past_pending_count,
+    COUNT(CASE WHEN ma.appointment_status = 'postponed' THEN 1 END) AS total_postponed_count,
+    COUNT(CASE WHEN ma.appointment_status = 'completed' THEN 1 END) AS total_completed_count,
+    COUNT(CASE WHEN ma.appointment_status = 'approved' THEN 1 END) AS total_approved_count,
+    COUNT(CASE WHEN ma.appointment_status = 'canceled' THEN 1 END) AS total_canceled_count
+  FROM medical_appointments ma
+  INNER JOIN appointment_payments ap ON ma.appointment_id = ap.appointment_id
+  WHERE ma.doctor_id = ? AND ap.payment_status = 'success';
+`,
+
+  GET_DOCTOR_MONTHLY_APPOINTMENT_METRICS: `
+  SELECT 
+    m.month,
+    m.monthName,
+    COALESCE(COUNT(a.appointment_id), 0) AS totalAppointments,
+    COALESCE(SUM(CASE WHEN a.appointment_status = 'completed' THEN 1 ELSE 0 END), 0) AS completedAppointments,
+    COALESCE(SUM(CASE WHEN a.appointment_status = 'approved' THEN 1 ELSE 0 END), 0) AS approvedAppointments,
+    COALESCE(SUM(CASE WHEN a.appointment_status = 'pending' THEN 1 ELSE 0 END), 0) AS pendingAppointments,
+    COALESCE(SUM(CASE WHEN a.appointment_status = 'postponed' THEN 1 ELSE 0 END), 0) AS postponedAppointments,
+    COALESCE(SUM(CASE WHEN a.appointment_status = 'canceled' THEN 1 ELSE 0 END), 0) AS canceledAppointments
+    -- COALESCE(SUM(CASE WHEN a.appointment_status = 'started' THEN 1 ELSE 0 END), 0) AS startedAppointments
+  FROM (
+    SELECT 1 as month, 'January' as monthName UNION ALL
+    SELECT 2, 'February' UNION ALL
+    SELECT 3, 'March' UNION ALL
+    SELECT 4, 'April' UNION ALL
+    SELECT 5, 'May' UNION ALL
+    SELECT 6, 'June' UNION ALL
+    SELECT 7, 'July' UNION ALL
+    SELECT 8, 'August' UNION ALL
+    SELECT 9, 'September' UNION ALL
+    SELECT 10, 'October' UNION ALL
+    SELECT 11, 'November' UNION ALL
+    SELECT 12, 'December'
+  ) m
+  LEFT JOIN (
+    SELECT a.* 
+    FROM medical_appointments a
+    INNER JOIN appointment_payments ap ON a.appointment_id = ap.appointment_id 
+    WHERE ap.payment_status = 'success'
+    AND YEAR(a.appointment_date) = YEAR(CURDATE())
+    AND a.doctor_id = ?
+  ) a ON MONTH(a.appointment_date) = m.month
+  GROUP BY m.month, m.monthName
+  ORDER BY m.month
+`,
 
   COUNT_DOCTOR_APPOINTMENTS_BY_ID: `
   SELECT COUNT(*) AS totalRows
@@ -97,6 +147,14 @@ module.exports = {
     SET end_time = ?, appointment_status = 'completed'
     WHERE appointment_id = ?;
   `,
+
+  BATCH_UPDATE_END_TIME: `
+  UPDATE medical_appointments
+  SET end_time = ?, appointment_status = 'completed'
+  WHERE appointment_status = 'started'
+  AND end_time IS NULL
+  AND appointment_date < CURDATE();
+      `,
 
   CANCEL_APPOINTMENT: `
     UPDATE medical_appointments

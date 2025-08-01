@@ -4,6 +4,7 @@ const { connectionPool } = require("./repository/db.connection");
 const {
   startAppointmentCron: runCron,
   startTimeSlotCron,
+  startAutoEndAppointmentCron,
 } = require("./utils/cron.utils");
 const { generateDoctorTimeSlots } = require("./utils/time.utils");
 require("./config/redis.config"); // Ensure Redis client is initialized
@@ -42,6 +43,8 @@ connectionPool.getConnection((err, connection) => {
           .catch((error) => {
             console.error("❌ Error during time slot initialization:", error);
           });
+
+        startAutoEndAppointmentCron();
       }
     });
   }
