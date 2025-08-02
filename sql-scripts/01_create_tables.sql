@@ -950,3 +950,39 @@ ALTER TABLE api_keys ADD COLUMN environment ENUM('development', 'staging', 'prod
 NOT NULL DEFAULT 'development';
 
 -- ALTER TABLE medical_appointments ADD UNIQUE INDEX doctor_time_unique (doctor_id, appointment_date, appointment_time);
+
+-- Create the table to store blog post details.
+CREATE TABLE IF NOT EXISTS `doctor_health_blogs` (
+  `blog_id` INT NOT NULL AUTO_INCREMENT,
+  `blog_uuid` CHAR(36) UNIQUE NOT NULL,
+  `doctor_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `content` TEXT NOT NULL,
+  `status` ENUM('draft', 'scheduled', 'published', 'archived') NOT NULL DEFAULT 'draft',
+  `title_image` VARCHAR(100) NOT NULL,
+  `images` TEXT,
+  `tags` TEXT,
+  --`views` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `published_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`post_id`),
+  -- Foreign key constraint to link the blog post to a specific doctor.
+  -- If the doctor is deleted, their posts will also be deleted (ON DELETE CASCADE).
+  CONSTRAINT `fk_health_blogs_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`doctor_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- CREATE TABLE IF NOT EXISTS `doctor_blog_comments` (
+--   `comment_id` INT NOT NULL AUTO_INCREMENT,
+--   `comment_uuid` CHAR(36) UNIQUE NOT NULL,
+--   `post_id` INT NOT NULL,
+--   `patient_id` INT NOT NULL,
+--   `comment_content` TEXT NOT NULL,
+--   `is_visible` TINYINT(1) NOT NULL DEFAULT 0,
+--   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--   PRIMARY KEY (`comment_id`),
+--   -- Foreign key constraints.
+--   CONSTRAINT `fk_blog_comments_post` FOREIGN KEY (`post_id`) REFERENCES `doctor_health_blogs` (`post_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+--   CONSTRAINT `fk_blog_comments_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE ON UPDATE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
