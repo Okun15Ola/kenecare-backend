@@ -1,4 +1,6 @@
+/* eslint-disable import/no-unresolved */
 const { body, param } = require("express-validator");
+const { mapUserRow, mapDoctorRow } = require("@utils/db-mapper.utils");
 const {
   getUserByMobileNumber,
   getUserByEmail,
@@ -29,13 +31,15 @@ exports.LoginValidations = [
     .custom(async (mobileNumber, { req }) => {
       const refinedMobileNumber = refineMobileNumber(mobileNumber);
 
-      const user = await getUserByMobileNumber(refinedMobileNumber);
+      const dbUser = await getUserByMobileNumber(refinedMobileNumber);
 
-      if (!user) {
+      if (!dbUser) {
         throw new Error(
           "Mobile Number or Password is incorrect. Please try again",
         );
       }
+
+      const user = await mapUserRow(dbUser, true, true, true, true);
 
       const { userId, userType, accountActive, accountVerified } = user;
 
@@ -53,14 +57,17 @@ exports.LoginValidations = [
 
       if (userType === USERTYPE.DOCTOR) {
         //  get doctor profile
-        const doctor = await getDoctorByUserId(userId);
-        if (!doctor) {
+        const dbDoctor = await getDoctorByUserId(userId);
+
+        if (!dbDoctor) {
           throw new Error(
             "Doctor profile not found. Please complete profile setup before logging in",
           );
         }
 
-        const { is_profile_approved: isProfileApproved } = doctor;
+        const doctor = await mapDoctorRow(dbDoctor);
+
+        const { isProfileApproved } = doctor;
 
         if (!isProfileApproved) {
           throw new Error(
@@ -115,11 +122,15 @@ exports.OTPLoginValidation = [
     .escape()
     .custom(async (mobileNumber, { req }) => {
       const refinedMobileNumber = refineMobileNumber(mobileNumber);
-      const user = await getUserByMobileNumber(refinedMobileNumber);
+      const dbUser = await getUserByMobileNumber(refinedMobileNumber);
 
-      if (!user) {
-        throw new Error("Not A registered Mobile Number");
+      if (!dbUser) {
+        throw new Error(
+          "Mobile Number or Password is incorrect. Please try again",
+        );
       }
+
+      const user = await mapUserRow(dbUser, true, true, true, true);
       const { accountVerified, accountActive } = user;
 
       if (accountVerified !== VERIFICATIONSTATUS.VERIFIED) {
@@ -146,11 +157,15 @@ exports.RegisterValidations = [
     .escape()
     .custom(async (value) => {
       const refinedMobileNumber = refineMobileNumber(value);
-      const user = await getUserByMobileNumber(refinedMobileNumber);
-      if (user && user.mobileNumber === refinedMobileNumber) {
-        throw new Error(
-          "Mobile Number Already Exist. Please try using a different number",
-        );
+      const dbUser = await getUserByMobileNumber(refinedMobileNumber);
+
+      if (dbUser) {
+        const user = mapUserRow(dbUser, true, true, true, true);
+        if (user && user.mobileNumber === refinedMobileNumber) {
+          throw new Error(
+            "Mobile Number Already Exist. Please try using a different number",
+          );
+        }
       }
       return true;
     }),
