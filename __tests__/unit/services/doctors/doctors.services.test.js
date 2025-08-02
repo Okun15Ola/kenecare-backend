@@ -525,20 +525,20 @@ describe("Doctors Service", () => {
       expect(result).toBe("bad_request");
     });
 
-    it("returns NOT_MODIFIED if update fails", async () => {
+    it("returns INTERNAL_SERVER_ERROR if update fails", async () => {
       dbObject.getDoctorByUserId.mockResolvedValue({ doctor_id: 4 });
       uploadFileToS3Bucket.mockResolvedValue();
       dbObject.updateDoctorProfilePictureById.mockResolvedValue({
         affectedRows: 0,
       });
-      Response.NOT_MODIFIED.mockReturnValue("not_modified");
+      Response.INTERNAL_SERVER_ERROR.mockReturnValue("internal_server_error");
       generateFileName.mockReturnValue("file.png");
       const result = await doctorsService.updateDoctorProfilePicture({
         userId: 4,
         file: { buffer: Buffer.from(""), mimetype: "image/png" },
       });
-      expect(Response.NOT_MODIFIED).toHaveBeenCalled();
-      expect(result).toBe("not_modified");
+      expect(Response.INTERNAL_SERVER_ERROR).toHaveBeenCalled();
+      expect(result).toBe("internal_server_error");
     });
 
     it("updates profile picture successfully", async () => {

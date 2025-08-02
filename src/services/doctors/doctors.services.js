@@ -475,7 +475,6 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
       doctorId,
       imageUrl: newImageUrl,
     });
-    console.log(affectedRows);
 
     if (!affectedRows || affectedRows < 1) {
       logger.error(
