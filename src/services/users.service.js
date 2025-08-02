@@ -264,14 +264,14 @@ exports.verifyRegistrationOTP = async ({ token, user }) => {
       userType,
       accountActive,
       accountVerified,
-      verificationTokenExpiry,
+      verificationExpiry,
     } = user;
 
     if (accountVerified === VERIFICATIONSTATUS.VERIFIED) {
       return Response.SUCCESS({ message: "Account is already verified" });
     }
 
-    if (verifyTokenExpiry(verificationTokenExpiry)) {
+    if (verifyTokenExpiry(verificationExpiry)) {
       logger.warn("verifyRegistrationOTP: Verification code expired");
       return Response.BAD_REQUEST({
         message:
@@ -499,7 +499,7 @@ exports.verifyUserLoginOtp = async ({
   mobileNumber,
   accountActive,
   accountVerified,
-  verificationTokenExpiry,
+  verificationExpiry,
 }) => {
   try {
     if (is2faEnabled === STATUS.ACTIVE) {
@@ -510,7 +510,7 @@ exports.verifyUserLoginOtp = async ({
       return response;
     }
 
-    if (verifyTokenExpiry(verificationTokenExpiry)) {
+    if (verifyTokenExpiry(verificationExpiry)) {
       logger.warn("verifyUserLoginOtp: Verification code expired");
       return Response.BAD_REQUEST({
         message: "Login OTP expired. Please request a new login OTP",
