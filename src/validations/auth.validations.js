@@ -3,8 +3,9 @@ const {
   getUserByMobileNumber,
   getUserByEmail,
   getUserById,
-  getUserByToken,
-} = require("../services/users.service");
+  getUserByVerificationToken,
+} = require("../repository/users.repository");
+
 const {
   comparePassword,
   refineMobileNumber,
@@ -232,7 +233,7 @@ exports.VerifyTokenValidations = [
     .trim()
     .escape()
     .custom(async (token, { req }) => {
-      const user = await getUserByToken(token);
+      const user = await getUserByVerificationToken(token);
       if (!user) {
         throw new Error("Invalid AUTH Token. Please enter a valid AUTH Token");
       }
@@ -250,7 +251,7 @@ exports.UpdatePasswordValidations = [
     .trim()
     .escape()
     .custom(async (value, { req }) => {
-      const user = await getUserByToken(value);
+      const user = await getUserByVerificationToken(value);
       if (!user) {
         throw new Error(
           "Invalid or expired token. Please try again with a valid token.",
@@ -347,7 +348,7 @@ exports.TokenValidations = [
     .trim()
     .escape()
     .custom(async (value, { req }) => {
-      const user = await getUserByToken(value);
+      const user = await getUserByVerificationToken(value);
       if (!user) {
         throw new Error(
           "Invalid or expired token. Please try again with a valid token.",
