@@ -39,7 +39,7 @@ exports.LoginValidations = [
         );
       }
 
-      const user = await mapUserRow(dbUser, true, true, true, true);
+      const user = mapUserRow(dbUser, true);
 
       const { userId, userType, accountActive, accountVerified } = user;
 
@@ -130,8 +130,8 @@ exports.OTPLoginValidation = [
         );
       }
 
-      const user = await mapUserRow(dbUser, true, true, true, true);
-      const { accountVerified, accountActive } = user;
+      const user = mapUserRow(dbUser, false, false, true, true);
+      const { accountVerified, accountActive, userType, userId } = user;
 
       if (accountVerified !== VERIFICATIONSTATUS.VERIFIED) {
         throw new Error("Account Not Verified. Please verify and try again");
@@ -141,6 +141,27 @@ exports.OTPLoginValidation = [
           "Account Has Been Disabled. Please Contact Kenecare Support for further instrcutions.",
         );
       }
+
+      if (userType === USERTYPE.DOCTOR) {
+        const dbDoctor = await getDoctorByUserId(userId);
+
+        if (!dbDoctor) {
+          throw new Error(
+            "Doctor profile not found. Please complete profile setup before logging in",
+          );
+        }
+
+        const doctor = await mapDoctorRow(dbDoctor);
+
+        const { isProfileApproved } = doctor;
+
+        if (!isProfileApproved) {
+          throw new Error(
+            "Doctor Profile has not been approved. Please contact support",
+          );
+        }
+      }
+
       req.user = user;
     }),
 ];
@@ -160,7 +181,7 @@ exports.RegisterValidations = [
       const dbUser = await getUserByMobileNumber(refinedMobileNumber);
 
       if (dbUser) {
-        const user = mapUserRow(dbUser, true, true, true, true);
+        const user = mapUserRow(dbUser, false, true, true, true);
         if (user && user.mobileNumber === refinedMobileNumber) {
           throw new Error(
             "Mobile Number Already Exist. Please try using a different number",
@@ -248,10 +269,12 @@ exports.VerifyTokenValidations = [
     .trim()
     .escape()
     .custom(async (token, { req }) => {
-      const user = await getUserByVerificationToken(token);
-      if (!user) {
+      const dbUser = await getUserByVerificationToken(token);
+      if (!dbUser) {
         throw new Error("Invalid AUTH Token. Please enter a valid AUTH Token");
       }
+
+      const user = mapUserRow(dbUser, false, false, true, true);
 
       req.user = user;
       return true;
@@ -266,12 +289,14 @@ exports.UpdatePasswordValidations = [
     .trim()
     .escape()
     .custom(async (value, { req }) => {
-      const user = await getUserByVerificationToken(value);
-      if (!user) {
+      const dbUser = await getUserByVerificationToken(value);
+      if (!dbUser) {
         throw new Error(
           "Invalid or expired token. Please try again with a valid token.",
         );
       }
+
+      const user = mapUserRow(dbUser, true, false, true, true);
 
       req.user = user;
       return true;
@@ -342,13 +367,15 @@ exports.MobileNumberValidations = [
     .escape()
     .custom(async (phoneNumber, { req }) => {
       const refinedMobileNumber = refineMobileNumber(phoneNumber);
-      const user = await getUserByMobileNumber(refinedMobileNumber);
+      const dbUser = await getUserByMobileNumber(refinedMobileNumber);
 
-      if (!user) {
+      if (!dbUser) {
         throw new Error(
           "No Account associated with the phone number you provided",
         );
       }
+
+      const user = mapUserRow(dbUser, false, false, true, true);
 
       req.user = user;
       return true;
@@ -363,12 +390,15 @@ exports.TokenValidations = [
     .trim()
     .escape()
     .custom(async (value, { req }) => {
-      const user = await getUserByVerificationToken(value);
-      if (!user) {
+      const dbUser = await getUserByVerificationToken(value);
+      if (!dbUser) {
         throw new Error(
           "Invalid or expired token. Please try again with a valid token.",
         );
       }
+
+      const user = mapUserRow(dbUser, false, false, true, true);
+
       req.user = user;
       return true;
     }),
