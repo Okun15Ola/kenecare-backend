@@ -6,6 +6,7 @@ const {
   smsHiveAuthToken,
   smsHiveUrl,
 } = require("../config/default.config");
+const { nodeEnv } = require("../config/default.config");
 
 const config = {
   method: "post",
@@ -31,9 +32,14 @@ const sendVerificationTokenSMS = async ({ token, mobileNumber }) => {
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
+
     logger.info("SMS sent successfully:");
   } catch (error) {
     logger.error(error);
@@ -51,9 +57,13 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -73,9 +83,13 @@ const sendMarketerVerificationTokenSMS = async ({
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -95,9 +109,13 @@ const sendMarketerPhoneVerifiedSMS = async ({
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -118,9 +136,13 @@ const sendMarketerUserRegisteredSMS = async ({
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -136,9 +158,13 @@ const sendForgotPasswordRequestTokenSMS = async ({ token, mobileNumber }) => {
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -154,9 +180,13 @@ const sendPasswordResetSMS = async (mobileNumber) => {
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -172,9 +202,13 @@ const sendPrescriptionToken = async ({ doctorName, mobileNumber }) => {
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -198,9 +232,13 @@ const appointmentApprovalSms = async ({
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error.response);
     throw error;
@@ -223,9 +261,13 @@ const newFollowAppointmentSms = async ({
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -246,9 +288,13 @@ const appointmentStartedSms = async ({
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
@@ -268,9 +314,13 @@ const appointmentEndedSms = async ({
     });
 
     config.data = data;
-    await axios.request(config).catch((error) => {
-      throw error;
-    });
+    if (nodeEnv === "development") {
+      console.log("SIMULATION SEND SMS", data);
+    } else {
+      await axios.request(config).catch((error) => {
+        throw error;
+      });
+    }
   } catch (error) {
     logger.error(error);
     throw error;
