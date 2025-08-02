@@ -1,233 +1,76 @@
 const { CronJob } = require("cron");
-const moment = require("moment");
-const {
-  getAppointments,
-} = require("../repository/adminAppointments.repository");
-const {
-  batchUpdateEndTimeForOpenAppointments,
-} = require("../repository/doctorAppointments.repository");
-const { generateDoctorTimeSlots } = require("./time.utils");
 const logger = require("../middlewares/logger.middleware");
-const { redisClient } = require("../config/redis.config");
+const appointmentNotifier = require("../jobs/appointmentNotifier.job");
+const timeSlotGenerator = require("../jobs/timeSlotGenerator.job");
+const autoEndAppointment = require("../jobs/autoEndAppointment.job");
+const blogPublisher = require("../jobs/blogPublisher.job");
 
-const sendPushNotifications = (notifications) => {
-  notifications.forEach(({ appointmentDateTime, diffInMinutes }) => {
-    logger.info(
-      `Sending push notification for appointment at ${appointmentDateTime}, ${diffInMinutes} minutes remaining.`,
-    );
-    // Implement push notification logic here
-  });
-};
+// Track job instances
+const jobInstances = {};
 
-const getAllAppointments = async () => {
-  try {
-    let appointments = null;
-    const cacheKey = "appointments:all";
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      appointments = JSON.parse(cachedData);
+// Create start and stop functions for a job
+const createJobFunctions = (jobModule) => {
+  const { name, schedule, execute } = jobModule;
+
+  const start = () => {
+    if (jobInstances[name]) {
+      logger.info(`${name} job is already running...`);
+      console.info(`${name} job is already running...`);
+      return;
+    }
+
+    jobInstances[name] = new CronJob(schedule, execute, null, false, "UTC");
+
+    jobInstances[name].start();
+    logger.info(`${name} job started successfully`);
+    console.info(`${name} job started successfully`);
+  };
+
+  const stop = () => {
+    if (jobInstances[name]) {
+      jobInstances[name].stop();
+      jobInstances[name] = null;
+      logger.info(`${name} job stopped`);
+      console.info(`${name} job stopped`);
     } else {
-      appointments = await getAppointments();
-      await redisClient.set({
-        key: cacheKey,
-        expiry: 600,
-        value: JSON.stringify(appointments),
-      });
+      logger.info(`No active ${name} job to stop`);
+      console.info(`No active ${name} job to stop`);
     }
+  };
 
-    const currentDateTime = moment();
-    const notifications = [];
-    appointments.forEach(
-      ({
-        appointment_status: appointmentStatus,
-        appointment_date: appointmentDate,
-        appointment_time: appointmentTime,
-      }) => {
-        if (appointmentStatus !== "pending") return;
-
-        const appointmentDateTime = moment(
-          `${appointmentDate} ${appointmentTime}`,
-          "YYYY-MM-DD HH:mm:ss",
-        );
-
-        if (currentDateTime.isSame(appointmentDateTime, "day")) {
-          const diffInMinutes = appointmentDateTime.diff(
-            currentDateTime,
-            "minutes",
-          );
-
-          if (diffInMinutes === 30 || diffInMinutes === 5) {
-            notifications.push({
-              appointmentDateTime: appointmentDateTime.format(
-                "YYYY-MM-DD HH:mm:ss",
-              ),
-              diffInMinutes,
-            });
-          }
-        }
-      },
-    );
-
-    // Process notifications in batch
-    if (notifications.length > 0) {
-      sendPushNotifications(notifications);
-    }
-  } catch (error) {
-    logger.info(error);
-    logger.error("CRON ERROR: ", error);
-    throw error;
-  }
+  return { start, stop };
 };
-let appointmentCronJobInstance;
-let timeSlotCronInstance;
-let autoEndAppointmentCronInstance;
+
+// Create functions for each job
+const appointmentFunctions = createJobFunctions(appointmentNotifier);
+const timeSlotFunctions = createJobFunctions(timeSlotGenerator);
+const autoEndFunctions = createJobFunctions(autoEndAppointment);
+const blogPublishingFunctions = createJobFunctions(blogPublisher);
 
 module.exports = {
-  startAppointmentCron: () => {
-    if (appointmentCronJobInstance) {
-      logger.info("Cron job is already running...");
-      console.info("Cron job is already running...");
-      return;
-    }
+  startAppointmentCron: appointmentFunctions.start,
+  stopAppointmentCron: appointmentFunctions.stop,
 
-    appointmentCronJobInstance = new CronJob(
-      "*/5 * * * *",
-      async () => {
-        try {
-          logger.info("Running appointment notification cron job...");
-          console.info("Running appointment notification cron job...");
-          await getAllAppointments();
-          logger.info("Appointment cron job completed....");
-          console.info("Appointment cron job completed....");
-        } catch (error) {
-          logger.error("Error in cron job:", error);
-        }
-      },
-      null, // no need for onComplete callback
-      false,
-      "UTC",
-    );
-    logger.info("Cron job started successfully");
+  startTimeSlotCron: timeSlotFunctions.start,
+  stopTimeSlotCron: timeSlotFunctions.stop,
+
+  startAutoEndAppointmentCron: autoEndFunctions.start,
+  stopAutoEndAppointmentCron: autoEndFunctions.stop,
+
+  startBlogPublishingCron: blogPublishingFunctions.start,
+  stopBlogPublishingCron: blogPublishingFunctions.stop,
+
+  startAllCronJobs: () => {
+    appointmentFunctions.start();
+    timeSlotFunctions.start();
+    autoEndFunctions.start();
+    blogPublishingFunctions.start();
   },
 
-  stopAppointmentCron: () => {
-    if (appointmentCronJobInstance) {
-      appointmentCronJobInstance.stop();
-      appointmentCronJobInstance = null;
-      logger.info("Cron job stopped");
-    } else {
-      logger.info("No active cron job to stop");
-    }
-  },
-
-  // New time slot cron functions
-  startTimeSlotCron: () => {
-    if (timeSlotCronInstance) {
-      logger.info("Time slot cron job is already running...");
-      console.info("Time slot cron job is already running...");
-      return;
-    }
-
-    // Run every Sunday at 12:00 AM
-    timeSlotCronInstance = new CronJob(
-      "0 0 * * 0",
-      async () => {
-        try {
-          logger.info("Running doctor time slot generation job...");
-          console.info("Running doctor time slot generation job...");
-
-          const result = await generateDoctorTimeSlots();
-
-          if (result.success) {
-            logger.info(`Time slot generation completed: ${result.message}`);
-            console.info(`Time slot generation completed: ${result.message}`);
-          } else {
-            logger.error(`Time slot generation failed: ${result.message}`);
-            console.error(`Time slot generation failed: ${result.message}`);
-          }
-        } catch (error) {
-          logger.error("Error in time slot cron job:", error);
-          console.error("Error in time slot cron job:", error);
-        }
-      },
-      null,
-      false, // prevent auto start
-      "UTC",
-    );
-
-    timeSlotCronInstance.start();
-    logger.info("Time slot cron job started successfully");
-    console.info("Time slot cron job started successfully");
-  },
-
-  stopTimeSlotCron: () => {
-    if (timeSlotCronInstance) {
-      timeSlotCronInstance.stop();
-      timeSlotCronInstance = null;
-      logger.info("Time slot cron job stopped");
-      console.info("Time slot cron job stopped");
-    } else {
-      logger.info("No active time slot cron job to stop");
-      console.info("No active time slot cron job to stop");
-    }
-  },
-
-  startAutoEndAppointmentCron: () => {
-    if (autoEndAppointmentCronInstance) {
-      logger.info("Auto-end appointment cron job is already running...");
-      console.info("Auto-end appointment cron job is already running...");
-      return;
-    }
-
-    // Run daily at 1:00 AM
-    autoEndAppointmentCronInstance = new CronJob(
-      "0 1 * * *",
-      async () => {
-        try {
-          logger.info("Running auto-end appointment job...");
-          console.info("Running auto-end appointment job...");
-
-          // Format current time for end_time
-          const currentTime = moment().format("HH:mm:ss");
-          const result =
-            await batchUpdateEndTimeForOpenAppointments(currentTime);
-
-          // Check if the query was successful
-          if (result?.affectedRows) {
-            logger.info(
-              `Successfully auto-closed ${result?.affectedRows} open appointments`,
-            );
-            console.info(
-              `Successfully auto-closed ${result?.affectedRows} open appointments`,
-            );
-          } else {
-            logger.info("No open appointments found to auto-close");
-            console.info("No open appointments found to auto-close");
-          }
-        } catch (error) {
-          logger.error("Error in auto-end appointment cron job:", error);
-          console.error("Error in auto-end appointment cron job:", error);
-        }
-      },
-      null,
-      false, // prevent auto start
-      "UTC",
-    );
-
-    autoEndAppointmentCronInstance.start();
-    logger.info("Auto-end appointment cron job started successfully");
-    console.info("Auto-end appointment cron job started successfully");
-  },
-
-  stopAutoEndAppointmentCron: () => {
-    if (autoEndAppointmentCronInstance) {
-      autoEndAppointmentCronInstance.stop();
-      autoEndAppointmentCronInstance = null;
-      logger.info("Auto-end appointment cron job stopped");
-      console.info("Auto-end appointment cron job stopped");
-    } else {
-      logger.info("Auto-end appointment cron job to stop");
-      console.info("Auto-end appointment cron job to stop");
-    }
+  stopAllCronJobs: () => {
+    appointmentFunctions.stop();
+    timeSlotFunctions.stop();
+    autoEndFunctions.stop();
+    blogPublishingFunctions.stop();
   },
 };
