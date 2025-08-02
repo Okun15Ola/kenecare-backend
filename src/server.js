@@ -1,11 +1,7 @@
 const app = require("./app");
 const { appPort, appBaseURL } = require("./config/default.config");
 const { connectionPool } = require("./repository/db.connection");
-const {
-  startAppointmentCron: runCron,
-  startTimeSlotCron,
-  startAutoEndAppointmentCron,
-} = require("./utils/cron.utils");
+const cronUtils = require("./utils/cron.utils");
 const { generateDoctorTimeSlots } = require("./utils/time.utils");
 require("./config/redis.config"); // Ensure Redis client is initialized
 
@@ -23,8 +19,8 @@ connectionPool.getConnection((err, connection) => {
         console.error("❌ There was an error running the server:", err);
       } else {
         console.info(`🚀 Server running on ${appBaseURL}:${appPort}`);
-        runCron();
-        startTimeSlotCron();
+        // init all cron jobs when server starts
+        cronUtils.startAllCronJobs();
 
         // Run doctor time slot generation on server startup
         console.info("🏥 Initializing doctor time slots...");
@@ -43,8 +39,6 @@ connectionPool.getConnection((err, connection) => {
           .catch((error) => {
             console.error("❌ Error during time slot initialization:", error);
           });
-
-        startAutoEndAppointmentCron();
       }
     });
   }
