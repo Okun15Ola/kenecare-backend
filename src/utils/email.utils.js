@@ -1,18 +1,33 @@
-const sendGrid = require("@sendgrid/mail");
+const nodemailer = require("nodemailer");
 const logger = require("../middlewares/logger.middleware");
 const {
-  sendGridApiKey,
-  sendGridSenderEmail,
   apiBaseURL,
+  nodemailerHost,
+  nodemailerPass,
+  nodemailerPort,
+  nodemailerUser,
 } = require("../config/default.config");
 const { kenecareAdminEmail, nodeEnv } = require("../config/default.config");
 
-sendGrid.setApiKey(sendGridApiKey);
+// sendGrid.setApiKey(sendGridApiKey);
+
+const transporter = nodemailer.createTransport({
+  host: nodemailerHost,
+  port: nodemailerPort,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: nodemailerUser, // Your custom email address
+    pass: nodemailerPass, // Your password
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
 
 const mailer = {
   from: {
     name: "KENECARE (SL)",
-    email: sendGridSenderEmail,
+    email: nodemailerUser,
   },
 };
 
@@ -43,7 +58,7 @@ const newPatientAppointmentEmail = async ({
     <p>Thank you for choosing Kenecare (SL) for your healthcare needs. We value your trust in us and are committed to making your experience as comfortable and efficient as possible.</p>`,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -84,7 +99,7 @@ const newDoctorAppointmentEmail = async ({
     <p>Thank you for your dedication to providing excellent patient care on Kenecare (SL).</p>`,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -110,7 +125,7 @@ const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
     `,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -135,7 +150,7 @@ const adminDoctorProfileRegistrationEmail = async ({ doctorName }) => {
     `,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -183,7 +198,7 @@ const adminWithdrawalRequestEmail = async ({
     `,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -219,7 +234,7 @@ const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
     `,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -256,7 +271,7 @@ const doctorCouncilRegistrationApprovedEmail = async ({
     `,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -296,7 +311,7 @@ const doctorCouncilRegistrationRejectedEmail = async ({
     `,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -346,7 +361,7 @@ const patientAppointmentApprovalEmail = async ({
     `,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -374,7 +389,7 @@ const paymentCanceledPatientAppointmentEmail = async ({
     <p>Thank you for choosing Kenecare for your healthcare needs. We value your trust in us and are committed to making your experience as comfortable and efficient as possible.</p>`,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -403,7 +418,7 @@ const marketerEmailVerificationToken = async ({
     `,
     };
     if (nodeEnv !== "development") {
-      await sendGrid.send(message).catch((err) => {
+      await transporter.sendMail(message).catch((err) => {
         throw err;
       });
     } else {
@@ -416,6 +431,7 @@ const marketerEmailVerificationToken = async ({
 };
 
 module.exports = {
+  transporter,
   newPatientAppointmentEmail,
   newDoctorAppointmentEmail,
   paymentCanceledPatientAppointmentEmail,

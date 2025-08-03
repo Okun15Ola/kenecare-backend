@@ -55,5 +55,9 @@ module.exports = {
   maxLimit: parseInt(env.MAX_LIMIT, 10),
   allowOrigins: env.ALLOWED_ORIGINS,
   allowHeaders: env.ALLOWED_HEADERS,
-  apiClientSecret: env.API_JWT_SECRET || "some_random_string",
+  apiClientSecret: env.API_JWT_SECRET,
+  nodemailerHost: env.NODEMAILER_HOST,
+  nodemailerUser: env.NODEMAILER_USER,
+  nodemailerPass: env.NODEMAILER_PASS,
+  nodemailerPort: env.NODEMAILER_PORT,
 };
