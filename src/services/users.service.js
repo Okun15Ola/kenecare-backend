@@ -264,14 +264,14 @@ exports.verifyRegistrationOTP = async ({ token, user }) => {
       userType,
       accountActive,
       accountVerified,
-      verificationTokenExpiry,
+      verificationExpiry,
     } = user;
 
     if (accountVerified === VERIFICATIONSTATUS.VERIFIED) {
       return Response.SUCCESS({ message: "Account is already verified" });
     }
 
-    if (verifyTokenExpiry(verificationTokenExpiry)) {
+    if (verifyTokenExpiry(verificationExpiry)) {
       logger.warn("verifyRegistrationOTP: Verification code expired");
       return Response.BAD_REQUEST({
         message:
@@ -499,7 +499,7 @@ exports.verifyUserLoginOtp = async ({
   mobileNumber,
   accountActive,
   accountVerified,
-  verificationTokenExpiry,
+  verificationExpiry,
 }) => {
   try {
     if (is2faEnabled === STATUS.ACTIVE) {
@@ -510,7 +510,7 @@ exports.verifyUserLoginOtp = async ({
       return response;
     }
 
-    if (verifyTokenExpiry(verificationTokenExpiry)) {
+    if (verifyTokenExpiry(verificationExpiry)) {
       logger.warn("verifyUserLoginOtp: Verification code expired");
       return Response.BAD_REQUEST({
         message: "Login OTP expired. Please request a new login OTP",
@@ -636,27 +636,8 @@ exports.sendForgetPasswordOTP = async ({
  * @param {Object} user - User object with verification token
  * @returns {Promise<Object>} Success response or error
  */
-exports.verifyForgetPasswordOTP = async (
-  token,
-  verificationToken,
-  accountVerified,
-  verificationExpiry,
-) => {
+exports.verifyForgetPasswordOTP = async (verificationExpiry) => {
   try {
-    if (token !== verificationToken) {
-      logger.error("Invalid OTP");
-      return Response.BAD_REQUEST({
-        message: "Invalid OTP",
-      });
-    }
-
-    if (!verificationToken || accountVerified !== STATUS.ACTIVE) {
-      logger.error("verifyRequestedOTP: Missing token or unverified account");
-      return Response.BAD_REQUEST({
-        message: "Error verifying forget password OTP, please try again.",
-      });
-    }
-
     if (verifyTokenExpiry(verificationExpiry)) {
       logger.warn("verifyRequestedOTP: Forget password OTP expired");
       return Response.BAD_REQUEST({
@@ -726,14 +707,22 @@ exports.updateUserPassword = async ({ newPassword, userId, mobileNumber }) => {
       });
     }
 
-    await repo.updateUserVerificationTokenById({ userId, token: null });
-    await sendPasswordResetSMS(mobileNumber);
-
-    // TODO: check if user want to logout of all other devices
+    await Promise.all([
+      repo.updateUserVerificationTokenById({ userId, token: null }),
+      sendPasswordResetSMS(mobileNumber),
+      blacklistAllUserTokens(userId),
+      repo.updateUserOnlineStatus({
+        userId,
+        status: STATUS.NOT_ACTIVE,
+      }),
+    ]);
 
     return Response.SUCCESS({
       message:
         "Password updated successfully. Please login with your new password.",
+      data: {
+        requireReLogin: true,
+      },
     });
   } catch (error) {
     logger.error("updateUserPassword: ", error);

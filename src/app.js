@@ -10,7 +10,7 @@ const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
 const { allowHeaders, allowOrigins } = require("./config/default.config");
-const { authenticateClient } = require("./middlewares/apiKey.middlewares");
+const { validateClientToken } = require("./middlewares/apiKey.middlewares");
 const { apiClientLimiter } = require("./utils/rate-limit.utils");
 // const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
 // const { encryptionKey } = require("./config/default.config");
@@ -40,6 +40,7 @@ const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.r
 const doctorsFollowUpRouter = require("./routes/api/doctors/followups.routes");
 const doctorsTimeSlotRouter = require("./routes/api/doctors/time-slot.routes");
 const doctorFaqRouter = require("./routes/api/doctors/doctor-faqs.routes");
+const doctorBlogRouter = require("./routes/api/doctors/doctor-blogs.routes");
 
 // PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
@@ -117,15 +118,11 @@ app.use("/api/v1/health-check", (req, res) =>
 app.use("/api/v1/api-clients", adminApiClientRouter);
 app.use("/api/v1/api-keys", adminApiKeyRouter);
 
-app.use(authenticateClient, apiClientLimiter);
-app.use(logUserInteraction);
-app.use("/api/v1", indexRouter);
-
 // API DOCS ROUTE
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
-app.use(authenticateClient);
 app.use(logUserInteraction);
+
+app.use(validateClientToken, apiClientLimiter);
 app.use("/api/v1", indexRouter);
 
 // AUTH ROUTES
@@ -145,6 +142,7 @@ app.use("/api/v1/doctors/appointments", doctorsAppointmentRouter);
 app.use("/api/v1/doctors/follow-ups", doctorsFollowUpRouter);
 app.use("/api/v1/doctors/slots", doctorsTimeSlotRouter);
 app.use("/api/v1/doctors/faqs", doctorFaqRouter);
+app.use("/api/v1/doctors/blogs", doctorBlogRouter);
 
 // PATIENT'S ROUTES
 app.use("/api/v1/patients", patientsProfileRouter);

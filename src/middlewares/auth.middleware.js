@@ -62,8 +62,7 @@ const authenticateUser = async (req, res, next) => {
     if (isBlacklisted) {
       logger.warn("[AUTH] Token is blacklisted");
       return res.status(401).json({
-        message:
-          "Your session has expired or you have logged out. Please log in again to continue.",
+        message: "Your session has expired. Please log in again to continue.",
       });
     }
 

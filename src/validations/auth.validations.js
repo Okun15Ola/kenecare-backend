@@ -19,7 +19,8 @@ const {
   getMarketerByReferralCode,
 } = require("../repository/marketers.repository");
 
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/;
+const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,50}$/;
 
 exports.LoginValidations = [
   body("mobileNumber")
@@ -39,13 +40,13 @@ exports.LoginValidations = [
         );
       }
 
-      const user = await mapUserRow(dbUser, true, true, true, true);
+      const user = mapUserRow(dbUser, true);
 
       const { userId, userType, accountActive, accountVerified } = user;
 
       if (accountActive !== STATUS.ACTIVE) {
         throw new Error(
-          "Account Suspended. Please Contact Kenecare Support for further instrcutions.",
+          "Unable to access account. Please Contact Kenecare Support for further instrcutions.",
         );
       }
 
@@ -102,7 +103,7 @@ exports.LoginValidations = [
 
           if (accountActive !== STATUS.ACTIVE) {
             throw new Error(
-              "Account Has Been Disabled. Please Contact Kenecare Support for further instructions.",
+              "Unable to access account. Please Contact Kenecare Support for further instrcutions.",
             );
           }
         }
@@ -130,18 +131,40 @@ exports.OTPLoginValidation = [
         );
       }
 
-      const user = await mapUserRow(dbUser, true, true, true, true);
-      const { accountVerified, accountActive } = user;
+      const user = mapUserRow(dbUser, false, false, true, true);
+      const { accountVerified, accountActive, userType, userId } = user;
 
       if (accountVerified !== VERIFICATIONSTATUS.VERIFIED) {
         throw new Error("Account Not Verified. Please verify and try again");
       }
       if (accountActive !== STATUS.ACTIVE) {
         throw new Error(
-          "Account Has Been Disabled. Please Contact Kenecare Support for further instrcutions.",
+          "Unable to access account. Please Contact Kenecare Support for further instrcutions.",
         );
       }
+
+      if (userType === USERTYPE.DOCTOR) {
+        const dbDoctor = await getDoctorByUserId(userId);
+
+        if (!dbDoctor) {
+          throw new Error(
+            "Doctor profile not found. Please complete profile setup before logging in",
+          );
+        }
+
+        const doctor = await mapDoctorRow(dbDoctor);
+
+        const { isProfileApproved } = doctor;
+
+        if (!isProfileApproved) {
+          throw new Error(
+            "Doctor Profile has not been approved. Please contact support",
+          );
+        }
+      }
+
       req.user = user;
+      return true;
     }),
 ];
 
@@ -160,7 +183,7 @@ exports.RegisterValidations = [
       const dbUser = await getUserByMobileNumber(refinedMobileNumber);
 
       if (dbUser) {
-        const user = mapUserRow(dbUser, true, true, true, true);
+        const user = mapUserRow(dbUser, false, true, true, true);
         if (user && user.mobileNumber === refinedMobileNumber) {
           throw new Error(
             "Mobile Number Already Exist. Please try using a different number",
@@ -189,9 +212,9 @@ exports.RegisterValidations = [
   body("password")
     .notEmpty()
     .withMessage("Password is required")
-    .matches(/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/)
+    .matches(PASSWORD_REGEX)
     .withMessage(
-      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
+      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character, and be 8-50 characters long",
     )
     .trim(),
   body("confirmPassword")
@@ -221,7 +244,7 @@ exports.RegisterValidations = [
       const data = await getMarketerByReferralCode(value);
       if (!data) {
         throw new Error(
-          "Invalid Referral Code. Try again with a valid referral codeee",
+          "Invalid Referral Code. Try again with a valid referral code",
         );
       }
       const {
@@ -252,7 +275,22 @@ exports.VerifyTokenValidations = [
       if (!dbUser) {
         throw new Error("Invalid AUTH Token. Please enter a valid AUTH Token");
       }
-      const user = mapUserRow(dbUser, true, true, true, true);
+
+      const user = mapUserRow(dbUser, false, false, true, true);
+
+      const { verificationToken, accountActive } = user;
+
+      if (token !== verificationToken) {
+        throw new Error(
+          "Invalid OTP Code. Please enter a valid OTP to continue.",
+        );
+      }
+
+      if (accountActive !== STATUS.ACTIVE) {
+        throw new Error(
+          "Unable to access account. Please Contact Kenecare Support for further instrcutions.",
+        );
+      }
 
       req.user = user;
       return true;
@@ -273,7 +311,29 @@ exports.UpdatePasswordValidations = [
           "Invalid or expired token. Please try again with a valid token.",
         );
       }
-      const user = mapUserRow(dbUser, true, true, true, true);
+
+      const user = mapUserRow(dbUser, true, false, true, true);
+
+      const { verificationToken, accountVerified, accountActive } = user;
+
+      if (value !== verificationToken) {
+        throw new Error(
+          "Invalid OTP Code. Please enter a valid OTP to continue.",
+        );
+      }
+
+      if (accountActive !== STATUS.ACTIVE) {
+        throw new Error(
+          "Unable to access account. Please Contact Kenecare Support for further instrcutions.",
+        );
+      }
+
+      if (accountVerified !== STATUS.ACTIVE) {
+        throw new Error(
+          "Account has not been verified. Please Verify account and try again",
+        );
+      }
+
       req.user = user;
       return true;
     }),
@@ -282,10 +342,12 @@ exports.UpdatePasswordValidations = [
     .withMessage("Current Password is required")
     .trim()
     .custom(async (currentPassword, { req }) => {
-      const user = await getUserById(req.user.id);
-      if (!user) {
+      const dbUser = await getUserById(req.user.userId);
+      if (!dbUser) {
         throw new Error("User not found");
       }
+
+      const user = mapUserRow(dbUser, true, false, true, true);
 
       const isMatch = await comparePassword({
         plainPassword: currentPassword,
@@ -293,7 +355,7 @@ exports.UpdatePasswordValidations = [
       });
 
       if (!isMatch) {
-        throw new Error("Current password is incorrect");
+        throw new Error("Current password mismatched");
       }
 
       req.user = user;
@@ -302,19 +364,20 @@ exports.UpdatePasswordValidations = [
   body("newPassword")
     .notEmpty()
     .withMessage("New Password is required")
-    .bail()
-    .isLength({ min: 8, max: 50 })
-    .withMessage("New password must be between 8 and 50 characters")
-    .bail()
-    .trim()
-    .matches(/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/)
+    .matches(PASSWORD_REGEX)
     .withMessage(
-      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
+      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character, and be 8-50 characters long",
     )
-    .custom((newPassword, { req }) => {
-      if (newPassword === req.body.currentPassword) {
+    .trim()
+    .custom(async (newPassword, { req }) => {
+      const { user } = req;
+      const isMatch = await comparePassword({
+        plainPassword: newPassword,
+        hashedPassword: user.password,
+      });
+      if (isMatch) {
         throw new Error(
-          "New password must be different from the current password",
+          "New password must be different from previous password",
         );
       }
       return true;
@@ -343,13 +406,15 @@ exports.MobileNumberValidations = [
     .escape()
     .custom(async (phoneNumber, { req }) => {
       const refinedMobileNumber = refineMobileNumber(phoneNumber);
-      const user = await getUserByMobileNumber(refinedMobileNumber);
+      const dbUser = await getUserByMobileNumber(refinedMobileNumber);
 
-      if (!user) {
+      if (!dbUser) {
         throw new Error(
           "No Account associated with the phone number you provided",
         );
       }
+
+      const user = mapUserRow(dbUser, false, false, true, true);
 
       req.user = user;
       return true;
@@ -364,32 +429,103 @@ exports.TokenValidations = [
     .trim()
     .escape()
     .custom(async (value, { req }) => {
-      const user = await getUserByVerificationToken(value);
-      if (!user) {
+      const dbUser = await getUserByVerificationToken(value);
+      if (!dbUser) {
         throw new Error(
           "Invalid or expired token. Please try again with a valid token.",
         );
       }
+
+      const user = mapUserRow(dbUser, false, false, true, true);
+
+      const { verificationToken, accountVerified, accountActive } = user;
+
+      if (value !== verificationToken) {
+        throw new Error(
+          "Invalid OTP Code. Please enter a valid OTP to continue.",
+        );
+      }
+
+      if (accountActive !== STATUS.ACTIVE) {
+        throw new Error(
+          "Unable to access account. Please Contact Kenecare Support for further instrcutions.",
+        );
+      }
+
+      if (accountVerified !== STATUS.ACTIVE) {
+        throw new Error(
+          "Account has not been verified. Please Verify account and try again",
+        );
+      }
+
       req.user = user;
       return true;
     }),
 ];
 
 exports.ResetPasswordValidations = [
-  body("newPassword")
+  body("token")
     .notEmpty()
-    .withMessage("Password is required")
-    .bail()
-    .isLength({ min: 8, max: 50 })
-    .withMessage("Password must be at least 8 characters long")
+    .withMessage("Token is required")
     .bail()
     .trim()
-    .custom(async (value) => {
-      if (!PASSWORD_REGEX.test(value)) {
+    .escape()
+    .custom(async (value, { req }) => {
+      const dbUser = await getUserByVerificationToken(value);
+      if (!dbUser) {
         throw new Error(
-          "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
+          "Invalid or expired token. Please try again with a valid token.",
         );
       }
+
+      const user = mapUserRow(dbUser, true, false, true, true);
+
+      const { verificationToken, accountVerified, accountActive } = user;
+
+      if (value !== verificationToken) {
+        throw new Error(
+          "Invalid OTP Code. Please enter a valid OTP to continue.",
+        );
+      }
+
+      if (accountActive !== STATUS.ACTIVE) {
+        throw new Error(
+          "Unable to access account. Please Contact Kenecare Support for further instrcutions.",
+        );
+      }
+
+      if (accountVerified !== STATUS.ACTIVE) {
+        throw new Error(
+          "Account has not been verified. Please Verify account and try again",
+        );
+      }
+
+      req.user = user;
+      return true;
+    }),
+  body("newPassword")
+    .notEmpty()
+    .withMessage("New Password is required")
+    .matches(PASSWORD_REGEX)
+    .withMessage(
+      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character, and be 8-50 characters long",
+    )
+    .trim()
+    .custom(async (newPassword, { req }) => {
+      if (!req.user) {
+        return false;
+      }
+      const { user } = req;
+      const isMatch = await comparePassword({
+        plainPassword: newPassword,
+        hashedPassword: user.password,
+      });
+      if (isMatch) {
+        throw new Error(
+          "New password must be different from previous password",
+        );
+      }
+      return true;
     }),
   body("confirmNewPassword")
     .notEmpty()
@@ -397,8 +533,11 @@ exports.ResetPasswordValidations = [
     .bail()
     .trim()
     .custom((value, { req }) => {
+      if (!req.user) {
+        return false;
+      }
       if (value !== req.body.newPassword) {
-        throw new Error("Passwords does'nt match");
+        throw new Error("Passwords don't match.");
       }
       return true;
     }),

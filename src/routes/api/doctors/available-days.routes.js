@@ -27,7 +27,6 @@ router.get(
 );
 router.post(
   "/multiple",
-
   validations.createMultipleDaysAvailabilityValidations,
   Validate,
   controller.CreateDoctorAvailableDaysController,

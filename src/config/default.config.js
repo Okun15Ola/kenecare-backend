@@ -55,4 +55,5 @@ module.exports = {
   maxLimit: parseInt(env.MAX_LIMIT, 10),
   allowOrigins: env.ALLOWED_ORIGINS,
   allowHeaders: env.ALLOWED_HEADERS,
+  apiClientSecret: env.API_JWT_SECRET,
 };

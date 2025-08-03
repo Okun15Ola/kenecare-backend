@@ -950,3 +950,20 @@ ALTER TABLE api_keys ADD COLUMN environment ENUM('development', 'staging', 'prod
 NOT NULL DEFAULT 'development';
 
 -- ALTER TABLE medical_appointments ADD UNIQUE INDEX doctor_time_unique (doctor_id, appointment_date, appointment_time);
+
+-- Create the table to store blog post details.
+CREATE TABLE IF NOT EXISTS `doctor_health_blogs` (
+  `blog_id` INT NOT NULL AUTO_INCREMENT,
+  `blog_uuid` CHAR(36) UNIQUE NOT NULL,
+  `doctor_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `content` TEXT NOT NULL,
+  `status` ENUM('draft', 'scheduled', 'published', 'archived') NOT NULL DEFAULT 'draft',
+  `image` VARCHAR(100),
+  `tags` TEXT,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `published_at` TIMESTAMP NULL DEFAULT NULL,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`blog_id`),
+  CONSTRAINT `fk_health_blogs_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`doctor_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

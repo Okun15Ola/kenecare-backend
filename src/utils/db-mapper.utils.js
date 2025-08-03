@@ -1319,3 +1319,53 @@ exports.mapApiKeyRow = (key) => {
     updatedAt,
   };
 };
+
+exports.mapDoctorBlog = async (blog) => {
+  const {
+    blog_uuid: blogUuid,
+    doctor_id: doctorId,
+    title,
+    content,
+    status,
+    image,
+    tags,
+    created_at: createdAt,
+    published_at: publishedAt,
+    updated_at: updatedAt,
+  } = blog;
+
+  // Process image URL if needed
+  let imageUrl = null;
+  if (image) {
+    imageUrl = await getFileUrlFromS3Bucket(image);
+  }
+
+  // Process tags - parse from JSON if present
+  let parsedTags = null;
+  if (tags) {
+    try {
+      parsedTags = JSON.parse(tags);
+      if (Array.isArray(parsedTags)) {
+        parsedTags = parsedTags.map((tag) => he.decode(tag));
+      }
+    } catch (error) {
+      console.error("Error parsing blog tags:", error);
+      parsedTags = null;
+    }
+  }
+
+  return {
+    blogUuid,
+    doctorId,
+    title: he.decode(title || ""),
+    content: he.decode(content || ""),
+    status,
+    image: imageUrl,
+    tags: parsedTags,
+    createdAt: createdAt ? moment(createdAt).format("YYYY-MM-DD HH:mm") : null,
+    publishedAt: publishedAt
+      ? moment(publishedAt).format("YYYY-MM-DD HH:mm")
+      : null,
+    updatedAt: updatedAt ? moment(updatedAt).format("YYYY-MM-DD HH:mm") : null,
+  };
+};
