@@ -248,10 +248,11 @@ exports.VerifyTokenValidations = [
     .trim()
     .escape()
     .custom(async (token, { req }) => {
-      const user = await getUserByVerificationToken(token);
-      if (!user) {
+      const dbUser = await getUserByVerificationToken(token);
+      if (!dbUser) {
         throw new Error("Invalid AUTH Token. Please enter a valid AUTH Token");
       }
+      const user = mapUserRow(dbUser, true, true, true, true);
 
       req.user = user;
       return true;
@@ -266,13 +267,13 @@ exports.UpdatePasswordValidations = [
     .trim()
     .escape()
     .custom(async (value, { req }) => {
-      const user = await getUserByVerificationToken(value);
-      if (!user) {
+      const dbUser = await getUserByVerificationToken(value);
+      if (!dbUser) {
         throw new Error(
           "Invalid or expired token. Please try again with a valid token.",
         );
       }
-
+      const user = mapUserRow(dbUser, true, true, true, true);
       req.user = user;
       return true;
     }),
