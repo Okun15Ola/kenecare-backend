@@ -1,6 +1,6 @@
 /* eslint-disable import/no-unresolved */
 const { body, param } = require("express-validator");
-const { mapUserRow, mapDoctorRow } = require("@utils/db-mapper.utils");
+const { mapUserRow, mapDoctorRow } = require("../utils/db-mapper.utils");
 const {
   getUserByMobileNumber,
   getUserByEmail,
