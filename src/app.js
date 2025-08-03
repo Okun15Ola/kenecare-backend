@@ -10,7 +10,7 @@ const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
 const logger = require("./middlewares/logger.middleware");
 const { allowHeaders, allowOrigins } = require("./config/default.config");
-const { validateClientToken } = require("./middlewares/apiKey.middlewares");
+const { authenticateClient } = require("./middlewares/apiKey.middlewares");
 const { apiClientLimiter } = require("./utils/rate-limit.utils");
 // const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
 // const { encryptionKey } = require("./config/default.config");
@@ -122,7 +122,7 @@ app.use("/api/v1/api-keys", adminApiKeyRouter);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use(logUserInteraction);
 
-app.use(validateClientToken, apiClientLimiter);
+app.use(authenticateClient, apiClientLimiter);
 app.use("/api/v1", indexRouter);
 
 // AUTH ROUTES
