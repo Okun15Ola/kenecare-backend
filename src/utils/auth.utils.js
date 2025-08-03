@@ -5,6 +5,7 @@ const { Expo } = require("expo-server-sdk");
 const {
   patientJwtSecret,
   adminJwtSecret,
+  apiClientSecret,
   jwtIssuer,
   jwtAudience,
   jwtAdminAudience,
@@ -224,6 +225,27 @@ const generateAdminJwtAccessToken = (admin) => {
   }
 };
 
+const generateApiClientJwtAccessToken = (api) => {
+  try {
+    return jwt.sign(api, apiClientSecret, {
+      issuer: jwtIssuer,
+      audience: jwtAdminAudience,
+      expiresIn: "30d",
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+
+/**
+ * Generates a secure random refresh token
+ * @returns {string} A random string to use as refresh token
+ */
+const generateRefreshToken = () => {
+  return crypto.randomBytes(40).toString("hex");
+};
+
 /**
  * Generates a JWT verification token for a marketer.
  * @param {Object} marketer - The marketer payload to encode in the token.
@@ -392,4 +414,6 @@ module.exports = {
   areUserTokensInvalidated,
   getKeyPrefix,
   generateApiKeyAndSecret,
+  generateApiClientJwtAccessToken,
+  generateRefreshToken,
 };
