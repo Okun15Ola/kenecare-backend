@@ -1,5 +1,6 @@
 const { param, body } = require("express-validator");
 const moment = require("moment");
+const he = require("he");
 
 exports.blogUuidValidation = [
   param("blogUuid")
@@ -21,7 +22,11 @@ exports.blogValidation = [
     .withMessage("Title must be a string")
     .isLength({ min: 5, max: 200 })
     .bail()
-    .withMessage("Title must be between 5 and 200 characters"),
+    .trim()
+    .withMessage("Title must be between 5 and 200 characters")
+    .customSanitizer((value) => {
+      return he.encode(value);
+    }),
 
   body("content")
     .notEmpty()
@@ -32,17 +37,41 @@ exports.blogValidation = [
     .withMessage("Content must be a string")
     .isLength({ min: 100, max: 2000 })
     .bail()
-    .withMessage("Content must be between 100 to 2000 characters"),
+    .withMessage("Content must be between 100 to 2000 characters")
+    .customSanitizer((value) => {
+      return he.encode(value);
+    }),
 
   body("tags")
     .optional()
-    .isArray()
-    .bail()
-    .withMessage("Tags must be an array")
-    .custom((tags) => {
-      if (!tags.every((tag) => typeof tag === "string")) {
-        throw new Error("All tags must be strings");
+    .customSanitizer((value) => {
+      if (!value) return null;
+      if (Array.isArray(value)) return value;
+
+      // If it's a string that looks like JSON, parse it
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          console.error("Failed to parse tags JSON:", e);
+          // If it's not valid JSON, treat as a single tag
+          return [value];
+        }
       }
+
+      // If it's anything else, convert to string and make it a single tag
+      return [String(value)];
+    })
+    .custom((value) => {
+      if (!value) return true;
+      if (
+        !Array.isArray(value) ||
+        !value.every((tag) => typeof tag === "string")
+      ) {
+        throw new Error("Tags must be an array of strings");
+      }
+
       return true;
     }),
 
@@ -54,42 +83,41 @@ exports.blogValidation = [
       "Status must be one of: draft, published, scheduled, archived",
     ),
 
-  body("publishedAt")
-    .optional()
-    .custom((value, { req }) => {
-      if (req.body.status === "scheduled" && !value) {
+  body("publishedAt").custom((value, { req }) => {
+    const { status } = req.body;
+
+    // SCHEDULED: Require future date
+    if (status === "scheduled") {
+      if (!value) {
         throw new Error("Published date is required for scheduled posts");
       }
 
-      if (value) {
-        const publishDate = moment(value);
+      const publishDate = moment(value);
 
-        // Check if the date is valid
-        if (!publishDate.isValid()) {
-          throw new Error("Published date must be a valid date");
-        }
-
-        // For scheduled posts, ensure date is in the future
-        if (
-          req.body.status === "scheduled" &&
-          publishDate.isSameOrBefore(moment())
-        ) {
-          throw new Error("Published date must be in the future");
-        }
+      if (!publishDate.isValid()) {
+        throw new Error("Published date must be a valid date");
       }
 
-      return true;
-    }),
+      if (publishDate.isSameOrBefore(moment())) {
+        throw new Error("Scheduled publish date must be in the future");
+      }
+    }
+
+    // PUBLISHED
+    if (status === "published") {
+      req.body.publishedAt = moment().format();
+    }
+
+    return true;
+  }),
 ];
 
 exports.updateBlogStatusValidation = [
-  param("status")
+  body("status")
     .notEmpty()
     .bail()
     .withMessage("Status is required")
-    .isIn(["draft", "published", "scheduled", "archived"])
+    .isIn(["published", "archived"])
     .bail()
-    .withMessage(
-      "Status must be one of: draft, published, scheduled, archived",
-    ),
+    .withMessage("Status must be one of: published, archived"),
 ];

@@ -42,14 +42,15 @@ exports.GetDoctorBlogController = async (req, res, next) => {
 exports.CreateDoctorBlogController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const { title, content, tags, status, publishedAt } = req.body;
+    const { title, content, status, tags, publishedAt } = req.body;
+    const formattedTags = Array.isArray(tags) ? JSON.stringify(tags) : null;
     const imageFile = req.file;
     const response = await doctorBlogService.createDoctorBlogService({
       userId,
       title,
       content,
       image: imageFile,
-      tags,
+      tags: formattedTags,
       status,
       publishedAt,
     });
@@ -64,7 +65,8 @@ exports.UpdateDoctorBlogController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
     const { blogUuid } = req.params;
-    const { title, content, tags, status, publishedAt } = req.body;
+    const { title, content, status, tags, publishedAt } = req.body;
+    const formattedTags = Array.isArray(tags) ? JSON.stringify(tags) : null;
     const imageFile = req.file;
     const response = await doctorBlogService.updateDoctorBlogService({
       userId,
@@ -72,7 +74,7 @@ exports.UpdateDoctorBlogController = async (req, res, next) => {
       title,
       content,
       image: imageFile,
-      tags,
+      tags: formattedTags,
       status,
       publishedAt,
     });

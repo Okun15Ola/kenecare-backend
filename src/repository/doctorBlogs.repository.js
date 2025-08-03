@@ -36,11 +36,6 @@ exports.getPublishedBlogsByDoctor = async (doctorId) => {
   return query(queries.GET_PUBLISHED_BLOGS_BY_DOCTOR, [doctorId]);
 };
 
-exports.countPublishedBlogsByDoctor = async (doctorId) => {
-  const row = await query(queries.COUNT_PUBLISHED_BLOGS_BY_DOCTOR, [doctorId]);
-  return row[0];
-};
-
 exports.updateBlog = async ({
   doctorId,
   blogUuid,
@@ -64,12 +59,14 @@ exports.updateBlog = async ({
 };
 
 exports.updateBlogStatus = async (status, doctorId, blogUuid) => {
-  let result;
-  if (status === "published") {
-    result = await query(queries.PUBLISH_BLOG, [doctorId, blogUuid]);
+  switch (status) {
+    case "published":
+      return query(queries.PUBLISH_BLOG, [doctorId, blogUuid]);
+    case "archived":
+      return query(queries.ARCHIVE_BLOG, [doctorId, blogUuid]);
+    default:
+      throw new Error(`Unsupported blog status: ${status}`);
   }
-  result = await query(queries.ARCHIVE_BLOG, [doctorId, blogUuid]);
-  return result;
 };
 
 exports.publishScheduledBlogs = async () => {

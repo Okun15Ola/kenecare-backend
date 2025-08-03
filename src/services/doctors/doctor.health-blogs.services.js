@@ -4,15 +4,19 @@ const { redisClient } = require("../../config/redis.config");
 const logger = require("../../middlewares/logger.middleware");
 const Response = require("../../utils/response.utils");
 const { fetchLoggedInDoctor } = require("../../utils/helpers.utils");
-const { uploadFileToS3Bucket } = require("../../utils/aws-s3.utils");
+const {
+  uploadFileToS3Bucket,
+  deleteFileFromS3Bucket,
+} = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
+const { mapDoctorBlog } = require("../../utils/db-mapper.utils");
 
 exports.createDoctorBlogService = async ({
   userId,
   title,
   content,
   image,
-  tags = null,
+  tags,
   status = "draft",
   publishedAt = null,
 }) => {
@@ -37,7 +41,15 @@ exports.createDoctorBlogService = async ({
         message: "Error Creating New Blog. Please try again",
       });
     }
-    const { doctorId } = await fetchLoggedInDoctor(userId);
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+    if (!doctorId) {
+      logger.error("Doctor not found");
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
+      });
+    }
+
     const blogUuid = uuidv4();
     const { insertId } = await doctorBlogRepository.createBlog({
       blogUuid,
@@ -74,32 +86,47 @@ exports.updateDoctorBlogService = async ({
   title,
   content,
   image,
-  tags = null,
+  tags,
   status = "draft",
   publishedAt = null,
 }) => {
   try {
-    if (!image) {
-      logger.error("Blog image is required");
-      return Response.BAD_REQUEST({
-        message: "Please upload a blog image",
+    const existingBlog = await doctorBlogRepository.getBlogByUuid(blogUuid);
+
+    if (!existingBlog) {
+      return Response.NOT_FOUND({ message: "Doctor Blog Not Found." });
+    }
+
+    if (existingBlog.content === content && existingBlog.title === title) {
+      return Response.NOT_MODIFIED({
+        message: "No changes detected in blog conten",
       });
     }
 
-    const fileName = generateFileName(image);
+    const fileName = existingBlog.image;
 
-    const { $metadata } = await uploadFileToS3Bucket({
-      fileName,
-      buffer: image.buffer,
-      mimetype: image.mimetype,
-    });
-    if ($metadata.httpStatusCode !== 200) {
-      logger.error("Error uploading blog image to S3");
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "Error Updating New Blog. Please try again",
+    if (image) {
+      const { $metadata } = await uploadFileToS3Bucket({
+        fileName,
+        buffer: image.buffer,
+        mimetype: image.mimetype,
+      });
+      if ($metadata.httpStatusCode !== 200) {
+        logger.error("Error uploading blog image to S3");
+        return Response.INTERNAL_SERVER_ERROR({
+          message: "Error Updating New Blog. Please try again",
+        });
+      }
+    }
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+    if (!doctorId) {
+      logger.error("Doctor not found");
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
       });
     }
-    const { doctorId } = await fetchLoggedInDoctor(userId);
+
     const { affectedRows } = await doctorBlogRepository.updateBlog({
       doctorId,
       blogUuid,
@@ -133,7 +160,25 @@ exports.updateDoctorBlogStatusService = async ({
   blogUuid,
 }) => {
   try {
-    const { doctorId } = await fetchLoggedInDoctor(userId);
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+    if (!doctorId) {
+      logger.error("Doctor not found");
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
+      });
+    }
+
+    const existingBlog = await doctorBlogRepository.getBlogByUuid(blogUuid);
+
+    if (!existingBlog) {
+      return Response.NOT_FOUND({ message: "Doctor Blog Not Found." });
+    }
+
+    if (existingBlog.status === status) {
+      return Response.NOT_MODIFIED({ message: `Status is already ${status}` });
+    }
+
     const { affectedRows } = await doctorBlogRepository.updateBlogStatus(
       status,
       doctorId,
@@ -158,9 +203,16 @@ exports.updateDoctorBlogStatusService = async ({
 
 exports.getBlogsByDoctorService = async (userId) => {
   try {
-    const { doctorId } = await fetchLoggedInDoctor(userId);
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+    if (!doctorId) {
+      logger.error("Doctor not found");
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
+      });
+    }
 
-    const cacheKey = `doctor:${doctorId}:blogs`;
+    const cacheKey = `doctor:${doctorId}:blogs:all`;
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
@@ -176,12 +228,14 @@ exports.getBlogsByDoctorService = async (userId) => {
       });
     }
 
+    const blogs = await Promise.all(data.map(mapDoctorBlog));
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(blogs),
     });
 
-    return Response.SUCCESS({ data });
+    return Response.SUCCESS({ data: blogs });
   } catch (error) {
     logger.error("getBlogsByDoctorService : ", error);
     throw error;
@@ -190,7 +244,14 @@ exports.getBlogsByDoctorService = async (userId) => {
 
 exports.getPublishedBlogsByDoctorService = async (userId) => {
   try {
-    const { doctorId } = await fetchLoggedInDoctor(userId);
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+    if (!doctorId) {
+      logger.error("Doctor not found");
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
+      });
+    }
 
     const cacheKey = `doctor:${doctorId}:blogs:published`;
     const cachedData = await redisClient.get(cacheKey);
@@ -208,12 +269,14 @@ exports.getPublishedBlogsByDoctorService = async (userId) => {
       });
     }
 
+    const blogs = await Promise.all(data.map(mapDoctorBlog));
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(blogs),
     });
 
-    return Response.SUCCESS({ data });
+    return Response.SUCCESS({ data: blogs });
   } catch (error) {
     logger.error("getPublishedBlogsByDoctorService : ", error);
     throw error;
@@ -222,7 +285,14 @@ exports.getPublishedBlogsByDoctorService = async (userId) => {
 
 exports.getBlogsByUuidService = async (userId, blogUuid) => {
   try {
-    const { doctorId } = await fetchLoggedInDoctor(userId);
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+    if (!doctorId) {
+      logger.error("Doctor not found");
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
+      });
+    }
 
     const cacheKey = `doctor:${doctorId}:blogs:${blogUuid}`;
     const cachedData = await redisClient.get(cacheKey);
@@ -239,12 +309,14 @@ exports.getBlogsByUuidService = async (userId, blogUuid) => {
       });
     }
 
+    const blog = await mapDoctorBlog(data);
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(blog),
     });
 
-    return Response.SUCCESS({ data });
+    return Response.SUCCESS({ data: blog });
   } catch (error) {
     logger.error("getBlogsByUuidService : ", error);
     throw error;
@@ -253,7 +325,23 @@ exports.getBlogsByUuidService = async (userId, blogUuid) => {
 
 exports.deleteDoctorBlogService = async (userId, blogUuid) => {
   try {
-    const { doctorId } = await fetchLoggedInDoctor(userId);
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+    if (!doctorId) {
+      logger.error("Doctor not found");
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
+      });
+    }
+    const blog = await doctorBlogRepository.getBlogByUuid(blogUuid);
+    if (!blog) {
+      return Response.NOT_FOUND({
+        message: "Doctor Blog Not Found.",
+      });
+    }
+
+    const imageFileName = blog.image;
+
     const { affectedRows } = await doctorBlogRepository.deleteBlog(
       doctorId,
       blogUuid,
@@ -261,7 +349,18 @@ exports.deleteDoctorBlogService = async (userId, blogUuid) => {
 
     if (!affectedRows || affectedRows < 1) {
       logger.error("Fail to delete doctor health blog : ");
-      return Response.NOT_MODIFIED({});
+      return Response.NOT_MODIFIED({
+        message: "Failed to delete blog. Please try again.",
+      });
+    }
+
+    if (imageFileName) {
+      try {
+        await deleteFileFromS3Bucket(imageFileName);
+        logger.info(`Successfully deleted blog image: ${imageFileName}`);
+      } catch (s3Error) {
+        logger.error(`Error deleting blog image from S3: ${s3Error.message}`);
+      }
     }
 
     await redisClient.clearCacheByPattern(`doctor:${doctorId}:blogs:*`);
