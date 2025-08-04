@@ -45,7 +45,7 @@ jest.mock("@stream-io/node-sdk", () => ({
 
 // Mock ioredis
 jest.mock("ioredis", () => {
-  return jest.fn().mockImplementation(() => ({
+  const RedisMock = jest.fn().mockImplementation(() => ({
     connect: jest.fn(),
     disconnect: jest.fn(),
     quit: jest.fn(),
@@ -54,7 +54,24 @@ jest.mock("ioredis", () => {
     del: jest.fn(),
     on: jest.fn(),
     status: "ready",
+    keys: jest.fn().mockResolvedValue([]),
+    unlink: jest.fn().mockResolvedValue(1),
   }));
+
+  RedisMock.Cluster = jest.fn().mockImplementation(() => ({
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+    quit: jest.fn(),
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    on: jest.fn(),
+    status: "ready",
+    keys: jest.fn().mockResolvedValue([]),
+    unlink: jest.fn().mockResolvedValue(1),
+  }));
+
+  return RedisMock;
 });
 
 jest.mock("@sendgrid/mail", () => ({
@@ -86,6 +103,15 @@ jest.mock("../src/middlewares/logger.middleware", () => ({
 beforeAll(() => {
   jest.spyOn(console, "error").mockImplementation(() => {});
 });
+
+// Mocks all console methods globally
+global.console = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  trace: jest.fn(),
+};
 
 // Close connection pool after tests
 const { connectionPool } = require("../src/repository/db.connection");
