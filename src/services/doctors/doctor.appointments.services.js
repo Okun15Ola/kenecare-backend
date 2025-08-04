@@ -225,7 +225,7 @@ exports.getDoctorAppointmentByDateRange = async ({
     const { doctor_id: doctorId, title } = doctor;
 
     const offset = (page - 1) * limit;
-    const countCacheKey = `doctor:${doctorId}:appointment:${startDate}-${endDate}:count`;
+    const countCacheKey = `doctor:${doctorId}:appointments:${startDate}-${endDate}:count`;
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
       countQueryFn: () =>
@@ -241,7 +241,7 @@ exports.getDoctorAppointmentByDateRange = async ({
     }
 
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
-    const cacheKey = `doctors:${doctorId}:appointments:${startDate}-${endDate}`;
+    const cacheKey = `doctor:${doctorId}:appointments:${startDate}-${endDate}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
@@ -367,10 +367,11 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentTime,
     });
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
-    await redisClient.clearCacheByPattern(
-      `patient:${patientId}:appointments:*`,
-    );
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
     return Response.SUCCESS({
       message: "Medical Appointment Approved Successfully",
     });
@@ -445,10 +446,11 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       }),
     ]);
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
-    await redisClient.clearCacheByPattern(
-      `patient:${patientId}:appointments:*`,
-    );
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
 
     return Response.SUCCESS({
       message: "Appointment Started Successfully",
@@ -523,10 +525,11 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       mobileNumber,
     });
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
-    await redisClient.clearCacheByPattern(
-      `patient:${patientId}:appointments:*`,
-    );
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
 
     return Response.SUCCESS({
       message: "Appointment Ended Successfully",
@@ -643,10 +646,12 @@ exports.cancelDoctorAppointment = async ({
       appointmentTime,
       cancelReason,
     });
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
-    await redisClient.clearCacheByPattern(
-      `patient:${patientId}:appointments:*`,
-    );
+
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
 
     return Response.SUCCESS({
       message:
@@ -746,10 +751,11 @@ exports.postponeDoctorAppointment = async ({
       appointmentTime: postponedTime,
     });
 
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
-    await redisClient.clearCacheByPattern(
-      `patient:${patientId}:appointments:*`,
-    );
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
 
     return Response.SUCCESS({
       message:

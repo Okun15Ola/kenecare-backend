@@ -208,6 +208,7 @@ exports.createMarketerService = async ({
       return Response.NOT_MODIFIED({});
     }
 
+    await redisClient.clearCacheByPattern("marketers:*");
     return Response.CREATED({
       message:
         "Marketer Created Successfully. Please provide further verificaiton instructions to marketer. ",
@@ -251,6 +252,7 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
       return Response.NOT_MODIFIED({});
     }
 
+    await redisClient.clearCacheByPattern("marketers:*");
     return Response.SUCCESS({
       message: "Marketer's Phone Number Verified Successfully",
     });
@@ -288,6 +290,7 @@ exports.verifyMarketerEmailService = async (token) => {
 
     //  TODO Send Email to marketer
 
+    await redisClient.clearCacheByPattern("marketers:*");
     // Send Success response
     return Response.SUCCESS({
       message: "Email Verified Successfully",
@@ -354,6 +357,7 @@ exports.updateMarketerByIdService = async ({
       secondEmergencyContactNumber,
       secondEmergencyContacAddress,
     });
+    await redisClient.clearCacheByPattern("marketers:*");
     return Response.SUCCESS({ message: "Successful" });
   } catch (error) {
     logger.error("updateMarketerByIdService: ", error);
@@ -382,6 +386,7 @@ exports.deleteMarketerByIdService = async (id) => {
       );
       return Response.NOT_MODIFIED({});
     }
+    await redisClient.clearCacheByPattern("marketers:*");
     return Response.SUCCESS({ message: "Marketer Deleted Successfully" });
   } catch (error) {
     logger.error("deleteMarketerByIdService: ", error);

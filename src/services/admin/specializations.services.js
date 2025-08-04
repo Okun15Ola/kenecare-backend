@@ -130,6 +130,7 @@ exports.createSpecialization = async ({ name, description, imageUrl }) => {
       return Response.NO_CONTENT({});
     }
 
+    await redisClient.clearCacheByPattern("specializations:*");
     return Response.CREATED({ message: "Specialization Created Successfully" });
   } catch (error) {
     logger.error("createSpecialization: ", error);
@@ -155,6 +156,7 @@ exports.updateSpecialization = async ({ specializationId, specialization }) => {
       return Response.NOT_MODIFIED({});
     }
 
+    await redisClient.clearCacheByPattern("specializations:*");
     return Response.SUCCESS({ message: "Specialization Updated Successfully" });
   } catch (error) {
     logger.error("updateSpecialization: ", error);
@@ -185,6 +187,7 @@ exports.updateSpecializationStatus = async ({ specializationId, status }) => {
       return Response.NOT_MODIFIED({});
     }
 
+    await redisClient.clearCacheByPattern("specializations:*");
     return Response.SUCCESS({
       message: "Specialization Status Updated Successfully",
     });
@@ -214,6 +217,7 @@ exports.deleteSpecialization = async (specializationId) => {
       return Response.NOT_MODIFIED({});
     }
 
+    await redisClient.clearCacheByPattern("specializations:*");
     return Response.SUCCESS({ message: "Specialization Deleted Successfully" });
   } catch (error) {
     logger.error("deleteSpecialization: ", error);

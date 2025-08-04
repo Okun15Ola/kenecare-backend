@@ -15,11 +15,6 @@ const logger = require("../../middlewares/logger.middleware");
 // DOCTORS
 exports.getDoctorCouncilRegistration = async (id) => {
   try {
-    const cacheKey = `doctor-council-registration:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
     // Get profile from database
     const doctor = await dbObject.getDoctorByUserId(id);
 
@@ -34,6 +29,12 @@ exports.getDoctorCouncilRegistration = async (id) => {
       user_type: userType,
       user_id: userId,
     } = doctor;
+
+    const cacheKey = `doctor:${doctorId}:council-registration:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
 
     // Check if the profile requested belongs to the requesting user
     // Check if the user type is a doctor
@@ -165,7 +166,12 @@ exports.createDoctorCouncilRegistration = async ({
       }),
     ]);
 
-    await redisClient.clearCacheByPattern("doctor-council-registration:*");
+    await Promise.all([
+      redisClient.clearCacheByPattern("admin:doctors:council:*"),
+      redisClient.clearCacheByPattern(
+        `doctor:${doctorId}:council-registration:*`,
+      ),
+    ]);
 
     return Response.CREATED({
       message:
@@ -266,7 +272,12 @@ exports.updateDoctorCouncilRegistration = async ({
       }),
     ]);
 
-    await redisClient.clearCacheByPattern("doctor-council-registration:*");
+    await Promise.all([
+      redisClient.clearCacheByPattern("admin:doctors:council:*"),
+      redisClient.clearCacheByPattern(
+        `doctor:${doctorId}:council-registration:*`,
+      ),
+    ]);
 
     return Response.SUCCESS({
       message:

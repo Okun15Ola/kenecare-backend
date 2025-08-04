@@ -71,7 +71,7 @@ exports.getAdminAppointmentsByDoctorId = async (doctorId, limit, page) => {
 
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
-      `admin:appointments-by-doctor-id:${doctorId}`,
+      `admin:appointments:doctor:${doctorId}`,
       limit,
       offset,
     );
@@ -108,7 +108,7 @@ exports.getAdminAppointmentsByDoctorId = async (doctorId, limit, page) => {
 
 exports.getAdminAppointmentById = async (id) => {
   try {
-    const cacheKey = `admin-appointments:${id}`;
+    const cacheKey = `admin:appointments:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -135,7 +135,7 @@ exports.getAdminAppointmentById = async (id) => {
 
 exports.getAdminAppointmentByUUID = async (uuid) => {
   try {
-    const cacheKey = `admin-appointments-by-uuid:${uuid}`;
+    const cacheKey = `admin:appointments:uuid:${uuid}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });

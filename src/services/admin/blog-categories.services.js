@@ -62,7 +62,7 @@ exports.getBlogCategories = async (limit, page) => {
 
 exports.getBlogCategory = async (id) => {
   try {
-    const cacheKey = `blog-category:${id}`;
+    const cacheKey = `blog-categories:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -138,7 +138,7 @@ exports.updateBlogCategory = async ({ id, name }) => {
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern("blog-category:*");
+    await redisClient.clearCacheByPattern("blog-categories:*");
     return Response.SUCCESS({ message: "Blog Category Updated Successfully" });
   } catch (error) {
     logger.error("updateBlogCategory: ", error);
@@ -170,7 +170,7 @@ exports.updateBlogCategoryStatus = async ({ id, status }) => {
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern("blog-category:*");
+    await redisClient.clearCacheByPattern("blog-categories:*");
 
     return Response.SUCCESS({
       message: "Blog Category Status Updated Successfully",
@@ -198,7 +198,7 @@ exports.deleteBlogCategory = async (id) => {
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern("blog-category:*");
+    await redisClient.clearCacheByPattern("blog-categories:*");
 
     return Response.SUCCESS({ message: "Blog Category Deleted Successfully" });
   } catch (error) {

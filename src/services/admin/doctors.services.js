@@ -55,7 +55,7 @@ exports.getAllDoctors = async (limit, page) => {
 
 exports.getDoctorById = async (id) => {
   try {
-    const cacheKey = `admin:doctor:${id}`;
+    const cacheKey = `admin:doctors:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
@@ -109,6 +109,11 @@ exports.approveDoctorProfile = async ({ doctorId, approvedBy }) => {
         mobileNumber,
         doctorName: `${firstName} ${lastName}`,
       }),
+    ]);
+
+    await Promise.all([
+      redisClient.clearCacheByPattern("admin:doctors:*"),
+      redisClient.clearCacheByPattern("doctors:*"),
     ]);
 
     return Response.SUCCESS({
