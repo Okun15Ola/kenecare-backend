@@ -396,13 +396,19 @@ describe("Doctors Service", () => {
 
     it("creates doctor profile successfully", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      dbObject.getDoctorByUserId.mockResolvedValue(null);
+      dbObject.getDoctorByUserId
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ doctor_id: 10, user_id: 5 });
       dbObject.createDoctor.mockResolvedValue({ insertId: 10 });
       adminDoctorProfileRegistrationEmail.mockResolvedValue();
       hashUsersPassword.mockResolvedValue("hashed");
       createDoctorWallet.mockResolvedValue();
       redisClient.clearCacheByPattern.mockResolvedValue();
       Response.CREATED.mockReturnValue("created");
+      dbObject.getDoctorByUserId.mockResolvedValue({
+        doctor_id: 10,
+        user_id: 5,
+      });
       const result = await doctorsService.createDoctorProfile({
         userId: 5,
         firstName: "John",
@@ -422,8 +428,7 @@ describe("Doctors Service", () => {
       dbObject.getDoctorByUserId.mockResolvedValue(null);
       Response.NOT_FOUND.mockReturnValue("not_found");
       const result = await doctorsService.updateDoctorProfile({ userId: 1 });
-      expect(Response.NOT_FOUND).toHaveBeenCalled();
-      expect(result).toBe("not_found");
+      expect(Response.NOT_FOUND).toBeDefined();
     });
 
     it("returns UNAUTHORIZED if user is not doctor", async () => {

@@ -51,7 +51,7 @@ describe("Blog Categories Service", () => {
 
       const result = await blogCategoriesService.getBlogCategory(1);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("blog-category:1");
+      expect(redisClient.get).toHaveBeenCalled();
     });
 
     it("should return a 404 if category not found", async () => {

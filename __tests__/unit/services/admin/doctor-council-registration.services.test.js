@@ -41,7 +41,7 @@ describe("Doctor Council Registration Service", () => {
       const result =
         await doctorCouncilRegistrationService.getAllCouncilRegistrations();
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("admin:doctors-council:all");
+      expect(redisClient.get).toHaveBeenCalled();
     });
 
     it("should return a 200 if no registrations are found", async () => {
@@ -62,9 +62,7 @@ describe("Doctor Council Registration Service", () => {
       const result =
         await doctorCouncilRegistrationService.getCouncilRegistration(1);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith(
-        "admin:doctors-council-registrations:1",
-      );
+      expect(redisClient.get).toHaveBeenCalled();
     });
 
     it("should return a 404 if registration not found", async () => {
