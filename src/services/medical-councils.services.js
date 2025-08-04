@@ -156,9 +156,7 @@ exports.createMedicalCouncil = async ({
       });
     }
 
-    const cacheKey = cacheKeyBulider("medical-council:all");
-
-    await redisClient.clearCacheByPattern(cacheKey);
+    await redisClient.clearCacheByPattern("medical-council:*");
 
     return Response.CREATED({
       message: "Medical council created successfully",
@@ -198,6 +196,7 @@ exports.updateMedicalCouncil = async ({
 
     const cacheKey = `medical-council:${id}`;
     await redisClient.delete(cacheKey);
+    await redisClient.clearCacheByPattern("medical-council:*");
 
     return Response.SUCCESS({
       message: "Medical Council Updated Successfully",
@@ -233,6 +232,7 @@ exports.updateMedicalCouncilStatus = async ({ id, status }) => {
 
     const cacheKey = `medical-council:${id}`;
     await redisClient.delete(cacheKey);
+    await redisClient.clearCacheByPattern("medical-council:*");
 
     return Response.SUCCESS({
       message: "Medical Council Status Updated Successfully",
@@ -258,8 +258,7 @@ exports.deleteMedicalCouncil = async (id) => {
       return Response.NOT_MODIFIED({});
     }
 
-    const cacheKey = `medical-council:${id}`;
-    await redisClient.delete(cacheKey);
+    await redisClient.clearCacheByPattern("medical-council:*");
 
     return Response.SUCCESS({
       message: "Medical Council Deleted Successfully",

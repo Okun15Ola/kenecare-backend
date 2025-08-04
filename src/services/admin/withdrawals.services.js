@@ -21,6 +21,7 @@ const {
   getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
+const { redisClient } = require("../../config/redis.config");
 
 exports.getAllRequests = async (limit, page) => {
   try {
@@ -135,6 +136,8 @@ exports.approveRequest = async ({ requestId, userId, comment }) => {
       return Response.NOT_MODIFIED({});
     }
 
+    await redisClient.clearCacheByPattern("withdraw-requests:*");
+
     //  send sms to doctor about approved request
     return Response.SUCCESS({
       message: "Withdrawal Request Approved Successfully",
@@ -173,6 +176,7 @@ exports.denyRequest = async ({ userId, requestId, comment }) => {
       doctorName: `${doctorFirstName} ${doctorLastName}`,
       comment,
     });
+    await redisClient.clearCacheByPattern("withdraw-requests:*");
     return Response.SUCCESS({
       message: "Withdrawal Request Declined Successfully",
     });

@@ -16,7 +16,7 @@ const logger = require("../../middlewares/logger.middleware");
 exports.getAllCouncilRegistrations = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "admin:doctors-council:count";
+    const countCacheKey = "admin:doctors:council:count";
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
       countQueryFn: dbObject.getAllMedicalCouncilRegistrationCount,
@@ -31,7 +31,7 @@ exports.getAllCouncilRegistrations = async (limit, page) => {
 
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
-      "admin:doctors-council:all",
+      "admin:doctors:council:all",
       limit,
       offset,
     );
@@ -71,7 +71,7 @@ exports.getAllCouncilRegistrations = async (limit, page) => {
 
 exports.getCouncilRegistration = async (id) => {
   try {
-    const cacheKey = `admin:doctors-council-registrations:${id}`;
+    const cacheKey = `admin:doctors:council:registrations:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -137,6 +137,15 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
       doctorEmail,
       doctorName: `${firstName} ${lastName}`,
     });
+
+    await Promise.all([
+      redisClient.clearCacheByPattern("admin:doctors:council:*"),
+      redisClient.clearCacheByPattern(
+        `doctor:${doctorId}:council-registration:*`,
+      ),
+      redisClient.clearCacheByPattern(`doctors:${doctorId}:*`),
+    ]);
+
     return Response.SUCCESS({
       message: "Doctor's Medical Council Registration Approved Successfully",
     });
@@ -191,6 +200,13 @@ exports.rejectCouncilRegistration = async ({
       doctorEmail,
       doctorName: `${firstName} ${lastName}`,
     });
+    await Promise.all([
+      redisClient.clearCacheByPattern("admin:doctors:council:*"),
+      redisClient.clearCacheByPattern(
+        `doctor:${doctorId}:council-registration:*`,
+      ),
+      redisClient.clearCacheByPattern(`doctors:${doctorId}:*`),
+    ]);
     return Response.SUCCESS({
       message: "Doctor's Medical Council Registration Rejected Successfully",
     });

@@ -17,6 +17,7 @@ const {
 } = require("../repository/doctor-wallet.repository");
 const { cancelPaymentUSSD } = require("../utils/payment.utils");
 const logger = require("../middlewares/logger.middleware");
+const { redisClient } = require("../config/redis.config");
 const {
   doctorAppointmentBookedSms,
   appointmentBookedSms,
@@ -323,6 +324,12 @@ exports.processAppointmentPayment = async ({
       });
     }
 
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
+
     return Response.SUCCESS({
       message: "Appointment Payment Processed Successfully",
     });
@@ -354,7 +361,11 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
       });
     }
 
-    const { appointment_id: appointmentId } = rawData;
+    const {
+      appointment_id: appointmentId,
+      doctor_id: doctorId,
+      patient_id: patientId,
+    } = rawData;
 
     const payment = await getAppointmentPaymentByAppointmentId(appointmentId);
 
@@ -403,6 +414,12 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
         ussdCancellation.reason,
       );
     }
+
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
 
     return Response.SUCCESS({
       message: "Medical Appointment Cancelled Successfully.",
