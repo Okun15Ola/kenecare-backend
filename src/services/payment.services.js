@@ -8,6 +8,7 @@ const {
   updateAppointmentPaymentStatus,
   getAppointmentPaymentByAppointmentId,
   deleteAppointmentPaymentByAppointmentId,
+  getPaymentStatusByAppointmentId,
 } = require("../repository/payments.repository");
 const { getPatientById } = require("../repository/patients.repository");
 const { getDoctorById } = require("../repository/doctors.repository");
@@ -426,6 +427,35 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
     });
   } catch (error) {
     logger.error("cancelAppointmentPayment: ", error);
+    throw error;
+  }
+};
+
+exports.getPaymentStatusByConsultationId = async (consultationId) => {
+  try {
+    const payment = await getPaymentStatusByAppointmentId(consultationId);
+
+    if (!payment) {
+      logger.warn(`Payment not found for consultation UUID: ${consultationId}`);
+      return Response.NOT_FOUND({
+        message: "Payment record not found.",
+      });
+    }
+
+    const {
+      payment_status: status,
+      amount_paid: amountPaid,
+      updated_at: lastUpdated,
+    } = payment;
+    return Response.SUCCESS({
+      data: {
+        status,
+        amountPaid,
+        lastUpdated,
+      },
+    });
+  } catch (error) {
+    logger.error("getPaymentStatusByConsultationId: ", error);
     throw error;
   }
 };

@@ -25,6 +25,12 @@ module.exports = {
   GET_APPOINTMENT_PAYMENTS_BY_STATUS: `
     SELECT * FROM appointment_payments WHERE payment_status = ? LIMIT 1;
   `,
+  GET_APPOINTMENT_PAYMENT_STATUS_BY_APPOINTMENT_ID: `
+    SELECT a.appointment_uuid, a.appointment_id, ap.payment_status, ap.amount_paid, ap.updated_at
+    FROM medical_appointments a
+    INNER JOIN appointment_payments ap ON a.appointment_id = ap.appointment_id
+    WHERE a.appointment_uuid = ? LIMIT 1;
+  `,
   DELETE_APPOINTMENT_PAYMENT_BY_APPOINTMENT_ID: `
     DELETE FROM appointment_payments WHERE appointment_id = ? LIMIT 1;
   `,

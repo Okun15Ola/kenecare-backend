@@ -91,6 +91,14 @@ exports.getAppointmentPaymentsByStatus = async (paymentStatus) => {
   return query(queries.GET_APPOINTMENT_PAYMENTS_BY_STATUS, [paymentStatus]);
 };
 
+exports.getPaymentStatusByAppointmentId = async (appointmentId) => {
+  const row = await query(
+    queries.GET_APPOINTMENT_PAYMENT_STATUS_BY_APPOINTMENT_ID,
+    [appointmentId],
+  );
+  return row[0];
+};
+
 exports.deleteAppointmentPaymentByAppointmentId = async ({ appointmentId }) => {
   return query(queries.DELETE_APPOINTMENT_PAYMENT_BY_APPOINTMENT_ID, [
     appointmentId,

@@ -13,14 +13,14 @@ router.get(
   authorizePatient,
   paymentController.returnHandler,
 );
+router.get(
+  "/status/:consultationId",
+  authenticateUser,
+  authorizePatient,
+  paymentController.paymentStatusController,
+);
 router.get("/cancel", limiter, paymentController.cancelHandler);
-// router.post(
-//   "/notification",
-//   authenticateUser,
-//   limiter,
-//   authorizePatient,
-//   paymentController.notificationHandler,
-// );
+
 router.post("/monimee/webhook/return", paymentController.webhookHandler);
 
 module.exports = router;

@@ -2,6 +2,7 @@ const { clientAppUrl } = require("../config/default.config");
 const {
   processAppointmentPayment,
   cancelAppointmentPayment,
+  getPaymentStatusByConsultationId,
 } = require("../services/payment.services");
 const logger = require("../middlewares/logger.middleware");
 const {
@@ -32,6 +33,7 @@ exports.returnHandler = async (req, res, next) => {
     });
     return redirectBasedOnStatus(response.statusCode, res);
   } catch (err) {
+    logger.error(err);
     return next(err);
   }
 };
@@ -45,6 +47,7 @@ exports.cancelHandler = async (req, res, next) => {
     });
     return res.status(response.statusCode).json(response);
   } catch (err) {
+    logger.error(err);
     return next(err);
   }
 };
@@ -58,7 +61,19 @@ exports.notificationHandler = async (req, res, next) => {
     });
     return redirectBasedOnStatus(response.statusCode, res);
   } catch (err) {
+    logger.error(err);
     return next(err);
+  }
+};
+
+exports.paymentStatusController = async (req, res, next) => {
+  try {
+    const { consultationId } = req.params;
+    const response = await getPaymentStatusByConsultationId(consultationId);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
   }
 };
 
