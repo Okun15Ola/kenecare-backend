@@ -516,6 +516,72 @@ const withdrawalDeniedSMS = async ({ mobileNumber, doctorName, comment }) => {
   }
 };
 
+const sendDoctorPendingAppointmentSMS = async ({ doctor, count }) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: doctor.mobile,
+      content: `Reminder:\n\nDear Dr. ${doctor.lastName}, you have ${count} pending appointment${count === 1 ? "" : "s"} today. Please log in to your kenecare dashboard to review and approve the details.\n\n\nKENECARE TEAM`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+
+const sendPendingAppointmentReminderSMS = async ({
+  mobileNumber,
+  doctorName,
+  appointmentDateTime,
+  diffInMinutes,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Reminder:\n\nDear Dr. ${doctorName}, you have scheduled a appointment on ${appointmentDateTime} (${diffInMinutes} ${diffInMinutes === 60 ? "hour" : "minutes"} from now). Please log in to your kenecare dashboard to approve the appointment.\n\n\nKENECARE TEAM`,
+    });
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+
+const sendApproveAppointmentReminderSMS = async ({
+  mobileNumber,
+  doctorName,
+  appointmentDateTime,
+  diffInMinutes,
+}) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: `Appointment Reminder\n\n Dear Dr. ${doctorName}, you have an upcoming appointment on ${appointmentDateTime} (${diffInMinutes} minute${diffInMinutes === 1 ? "" : "s"} from now) on Kenecare. Please log in to your dashboard and start the meeting on time.\n\n\nKENECARE TEAM`,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendAuthTokenSMS,
   sendVerificationTokenSMS,
@@ -537,4 +603,7 @@ module.exports = {
   sendMarketerVerificationTokenSMS,
   sendMarketerPhoneVerifiedSMS,
   sendMarketerUserRegisteredSMS,
+  sendDoctorPendingAppointmentSMS,
+  sendPendingAppointmentReminderSMS,
+  sendApproveAppointmentReminderSMS,
 };
