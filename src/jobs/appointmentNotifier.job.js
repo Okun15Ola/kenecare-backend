@@ -16,7 +16,6 @@ const sendSmsNotifications = async (notifications) => {
         doctorName,
       }) => {
         try {
-          console.log("Sending sms to doctor ", doctorMobile, doctorName);
           await smsUtils.sendPendingAppointmentReminderSMS({
             mobileNumber: doctorMobile,
             doctorName,

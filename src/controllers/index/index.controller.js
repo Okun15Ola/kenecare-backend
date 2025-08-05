@@ -1,6 +1,34 @@
 const logger = require("../../middlewares/logger.middleware");
 const service = require("../../services/index.services");
 
+exports.GetDoctorBlogsController = async (req, res, next) => {
+  try {
+    const doctorId = parseInt(req.params.id, 10);
+    const response =
+      await service.getPublishedBlogsByDoctorIndexService(doctorId);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("GetDoctorBlogsController: ", error);
+    return next(error);
+  }
+};
+
+exports.GetDoctorFaqController = async (req, res, next) => {
+  try {
+    const { page, limit } = req.query;
+    const doctorId = parseInt(req.params.id, 10);
+    const response = await service.getDoctorActiveFaqsIndexService(
+      doctorId,
+      limit,
+      page,
+    );
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("GetDoctorFaqController: ", error);
+    return next(error);
+  }
+};
+
 exports.GetBlogsController = async (req, res, next) => {
   try {
     const { page, limit } = req.query;

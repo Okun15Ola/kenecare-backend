@@ -57,7 +57,10 @@ const {
   mapSpecializationRow,
   mapSpecialityRow,
   mapTestimonialRow,
+  mapDoctorBlog,
 } = require("../utils/db-mapper.utils");
+const doctorBlogRepository = require("../repository/doctorBlogs.repository");
+const doctorFaqRepository = require("../repository/doctorFaqs.repository");
 const { redisClient } = require("../config/redis.config");
 const {
   cacheKeyBulider,
@@ -464,6 +467,98 @@ exports.getBlogsIndexService = async (limit, page) => {
     return Response.SUCCESS({ data: blogs, pagination: paginationInfo });
   } catch (error) {
     logger.error("getBlogs: ", error);
+    throw error;
+  }
+};
+
+exports.getPublishedBlogsByDoctorIndexService = async (doctorId) => {
+  try {
+    const cacheKey = `doctor:${doctorId}:blogs:published`;
+    const cachedData = await redisClient.get(cacheKey);
+
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+    const data = await doctorBlogRepository.getPublishedBlogsByDoctor(doctorId);
+
+    if (!data?.length) {
+      logger.warn("No published blog found for doctor with ID : ", doctorId);
+      return Response.SUCCESS({
+        message: "No published blog found for doctor",
+        data: [],
+      });
+    }
+
+    const blogs = await Promise.all(data.map(mapDoctorBlog));
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(blogs),
+    });
+
+    return Response.SUCCESS({ data: blogs });
+  } catch (error) {
+    logger.error("getPublishedBlogsByDoctorIndexService : ", error);
+    throw error;
+  }
+};
+
+exports.getDoctorActiveFaqsIndexService = async (doctorId, limit, page) => {
+  try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = `doctor:${doctorId}:faq:active:count`;
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => doctorFaqRepository.countDoctorActiveFaq(doctorId),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No doctor active faq found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const cacheKey = cacheKeyBulider(
+      `doctor:${doctorId}:faq:active:all`,
+      limit,
+      offset,
+    );
+    const cachedData = await redisClient.get(cacheKey);
+
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
+    }
+
+    const data = await doctorFaqRepository.getAllActiveDoctorFaqByDoctorId(
+      doctorId,
+      limit,
+      offset,
+    );
+
+    if (!data?.length) {
+      return Response.SUCCESS({
+        message: "No doctor active faq found",
+        data: [],
+      });
+    }
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(data),
+    });
+
+    return Response.SUCCESS({
+      data,
+      pagination: paginationInfo,
+    });
+  } catch (error) {
+    logger.error("getDoctorActiveFaqsIndexService: ", error);
     throw error;
   }
 };

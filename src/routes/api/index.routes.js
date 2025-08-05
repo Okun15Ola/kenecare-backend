@@ -11,6 +11,22 @@ const {
 } = require("../../validations/pagination.validations");
 
 router.get(
+  "/doctor-health-blogs/:id",
+  limiter,
+  doctorIdValidation,
+  Validate,
+  IndexController.GetDoctorBlogsController,
+);
+
+router.get(
+  "/doctor-faqs/:id",
+  limiter,
+  [...doctorIdValidation, ...paginationValidation],
+  Validate,
+  IndexController.GetDoctorFaqController,
+);
+
+router.get(
   "/blogs",
   limiter,
   paginationValidation,
@@ -54,6 +70,13 @@ router.get(
   Validate,
   IndexController.GetDoctorsController,
 );
+
+// router.get(
+//   "/active",
+//   paginationValidation,
+//   Validate,
+//   doctorFaqController.GetDoctorActiveFaqsController,
+// );
 
 router.get(
   "/doctor/:id",
