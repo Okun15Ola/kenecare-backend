@@ -1,0 +1,17 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🧪 Running environment check before push..."
+
+# Default to production unless specified
+ENV="${ENV:-production}"
+
+# Run the check
+node check-env.js $ENV
+
+if [ $? -ne 0 ]; then
+  echo "❌ Env check failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ Env check passed. Proceeding with push..."
