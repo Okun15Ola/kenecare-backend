@@ -17,7 +17,7 @@ env:
   ENV: ${{github.event.inputs.ENV || 'staging'}}
   GH_RUN_NUMBER: ${{github.run_number}}
   SHA: ${{ github.sha }}
-  
+
   # Docker Setup
   REGISTRY: docker.io
   IMAGE_NAME: imotechsl/kenecare-api
@@ -201,6 +201,9 @@ jobs:
           else
             echo "Production environment variables file not found, skipping copy."
           fi
+
+      - name: Check env variables
+        run: node check-env.js production
 
       - name: Pre-deployment Health Check
         run: |
