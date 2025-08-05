@@ -11,8 +11,8 @@ SELECT medical_appointments.appointment_id, appointment_uuid, p.patient_id, p.fi
     FROM medical_appointments
     INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
     INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
-    INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
     INNER JOIN medical_specialities AS ms ON medical_appointments.speciality_id = ms.speciality_id
+    LEFT JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
     LEFT JOIN zoom_meetings ON medical_appointments.meeting_id = zoom_meetings.meeting_id
 `;
 
@@ -59,8 +59,7 @@ module.exports = {
 
   GET_APPOINTMENT_BY_UUID: `
     ${COMMON_SELECT}
-    WHERE medical_appointments.appointment_uuid = ?
-    LIMIT 1
+    WHERE medical_appointments.appointment_uuid = ? LIMIT 1
   `,
 
   GET_APPOINTMENT_BY_ID: `

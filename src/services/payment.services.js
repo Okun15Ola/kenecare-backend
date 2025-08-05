@@ -372,6 +372,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
 
     if (!payment) {
       logger.warn(`Payment not found for appointmentId: ${appointmentId}`);
+      await deleteAppointmentById({ appointmentId });
       return Response.BAD_REQUEST({
         message: "Error processing payment. Please try again",
       });
