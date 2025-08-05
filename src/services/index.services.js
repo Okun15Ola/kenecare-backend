@@ -306,6 +306,7 @@ exports.getCommonSymptomsIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(symptoms),
+      expiry: 3600,
     });
 
     return Response.SUCCESS({ data: symptoms, pagination: paginationInfo });
@@ -333,6 +334,7 @@ exports.getCommonSymptomIndexService = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(symptom),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: symptom });
   } catch (error) {
@@ -380,6 +382,7 @@ exports.getBlogCategoriesIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(categories),
+      expiry: 3600,
     });
 
     return Response.SUCCESS({
@@ -410,6 +413,7 @@ exports.getBlogCategoryIndexService = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(category),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: category });
   } catch (error) {
@@ -454,6 +458,7 @@ exports.getBlogsIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(blogs),
+      expiry: 3600,
     });
 
     return Response.SUCCESS({ data: blogs, pagination: paginationInfo });
@@ -480,6 +485,7 @@ exports.getBlogIndexService = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(blog),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: blog });
   } catch (error) {
@@ -520,6 +526,7 @@ exports.getCitiesIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(cities),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: cities, pagination: paginationInfo });
   } catch (error) {
@@ -545,6 +552,7 @@ exports.getCityIndexService = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(city),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: city });
   } catch (error) {
@@ -590,6 +598,7 @@ exports.getMedicalCouncilsIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(councils),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: councils, pagination: paginationInfo });
   } catch (error) {
@@ -615,6 +624,7 @@ exports.getMedicalCouncilIndexService = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(council),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: council });
   } catch (error) {
@@ -655,6 +665,7 @@ exports.getSpecializationsIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specializations),
+      expiry: 3600,
     });
     return Response.SUCCESS({
       data: specializations,
@@ -684,6 +695,7 @@ exports.getSpecializationByIdIndexService = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialization),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: specialization });
   } catch (error) {
@@ -726,6 +738,7 @@ exports.getSpecialtiesIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialties),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: specialties, pagination: paginationInfo });
   } catch (error) {
@@ -752,6 +765,7 @@ exports.getSpecialtyByIdIndexService = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialty),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: specialty });
   } catch (error) {
@@ -794,6 +808,7 @@ exports.getTestimonialsIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(testimonials),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: testimonials, pagination: paginationInfo });
   } catch (error) {

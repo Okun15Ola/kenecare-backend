@@ -41,6 +41,7 @@ exports.getTestimonials = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(testimonials),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: testimonials, pagination: paginationInfo });
   } catch (error) {
@@ -67,6 +68,7 @@ exports.getTestimonialById = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(testimonial),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: testimonial });
   } catch (error) {

@@ -100,6 +100,7 @@ const fetchLoggedInDoctor = async (userId) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(doctor),
+      expiry: 3600,
     });
     return doctor;
   } catch (error) {

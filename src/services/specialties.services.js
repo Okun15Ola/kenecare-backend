@@ -46,6 +46,7 @@ exports.getSpecialties = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialties),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: specialties, pagination: paginationInfo });
   } catch (error) {
@@ -72,6 +73,7 @@ exports.getSpecialtyByName = async (name) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialty),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: specialty });
   } catch (error) {
@@ -98,6 +100,7 @@ exports.getSpecialtyById = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(specialty),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: specialty });
   } catch (error) {

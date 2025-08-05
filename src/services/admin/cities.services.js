@@ -41,6 +41,7 @@ exports.getCities = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(cities),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: cities, pagination: paginationInfo });
   } catch (error) {
@@ -66,6 +67,7 @@ exports.getCity = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(city),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: city });
   } catch (error) {
@@ -91,6 +93,7 @@ exports.getCityByName = async (name) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(city),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: city });
   } catch (error) {

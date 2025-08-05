@@ -51,6 +51,7 @@ exports.getCommonSymptoms = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(symptoms),
+      expiry: 3600,
     });
 
     return Response.SUCCESS({ data: symptoms, pagination: paginationInfo });
@@ -78,6 +79,7 @@ exports.getCommonSymptom = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(symptom),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: symptom });
   } catch (error) {

@@ -73,6 +73,7 @@ exports.getUsers = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(users),
+      expiry: 3600,
     });
     return Response.SUCCESS({
       data: users,

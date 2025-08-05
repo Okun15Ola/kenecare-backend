@@ -46,6 +46,7 @@ exports.getMedicalCouncils = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(councils),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: councils, pagination: paginationInfo });
   } catch (error) {
@@ -73,6 +74,7 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(council),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: council });
   } catch (error) {
@@ -100,6 +102,7 @@ exports.getMedicalCouncilByMobileNumber = async (number) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(council),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: council });
   } catch (error) {
@@ -125,6 +128,7 @@ exports.getMedicalCouncil = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(council),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: council });
   } catch (error) {

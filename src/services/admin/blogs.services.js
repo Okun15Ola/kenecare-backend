@@ -45,6 +45,7 @@ exports.getBlogs = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(blogs),
+      expiry: 3600,
     });
 
     return Response.SUCCESS({ data: blogs, pagination: paginationInfo });
@@ -71,6 +72,7 @@ exports.getBlog = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(blog),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: blog });
   } catch (error) {

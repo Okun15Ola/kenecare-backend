@@ -48,6 +48,7 @@ exports.getBlogCategories = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(categories),
+      expiry: 3600,
     });
 
     return Response.SUCCESS({
@@ -78,6 +79,7 @@ exports.getBlogCategory = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(category),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: category });
   } catch (error) {
