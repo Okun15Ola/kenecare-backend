@@ -22,6 +22,10 @@ if (!fs.existsSync(envPath)) {
 // Load the environment file
 const envConfig = dotenv.parse(fs.readFileSync(envPath));
 
+// Show total number of variables
+const totalEnvVars = Object.keys(envConfig).length;
+console.log(`📦 Loaded ${totalEnvVars} environment variables from ${envFile}`);
+
 // Read the config file
 const configPath = path.resolve(
   __dirname,
