@@ -11,10 +11,11 @@ const {
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
 
-router.use(authenticateUser, limiter, authorizeDoctor);
+router.use(authenticateUser, limiter);
 
 router.get(
   "/",
+  authorizeDoctor,
   paginationValidation,
   Validate,
   doctorFaqController.GetDoctorFaqsController,
@@ -36,6 +37,7 @@ router.get(
 
 router.post(
   "/",
+  authorizeDoctor,
   doctorFaqValidation.faqContentValidation,
   Validate,
   doctorFaqController.CreateDoctorFaqController,
@@ -43,6 +45,7 @@ router.post(
 
 router.put(
   "/:id",
+  authorizeDoctor,
   [
     ...doctorFaqValidation.faqContentValidation,
     ...doctorFaqValidation.faqContentValidation,
@@ -53,6 +56,7 @@ router.put(
 
 router.patch(
   "/status/:id",
+  authorizeDoctor,
   [
     ...doctorFaqValidation.faqIdValidation,
     ...doctorFaqValidation.updateDoctorFaqStatusValidation,
@@ -63,6 +67,7 @@ router.patch(
 
 router.delete(
   "/:id",
+  authorizeDoctor,
   doctorFaqValidation.faqIdValidation,
   Validate,
   doctorFaqController.DeleteDoctorFaqController,

@@ -9,9 +9,14 @@ const {
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
 
-router.use(authenticateUser, limiter, authorizeDoctor);
+router.use(authenticateUser, limiter);
 
-router.get("/", Validate, doctorBlogController.GetDoctorBlogsController);
+router.get(
+  "/",
+  authorizeDoctor,
+  Validate,
+  doctorBlogController.GetDoctorBlogsController,
+);
 
 router.get(
   "/published",
@@ -28,6 +33,7 @@ router.get(
 
 router.post(
   "/",
+  authorizeDoctor,
   AWSUploader.single("image"),
   doctorBlogValidation.blogValidation,
   Validate,
@@ -36,6 +42,7 @@ router.post(
 
 router.put(
   "/:blogUuid",
+  authorizeDoctor,
   AWSUploader.single("image"),
   [
     ...doctorBlogValidation.blogUuidValidation,
@@ -47,6 +54,7 @@ router.put(
 
 router.patch(
   "/status/:blogUuid",
+  authorizeDoctor,
   [
     ...doctorBlogValidation.blogUuidValidation,
     ...doctorBlogValidation.updateBlogStatusValidation,
@@ -57,6 +65,7 @@ router.patch(
 
 router.delete(
   "/:blogUuid",
+  authorizeDoctor,
   doctorBlogValidation.blogUuidValidation,
   Validate,
   doctorBlogController.DeleteDoctorBlogController,

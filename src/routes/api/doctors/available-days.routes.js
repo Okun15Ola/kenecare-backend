@@ -10,7 +10,7 @@ const {
 
 router.use(authenticateUser, limiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
-router.get("/", authorizeDoctor, controller.GetDoctorAvailableDaysController);
+router.get("/", controller.GetDoctorAvailableDaysController);
 router.get(
   "/:day",
   authorizeDoctor,
