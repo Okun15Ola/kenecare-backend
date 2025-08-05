@@ -1,9 +1,8 @@
 const moment = require("moment");
 const logger = require("../middlewares/logger.middleware");
 const {
-  getAppointments,
-} = require("../repository/adminAppointments.repository");
-const { redisClient } = require("../config/redis.config");
+  getDoctorsApprovedAppointmentsForToday,
+} = require("../repository/doctorAppointments.repository");
 const smsUtils = require("../utils/sms.utils");
 
 const sendSmsNotifications = async (notifications) => {
@@ -17,7 +16,7 @@ const sendSmsNotifications = async (notifications) => {
       }) => {
         try {
           console.log("Sending sms to doctor ", doctorMobile, doctorName);
-          await smsUtils.sendPendingAppointmentReminderSMS({
+          await smsUtils.sendApproveAppointmentReminderSMS({
             mobileNumber: doctorMobile,
             doctorName,
             appointmentDateTime,
@@ -36,43 +35,23 @@ const sendSmsNotifications = async (notifications) => {
 
 module.exports = {
   schedule: "*/5 * * * *", // Every 5 minutes
-  name: "appointment-notifier",
+  name: "approved-appointment-notifier",
 
   async execute() {
     try {
-      logger.info("Running appointment notification job...");
-      console.info("Running appointment notification job...");
+      logger.info("Running approved appointment notification job...");
+      console.info("Running approved appointment notification job...");
 
-      let appointments = null;
-      const cacheKey = "appointments:all";
-      const cachedData = await redisClient.get(cacheKey);
-
-      if (cachedData) {
-        appointments = JSON.parse(cachedData);
-      } else {
-        appointments = await getAppointments();
-        await redisClient.set({
-          key: cacheKey,
-          expiry: 100,
-          value: JSON.stringify(appointments),
-        });
-      }
-
+      const appointments = await getDoctorsApprovedAppointmentsForToday();
       const currentDateTime = moment();
-
       const notifications = [];
-
       appointments.forEach(
         ({
-          appointment_status: appointmentStatus,
           appointment_date: appointmentDate,
           appointment_time: appointmentTime,
           doctor_mobile_number: doctorMobile,
-          doc_last_name: doctorName,
+          doctor_last_name: doctorName,
         }) => {
-          if (appointmentStatus !== "pending") {
-            return;
-          }
           const formattedDate = moment(appointmentDate).format("YYYY-MM-DD");
           const appointmentDateTime = moment(
             `${formattedDate} ${appointmentTime}`,
@@ -88,7 +67,7 @@ module.exports = {
             if (
               diffInMinutes === 60 ||
               diffInMinutes === 30 ||
-              diffInMinutes === 5
+              diffInMinutes === 1
             ) {
               notifications.push({
                 appointmentDateTime: appointmentDateTime.format(
@@ -108,11 +87,11 @@ module.exports = {
         sendSmsNotifications(notifications);
       }
 
-      logger.info("Appointment notification job completed");
-      console.info("Appointment notification job completed");
+      logger.info("Appointment approved notification job completed");
+      console.info("Appointment approved notification job completed");
     } catch (error) {
-      logger.error("Error in appointment notification job:", error);
-      console.error("Error in appointment notification job:", error);
+      logger.error("Error in approved appointmenta notification job:", error);
+      console.error("Error in approved appointment notification job:", error);
     }
   },
 };
