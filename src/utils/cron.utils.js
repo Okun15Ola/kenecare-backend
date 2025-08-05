@@ -4,6 +4,8 @@ const appointmentNotifier = require("../jobs/appointmentNotifier.job");
 const timeSlotGenerator = require("../jobs/timeSlotGenerator.job");
 const autoEndAppointment = require("../jobs/autoEndAppointment.job");
 const blogPublisher = require("../jobs/blogPublisher.job");
+const dailyPendingAppointment = require("../jobs/pendingAppointmentsNotifier.job");
+const dailyApprovedAppointment = require("../jobs/upcomingAppointmentNotifier.job");
 
 // Track job instances
 const jobInstances = {};
@@ -46,6 +48,12 @@ const appointmentFunctions = createJobFunctions(appointmentNotifier);
 const timeSlotFunctions = createJobFunctions(timeSlotGenerator);
 const autoEndFunctions = createJobFunctions(autoEndAppointment);
 const blogPublishingFunctions = createJobFunctions(blogPublisher);
+const dailyPendingAppointmentFunctions = createJobFunctions(
+  dailyPendingAppointment,
+);
+const dailyApprovedAppointmentFunctions = createJobFunctions(
+  dailyApprovedAppointment,
+);
 
 module.exports = {
   startAppointmentCron: appointmentFunctions.start,
@@ -60,11 +68,19 @@ module.exports = {
   startBlogPublishingCron: blogPublishingFunctions.start,
   stopBlogPublishingCron: blogPublishingFunctions.stop,
 
+  startPendingAppointmentCron: dailyPendingAppointmentFunctions.start,
+  stopPendingAppointmentCron: dailyPendingAppointmentFunctions.stop,
+
+  startApprovedAppointmentCron: dailyApprovedAppointmentFunctions.start,
+  stopApprovedAppointmentCron: dailyApprovedAppointmentFunctions.stop,
+
   startAllCronJobs: () => {
     appointmentFunctions.start();
     timeSlotFunctions.start();
     autoEndFunctions.start();
     blogPublishingFunctions.start();
+    dailyPendingAppointmentFunctions.start();
+    dailyApprovedAppointmentFunctions.start();
   },
 
   stopAllCronJobs: () => {
@@ -72,5 +88,7 @@ module.exports = {
     timeSlotFunctions.stop();
     autoEndFunctions.stop();
     blogPublishingFunctions.stop();
+    dailyPendingAppointmentFunctions.stop();
+    dailyApprovedAppointmentFunctions.stop();
   },
 };
