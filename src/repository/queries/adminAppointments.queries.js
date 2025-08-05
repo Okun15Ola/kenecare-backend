@@ -10,10 +10,11 @@ const baseAppointmentSelect = `
     speciality_name, meeting_id, start_time, end_time,
     appointment_status, cancelled_reason, cancelled_at,
     canceled_by, postponed_by, postponed_date, postponed_reason,
-    medical_appointments.created_at, medical_appointments.updated_at
+    medical_appointments.created_at, medical_appointments.updated_at, users.mobile_number AS doctor_mobile_number
   FROM medical_appointments
   INNER JOIN patients ON medical_appointments.patient_id = patients.patient_id
   INNER JOIN doctors ON medical_appointments.doctor_id = doctors.doctor_id
+  INNER JOIN users ON doctors.user_id = users.user_id
   INNER JOIN medical_specialities ON medical_appointments.speciality_id = medical_specialities.speciality_id
 `;
 

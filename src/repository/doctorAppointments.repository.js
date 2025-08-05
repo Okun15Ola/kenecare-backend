@@ -6,6 +6,14 @@ exports.getAppointmentsByDoctorId = async ({ doctorId, offset, limit }) => {
   return query(optimizedQuery, [doctorId]);
 };
 
+exports.getDoctorsPendingAppointmentsForToday = async () => {
+  return query(queries.GET_ALL_DOCTORS_PENDING_APPOINTMENTS_TODAY);
+};
+
+exports.getDoctorsApprovedAppointmentsForToday = async () => {
+  return query(queries.GET_ALL_DOCTORS_APPROVED_APPOINTMENTS_TODAY);
+};
+
 exports.countDoctorAppointments = async ({ doctorId }) => {
   const row = await query(queries.COUNT_DOCTOR_APPOINTMENTS_BY_ID, [doctorId]);
   return row[0];
