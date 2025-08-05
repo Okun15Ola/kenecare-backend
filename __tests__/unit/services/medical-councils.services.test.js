@@ -57,6 +57,7 @@ describe("Medical Councils Service", () => {
       expect(redisClient.set).toHaveBeenCalledWith({
         key: "cache-key",
         value: JSON.stringify(mappedData),
+        expiry: 3600,
       });
     });
 
