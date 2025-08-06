@@ -1,15 +1,9 @@
-const path = require("path");
 const logger = require("../../middlewares/logger.middleware");
 const {
   getDoctorCouncilRegistration,
   createDoctorCouncilRegistration,
   updateDoctorCouncilRegistration,
 } = require("../../services/doctors/doctors.council-registration.services");
-const {
-  getDoctorByUserId,
-  getCouncilRegistrationByDoctorId,
-} = require("../../repository/doctors.repository");
-const Response = require("../../utils/response.utils");
 
 const GetDoctorCouncilRegistrationController = async (req, res, next) => {
   try {
@@ -21,42 +15,26 @@ const GetDoctorCouncilRegistrationController = async (req, res, next) => {
     return next(error);
   }
 };
-// TODO: decouple this fn
+
 const GetDoctorCouncilRegistrationDocumentController = async (
   req,
   res,
   next,
 ) => {
   try {
-    const { id: loggedInUserId } = req.user;
-    const doctor = await getDoctorByUserId(loggedInUserId);
-
-    if (!doctor) {
-      return res.status(404).json(
-        Response.NOT_FOUND({
-          message: "Doctor Profile Not Found for Logged In Account",
-        }),
-      );
-    }
-    const { doctor_id: doctorId, user_id: userId } = doctor;
-
-    if (userId !== loggedInUserId) {
-      return Response.UNAUTHORIZED({ message: "Access Forbidden" });
+    const id = parseInt(req.user.id, 10);
+    const response = await getDoctorCouncilRegistration(id);
+    if (!response.data) {
+      return res.status(response.statusCode).json(response);
     }
 
-    //  Get document by doctorId AND Filename
+    const { registrationId, regDocumentUrl } = response.data;
 
-    const registration = await getCouncilRegistrationByDoctorId(doctorId);
-    if (!registration) {
-      return res
-        .status(404)
-        .json(Response.NOT_FOUND({ message: "Document Not Found" }));
-    }
-
-    //  Check if the registration belongs to the requesting doctor
-    return res.sendFile(
-      path.join(__dirname, `../../public/upload/media/${req.params.filename}`),
-    );
+    const data = {
+      registrationId,
+      regDocumentUrl,
+    };
+    return res.status(response.statusCode).json(data);
   } catch (error) {
     logger.error(error);
     return next(error);
