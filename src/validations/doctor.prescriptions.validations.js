@@ -23,7 +23,7 @@ exports.CreatePrescriptionValidation = [
           appointmentId: value,
         });
         if (!appointment) {
-          throw new Error("Specfied Doctor Appintment Not Found");
+          throw new Error("Specified Doctor Appointment Not Found");
         }
         return true;
       }
@@ -98,7 +98,7 @@ exports.UpadatePrescriptionValidation = [
           appointmentId: value,
         });
         if (!appointment) {
-          throw new Error("Appintment Not Found");
+          throw new Error("Appointment Not Found");
         }
         return true;
       }

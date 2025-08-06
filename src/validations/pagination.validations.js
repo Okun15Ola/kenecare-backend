@@ -5,7 +5,7 @@ exports.paginationValidation = [
   query("page")
     .default(1)
     .isInt({ min: 1 })
-    .withMessage("Invalid Page")
+    .withMessage("Page must be a positive number")
     .bail()
     .toInt(),
   query("limit")

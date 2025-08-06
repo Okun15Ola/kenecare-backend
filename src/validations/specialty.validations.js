@@ -67,7 +67,7 @@ exports.SpecialtyIDValidation = [
     .notEmpty()
     .withMessage("Specialty ID is required")
     .bail()
-    .isInt({ gt: 0 })
+    .isInt({ gt: 0, allow_leading_zeroes: false })
     .trim()
     .escape()
     .custom(async (id) => {

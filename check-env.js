@@ -32,7 +32,8 @@ const configPath = path.resolve(
 const configContent = fs.readFileSync(configPath, "utf-8");
 
 // Find all process.env.XXX or env.XXX patterns
-const envRegex = /\b(?:process\.)?env\.([a-zA-Z_]\w*)/g;
+const envRegex =
+  /\b(?:process\.)?env(?:\?\.|\.)?(?:\[['"]?([a-zA-Z_]\w*)['"]?\]|\.([a-zA-Z_]\w*))/g;
 
 const usedEnvVars = new Set();
 let match;

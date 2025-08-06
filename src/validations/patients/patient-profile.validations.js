@@ -25,6 +25,9 @@ exports.profileValidation = [
     .notEmpty()
     .withMessage("Gender is required")
     .bail()
+    .isLength({ min: 1, max: 10 })
+    .withMessage("Gender Must not be longer than 10 character")
+    .bail()
     .trim()
     .escape()
     .toLowerCase(),

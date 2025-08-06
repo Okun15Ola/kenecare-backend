@@ -16,10 +16,10 @@ const { getPatientByUserId } = require("../repository/patients.repository");
 
 exports.CreateNewMedicalRecordValidation = [
   body("documentTitle")
+    .trim()
     .notEmpty()
     .withMessage("Document Title is required")
     .bail()
-    .trim()
     .escape(),
   body("password")
     .trim()
@@ -48,9 +48,11 @@ exports.MedicalRecordIdValidation = [
     .notEmpty()
     .withMessage("Document Id is required")
     .bail()
-    .isInt({ gt: 0 })
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Invalid Document ID")
+    .bail()
     .custom(async (value, { req }) => {
       const { patient_id: patientId } = await getPatientByUserId(req.user.id);
       if (!patientId) {

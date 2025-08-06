@@ -145,6 +145,11 @@ exports.UpdatePasswordValidations = [
     .notEmpty()
     .withMessage("Password is required")
     .bail()
+    .matches(/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/)
+    .withMessage(
+      "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
+    )
+    .bail()
     .trim(),
   body("confirmNewPassword")
     .notEmpty()

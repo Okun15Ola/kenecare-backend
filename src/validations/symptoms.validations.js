@@ -31,18 +31,20 @@ exports.CreateSymptomValidation = [
     .notEmpty()
     .withMessage("Consultation Fee is required")
     .bail()
+    .trim()
+    .escape()
     .isNumeric({ no_symbols: true })
     .withMessage("Invalid Consultation Fee Specified")
-    .bail()
-    .trim()
-    .escape(),
+    .bail(),
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty ID is required")
     .bail()
-    .isInt({ gt: 0 })
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Provide a valid common symptom ID")
+    .bail()
     .custom(async (value) => {
       const id = parseInt(value, 10);
       const found = await getSpecialtiyById(id);
@@ -59,9 +61,10 @@ exports.UpdateSymptomValidation = [
     .notEmpty()
     .withMessage("Common Symptom ID is required")
     .bail()
-    .isInt({ gt: 0 })
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Provide a valid common symptom ID")
     .custom(async (value) => {
       const data = await getCommonSymptomById(value);
 
@@ -89,17 +92,20 @@ exports.UpdateSymptomValidation = [
     .notEmpty()
     .withMessage("Consultation Fee is required")
     .bail()
+    .trim()
+    .escape()
     .isNumeric({ no_symbols: true })
     .withMessage("Invalid Consultation Fee Specified")
-    .trim()
-    .escape(),
+    .bail(),
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty ID is required")
     .bail()
-    .isInt({ gt: 0 })
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Provide a valid common symptom ID")
+    .bail()
     .custom(async (value) => {
       const id = parseInt(value, 10);
       const found = await getSpecialtiyById(id);
@@ -116,9 +122,11 @@ exports.SpecialtyIDValidation = [
     .notEmpty()
     .withMessage("Specialty ID is required")
     .bail()
-    .isInt({ gt: 0 })
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Provide a valid common symptom ID")
+    .bail()
     .custom(async (id) => {
       const data = await getSpecialtiyById(id);
       if (!data) {

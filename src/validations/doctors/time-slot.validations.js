@@ -11,11 +11,11 @@ exports.validateSlotIdParam = [
     .notEmpty()
     .withMessage("slot ID is required")
     .bail()
+    .trim()
+    .escape()
     .isInt({ gt: 0 })
     .withMessage("slot ID must be a number greater than 0")
-    .bail()
-    .trim()
-    .escape(),
+    .bail(),
 ];
 
 exports.validateSlotIdBody = [
@@ -23,11 +23,11 @@ exports.validateSlotIdBody = [
     .notEmpty()
     .withMessage("slot ID is required")
     .bail()
+    .trim()
+    .escape()
     .isInt({ gt: 0 })
     .withMessage("slot ID must be a number greater than 0")
-    .bail()
-    .trim()
-    .escape(),
+    .bail(),
 ];
 
 exports.dayParamValidation = [

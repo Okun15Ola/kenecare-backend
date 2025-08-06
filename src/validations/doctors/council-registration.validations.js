@@ -12,6 +12,14 @@ exports.councilValidations = [
     .notEmpty()
     .withMessage("Medical Council Is Required")
     .bail()
+    .custom((value) => {
+      if (moment(value).isAfter(moment())) {
+        throw new Error(
+          "Certificate Issued Date cannot be later than today's date",
+        );
+      }
+      return true;
+    })
     .isInt({ gt: 0 })
     .trim()
     .escape()

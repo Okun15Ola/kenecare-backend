@@ -37,7 +37,8 @@ exports.CreateAppointmentValidation = [
     .custom(async (patientNumber) => {
       refineMobileNumber(patientNumber);
       return true;
-    }),
+    })
+    .bail(),
   body("doctorId")
     .notEmpty()
     .withMessage("Doctor ID is required")
@@ -255,9 +256,9 @@ exports.PostponeAppointmentValidation = [
       );
 
       // Allow postponing past appointments by removing this check
-      if (appointmentDateTime.isBefore(now)) {
-        throw new Error("You cannot postpone a past appointment");
-      }
+      // if (appointmentDateTime.isBefore(now)) {
+      //   throw new Error("You cannot postpone a past appointment");
+      // }
 
       const hoursDiff = appointmentDateTime.diff(now, "hours");
 

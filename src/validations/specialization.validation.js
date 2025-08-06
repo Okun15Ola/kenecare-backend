@@ -9,10 +9,10 @@ exports.SpecializationValidation = [
     .notEmpty()
     .withMessage("Specialization Name is required")
     .bail()
+    .trim()
     .isLength({ max: 150, min: 3 })
     .withMessage("Must be more than 3 characters long")
     .bail()
-    .trim()
     .escape()
     .custom(async (value) => {
       const row = await getSpecializationByName(value);
@@ -34,9 +34,11 @@ exports.SpecializationIDValidation = [
     .notEmpty()
     .withMessage("Specialization ID is required")
     .bail()
-    .isInt({ gt: 0 })
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Specialization ID must be a positive number")
+    .bail()
     .custom(async (id) => {
       const data = await getSpecializationById(id);
       if (!data) {
