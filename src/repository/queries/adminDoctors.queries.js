@@ -32,6 +32,7 @@ module.exports = {
   INNER JOIN users u ON d.user_id = u.user_id
   INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
   INNER JOIN cities c ON d.city_id = c.city_id
+  ORDER BY d.updated_at DESC
   `,
 
   COUNT_DOCTORS: `
@@ -56,6 +57,7 @@ module.exports = {
     OR d.specialization_id LIKE ?
     OR ms.speciality_name LIKE ?
   )
+  ORDER BY d.updated_at DESC
   `,
 
   GET_DOCTOR_BY_ID: `
@@ -85,6 +87,7 @@ module.exports = {
     INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
     INNER JOIN cities c ON d.city_id = c.city_id  
     WHERE d.city_id = ?
+    ORDER BY d.updated_at DESC
   `,
 
   GET_DOCTOR_COUNCIL_REGISTRATION_COUNT: `
@@ -99,6 +102,7 @@ module.exports = {
     INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
     INNER JOIN cities c ON d.city_id = c.city_id  
     WHERE d.specialization_id = ?
+    ORDER BY d.updated_at DESC
   `,
 
   GET_DOCTOR_BY_HOSPITAL_ID: `
@@ -108,6 +112,7 @@ module.exports = {
     INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
     INNER JOIN cities c ON d.city_id = c.city_id  
     WHERE d.hospital_id = ?
+    ORDER BY d.updated_at DESC
   `,
 
   GET_DOCTOR_COUNCIL_REGISTRATION_BY_DOCTOR_ID: `
@@ -130,6 +135,7 @@ module.exports = {
     INNER JOIN medical_councils mc ON dcr.medical_council_id = mc.council_id
     INNER JOIN doctors d ON dcr.doctor_id = d.doctor_id
     INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
+    ORDER BY dcr.updated_at DESC
   `,
 
   GET_DOCTOR_COUNCIL_REGISTRATION_BY_ID: `
