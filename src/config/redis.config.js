@@ -91,67 +91,17 @@ class RedisClient {
     }
   }
 
-  // async clearCacheByPattern(pattern) {
-  //   try {
-  //     const keys = await this.keys(pattern);
-  //     if (keys.length > 0) {
-  //       await this.client.unlink(...keys); // More efficient than DEL for large sets
-  //       console.log(
-  //         `🗑️ Cleared ${keys.length} keys matching pattern "${pattern}"`,
-  //       );
-  //       logger.info(
-  //         `🗑️ Cleared ${keys.length} keys matching pattern "${pattern}"`,
-  //       );
-  //     }
-  //   } catch (error) {
-  //     console.error("❌ Redis Clear Cache Error:", error);
-  //     logger.error("❌ Redis Clear Cache Error:", error);
-  //   }
-  // }
-
   async clearCacheByPattern(pattern) {
     try {
-      if (!pattern || typeof pattern !== "string") {
-        throw new Error("Pattern must be a non-empty string");
-      }
-
-      const stream = this.client.scanStream({
-        match: pattern,
-        count: 100, // Adjust as needed
-      });
-
-      const keysToDelete = [];
-
-      stream.on("data", (resultKeys) => {
-        if (resultKeys.length) {
-          keysToDelete.push(...resultKeys);
-        }
-      });
-
-      await new Promise((resolve, reject) => {
-        stream.on("end", resolve);
-        stream.on("error", reject);
-      });
-
-      if (keysToDelete.length > 0) {
-        // Delete in chunks to avoid exceeding argument limits
-        const chunkSize = 500;
-        const unlinkPromises = [];
-        for (let i = 0; i < keysToDelete.length; i += chunkSize) {
-          const chunk = keysToDelete.slice(i, i + chunkSize);
-          unlinkPromises.push(this.client.unlink(...chunk));
-        }
-        await Promise.all(unlinkPromises);
-
+      const keys = await this.keys(pattern);
+      if (keys.length > 0) {
+        await this.client.unlink(...keys); // More efficient than DEL for large sets
         console.log(
-          `🗑️ Cleared ${keysToDelete.length} keys matching "${pattern}"`,
+          `🗑️ Cleared ${keys.length} keys matching pattern "${pattern}"`,
         );
         logger.info(
-          `🗑️ Cleared ${keysToDelete.length} keys matching "${pattern}"`,
+          `🗑️ Cleared ${keys.length} keys matching pattern "${pattern}"`,
         );
-      } else {
-        console.log(`⚠️ No keys matched pattern "${pattern}"`);
-        logger.info(`⚠️ No keys matched pattern "${pattern}"`);
       }
     } catch (error) {
       console.error("❌ Redis Clear Cache Error:", error);
