@@ -5,21 +5,26 @@ exports.profileValidation = [
   body("firstname")
     .notEmpty()
     .withMessage("First Name is required")
+    .bail()
     .isLength({ min: 1, max: 50 })
     .withMessage("First Name Must not be longer than 50 character")
+    .bail()
     .trim()
     .escape(),
   body("middlename").trim().escape(),
   body("lastname")
     .notEmpty()
     .withMessage("Last Name is required")
+    .bail()
     .isLength({ min: 1, max: 50 })
     .withMessage("Last Name Must not be longer than 50 character")
+    .bail()
     .trim()
     .escape(),
   body("gender")
     .notEmpty()
     .withMessage("Gender is required")
+    .bail()
     .trim()
     .escape()
     .toLowerCase(),
