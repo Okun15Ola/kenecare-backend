@@ -123,7 +123,7 @@ module.exports = {
   ORDER BY dcr.updated_at DESC
   `,
   GET_DOCTORS_BY_HOSPITAL_ID_COUNT:
-    "SELECT COUNT(*) AS totalRows FROM doctors INNER JOIN doctors_council_registration dcr ON doctors.doctor_id = dcr.doctor_id doctors WHERE hospital_id = ? AND dcr.registration_status = 'approved' AND dcr.certificate_expiry_date >= CURDATE();",
+    "SELECT COUNT(*) AS totalRows FROM doctors INNER JOIN doctors_council_registration dcr ON doctors.doctor_id = dcr.doctor_id WHERE hospital_id = ? AND dcr.registration_status = 'approved' AND dcr.certificate_expiry_date >= CURDATE();",
   GET_DOCTOR_COUNCIL_REGISTRATION_BY_DOCTOR_ID: `
     SELECT council_registration_id, dcr.doctor_id, first_name, last_name, gender, doctors.specialization_id, speciality_name, profile_pic_url, council_name, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, fullname as 'verified_by'
     FROM doctors_council_registration as dcr
