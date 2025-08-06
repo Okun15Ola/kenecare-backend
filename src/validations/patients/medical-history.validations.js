@@ -8,19 +8,25 @@ exports.createMedicalHistoryValidation = [
     .optional()
     .isString()
     .isLength({ max: 20 })
-    .withMessage("Height must be less than 20 characters"),
+    .withMessage("Height must be less than 20 characters")
+    .bail()
+    .escape(),
 
   body("weight")
     .optional()
     .isString()
     .isLength({ max: 20 })
-    .withMessage("Weight must be less than 20 characters"),
+    .withMessage("Weight must be less than 20 characters")
+    .bail()
+    .escape(),
 
   body("allergies")
     .optional()
     .isString()
     .isLength({ max: 500 })
-    .withMessage("Allergies must be less than 500 characters"),
+    .withMessage("Allergies must be less than 500 characters")
+    .bail()
+    .escape(),
 
   binaryBooleanValidator(
     "isDisabled",
@@ -32,6 +38,8 @@ exports.createMedicalHistoryValidation = [
     .isString()
     .isLength({ max: 255 })
     .withMessage("Disability description must be less than 255 characters")
+    .bail()
+    .escape()
     .custom((value, { req }) => {
       // Disability description required if patient is disabled
       if (req.body.isDisabled === 1 && !value) {
@@ -51,6 +59,8 @@ exports.createMedicalHistoryValidation = [
     .optional()
     .isString()
     .withMessage("Tobacco intake frequency must be a string")
+    .bail()
+    .escape()
     .custom((value, { req }) => {
       // Frequency required if tobacco use is true
       if (req.body.useTobacco === 1 && !value) {
@@ -70,6 +80,8 @@ exports.createMedicalHistoryValidation = [
     .optional()
     .isString()
     .withMessage("Alcohol intake frequency must be a string")
+    .bail()
+    .escape()
     .custom((value, { req }) => {
       // Frequency required if alcohol use is true
       if (req.body.alcoholIntake === 1 && !value) {
@@ -89,6 +101,8 @@ exports.createMedicalHistoryValidation = [
     .optional()
     .isString()
     .withMessage("Caffeine intake frequency must be a string")
+    .bail()
+    .escape()
     .custom((value, { req }) => {
       // Frequency required if caffeine use is true
       if (req.body.caffineIntake === 1 && !value) {
