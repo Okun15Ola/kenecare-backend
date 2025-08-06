@@ -16,7 +16,7 @@ const {
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
 
-router.use(authenticateUser, limiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+router.use(authenticateUser, limiter, authorizeDoctor);
 
 router.post(
   "/",
@@ -25,11 +25,10 @@ router.post(
   Validate,
   CreateDoctorCouncilRegistration,
 );
-router.get("/", authorizeDoctor, GetDoctorCouncilRegistrationController);
-router.get("/doc/:filename", GetDoctorCouncilRegistrationDocumentController);
+router.get("/doc/", GetDoctorCouncilRegistrationDocumentController);
+router.get("/", GetDoctorCouncilRegistrationController);
 router.put(
   "/",
-  authorizeDoctor,
   AWSUploader.single("regCertificate"),
   UpdateCouncilRegistrationController,
 );
