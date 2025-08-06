@@ -8,14 +8,12 @@ exports.blogUuidValidation = [
     .bail()
     .withMessage("Blog UUID is required")
     .isUUID()
-    .bail()
     .withMessage("Blog UUID must be a valid UUID"),
 ];
 
 exports.blogValidation = [
   body("title")
     .notEmpty()
-    .bail()
     .withMessage("Title is required")
     .isString()
     .bail()

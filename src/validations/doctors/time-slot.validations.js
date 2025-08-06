@@ -8,18 +8,26 @@ const {
 
 exports.validateSlotIdParam = [
   param("slotId")
-    .exists()
+    .notEmpty()
     .withMessage("slot ID is required")
+    .bail()
     .isInt({ gt: 0 })
-    .withMessage("slot ID must be a number greater than 0"),
+    .withMessage("slot ID must be a number greater than 0")
+    .bail()
+    .trim()
+    .escape(),
 ];
 
 exports.validateSlotIdBody = [
   body("slotId")
-    .exists()
+    .notEmpty()
     .withMessage("slot ID is required")
+    .bail()
     .isInt({ gt: 0 })
-    .withMessage("slot ID must be a number greater than 0"),
+    .withMessage("slot ID must be a number greater than 0")
+    .bail()
+    .trim()
+    .escape(),
 ];
 
 exports.dayParamValidation = [
@@ -45,13 +53,13 @@ exports.dayParamValidation = [
 
 exports.validateSlotTiming = [
   body("startTime")
-    .exists()
+    .notEmpty()
     .withMessage("startTime is required")
     .bail()
     .custom(normalizeAndValidateTime),
 
   body("endTime")
-    .exists()
+    .notEmpty()
     .withMessage("endTime is required")
     .bail()
     .custom(normalizeAndValidateTime),
