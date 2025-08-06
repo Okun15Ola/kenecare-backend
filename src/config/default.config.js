@@ -18,7 +18,7 @@ module.exports = {
   dbName: env.DB_NAME,
   dbPort: env.DB_PORT,
   dbConnectionLimit: env.DB_CONNECTION_LIMIT,
-  encryptionKey: env.ENCRYPTION_KEY, // TODO: add to env
+  encryptionKey: env.ENCRYPTION_KEY,
   sessionSecret: env.SESSION_SECRET,
   patientJwtSecret: env.PATIENTS_JWT_SECRET,
   jwtIssuer: env.JWT_ISSUER,
