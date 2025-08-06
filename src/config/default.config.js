@@ -56,8 +56,8 @@ module.exports = {
   allowOrigins: env.ALLOWED_ORIGINS,
   allowHeaders: env.ALLOWED_HEADERS,
   apiClientSecret: env.API_JWT_SECRET,
-  // nodemailerHost: env.NODEMAILER_HOST,
-  // nodemailerUser: env.NODEMAILER_USER,
-  // nodemailerPass: env.NODEMAILER_PASS,
-  // nodemailerPort: env.NODEMAILER_PORT,
+  nodemailerHost: env.NODEMAILER_HOST,
+  nodemailerUser: env.NODEMAILER_USER,
+  nodemailerPass: env.NODEMAILER_PASS,
+  nodemailerPort: env.NODEMAILER_PORT,
 };
