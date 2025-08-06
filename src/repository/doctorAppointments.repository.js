@@ -108,9 +108,8 @@ exports.getDoctorAppointByDate = async ({
   limit,
   offset,
 }) => {
-  const baseQuery = queries.GET_APPOINTMENTS_BY_DATE(startDate, endDate);
-  const optimizedQuery = `${baseQuery} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery, [doctorId]);
+  const optimizedQuery = `${queries.GET_APPOINTMENTS_BY_DATE} LIMIT ${limit} OFFSET ${offset};`;
+  return query(optimizedQuery, [startDate, endDate, doctorId]);
 };
 
 exports.countDoctorAppointmentsByDate = async ({
@@ -118,8 +117,12 @@ exports.countDoctorAppointmentsByDate = async ({
   startDate,
   endDate,
 }) => {
-  const baseQuery = queries.COUNT_APPOINTMENTS_BY_DATE(startDate, endDate);
-  return query(baseQuery, [doctorId]);
+  const row = await query(queries.COUNT_APPOINTMENTS_BY_DATE, [
+    startDate,
+    endDate,
+    doctorId,
+  ]);
+  return row[0];
 };
 
 exports.getDoctorAppointByDateAndTime = async ({ doctorId, date, time }) => {
