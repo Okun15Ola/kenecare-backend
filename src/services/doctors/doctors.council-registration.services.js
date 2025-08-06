@@ -1,7 +1,5 @@
 const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
-const { USERTYPE } = require("../../utils/enum.utils");
-const { getUserById } = require("../../repository/users.repository");
 const {
   doctorCouncilRegistrationEmail,
   adminDoctorCouncilRegistrationEmail,
@@ -24,25 +22,12 @@ exports.getDoctorCouncilRegistration = async (id) => {
     }
 
     // destruct properties from database object
-    const {
-      doctor_id: doctorId,
-      user_type: userType,
-      user_id: userId,
-    } = doctor;
+    const { doctor_id: doctorId } = doctor;
 
     const cacheKey = `doctor:${doctorId}:council-registration:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
-
-    // Check if the profile requested belongs to the requesting user
-    // Check if the user type is a doctor
-    if (id !== userId || userType !== USERTYPE.DOCTOR) {
-      logger.error(
-        `Unauthorized access attempt by userId: ${id} for doctorId: ${doctorId}`,
-      );
-      return Response.FORBIDDEN({});
     }
 
     const rawData = await dbObject.getCouncilRegistrationByDoctorId(doctorId);
@@ -123,7 +108,7 @@ exports.createDoctorCouncilRegistration = async ({
           `Doctor with ID ${doctorId} has a rejected council registration.`,
         );
         return Response.BAD_REQUEST({
-          message: `Medical Council Registration was rejected by admin. Reason: ${rejectReason}`,
+          message: `Medical Council Registration was REJECTED by admin. Reason: ${rejectReason}`,
         });
       }
 
@@ -199,16 +184,7 @@ exports.updateDoctorCouncilRegistration = async ({
         message: "Please upload medical council registration document.",
       });
     }
-    const { user_type: userType } = await getUserById(userId);
 
-    if (userType !== USERTYPE.DOCTOR) {
-      logger.error(
-        `Unauthorized action by userId: ${userId}. User type: ${userType}`,
-      );
-      return Response.UNAUTHORIZED({
-        message: "Unauthorized Action.",
-      });
-    }
     const {
       doctor_id: doctorId,
       first_name: doctorFirstName,

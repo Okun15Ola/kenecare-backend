@@ -336,7 +336,7 @@ exports.createPatientAppointment = async ({
     await redisClient.set({
       key: idempotencyCacheKey,
       value: Date.now().toString(),
-      expiry: 1800, // 30 mins // TODO reduce expiry time, 30 mins is too long
+      expiry: 600, // 10 mins
     });
 
     const {
