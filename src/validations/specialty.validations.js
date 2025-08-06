@@ -22,6 +22,7 @@ exports.CreateSpecialtyValidation = [
   body("description")
     .notEmpty()
     .withMessage("Description is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape(),
@@ -30,7 +31,8 @@ exports.UpdateSpecialtyValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specialty ID is required")
-    .isInt({ allow_leading_zeroes: false })
+    .bail()
+    .isInt({ gt: 0, allow_leading_zeroes: false })
     .withMessage("Speciality Id should be a numeric value")
     .bail()
     .trim()
@@ -45,6 +47,7 @@ exports.UpdateSpecialtyValidation = [
   body("name")
     .notEmpty()
     .withMessage("Specialty Name is required")
+    .bail()
     .toLowerCase()
     .trim()
     .isLength({ max: 150, min: 3 })
@@ -53,6 +56,7 @@ exports.UpdateSpecialtyValidation = [
   body("description")
     .notEmpty()
     .withMessage("Description is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape(),
@@ -62,6 +66,8 @@ exports.SpecialtyIDValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specialty ID is required")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (id) => {
@@ -69,5 +75,6 @@ exports.SpecialtyIDValidation = [
       if (!data) {
         throw new Error("Specialty Not Found");
       }
+      return true;
     }),
 ];

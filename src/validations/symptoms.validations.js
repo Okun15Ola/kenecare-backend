@@ -9,6 +9,7 @@ exports.CreateSymptomValidation = [
   body("name")
     .notEmpty()
     .withMessage("Name is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape()
@@ -22,20 +23,24 @@ exports.CreateSymptomValidation = [
   body("description")
     .notEmpty()
     .withMessage("Description is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape(),
   body("consultationFee")
     .notEmpty()
     .withMessage("Consultation Fee is required")
+    .bail()
     .isNumeric({ no_symbols: true })
     .withMessage("Invalid Consultation Fee Specified")
+    .bail()
     .trim()
     .escape(),
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty ID is required")
-    .isNumeric({ no_symbols: true })
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {
@@ -53,6 +58,8 @@ exports.UpdateSymptomValidation = [
   param("id")
     .notEmpty()
     .withMessage("Common Symptom ID is required")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {
@@ -66,6 +73,7 @@ exports.UpdateSymptomValidation = [
   body("name")
     .notEmpty()
     .withMessage("Common Symptom Name is required")
+    .bail()
     .toLowerCase()
     .trim()
     .isLength({ max: 150, min: 3 })
@@ -74,11 +82,13 @@ exports.UpdateSymptomValidation = [
   body("description")
     .notEmpty()
     .withMessage("Description is required")
+    .bail()
     .trim()
     .escape(),
   body("consultationFee")
     .notEmpty()
     .withMessage("Consultation Fee is required")
+    .bail()
     .isNumeric({ no_symbols: true })
     .withMessage("Invalid Consultation Fee Specified")
     .trim()
@@ -86,7 +96,8 @@ exports.UpdateSymptomValidation = [
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty ID is required")
-    .isNumeric({ no_symbols: true })
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {
@@ -104,6 +115,8 @@ exports.SpecialtyIDValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specialty ID is required")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (id) => {
@@ -111,5 +124,6 @@ exports.SpecialtyIDValidation = [
       if (!data) {
         throw new Error("Specialty Not Found");
       }
+      return true;
     }),
 ];

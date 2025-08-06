@@ -5,7 +5,8 @@ exports.paginationValidation = [
   query("page")
     .default(1)
     .isInt({ min: 1 })
-    .withMessage("Page must be a positive number")
+    .withMessage("Invalid Page")
+    .bail()
     .toInt(),
   query("limit")
     .default(10)
@@ -13,5 +14,6 @@ exports.paginationValidation = [
     .withMessage(
       `Limit must be a number between 1 and ${parseInt(maxLimit, 10)}`,
     )
+    .bail()
     .toInt(),
 ];

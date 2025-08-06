@@ -8,10 +8,11 @@ exports.SpecializationValidation = [
   body("name")
     .notEmpty()
     .withMessage("Specialization Name is required")
-    .toLowerCase()
-    .trim()
+    .bail()
     .isLength({ max: 150, min: 3 })
     .withMessage("Must be more than 3 characters long")
+    .bail()
+    .trim()
     .escape()
     .custom(async (value) => {
       const row = await getSpecializationByName(value);
@@ -21,10 +22,10 @@ exports.SpecializationValidation = [
   body("description")
     .notEmpty()
     .withMessage("Specialization Description is required")
-    .toLowerCase()
-    .trim()
+    .bail()
     .isLength({ max: 250, min: 3 })
     .withMessage("Must be more than 3 characters long")
+    .trim()
     .escape(),
 ];
 
@@ -32,6 +33,8 @@ exports.SpecializationIDValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specialization ID is required")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (id) => {
@@ -39,5 +42,6 @@ exports.SpecializationIDValidation = [
       if (!data) {
         throw new Error("Specialization Not Found");
       }
+      return true;
     }),
 ];

@@ -18,6 +18,7 @@ exports.CreateNewMedicalRecordValidation = [
   body("documentTitle")
     .notEmpty()
     .withMessage("Document Title is required")
+    .bail()
     .trim()
     .escape(),
   body("password")
@@ -47,6 +48,7 @@ exports.MedicalRecordIdValidation = [
     .notEmpty()
     .withMessage("Document Id is required")
     .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value, { req }) => {
@@ -70,6 +72,8 @@ exports.ShareMedicalDocumentValidation = [
   body("documentId")
     .notEmpty()
     .withMessage("Document Title is required")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {
@@ -85,6 +89,8 @@ exports.ShareMedicalDocumentValidation = [
   body("doctorId")
     .notEmpty()
     .withMessage("Please select a doctor you wish to share document with")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {
@@ -124,6 +130,7 @@ exports.GetDoctorSharedMedicalDocumentValidation = [
     .notEmpty()
     .withMessage("Document ID is Required")
     .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const userId = parseInt(req.user.id, 10);
       const sharedDocumentId = parseInt(value, 10);
@@ -148,6 +155,7 @@ exports.GetPatientSharedMedicalDocumentValidation = [
     .notEmpty()
     .withMessage("Document ID is Required")
     .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const userId = parseInt(req.user.id, 10);
       const sharedDocumentId = parseInt(value, 10);
@@ -168,6 +176,7 @@ exports.VerifySharedMedicalDocumentPasswordValidation = [
     .notEmpty()
     .withMessage("Document ID is Required")
     .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const userId = parseInt(req.user.id, 10);
       const sharedDocumentId = parseInt(value, 10);
@@ -219,6 +228,7 @@ exports.VerifyPatientMedicalDocumentPasswordValidation = [
     .notEmpty()
     .withMessage("Document ID is Required")
     .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const userId = parseInt(req.user.id, 10);
       const docId = parseInt(value, 10);

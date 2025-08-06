@@ -8,6 +8,8 @@ exports.doctorIdValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specify Doctor Id")
+    .bail()
+    .isInt({ gt: 0 })
     .escape()
     .trim()
     .custom(async (value) => {
@@ -29,10 +31,9 @@ exports.doctorIdValidation = [
 exports.doctorPaginationValidation = [
   query("specialty_id")
     .optional()
-    .isInt({ min: 1, allow_leading_zeroes: false })
+    .isInt({ gt: 0, allow_leading_zeroes: false })
     .withMessage("Specialty ID must be a number greater than 0")
     .bail()
-    .toInt()
     .custom(async (value) => {
       const data = await getSpecialtiyById(value);
       if (!data) {
@@ -46,7 +47,6 @@ exports.doctorPaginationValidation = [
     .isInt({ min: 1, allow_leading_zeroes: false })
     .withMessage("Location ID must be a number greater than 0")
     .bail()
-    .toInt()
     .custom(async (value) => {
       const data = await getCityById(value);
       if (!data) {

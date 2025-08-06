@@ -11,8 +11,10 @@ exports.AdminLoginValidations = [
   body("email")
     .notEmpty()
     .withMessage("Email is required")
+    .bail()
     .isEmail()
     .withMessage("Must be a valid email address")
+    .bail()
     .trim()
     .escape()
     .custom(async (email, { req }) => {
@@ -31,6 +33,7 @@ exports.AdminLoginValidations = [
   body("password")
     .notEmpty()
     .withMessage("Password is required")
+    .bail()
     .trim()
     .escape()
     .custom(async (password, { req }) => {
@@ -70,9 +73,11 @@ exports.AdminRegisterValidations = [
   body("mobileNumber")
     .notEmpty()
     .withMessage("Mobile Number is required")
+    .bail()
     .toLowerCase()
     .matches(/^\+\d{1,3}\d{6,14}$/)
     .withMessage("Mobile Number must be in international format(e.g +XXX)")
+    .bail()
     .isLength({ min: 9, max: 20 })
     .trim()
     .escape()
@@ -87,14 +92,17 @@ exports.AdminRegisterValidations = [
   body("password")
     .notEmpty()
     .withMessage("Password is required")
+    .bail()
     .matches(/^(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{8,50}$/)
     .withMessage(
       "Password must be at least 8 characters long, with 1 uppercase letter and 1 special character",
     )
+    .bail()
     .trim(),
   body("confirmPassword")
     .notEmpty()
     .withMessage("Confirm Password is required")
+    .bail()
     .custom((value, { req }) => value === req.body.password)
     .withMessage("Passwords do not match"),
 ];
@@ -103,6 +111,7 @@ exports.AdminUpdateStatusValidations = [
   query("status")
     .notEmpty()
     .withMessage("Status is required")
+    .bail()
     .trim()
     .escape()
     .isNumeric({ no_symbols: true }),
@@ -112,6 +121,7 @@ exports.AdminIDValidations = [
   param("id")
     .notEmpty()
     .withMessage("Account ID is required")
+    .bail()
     .trim()
     .escape()
     .isNumeric({ no_symbols: true })
@@ -126,11 +136,20 @@ exports.AdminIDValidations = [
 ];
 
 exports.UpdatePasswordValidations = [
-  body("oldPassword").notEmpty().withMessage("Password is required").trim(),
-  body("newPassword").notEmpty().withMessage("Password is required").trim(),
+  body("oldPassword")
+    .notEmpty()
+    .withMessage("Password is required")
+    .bail()
+    .trim(),
+  body("newPassword")
+    .notEmpty()
+    .withMessage("Password is required")
+    .bail()
+    .trim(),
   body("confirmNewPassword")
     .notEmpty()
     .withMessage("Confirm Password is required")
+    .bail()
     .custom((value, { req }) => {
       return value === req.body.newPassword;
     })
