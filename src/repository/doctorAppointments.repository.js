@@ -151,3 +151,19 @@ exports.createNewZoomMeeting = async ({
     encryptedPassword,
   ]);
 };
+
+exports.getDoctorTodayAppointments = async (doctorId) => {
+  return query(queries.GET_ALL_DOCTORS_APPOINTMENTS_TODAY, [doctorId]);
+};
+
+exports.getDoctorAppointmentsDateRange = async (
+  doctorId,
+  startDate,
+  endDate,
+) => {
+  return query(queries.GET_DOCTOR_APPOINTMENTS_DATE_RANGE, [
+    doctorId,
+    startDate,
+    endDate,
+  ]);
+};
