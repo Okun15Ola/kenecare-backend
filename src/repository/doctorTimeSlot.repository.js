@@ -18,7 +18,6 @@ exports.createDoctorTimeSlot = async ({
 };
 
 exports.bulkInsertDoctorTimeSlots = async (slots) => {
-  // slots should be an array of arrays: [[doctorId, daySlotId, slotStartTime, slotEndTime, isSlotAvailable], ...]
   return query(queries.BULK_INSERT_DOCTOR_TIME_SLOTS, [slots]);
 };
 
