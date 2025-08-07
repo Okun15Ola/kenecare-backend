@@ -1,8 +1,21 @@
+const moment = require("moment");
 const db = require("../../repository/doctorAvailableDays.repository");
 const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const { redisClient } = require("../../config/redis.config");
 const { getDoctorByUserId } = require("../../repository/doctors.repository");
+const {
+  getDoctorTodayAppointments,
+  getDoctorAppointmentsDateRange,
+} = require("../../repository/doctorAppointments.repository");
+const {
+  bulkMarkDayUnavailable,
+  deleteSlotsForDoctor,
+  deleteSlotsForDay,
+} = require("../../repository/doctorTimeSlot.repository");
+const {
+  generateDoctorTimeSlotsForAvailableDay,
+} = require("../../utils/time.utils");
 
 exports.getDoctorAvailableDays = async (userId) => {
   try {
@@ -11,7 +24,7 @@ exports.getDoctorAvailableDays = async (userId) => {
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
-    const cacheKey = `doctor:${userId}:availableDays`;
+    const cacheKey = `doctor:${doctorId}:availableDays`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -51,7 +64,7 @@ exports.getDoctorSpecifyDayAvailabilty = async (userId, day) => {
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
-    const cacheKey = `doctor:${userId}:day:${day}`;
+    const cacheKey = `doctor:${doctorId}:availableDays:${day}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -145,8 +158,24 @@ exports.createDoctorSingleDayAvailability = async (
       });
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
-    await redisClient.clearCacheByPattern("doctors:available-on:*");
+    const updatedTimeSlots = await generateDoctorTimeSlotsForAvailableDay(
+      doctorId,
+      dayOfWeek,
+    );
+
+    if (!updatedTimeSlots.success) {
+      logger.error("Error generating timeslot: ", updatedTimeSlots.message);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Something went wrong. Please try again",
+      });
+    }
+
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
+      redisClient.delete(`doctor:${doctorId}:availableDays`),
+      redisClient.clearCacheByPattern("doctors:available-on:*"),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:time-slot:*`),
+    ]);
 
     return Response.SUCCESS({
       message: `Doctor ${dayOfWeek} availability created successfully`,
@@ -180,8 +209,34 @@ exports.createDoctorMultipleDaysAvailability = async ({ userId, days }) => {
         message: "Failed to create multiple days availability",
       });
     }
-    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
-    await redisClient.clearCacheByPattern("doctors:available-on:*");
+
+    // Generate time slots for each day
+    const timeslotPromises = days.map(async (day) => {
+      if (day.isAvailable) {
+        try {
+          return await generateDoctorTimeSlotsForAvailableDay(
+            doctorId,
+            day.day,
+          );
+        } catch (error) {
+          logger.warn(`Failed to generate time slots for ${day.day}:`, error);
+          return { day: day.day, success: false };
+        }
+      }
+      return {
+        day: day.day,
+        success: true,
+        message: "Day not marked as available",
+      };
+    });
+
+    await Promise.all([
+      ...timeslotPromises,
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
+      redisClient.delete(`doctor:${doctorId}:availableDays`),
+      redisClient.clearCacheByPattern("doctors:available-on:*"),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:time-slot:*`),
+    ]);
 
     return Response.SUCCESS({
       message: "Doctor availability for multiple days created successfully",
@@ -207,6 +262,8 @@ exports.updateDoctorWeekendAvailability = async (
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
+
+    // TODO: check if appointment exist then throw conflict error
     const { insertId } = await db.updateWeekendAvailability(
       doctorId,
       saturdayStartTime,
@@ -223,8 +280,24 @@ exports.updateDoctorWeekendAvailability = async (
       });
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
-    await redisClient.clearCacheByPattern("doctors:available-on:*");
+    if (isAvailableOnSaturday === 0) {
+      await bulkMarkDayUnavailable(doctorId, "saturday");
+    } else {
+      await generateDoctorTimeSlotsForAvailableDay(doctorId, "saturday");
+    }
+
+    if (isAvailableOnSunday === 0) {
+      await bulkMarkDayUnavailable(doctorId, "sunday");
+    } else {
+      await generateDoctorTimeSlotsForAvailableDay(doctorId, "sunday");
+    }
+
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
+      redisClient.delete(`doctor:${doctorId}:availableDays`),
+      redisClient.clearCacheByPattern("doctors:available-on:*"),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:time-slot:*`),
+    ]);
 
     return Response.SUCCESS({
       message: "Doctor weekend availability updated successfully",
@@ -247,19 +320,58 @@ exports.updateDoctorWorkHoursAvailability = async (
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
+
+    const appointments = await getDoctorTodayAppointments(doctorId);
+
+    if (appointments?.length > 0) {
+      // Check if any appointments are for the day being updated
+      const dayAppointments = appointments.filter((appt) => {
+        const appointmentDate = new Date(appt.appointment_date);
+        const appointmentDayName = appointmentDate.toLocaleLowerCase("en-US", {
+          weekday: "long",
+        });
+        return appointmentDayName === dayOfWeek.toLowerCase();
+      });
+
+      if (dayAppointments.length > 0) {
+        logger.warn(
+          `Cannot update ${dayOfWeek} availability due to existing appointments`,
+        );
+        return Response.CONFLICT({
+          message: `Cannot update ${dayOfWeek} availability because you have ${dayAppointments.length} appointment(s) scheduled on this day`,
+        });
+      }
+    }
+
     const { affectedRows } = await db.updateWorkingHours(
       doctorId,
       dayOfWeek,
       startTime,
       endTime,
     );
+
     if (!affectedRows || affectedRows < 1) {
       logger.error("Failed to update doctor working hours");
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
-    await redisClient.clearCacheByPattern("doctors:available-on:*");
+    const updatedTimeSlots = await generateDoctorTimeSlotsForAvailableDay(
+      doctorId,
+      dayOfWeek,
+    );
+
+    if (!updatedTimeSlots.success) {
+      logger.error("Error generating timeslot: ", updatedTimeSlots.message);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Something went wrong. Please try again",
+      });
+    }
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
+      redisClient.delete(`doctor:${doctorId}:availableDays`),
+      redisClient.clearCacheByPattern("doctors:available-on:*"),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:time-slot:*`),
+    ]);
 
     return Response.SUCCESS({
       message: "Doctor working hours updated successfully",
@@ -281,6 +393,14 @@ exports.updateDoctorDayAvailability = async (
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
+
+    const appointments = await getDoctorTodayAppointments(doctorId);
+    if (appointments?.length > 0) {
+      return Response.CONFLICT({
+        message:
+          "Cannot update doctor availability because you still have unattended appointments for this period",
+      });
+    }
     const { affectedRows } = await db.updateDayAvailability(
       doctorId,
       dayOfWeek,
@@ -291,8 +411,16 @@ exports.updateDoctorDayAvailability = async (
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
-    await redisClient.clearCacheByPattern("doctors:available-on:*");
+    if (isAvailable === 0) {
+      await bulkMarkDayUnavailable(doctorId, dayOfWeek);
+    }
+
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
+      redisClient.delete(`doctor:${doctorId}:availableDays`),
+      redisClient.clearCacheByPattern("doctors:available-on:*"),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:time-slot:*`),
+    ]);
 
     return Response.SUCCESS({
       message: "Doctor working days updated successfully",
@@ -314,6 +442,35 @@ exports.updateDoctorMultipleWorkHoursAvailability = async (
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
+
+    // Get the current day of week using moment.js
+    const today = moment();
+    const currentDayNumber = today.day(); // 0 = Sunday, 6 = Saturday
+
+    // Only proceed with weekday checks if today is a weekday (Monday-Friday)
+    if (currentDayNumber >= 1 && currentDayNumber <= 5) {
+      // Calculate date range from today to Friday
+      const daysUntilFriday = 5 - currentDayNumber; // Friday is day 5
+      const endDate = moment(today).add(daysUntilFriday, "days");
+
+      // Format dates for SQL query
+      const startDateFormatted = today.format("YYYY-MM-DD");
+      const endDateFormatted = endDate.format("YYYY-MM-DD");
+
+      // Check for appointments from today until Friday
+      const appointments = await getDoctorAppointmentsDateRange(
+        doctorId,
+        startDateFormatted,
+        endDateFormatted,
+      );
+
+      if (appointments && appointments.length > 0) {
+        return Response.CONFLICT({
+          message: "Cannot update weekday hours due to existing appointments",
+        });
+      }
+    }
+
     const { affectedRows } = await db.updateBulkWeekdayHours(
       doctorId,
       startTime,
@@ -326,8 +483,34 @@ exports.updateDoctorMultipleWorkHoursAvailability = async (
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
-    await redisClient.clearCacheByPattern("doctors:available-on:*");
+    // Generate time slots for each weekday
+    const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+
+    const timeslotPromises = weekdays.map(async (day) => {
+      try {
+        const result = await generateDoctorTimeSlotsForAvailableDay(
+          doctorId,
+          day,
+        );
+        if (!result.success) {
+          logger.warn(
+            `Failed to generate time slots for ${day}: ${result.message}`,
+          );
+        }
+        return { day, success: result.success };
+      } catch (error) {
+        logger.error(`Error generating time slots for ${day}:`, error);
+        return { day, success: false };
+      }
+    });
+
+    await Promise.all([
+      ...timeslotPromises,
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
+      redisClient.delete(`doctor:${doctorId}:availableDays`),
+      redisClient.clearCacheByPattern("doctors:available-on:*"),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:time-slot:*`),
+    ]);
 
     return Response.SUCCESS({
       message: "Doctor working days updated successfully",
@@ -345,19 +528,37 @@ exports.deleteDoctorSpecificDayAvailability = async (userId, dayOfWeek) => {
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
+
+    // check if the doctor have any booked appointments among these days before delete
+    const appointments = await getDoctorTodayAppointments(doctorId);
+
+    if (appointments?.length > 0) {
+      logger.warn("Cannot delete doctor availability because yo appointments");
+      return Response.CONFLICT({
+        message:
+          "Cannot delete doctor availability because you still have unattended appointments for this period",
+      });
+    }
+
     const { affectedRows } = await db.deleteSpecificDay(doctorId, dayOfWeek);
     if (!affectedRows || affectedRows < 1) {
       logger.error("Failed to delete specific day availability");
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
-    await redisClient.clearCacheByPattern("doctors:available-on:*");
+    await deleteSlotsForDay(doctorId, dayOfWeek);
+
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
+      redisClient.delete(`doctor:${doctorId}:availableDays`),
+      redisClient.clearCacheByPattern("doctors:available-on:*"),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:time-slot:*`),
+    ]);
     return Response.SUCCESS({
       message: `Doctor's ${dayOfWeek} availability deleted successfully`,
     });
   } catch (error) {
-    logger.error("deleteDoctorSpecificDay: ", error);
+    logger.error("deleteDoctorSpecificDayAvailability: ", error);
     throw error;
   }
 };
@@ -369,20 +570,46 @@ exports.deleteDoctorAllDaysAvailability = async (userId) => {
       logger.error("Doctor not found for the given user ID");
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
+
+    // Check for any upcoming appointments before deleting availability
+    const today = moment().format("YYYY-MM-DD");
+    const futureDate = moment().add(30, "days").format("YYYY-MM-DD");
+    const appointments = await getDoctorAppointmentsDateRange(
+      doctorId,
+      today,
+      futureDate,
+    );
+
+    if (appointments?.length > 0) {
+      logger.warn(
+        `Cannot delete all days: Doctor has ${appointments.length} upcoming appointments`,
+      );
+      return Response.CONFLICT({
+        message:
+          "Cannot delete all availability days because you have upcoming appointments",
+      });
+    }
+
     const { affectedRows } = await db.deleteAllDoctorAvailability(doctorId);
     if (!affectedRows || affectedRows < 1) {
       logger.error("Failed to delete doctor days availability");
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern(`doctor:${userId}:*`);
-    await redisClient.clearCacheByPattern("doctors:available-on:*");
+    await deleteSlotsForDoctor(doctorId);
+
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
+      redisClient.delete(`doctor:${doctorId}:availableDays`),
+      redisClient.clearCacheByPattern("doctors:available-on:*"),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:time-slot:*`),
+    ]);
 
     return Response.SUCCESS({
       message: "Doctor's all days availability deleted successfully",
     });
   } catch (error) {
-    logger.error("deleteDoctorAllDays: ", error);
+    logger.error("deleteDoctorAllDaysAvailability: ", error);
     throw error;
   }
 };

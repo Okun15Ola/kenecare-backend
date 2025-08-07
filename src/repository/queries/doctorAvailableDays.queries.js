@@ -14,7 +14,7 @@ module.exports = {
   SELECT_AVAILABLE_DAYS_FOR_DOCTOR: `
     SELECT day_slot_id, day_of_week, day_start_time, day_end_time, is_available
     FROM doctor_available_days
-    WHERE doctor_id = ? AND is_available = 1
+    WHERE doctor_id = ?
     ORDER BY 
       CASE day_of_week 
         WHEN 'monday' THEN 1
@@ -33,6 +33,12 @@ module.exports = {
   WHERE is_available = 1;
   `,
 
+  SELECT_DOCTOR_AVAILABILITY: `
+  SELECT day_slot_id AS daySlotId, doctor_id AS doctorId, day_of_week AS day, day_start_time AS dayStartTime, day_end_time AS dayEndTime
+  FROM doctor_available_days
+  WHERE doctor_id = ? AND day_of_week = ? AND is_available = 1;
+  `,
+
   SELECT_AVAILABLE_DAY_BY_ID:
     "SELECT * FROM doctor_available_days WHERE day_slot_id = ? AND is_available = 1;",
 
@@ -46,7 +52,7 @@ module.exports = {
     SELECT d.doctor_id, d.day_of_week, d.day_start_time, d.day_end_time, dr.title, dr.last_name
     FROM doctor_available_days d
     INNER JOIN doctors dr ON d.doctor_id = dr.doctor_id
-    WHERE d.day_of_week = ? AND d.is_available = 1;
+    WHERE d.day_of_week = ? AND d.is_available = 1 LIMIT 1;
   `,
 
   // UPDATE queries
