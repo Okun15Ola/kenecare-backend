@@ -41,6 +41,7 @@ const doctorsFollowUpRouter = require("./routes/api/doctors/followups.routes");
 const doctorsTimeSlotRouter = require("./routes/api/doctors/time-slot.routes");
 const doctorFaqRouter = require("./routes/api/doctors/doctor-faqs.routes");
 const doctorBlogRouter = require("./routes/api/doctors/doctor-blogs.routes");
+const doctorReviews = require("./routes/api/doctors/reviews.routes");
 
 // PATIENTS ROUTES
 const patientsProfileRouter = require("./routes/api/patients/profile.routes");
@@ -51,6 +52,7 @@ const patientMedicalHistoryRouter = require("./routes/api/patients/medical-histo
 const appointmentPaymentRoutes = require("./routes/api/patients/appointment.payments.routes");
 const patientPrescriptionRoutes = require("./routes/api/patients/prescriptions.routes");
 const patientFollowUpRoutes = require("./routes/api/patients/follow-up.routes");
+const patientDoctorReviews = require("./routes/api/patients/doctor.reviews.routes");
 
 // ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
@@ -73,6 +75,7 @@ const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes"
 const adminMarketersRouter = require("./routes/api/admin/marketers.routes");
 const adminApiClientRouter = require("./routes/api/apiClient.routes");
 const adminApiKeyRouter = require("./routes/api/apiKey.routes");
+const adminDoctorReviews = require("./routes/api/admin/doctors.reviews.routes");
 
 // Replace your current CORS setup with this more secure configuration
 const corsOptions = {
@@ -143,6 +146,7 @@ app.use("/api/v1/doctors/follow-ups", doctorsFollowUpRouter);
 app.use("/api/v1/doctors/slots", doctorsTimeSlotRouter);
 app.use("/api/v1/doctors/faqs", doctorFaqRouter);
 app.use("/api/v1/doctors/blogs", doctorBlogRouter);
+app.use("/api/v1/doctors/reviews", doctorReviews);
 
 // PATIENT'S ROUTES
 app.use("/api/v1/patients", patientsProfileRouter);
@@ -152,6 +156,7 @@ app.use("/api/v1/patients/shared-docs", patientSharedMedicalDocumentRouter);
 app.use("/api/v1/patients/medical-info", patientMedicalHistoryRouter);
 app.use("/api/v1/patients/prescriptions", patientPrescriptionRoutes);
 app.use("/api/v1/patients/follow-ups", patientFollowUpRoutes);
+app.use("/api/v1/patients/doctor-reviews", patientDoctorReviews);
 
 // PAYMENT ROUTES
 app.use("/api/v1/payments", appointmentPaymentRoutes);
@@ -177,6 +182,7 @@ app.use("/api/v1/admin/council-regsitrations", adminCouncilRegistrationRouter);
 app.use("/api/v1/admin/withdrawals", adminWithdrawalsRoute);
 app.use("/api/v1/admin/marketers", adminMarketersRouter);
 app.use("/api/v1/marketers", adminMarketersRouter);
+app.use("/api/v1/admin/doctor-reviews", adminDoctorReviews);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {
