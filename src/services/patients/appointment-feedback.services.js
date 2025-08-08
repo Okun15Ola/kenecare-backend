@@ -54,7 +54,7 @@ exports.getAppointmentFeedbackService = async (appointmentId) => {
       expiry: 3600,
     });
 
-    return Response.SUCCESS({ message: "Feedback added successfully!" });
+    return Response.SUCCESS({ data });
   } catch (error) {
     logger.error("addAppointmentFeedbackService", error);
     throw error;
