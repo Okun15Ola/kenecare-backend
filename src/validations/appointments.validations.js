@@ -313,3 +313,21 @@ exports.AppointmentIdValidation = [
     .bail()
     .escape(),
 ];
+
+exports.FeedBackValidation = [
+  body("id")
+    .notEmpty()
+    .withMessage("Appointment ID is required.")
+    .bail()
+    .isInt({ gt: 0, allow_leading_zeroes: false })
+    .withMessage("Appointment ID must be a valid positive number")
+    .bail()
+    .escape(),
+  body("feedback")
+    .notEmpty()
+    .withMessage("Feedback content is required.")
+    .isString()
+    .withMessage("Feedback content must be a string.")
+    .isLength({ min: 5, max: 1000 })
+    .withMessage("Feedback content must be between 5 to 1000 characters."),
+];

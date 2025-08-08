@@ -10,6 +10,9 @@ const {
   endDoctorAppointment,
   getDoctorAppointmentMetrics,
 } = require("../../services/doctors/doctor.appointments.services");
+const {
+  getAppointmentFeedbackService,
+} = require("../../services/patients/appointment-feedback.services");
 
 exports.GetDoctorAppointmentMetricsController = async (req, res, next) => {
   try {
@@ -139,6 +142,17 @@ exports.EndDoctorAppointmentController = async (req, res, next) => {
       userId,
       appointmentId,
     });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.GetApppointmentFeedbackController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const response = await getAppointmentFeedbackService(id);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

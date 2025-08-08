@@ -9,11 +9,13 @@ const {
   StartDoctorAppointmentController,
   EndDoctorAppointmentController,
   GetDoctorAppointmentMetricsController,
+  GetApppointmentFeedbackController,
 } = require("../../../controllers/doctors/appointments.controller");
 const {
   StartAppointmentValidation,
   ApproveAppointmentValidation,
   PostponeAppointmentValidation,
+  AppointmentIdValidation,
 } = require("../../../validations/appointments.validations");
 const { limiter } = require("../../../utils/rate-limit.utils");
 const {
@@ -33,8 +35,18 @@ router.get(
   Validate,
   GetDoctorAppointmentsController,
 );
-router.get("/:id", GetDoctorAppointmentsByIDController);
-
+router.get(
+  "/:id",
+  AppointmentIdValidation,
+  Validate,
+  GetDoctorAppointmentsByIDController,
+);
+router.get(
+  "/:id/feedback",
+  AppointmentIdValidation,
+  Validate,
+  GetApppointmentFeedbackController,
+);
 router.patch(
   "/:id/approve",
   ApproveAppointmentValidation,
