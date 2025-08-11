@@ -61,6 +61,11 @@ const createStreamCall = async (call) => {
         custom: {
           appointmentId,
         },
+        settings_override: {
+          limits: {
+            max_duration_seconds: 1800,
+          },
+        },
       },
     });
   } catch (error) {
