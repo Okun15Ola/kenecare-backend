@@ -7,6 +7,7 @@ const {
   getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
+const { mapDoctorReview } = require("../../utils/db-mapper.utils");
 
 exports.getAllDoctorReviewsService = async (page, limit) => {
   try {
@@ -14,7 +15,7 @@ exports.getAllDoctorReviewsService = async (page, limit) => {
     const countCacheKey = "reviews:count";
     const totalRows = await getCachedCount({
       cacheKey: countCacheKey,
-      countQueryFn: doctorReviewRepository.countDoctorsReviews(),
+      countQueryFn: doctorReviewRepository.countDoctorsReviews,
     });
 
     if (!totalRows) {
@@ -45,14 +46,17 @@ exports.getAllDoctorReviewsService = async (page, limit) => {
       });
     }
 
+    const data = reviews.map((review) => mapDoctorReview(review, true));
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(reviews),
+      value: JSON.stringify(data),
       expiry: 3600,
     });
 
     return Response.SUCCESS({
-      data: reviews,
+      data,
+      pagination: paginationInfo,
     });
   } catch (error) {
     logger.error("getAllDoctorReviewsService", error);
@@ -73,7 +77,7 @@ exports.updateDoctorReviewApprovalStatusService = async (
       });
     }
 
-    const { doctor_id: doctorId } = review;
+    const { doctor_id: doctorId, patient_id: patientId } = review;
 
     const { affectedRows } =
       await doctorReviewRepository.updateReviewApprovalStatus(
@@ -93,6 +97,7 @@ exports.updateDoctorReviewApprovalStatusService = async (
       redisClient.clearCacheByPattern("reviews:all:*"),
       redisClient.delete("reviews:count"),
       redisClient.delete(`reviews:${reviewId}`),
+      redisClient.delete(`patient:${patientId}:doctor-reviews`),
     ]);
 
     return Response.SUCCESS({
@@ -122,13 +127,15 @@ exports.getReviewByIdService = async (reviewId) => {
       });
     }
 
+    const data = mapDoctorReview(review, true);
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(review),
+      value: JSON.stringify(data),
     });
 
     return Response.SUCCESS({
-      data: review,
+      data,
     });
   } catch (error) {
     logger.error("getReviewByIdService", error);

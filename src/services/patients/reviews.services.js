@@ -3,6 +3,7 @@ const { getPatientByUserId } = require("../../repository/patients.repository");
 const { redisClient } = require("../../config/redis.config");
 const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
+const { mapDoctorReview } = require("../../utils/db-mapper.utils");
 
 exports.addDoctorReviewService = async (userId, doctorId, review) => {
   try {
@@ -66,13 +67,15 @@ exports.getPatientReviewsService = async (userId) => {
       });
     }
 
+    const data = reviews.map(mapDoctorReview);
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(reviews),
+      value: JSON.stringify(data),
     });
 
     return Response.SUCCESS({
-      data: reviews,
+      data,
     });
   } catch (error) {
     logger.error("getPatientReviewsService: ", error);
