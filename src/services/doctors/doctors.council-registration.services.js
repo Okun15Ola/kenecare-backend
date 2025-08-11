@@ -1,19 +1,17 @@
 const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
-const {
-  doctorCouncilRegistrationEmail,
-  adminDoctorCouncilRegistrationEmail,
-} = require("../../utils/email.utils");
+// const {
+//   doctorCouncilRegistrationEmail,
+//   adminDoctorCouncilRegistrationEmail,
+// } = require("../../utils/email.utils");
 const { uploadFileToS3Bucket } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapDoctorCouncilRow } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
 
-// DOCTORS
 exports.getDoctorCouncilRegistration = async (id) => {
   try {
-    // Get profile from database
     const doctor = await dbObject.getDoctorByUserId(id);
 
     if (!doctor) {
@@ -21,7 +19,6 @@ exports.getDoctorCouncilRegistration = async (id) => {
       return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
     }
 
-    // destruct properties from database object
     const { doctor_id: doctorId } = doctor;
 
     const cacheKey = `doctor:${doctorId}:council-registration:${id}`;
@@ -79,9 +76,9 @@ exports.createDoctorCouncilRegistration = async ({
     }
     const {
       doctor_id: doctorId,
-      first_name: doctorFirstName,
-      last_name: doctorLastName,
-      email: doctorEmail,
+      // first_name: doctorFirstName,
+      // last_name: doctorLastName,
+      // email: doctorEmail,
     } = doctor;
 
     const councilRegistrationExist =
@@ -142,14 +139,17 @@ exports.createDoctorCouncilRegistration = async ({
         certExpiryDate,
         fileName,
       }),
-      adminDoctorCouncilRegistrationEmail({
-        doctorName: `${doctorFirstName} ${doctorLastName}`,
-      }),
-      doctorCouncilRegistrationEmail({
-        doctorEmail,
-        doctorName: `${doctorFirstName} ${doctorLastName}`,
-      }),
     ]);
+
+    // TODO: send an email with further instructions
+    // adminDoctorCouncilRegistrationEmail({
+    //   doctorName: `${doctorFirstName} ${doctorLastName}`,
+    // });
+
+    // doctorCouncilRegistrationEmail({
+    //   doctorEmail,
+    //   doctorName: `${doctorFirstName} ${doctorLastName}`,
+    // });
 
     await Promise.all([
       redisClient.clearCacheByPattern("admin:doctors:council:*"),
@@ -187,9 +187,9 @@ exports.updateDoctorCouncilRegistration = async ({
 
     const {
       doctor_id: doctorId,
-      first_name: doctorFirstName,
-      last_name: doctorLastName,
-      email: doctorEmail,
+      // first_name: doctorFirstName,
+      // last_name: doctorLastName,
+      // email: doctorEmail,
     } = await dbObject.getDoctorByUserId(userId);
 
     if (!doctorId) {
@@ -235,18 +235,18 @@ exports.updateDoctorCouncilRegistration = async ({
       }),
     ]);
 
-    //  Deactivate doctors profile until registration has been reverified
-    // send an email with further instructions
+    // TODO: Deactivate doctors profile until registration has been reverified
+    // TODO: send an email with further instructions
 
-    await Promise.all([
-      adminDoctorCouncilRegistrationEmail({
-        doctorName: `${doctorFirstName} ${doctorLastName}`,
-      }),
-      doctorCouncilRegistrationEmail({
-        doctorEmail,
-        doctorName: `${doctorFirstName} ${doctorLastName}`,
-      }),
-    ]);
+    // await Promise.all([
+    //   adminDoctorCouncilRegistrationEmail({
+    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
+    //   }),
+    //   doctorCouncilRegistrationEmail({
+    //     doctorEmail,
+    //     doctorName: `${doctorFirstName} ${doctorLastName}`,
+    //   }),
+    // ]);
 
     await Promise.all([
       redisClient.clearCacheByPattern("admin:doctors:council:*"),
