@@ -14,10 +14,28 @@ jest.mock("../../../../src/config/redis.config", () => ({
   redisClient: {
     get: jest.fn(),
     set: jest.fn(),
+    delete: jest.fn(),
     clearCacheByPattern: jest.fn(),
   },
 }));
 jest.mock("../../../../src/repository/doctors.repository");
+jest.mock("../../../../src/utils/time.utils.js", () => ({
+  generateDoctorTimeSlotsForAvailableDay: jest.fn(() => ({
+    success: true,
+  })),
+}));
+jest.mock(
+  "../../../../src/repository/doctorAppointments.repository.js",
+  () => ({
+    getDoctorTodayAppointments: jest.fn(),
+    getDoctorAppointmentsDateRange: jest.fn(),
+  }),
+);
+jest.mock("../../../../src/repository/doctorTimeSlot.repository.js", () => ({
+  bulkMarkDayUnavailable: jest.fn(),
+  deleteSlotsForDoctor: jest.fn(),
+  deleteSlotsForDay: jest.fn(),
+}));
 
 describe("days-available.services", () => {
   const userId = 1;
