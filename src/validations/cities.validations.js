@@ -8,6 +8,7 @@ exports.CreateCityValidation = [
   body("name")
     .notEmpty()
     .withMessage("City Name is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape()
@@ -23,6 +24,7 @@ exports.UpdateCityValidation = [
   param("id")
     .notEmpty()
     .withMessage("City ID is required")
+    .bail()
     .trim()
     .escape()
     .custom(async (id) => {
@@ -35,6 +37,7 @@ exports.UpdateCityValidation = [
   body("name")
     .notEmpty()
     .withMessage("City Name is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape()
@@ -50,6 +53,7 @@ exports.CityIDValidation = [
   param("id")
     .notEmpty()
     .withMessage("City ID is required")
+    .bail()
     .trim()
     .escape()
     .custom(async (id) => {
@@ -64,6 +68,7 @@ exports.PathCityValidation = [
   param("id")
     .notEmpty()
     .withMessage("City ID is required")
+    .bail()
     .trim()
     .escape()
     .custom(async (id) => {

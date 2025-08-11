@@ -46,6 +46,7 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
     if (cachedData) {
       return Response.SUCCESS({
         data: JSON.parse(cachedData),
+        expiry: 60,
       });
     }
 
@@ -149,6 +150,7 @@ exports.getDoctorAppointments = async ({ userId, limit, page }) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(appointments),
+      expiry: 60,
     });
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
@@ -175,7 +177,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       return Response.UNAUTHORIZED({ message: "Unauthorized access" });
     }
 
-    const cacheKey = `doctor:${doctorId}:appointments::${id}`;
+    const cacheKey = `doctor:${doctorId}:appointments:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -205,6 +207,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(mapDoctorAppointment),
+      expiry: 60,
     });
     return Response.SUCCESS({ data: mapDoctorAppointment });
   } catch (error) {
@@ -269,6 +272,7 @@ exports.getDoctorAppointmentByDateRange = async ({
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(appointments),
+      expiry: 60,
     });
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {

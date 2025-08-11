@@ -2,9 +2,11 @@ const moment = require("moment");
 const logger = require("../middlewares/logger.middleware");
 const {
   getAvailableDoctors,
+  getDoctorSpecificDayAvailability,
 } = require("../repository/doctorAvailableDays.repository");
 const {
   DELETE_SLOTS,
+  DELETE_SLOTS_FOR_DAY,
   BULK_INSERT_DOCTOR_TIME_SLOTS,
 } = require("../repository/queries/doctorTimeSlot.queries");
 const { withTransaction } = require("../repository/db.connection");
@@ -281,6 +283,102 @@ const generateDoctorTimeSlots = async () => {
   }
 };
 
+/**
+ * Generates time slots for doctors based on available days with breaks between slots
+ * @returns {Promise<{success: boolean, message: string, count?: number}>}
+ */
+const generateDoctorTimeSlotsForAvailableDay = async (doctorId, dayOfWeek) => {
+  try {
+    if (!doctorId) {
+      throw new Error("Doctor ID is required");
+    }
+
+    // Validate day of week
+    const validDays = [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ];
+    const normalizedDay = dayOfWeek.toLowerCase();
+
+    if (!validDays.includes(normalizedDay)) {
+      throw new Error(`Invalid day. Must be one of: ${validDays.join(", ")}`);
+    }
+    const dayAvailability = await getDoctorSpecificDayAvailability(
+      doctorId,
+      normalizedDay,
+    );
+
+    if (!dayAvailability) {
+      throw new Error(`Doctor has no availability set for ${normalizedDay}`);
+    }
+
+    const { daySlotId, dayStartTime, dayEndTime } = dayAvailability;
+
+    // Check if start and end times are provided
+    if (!dayStartTime || !dayEndTime) {
+      throw new Error(
+        `Doctor ${doctorId} has invalid time range for ${normalizedDay}`,
+      );
+    }
+
+    const slotValues = [];
+
+    // Generate slots with breaks for this day
+    const startTime = moment(dayStartTime, "HH:mm:ss");
+    const endTime = moment(dayEndTime, "HH:mm:ss");
+
+    let currentTime = startTime.clone();
+
+    while (currentTime.clone().add(30, "minutes").isSameOrBefore(endTime)) {
+      // Create a 30-minute slot
+      const slotEndTime = currentTime.clone().add(30, "minutes");
+
+      slotValues.push([
+        doctorId,
+        daySlotId,
+        currentTime.format("HH:mm:ss"),
+        slotEndTime.format("HH:mm:ss"),
+        1, // is_slot_available
+      ]);
+
+      // Add a 10-minute break after the slot
+      currentTime = slotEndTime.clone().add(10, "minutes");
+    }
+
+    if (slotValues.length === 0) {
+      return { success: true, message: "No slots to generate" };
+    }
+
+    const result = await withTransaction(async (connection) => {
+      // Delete only slots for this specific doctor and day
+      await connection.query(DELETE_SLOTS_FOR_DAY, [doctorId, normalizedDay]);
+
+      // Insert all generated slots
+      const [insertResult] = await connection.query(
+        BULK_INSERT_DOCTOR_TIME_SLOTS,
+        [slotValues],
+      );
+
+      return insertResult;
+    });
+
+    return {
+      success: true,
+      message: `Successfully generated ${result.affectedRows} time slots with breaks`,
+      count: result.affectedRows,
+    };
+  } catch (error) {
+    console.error("❌ ERROR generating time slots:", error);
+    logger.error("Error generating time slots:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   validateNewAppointmentDate,
   validateAppointmentTime,
@@ -294,4 +392,5 @@ module.exports = {
   validateTimeFormat,
   validateTimeRange,
   generateDoctorTimeSlots,
+  generateDoctorTimeSlotsForAvailableDay,
 };

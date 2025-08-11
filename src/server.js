@@ -2,7 +2,7 @@ const app = require("./app");
 const { appPort, appBaseURL } = require("./config/default.config");
 const { connectionPool } = require("./repository/db.connection");
 const cronUtils = require("./utils/cron.utils");
-const { generateDoctorTimeSlots } = require("./utils/time.utils");
+// const { generateDoctorTimeSlots } = require("./utils/time.utils");
 require("./config/redis.config"); // Ensure Redis client is initialized
 
 connectionPool.getConnection((err, connection) => {
@@ -23,22 +23,22 @@ connectionPool.getConnection((err, connection) => {
         cronUtils.startAllCronJobs();
 
         // Run doctor time slot generation on server startup
-        console.info("🏥 Initializing doctor time slots...");
-        generateDoctorTimeSlots()
-          .then((result) => {
-            if (result.success) {
-              console.info(
-                `✅ Time slot initialization complete: ${result.message}`,
-              );
-            } else {
-              console.error(
-                `❌ Time slot initialization failed: ${result.message}`,
-              );
-            }
-          })
-          .catch((error) => {
-            console.error("❌ Error during time slot initialization:", error);
-          });
+        // console.info("🏥 Initializing doctor time slots...");
+        // generateDoctorTimeSlots()
+        //   .then((result) => {
+        //     if (result.success) {
+        //       console.info(
+        //         `✅ Time slot initialization complete: ${result.message}`,
+        //       );
+        //     } else {
+        //       console.error(
+        //         `❌ Time slot initialization failed: ${result.message}`,
+        //       );
+        //     }
+        //   })
+        //   .catch((error) => {
+        //     console.error("❌ Error during time slot initialization:", error);
+        //   });
       }
     });
   }

@@ -33,7 +33,7 @@ module.exports = {
   FROM medical_appointments
   INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
   INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
-  WHERE medical_appointments.patient_id = ?;
+  WHERE medical_appointments.patient_id = ? AND appointment_payments.payment_status = 'success';
   `,
 
   COUNT_PATIENT_APPOINTMENTS: `SELECT COUNT(*) AS totalRows FROM medical_appointments

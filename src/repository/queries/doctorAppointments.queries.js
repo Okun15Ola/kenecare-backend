@@ -66,6 +66,40 @@ module.exports = {
     ORDER BY d.doctor_id, medical_appointments.appointment_time ASC
   `,
 
+  GET_ALL_DOCTORS_APPOINTMENTS_TODAY: `
+  SELECT medical_appointments.appointment_id, appointment_uuid, p.patient_id, p.first_name, p.last_name, p.gender,
+  d.doctor_id, d.first_name AS doctor_first_name, d.last_name AS doctor_last_name, appointment_type,
+  medical_appointments.consultation_fee, appointment_date, appointment_time, time_slot_id,
+  patient_name_on_prescription, patient_mobile_number, patient_symptoms, d.specialization_id, speciality_name,
+  medical_appointments.meeting_id, start_time, end_time, appointment_status,
+  cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason,
+  medical_appointments.created_at, medical_appointments.updated_at, amount_paid, currency, payment_method,
+  order_id, transaction_id, payment_status, u.mobile_number AS doctor_mobile_number
+  FROM medical_appointments
+  INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
+  INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
+  INNER JOIN users AS u ON d.user_id = u.user_id
+  INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
+  INNER JOIN medical_specialities AS ms ON medical_appointments.speciality_id = ms.speciality_id
+  LEFT JOIN zoom_meetings ON medical_appointments.meeting_id = zoom_meetings.meeting_id
+  WHERE d.doctor_id = ? AND appointment_status IN('approved', 'pending', 'postponed')
+      AND appointment_date = CURDATE()
+      AND payment_status = 'success'
+    ORDER BY d.doctor_id, medical_appointments.appointment_time ASC
+  `,
+
+  GET_DOCTOR_APPOINTMENTS_DATE_RANGE: `
+  SELECT ma.appointment_id, ma.appointment_date, ma.appointment_time,
+           p.first_name, p.last_name
+    FROM medical_appointments ma
+    INNER JOIN patients p ON ma.patient_id = p.patient_id
+    INNER JOIN appointment_payments ap ON ma.appointment_id = ap.appointment_id
+    WHERE ma.doctor_id = ? 
+      AND ma.appointment_date BETWEEN ? AND ?
+      AND ma.appointment_status IN ('pending', 'approved', 'postponed')
+      AND ap.payment_status = 'success'
+  `,
+
   GET_DOCTOR_APPOINTMENTS_DASHBOARD_METRICS: `
   SELECT
     -- Today's metrics
@@ -216,12 +250,12 @@ module.exports = {
     WHERE appointment_id = ? AND doctor_id = ?;
   `,
 
-  GET_APPOINTMENTS_BY_DATE: (startDate, endDate) => `
+  GET_APPOINTMENTS_BY_DATE: `
     ${COMMON_SELECT}
-    WHERE medical_appointments.created_at BETWEEN ${startDate} AND ${endDate}
+    WHERE medical_appointments.created_at BETWEEN ? AND ?
       AND medical_appointments.doctor_id = ? AND payment_status = 'success'
   `,
-  COUNT_APPOINTMENTS_BY_DATE: (startDate, endDate) => `
+  COUNT_APPOINTMENTS_BY_DATE: `
   SELECT COUNT(*) AS totalRows
   FROM medical_appointments
   INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
@@ -229,7 +263,7 @@ module.exports = {
   INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
   INNER JOIN medical_specialities AS ms ON medical_appointments.speciality_id = ms.speciality_id
   LEFT JOIN zoom_meetings ON medical_appointments.meeting_id = zoom_meetings.meeting_id
-  WHERE medical_appointments.created_at BETWEEN ${startDate} AND ${endDate} AND medical_appointments.doctor_id = ? AND payment_status = 'success'`,
+  WHERE medical_appointments.created_at BETWEEN ? AND ? AND medical_appointments.doctor_id = ? AND payment_status = 'success'`,
 
   GET_APPOINTMENT_BY_DATE_AND_TIME: `
     ${COMMON_SELECT}

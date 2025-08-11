@@ -9,6 +9,7 @@ exports.CreateSymptomValidation = [
   body("name")
     .notEmpty()
     .withMessage("Name is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape()
@@ -22,22 +23,28 @@ exports.CreateSymptomValidation = [
   body("description")
     .notEmpty()
     .withMessage("Description is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape(),
   body("consultationFee")
     .notEmpty()
     .withMessage("Consultation Fee is required")
+    .bail()
+    .trim()
+    .escape()
     .isNumeric({ no_symbols: true })
     .withMessage("Invalid Consultation Fee Specified")
-    .trim()
-    .escape(),
+    .bail(),
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty ID is required")
-    .isNumeric({ no_symbols: true })
+    .bail()
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Provide a valid common symptom ID")
+    .bail()
     .custom(async (value) => {
       const id = parseInt(value, 10);
       const found = await getSpecialtiyById(id);
@@ -53,8 +60,11 @@ exports.UpdateSymptomValidation = [
   param("id")
     .notEmpty()
     .withMessage("Common Symptom ID is required")
+    .bail()
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Provide a valid common symptom ID")
     .custom(async (value) => {
       const data = await getCommonSymptomById(value);
 
@@ -66,6 +76,7 @@ exports.UpdateSymptomValidation = [
   body("name")
     .notEmpty()
     .withMessage("Common Symptom Name is required")
+    .bail()
     .toLowerCase()
     .trim()
     .isLength({ max: 150, min: 3 })
@@ -74,21 +85,27 @@ exports.UpdateSymptomValidation = [
   body("description")
     .notEmpty()
     .withMessage("Description is required")
+    .bail()
     .trim()
     .escape(),
   body("consultationFee")
     .notEmpty()
     .withMessage("Consultation Fee is required")
+    .bail()
+    .trim()
+    .escape()
     .isNumeric({ no_symbols: true })
     .withMessage("Invalid Consultation Fee Specified")
-    .trim()
-    .escape(),
+    .bail(),
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty ID is required")
-    .isNumeric({ no_symbols: true })
+    .bail()
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Provide a valid common symptom ID")
+    .bail()
     .custom(async (value) => {
       const id = parseInt(value, 10);
       const found = await getSpecialtiyById(id);
@@ -104,12 +121,17 @@ exports.SpecialtyIDValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specialty ID is required")
+    .bail()
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Provide a valid common symptom ID")
+    .bail()
     .custom(async (id) => {
       const data = await getSpecialtiyById(id);
       if (!data) {
         throw new Error("Specialty Not Found");
       }
+      return true;
     }),
 ];

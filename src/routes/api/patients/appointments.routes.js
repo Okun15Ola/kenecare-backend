@@ -5,10 +5,12 @@ const {
   CreateAppointmentController,
   GetPatientAppointmentMetricsController,
   GetPatientFollowUpMetricsController,
+  AddApppointmentFeedbackController,
 } = require("../../../controllers/patients/appointments.controller");
 const {
   CreateAppointmentValidation,
   AppointmentIdValidation,
+  FeedBackValidation,
 } = require("../../../validations/appointments.validations");
 const { Validate } = require("../../../validations/validate");
 const { limiter } = require("../../../utils/rate-limit.utils");
@@ -30,6 +32,12 @@ router.get(
   AppointmentIdValidation,
   Validate,
   GetAppointmentsByIDController,
+);
+router.post(
+  "/feedback",
+  FeedBackValidation,
+  Validate,
+  AddApppointmentFeedbackController,
 );
 
 router.post(

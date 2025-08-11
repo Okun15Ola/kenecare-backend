@@ -10,8 +10,8 @@ module.exports = {
   GET_AVAILABLE_SLOTS_FOR_DAY: `
     SELECT ts.time_slot_id AS slotId, ts.slot_start_time As slotStartTime, ts.slot_end_time AS slotEndTime, ts.is_slot_available AS isSlotAvailable, dad.day_of_week AS day
     FROM doctor_time_slots as ts
-    JOIN doctor_available_days dad ON ts.day_slot_id = dad.day_slot_id
-    WHERE ts.doctor_id = ? AND dad.day_of_week = ? AND ts.is_slot_available = 1
+    INNER JOIN doctor_available_days dad ON ts.day_slot_id = dad.day_slot_id
+    WHERE ts.doctor_id = ? AND dad.day_of_week = ? AND ts.is_slot_available = 1 AND dad.is_available = 1
     ORDER BY ts.slot_start_time;
   `,
   GET_AVAILABLE_SLOTS_FOR_WEEK: `
@@ -70,13 +70,13 @@ module.exports = {
   `,
   DELETE_SLOTS_FOR_DAY: `
     DELETE ts FROM doctor_time_slots ts
-    JOIN doctor_available_days dad ON ts.day_slot_id = dad.day_slot_id
+    INNER JOIN doctor_available_days dad ON ts.day_slot_id = dad.day_slot_id
     WHERE ts.doctor_id = ? AND dad.day_of_week = ?;
   `,
   DELETE_SLOTS_FOR_DOCTOR: `
     DELETE FROM doctor_time_slots WHERE doctor_id = ?;
   `,
   DELETE_SLOTS: `DELETE ts FROM doctor_time_slots ts
-      JOIN doctor_available_days dad ON ts.day_slot_id = dad.day_slot_id
+      INNER JOIN doctor_available_days dad ON ts.day_slot_id = dad.day_slot_id
       WHERE dad.is_available = 1;`,
 };

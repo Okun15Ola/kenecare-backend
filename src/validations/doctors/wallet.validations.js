@@ -8,8 +8,11 @@ const { comparePassword } = require("../../utils/auth.utils");
 exports.walletWithdrawalValidations = [
   body("pin")
     .notEmpty()
-    .withMessage("PIN is required")
+    .withMessage("Wallet PIN is required")
+    .bail()
     .isInt({ allow_leading_zeroes: false })
+    .withMessage("Invalid Wallet Pin")
+    .bail()
     .trim()
     .escape()
     .custom(async (value, { req }) => {
@@ -96,9 +99,13 @@ exports.walletWithdrawalValidations = [
 exports.walletPinValidation = [
   body("currentPin")
     .notEmpty()
-    .withMessage("Current Pin is required")
+    .withMessage("Current Wallet Pin is required")
+    .bail()
     .isLength({ min: 4, max: 4 })
-    .withMessage("PIN must be 4-digits long")
+    .withMessage("Wallet PIN must be 4-digits long")
+    .bail()
+    .trim()
+    .escape()
     .custom(async (value, { req }) => {
       const { id } = req.user;
       const doctor = await getDoctorByUserId(id);
@@ -123,6 +130,7 @@ exports.walletPinValidation = [
   body("newPin")
     .notEmpty()
     .withMessage("New Pin is required")
+    .bail()
     .trim()
     .escape()
     .isLength({ min: 4, max: 4 })
@@ -130,6 +138,7 @@ exports.walletPinValidation = [
   body("confirmNewPin")
     .notEmpty()
     .withMessage("Confirm Pin is required")
+    .bail()
     .custom(async (pin, { req }) => {
       if (req.body.newPin !== pin) {
         throw new Error("PIN don't match");

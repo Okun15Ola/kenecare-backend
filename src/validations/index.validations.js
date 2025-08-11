@@ -8,6 +8,8 @@ exports.doctorIdValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specify Doctor Id")
+    .bail()
+    .isInt({ gt: 0 })
     .escape()
     .trim()
     .custom(async (value) => {
@@ -29,10 +31,11 @@ exports.doctorIdValidation = [
 exports.doctorPaginationValidation = [
   query("specialty_id")
     .optional()
-    .isInt({ min: 1, allow_leading_zeroes: false })
+    .trim()
+    .escape()
+    .isInt({ gt: 0, allow_leading_zeroes: false })
     .withMessage("Specialty ID must be a number greater than 0")
     .bail()
-    .toInt()
     .custom(async (value) => {
       const data = await getSpecialtiyById(value);
       if (!data) {
@@ -43,10 +46,11 @@ exports.doctorPaginationValidation = [
 
   query("locationId")
     .optional()
-    .isInt({ min: 1, allow_leading_zeroes: false })
+    .trim()
+    .escape()
+    .isInt({ gt: 1, allow_leading_zeroes: false })
     .withMessage("Location ID must be a number greater than 0")
     .bail()
-    .toInt()
     .custom(async (value) => {
       const data = await getCityById(value);
       if (!data) {
@@ -63,17 +67,24 @@ exports.doctorPaginationValidation = [
     .trim()
     .escape()
     .matches(/^[a-zA-Z0-9\s\-.]+$/)
-    .withMessage("Search query contains invalid characters"),
+    .withMessage("Search query contains invalid characters")
+    .bail(),
   query("page")
     .default(1)
+    .trim()
+    .escape()
     .isInt({ min: 1 })
     .withMessage("Page must be a positive number")
+    .bail()
     .toInt(),
   query("limit")
     .default(10)
+    .trim()
+    .escape()
     .isInt({ min: 1, max: parseInt(maxLimit, 10) })
     .withMessage(
       `Limit must be a number between 1 and ${parseInt(maxLimit, 10)}`,
     )
+    .bail()
     .toInt(),
 ];

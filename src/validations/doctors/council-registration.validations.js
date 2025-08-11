@@ -11,6 +11,16 @@ exports.councilValidations = [
   body("councilId")
     .notEmpty()
     .withMessage("Medical Council Is Required")
+    .bail()
+    .custom((value) => {
+      if (moment(value).isAfter(moment())) {
+        throw new Error(
+          "Certificate Issued Date cannot be later than today's date",
+        );
+      }
+      return true;
+    })
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (id) => {
@@ -23,9 +33,9 @@ exports.councilValidations = [
   body("regYear")
     .notEmpty()
     .withMessage("Registration Year Is Required")
+    .bail()
     .trim()
     .escape()
-    .toUpperCase()
     .custom((value) => {
       if (!moment(value).year()) {
         throw new Error("Please specify a valid registration year");
@@ -39,9 +49,9 @@ exports.councilValidations = [
   body("regNumber")
     .notEmpty()
     .withMessage("Registration Number is requred")
+    .bail()
     .trim()
     .escape()
-    .toUpperCase()
     .custom(async (regNumber) => {
       const data = await getCouncilRegistrationByRegNumber(regNumber);
       if (data) {
@@ -54,6 +64,7 @@ exports.councilValidations = [
   body("certIssuedDate")
     .notEmpty()
     .withMessage("Please specify certificate issued date")
+    .bail()
     .trim()
     .escape()
     .custom((value, { req }) => {
@@ -74,6 +85,7 @@ exports.councilValidations = [
   body("certExpiryDate")
     .notEmpty()
     .withMessage("Please specify certificate expiry date")
+    .bail()
     .trim()
     .escape()
     .custom((value) => {

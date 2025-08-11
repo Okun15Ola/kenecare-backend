@@ -212,11 +212,14 @@ exports.RegisterValidations = [
   body("password")
     .notEmpty()
     .withMessage("Password is required")
+    .bail()
     .matches(PASSWORD_REGEX)
     .withMessage(
       "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character, and be 8-50 characters long",
     )
-    .trim(),
+    .bail()
+    .trim()
+    .escape(),
   body("confirmPassword")
     .notEmpty()
     .withMessage("Confirm Password is required")
@@ -238,6 +241,7 @@ exports.RegisterValidations = [
     .toUpperCase()
     .isLength({ max: 15, min: 0 })
     .withMessage("Not a valid referral code")
+    .bail()
     .custom(async (value) => {
       if (!value) return true;
 
@@ -340,6 +344,7 @@ exports.UpdatePasswordValidations = [
   body("currentPassword")
     .notEmpty()
     .withMessage("Current Password is required")
+    .bail()
     .trim()
     .custom(async (currentPassword, { req }) => {
       const dbUser = await getUserById(req.user.userId);
@@ -364,11 +369,14 @@ exports.UpdatePasswordValidations = [
   body("newPassword")
     .notEmpty()
     .withMessage("New Password is required")
+    .bail()
     .matches(PASSWORD_REGEX)
     .withMessage(
       "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character, and be 8-50 characters long",
     )
+    .bail()
     .trim()
+    .escape()
     .custom(async (newPassword, { req }) => {
       const { user } = req;
       const isMatch = await comparePassword({
@@ -506,11 +514,14 @@ exports.ResetPasswordValidations = [
   body("newPassword")
     .notEmpty()
     .withMessage("New Password is required")
+    .bail()
     .matches(PASSWORD_REGEX)
     .withMessage(
       "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character, and be 8-50 characters long",
     )
+    .bail()
     .trim()
+    .escape()
     .custom(async (newPassword, { req }) => {
       if (!req.user) {
         return false;
@@ -547,6 +558,7 @@ exports.NotificationTokenValidations = [
   body("notification_token")
     .notEmpty()
     .withMessage("Push notification token is required")
+    .bail()
     .custom(async (value) => {
       const isValidToken = validateExpoToken(value);
 

@@ -12,7 +12,7 @@ exports.CreatePrescriptionValidation = [
     .notEmpty()
     .withMessage("Appointment ID is required")
     .bail()
-    .isInt()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const doctor = await getDoctorByUserId(req.user.id);
 
@@ -23,7 +23,7 @@ exports.CreatePrescriptionValidation = [
           appointmentId: value,
         });
         if (!appointment) {
-          throw new Error("Specfied Doctor Appintment Not Found");
+          throw new Error("Specified Doctor Appointment Not Found");
         }
         return true;
       }
@@ -71,6 +71,8 @@ exports.UpadatePrescriptionValidation = [
   param("id")
     .notEmpty()
     .withMessage("Prescription ID is required")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {
@@ -84,7 +86,8 @@ exports.UpadatePrescriptionValidation = [
   body("appointmentId")
     .notEmpty()
     .withMessage("Appointment ID is required")
-    .isInt()
+    .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const doctor = await getDoctorByUserId(req.user.id);
 
@@ -95,7 +98,7 @@ exports.UpadatePrescriptionValidation = [
           appointmentId: value,
         });
         if (!appointment) {
-          throw new Error("Appintment Not Found");
+          throw new Error("Appointment Not Found");
         }
         return true;
       }
@@ -104,6 +107,7 @@ exports.UpadatePrescriptionValidation = [
   body("diagnosis")
     .notEmpty()
     .withMessage("Prescription diagnosis is required")
+    .bail()
     .trim()
     .escape(),
   body("medicines")
@@ -113,21 +117,25 @@ exports.UpadatePrescriptionValidation = [
   check("medicines.*.medicineName")
     .notEmpty()
     .withMessage("Medicine name is required")
+    .bail()
     .trim()
     .escape(),
   check("medicines.*.strength")
     .notEmpty()
     .withMessage("Medicine strength is required")
+    .bail()
     .trim()
     .escape(),
   check("medicines.*.dosage")
     .notEmpty()
     .withMessage("Medicine dosage is required")
+    .bail()
     .trim()
     .escape(),
   check("medicines.*.treatmentDuration")
     .notEmpty()
     .withMessage("Treatment Duration is required")
+    .bail()
     .trim()
     .escape(),
   body("comment").trim().escape(),
@@ -138,6 +146,7 @@ exports.GetPrescriptionsByAppointmentValidation = [
     .notEmpty()
     .withMessage("Appointment ID is required")
     .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value, { req }) => {
@@ -161,7 +170,8 @@ exports.GetPrescriptionByIdValidation = [
   param("id")
     .notEmpty()
     .withMessage("Prescription ID is required")
-    .isInt("Invalid Prescription ID")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {

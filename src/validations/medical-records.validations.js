@@ -16,9 +16,10 @@ const { getPatientByUserId } = require("../repository/patients.repository");
 
 exports.CreateNewMedicalRecordValidation = [
   body("documentTitle")
+    .trim()
     .notEmpty()
     .withMessage("Document Title is required")
-    .trim()
+    .bail()
     .escape(),
   body("password")
     .trim()
@@ -49,6 +50,9 @@ exports.MedicalRecordIdValidation = [
     .bail()
     .trim()
     .escape()
+    .isInt({ gt: 0 })
+    .withMessage("Invalid Document ID")
+    .bail()
     .custom(async (value, { req }) => {
       const { patient_id: patientId } = await getPatientByUserId(req.user.id);
       if (!patientId) {
@@ -70,6 +74,8 @@ exports.ShareMedicalDocumentValidation = [
   body("documentId")
     .notEmpty()
     .withMessage("Document Title is required")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {
@@ -85,6 +91,8 @@ exports.ShareMedicalDocumentValidation = [
   body("doctorId")
     .notEmpty()
     .withMessage("Please select a doctor you wish to share document with")
+    .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value) => {
@@ -124,6 +132,7 @@ exports.GetDoctorSharedMedicalDocumentValidation = [
     .notEmpty()
     .withMessage("Document ID is Required")
     .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const userId = parseInt(req.user.id, 10);
       const sharedDocumentId = parseInt(value, 10);
@@ -148,6 +157,7 @@ exports.GetPatientSharedMedicalDocumentValidation = [
     .notEmpty()
     .withMessage("Document ID is Required")
     .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const userId = parseInt(req.user.id, 10);
       const sharedDocumentId = parseInt(value, 10);
@@ -168,6 +178,7 @@ exports.VerifySharedMedicalDocumentPasswordValidation = [
     .notEmpty()
     .withMessage("Document ID is Required")
     .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const userId = parseInt(req.user.id, 10);
       const sharedDocumentId = parseInt(value, 10);
@@ -219,6 +230,7 @@ exports.VerifyPatientMedicalDocumentPasswordValidation = [
     .notEmpty()
     .withMessage("Document ID is Required")
     .bail()
+    .isInt({ gt: 0 })
     .custom(async (value, { req }) => {
       const userId = parseInt(req.user.id, 10);
       const docId = parseInt(value, 10);

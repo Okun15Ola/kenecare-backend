@@ -15,8 +15,10 @@ exports.followUpIdValidation = [
   param("id")
     .notEmpty()
     .withMessage("Appointment ID is required")
+    .bail()
     .isInt({ allow_leading_zeroes: false, gt: 0 })
     .withMessage("Provide a valid Appointment ID")
+    .bail()
     .escape(),
 ];
 
@@ -97,7 +99,7 @@ exports.CreateFollowUpValidation = [
   body("followUpTime")
     .notEmpty()
     .withMessage("Follow up Time is required")
-    .toLowerCase()
+    .bail()
     .trim()
     .escape(),
 ];
@@ -105,8 +107,10 @@ exports.UpdateFollowUpValidation = [
   param("id")
     .notEmpty()
     .withMessage("Followup ID is required")
+    .bail()
     .isInt({ allow_leading_zeroes: false, gt: 0 })
     .withMessage("Provide a valid Followup ID")
+    .bail()
     .escape(),
   body("appointmentId")
     .notEmpty()
@@ -166,6 +170,7 @@ exports.UpdateFollowUpValidation = [
     .bail()
     .isDate({ format: "YYYY-MM-DD" })
     .withMessage("Please provide a valid follow-up date format (YYYY-MM-DD)")
+    .bail()
     .trim()
     .escape()
     .custom(async (date) => {
@@ -180,13 +185,13 @@ exports.UpdateFollowUpValidation = [
           "Follow up date must not be today's date or an older date,. Please choose an earlier date",
         );
       }
-    })
-    .bail(),
+      return true;
+    }),
 
   body("followUpTime")
     .notEmpty()
     .withMessage("Follow up Time is required")
-    .toLowerCase()
+    .bail()
     .trim()
     .escape(),
 ];
@@ -195,6 +200,7 @@ exports.StartAppointmentValidation = [
   param("id")
     .notEmpty()
     .withMessage("Appointment ID is required")
+    .bail()
     .escape()
     .trim()
     .custom(async (value, { req }) => {
@@ -255,6 +261,7 @@ exports.ApproveAppointmentValidation = [
   param("id")
     .notEmpty()
     .withMessage("Appointment ID is required")
+    .bail()
     .escape()
     .trim()
     .custom(async (value, { req }) => {
@@ -307,6 +314,7 @@ exports.SpecialtyIDValidation = [
   param("id")
     .notEmpty()
     .withMessage("Specialty ID is required")
+    .bail()
     .trim()
     .escape()
     .custom(async (id) => {
@@ -314,5 +322,6 @@ exports.SpecialtyIDValidation = [
       if (!data) {
         throw new Error("Specialty Not Found");
       }
+      return true;
     }),
 ];

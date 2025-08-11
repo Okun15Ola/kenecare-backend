@@ -6,6 +6,9 @@ const {
   getPatientAppointmentMetrics,
   getPatientFollowUpMetrics,
 } = require("../../services/patients/patients.appointments.services");
+const {
+  addAppointmentFeedbackService,
+} = require("../../services/patients/appointment-feedback.services");
 const { refineMobileNumber } = require("../../utils/time.utils");
 
 exports.GetAppointmentsController = async (req, res, next) => {
@@ -105,6 +108,19 @@ exports.UpdatePatientMedicalAppointmentStatusController = async (
 ) => {
   try {
     return res.sendStatus(200);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+exports.AddApppointmentFeedbackController = async (req, res, next) => {
+  try {
+    const { appointmentId, feedback } = req.body;
+    const response = await addAppointmentFeedbackService(
+      appointmentId,
+      feedback,
+    );
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
     return next(error);

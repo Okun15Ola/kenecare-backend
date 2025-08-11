@@ -13,6 +13,7 @@ exports.GetPrescriptionsByAppointmentValidation = [
     .withMessage("Appointment ID is required")
     .bail()
     .trim()
+    .isInt({ gt: 0 })
     .escape()
     .custom(async (value, { req }) => {
       const patient = await getPatientByUserId(req.user.id);
@@ -38,6 +39,7 @@ exports.GetPrescriptionByIdValidation = [
     .notEmpty()
     .withMessage("Prescription ID is required")
     .bail()
+    .isInt({ gt: 0 })
     .trim()
     .escape()
     .custom(async (value, { req }) => {

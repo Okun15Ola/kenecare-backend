@@ -37,22 +37,22 @@ exports.CreateAppointmentValidation = [
     .custom(async (patientNumber) => {
       refineMobileNumber(patientNumber);
       return true;
-    }),
+    })
+    .bail(),
   body("doctorId")
     .notEmpty()
     .withMessage("Doctor ID is required")
+    .bail()
     .isInt({ allow_leading_zeroes: false, gt: 0 })
     .withMessage("Invalid Doctor Id")
-    .toInt()
-    .escape()
+    .bail()
     .custom(async (doctorId) => {
       const data = await getDoctorById(doctorId);
       if (!data) {
         throw new Error("Specified Doctor Not Found");
       }
       return true;
-    })
-    .bail(),
+    }),
   body("specialtyId")
     .notEmpty()
     .withMessage("Specialty is required")
@@ -60,50 +60,46 @@ exports.CreateAppointmentValidation = [
     .isInt({ allow_leading_zeroes: false, gt: 0 })
     .withMessage("Invalid Specialty Id")
     .bail()
-    .trim()
-    .escape()
     .custom(async (id) => {
       const data = await getSpecialtiyById(id);
       if (!data) {
         throw new Error("Specified Specialty Not Found");
       }
       return true;
-    })
-    .bail(),
+    }),
   body("symptoms")
     .notEmpty()
     .withMessage("Patient Symptom(s) is required")
+    .bail()
     .toLowerCase()
     .trim()
-    .escape()
-    .bail(),
+    .escape(),
   body("appointmentType")
     .notEmpty()
     .withMessage("Appointment Type is required")
+    .bail()
     .toLowerCase()
     .isIn(["online_consultation", "doctor_visit", "patient_visit"])
     .withMessage("Invalid Appointment Type")
-    .trim()
-    .bail(),
+    .escape(),
   body("appointmentDate")
     .notEmpty()
     .withMessage("Appointment Date is required")
+    .bail()
     .toLowerCase()
     .trim()
     .escape()
     .custom(async (date) => {
       validateDate(date);
-    })
-    .bail(),
-
+    }),
   body("appointmentTime")
     .notEmpty()
     .withMessage("Appointment Time is required")
+    .bail()
     .trim()
     .escape()
     .custom(async (time, { req }) => {
       const date = req.body.appointmentDate;
-
       validateDateTime({ date, time });
     }),
 ];
@@ -173,6 +169,7 @@ exports.ApproveAppointmentValidation = [
   param("id")
     .notEmpty()
     .withMessage("Appointment ID is required")
+    .bail()
     .escape()
     .trim()
     .custom(async (value, { req }) => {
@@ -221,6 +218,7 @@ exports.PostponeAppointmentValidation = [
   param("id")
     .notEmpty()
     .withMessage("Appointment ID is required")
+    .bail()
     .custom(async (value, { req }) => {
       const { doctor_id: doctorId } = await getDoctorByUserId(req.user.id);
 
@@ -257,13 +255,14 @@ exports.PostponeAppointmentValidation = [
         "YYYY-MM-DD HH:mm:ss",
       );
 
-      if (appointmentDateTime.isBefore(now)) {
-        throw new Error("You cannot postpone a past appointment");
-      }
+      // Allow postponing past appointments by removing this check
+      // if (appointmentDateTime.isBefore(now)) {
+      //   throw new Error("You cannot postpone a past appointment");
+      // }
 
       const hoursDiff = appointmentDateTime.diff(now, "hours");
 
-      if (hoursDiff < 24) {
+      if (hoursDiff < 48) {
         throw new Error(
           "Appointment can only be postponed at least 48 hours in advance",
         );
@@ -308,6 +307,28 @@ exports.AppointmentIdValidation = [
   param("id")
     .notEmpty()
     .withMessage("Appointment ID is required")
+    .bail()
     .isInt({ gt: 0, allow_leading_zeroes: false })
-    .trim(),
+    .withMessage("Appointment ID must be a valid positive number")
+    .bail()
+    .escape(),
+];
+
+exports.FeedBackValidation = [
+  body("appointmentId")
+    .notEmpty()
+    .withMessage("Appointment ID is required.")
+    .bail()
+    .isInt({ gt: 0, allow_leading_zeroes: false })
+    .withMessage("Appointment ID must be a valid positive number")
+    .bail()
+    .trim()
+    .escape(),
+  body("feedback")
+    .notEmpty()
+    .withMessage("Feedback content is required.")
+    .isString()
+    .withMessage("Feedback content must be a string.")
+    .isLength({ min: 5, max: 1000 })
+    .withMessage("Feedback content must be between 5 to 1000 characters."),
 ];

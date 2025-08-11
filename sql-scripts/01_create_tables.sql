@@ -967,3 +967,39 @@ CREATE TABLE IF NOT EXISTS `doctor_health_blogs` (
   PRIMARY KEY (`blog_id`),
   CONSTRAINT `fk_health_blogs_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`doctor_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `faqs` (
+    `faq_id` INT PRIMARY KEY AUTO_INCREMENT,
+    `faq_uuid` CHAR(36) NOT NULL UNIQUE,
+    `question` VARCHAR(500) NOT NULL,
+    `answer` TEXT NOT NULL,
+    -- category VARCHAR(100),
+    `is_published` TINYINT(1) DEFAULT 0,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- future updates
+
+-- CREATE TABLE IF NOT EXISTS feature_flags (
+--     flag_id INT PRIMARY KEY AUTO_INCREMENT,
+--     flag_name VARCHAR(100) UNIQUE NOT NULL,
+--     description TEXT,
+--     is_enabled TINYINT(1) NOT NULL DEFAULT 0,
+--     rollout_percentage INT DEFAULT 100 CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100),
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+
+-- CREATE TABLE user_devices (
+--     device_id INT PRIMARY KEY AUTO_INCREMENT,
+--     user_id INT NOT NULL,
+--     device_token VARCHAR(255) NOT NULL,
+--     device_type ENUM('ios', 'android', 'web') NOT NULL,
+--     os_version VARCHAR(50),
+--     last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     CONSTRAINT unique_user_device UNIQUE (user_id, device_token),
+--     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+-- );

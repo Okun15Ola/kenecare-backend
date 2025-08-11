@@ -6,7 +6,9 @@ exports.blogCategoryValidations = [
     .withMessage("Blog Category Name is required")
     .toLowerCase()
     .trim()
+    .bail()
     .isLength({ max: 150, min: 3 })
     .withMessage("Must be more than 3 characters long")
+    .bail()
     .escape(),
 ];
