@@ -71,7 +71,7 @@ module.exports = {
   d.doctor_id, d.first_name AS doctor_first_name, d.last_name AS doctor_last_name, appointment_type,
   medical_appointments.consultation_fee, appointment_date, appointment_time, time_slot_id,
   patient_name_on_prescription, patient_mobile_number, patient_symptoms, d.specialization_id, speciality_name,
-  medical_appointments.meeting_id, join_url, start_url, start_time, end_time, appointment_status,
+  medical_appointments.meeting_id, start_time, end_time, appointment_status,
   cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason,
   medical_appointments.created_at, medical_appointments.updated_at, amount_paid, currency, payment_method,
   order_id, transaction_id, payment_status, u.mobile_number AS doctor_mobile_number
@@ -81,6 +81,7 @@ module.exports = {
   INNER JOIN users AS u ON d.user_id = u.user_id
   INNER JOIN appointment_payments ON medical_appointments.appointment_id = appointment_payments.appointment_id
   INNER JOIN medical_specialities AS ms ON medical_appointments.speciality_id = ms.speciality_id
+  LEFT JOIN zoom_meetings ON medical_appointments.meeting_id = zoom_meetings.meeting_id
   WHERE d.doctor_id = ? AND appointment_status IN('approved', 'pending', 'postponed')
       AND appointment_date = CURDATE()
       AND payment_status = 'success'

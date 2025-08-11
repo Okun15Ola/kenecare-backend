@@ -211,27 +211,19 @@ exports.createDoctorMultipleDaysAvailability = async ({ userId, days }) => {
     }
 
     // Generate time slots for each day
-    const timeslotPromises = days.map(async (day) => {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const day of days) {
       if (day.isAvailable) {
         try {
-          return await generateDoctorTimeSlotsForAvailableDay(
-            doctorId,
-            day.day,
-          );
+          // eslint-disable-next-line no-await-in-loop
+          await generateDoctorTimeSlotsForAvailableDay(doctorId, day.day);
         } catch (error) {
           logger.warn(`Failed to generate time slots for ${day.day}:`, error);
-          return { day: day.day, success: false };
         }
       }
-      return {
-        day: day.day,
-        success: true,
-        message: "Day not marked as available",
-      };
-    });
+    }
 
     await Promise.all([
-      ...timeslotPromises,
       redisClient.clearCacheByPattern(`doctor:${doctorId}:availableDays:*`),
       redisClient.delete(`doctor:${doctorId}:availableDays`),
       redisClient.clearCacheByPattern("doctors:available-on:*"),
@@ -355,13 +347,10 @@ exports.updateDoctorWorkHoursAvailability = async (
       return Response.NOT_MODIFIED({});
     }
 
-    const updatedTimeSlots = await generateDoctorTimeSlotsForAvailableDay(
-      doctorId,
-      dayOfWeek,
-    );
-
-    if (!updatedTimeSlots.success) {
-      logger.error("Error generating timeslot: ", updatedTimeSlots.message);
+    try {
+      await generateDoctorTimeSlotsForAvailableDay(doctorId, dayOfWeek);
+    } catch (error) {
+      logger.error("Error generating timeslot:", error.message || error);
       return Response.INTERNAL_SERVER_ERROR({
         message: "Something went wrong. Please try again",
       });
