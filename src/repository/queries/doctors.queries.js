@@ -173,7 +173,7 @@ module.exports = {
   `,
   UPDATE_DOCTOR_COUNCIL_REGISTRATION: `
     UPDATE doctors_council_registration
-    SET medical_council_id = ?, registration_number = ?, registration_year = ?, registration_document_url = ?, certificate_issued_date = ?, certificate_expiry_date = ?
+    SET medical_council_id = ?, registration_number = ?, registration_year = ?, registration_document_url = ?, certificate_issued_date = ?, certificate_expiry_date = ?, registration_status = 'pending', verified_by = null
     WHERE council_registration_id = ? AND doctor_id = ?;
   `,
   UPDATE_DOCTOR: `

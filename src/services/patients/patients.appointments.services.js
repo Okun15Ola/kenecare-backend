@@ -159,6 +159,7 @@ exports.getPatientAppointments = async (userId, limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(appointments),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
@@ -211,6 +212,7 @@ exports.getPatientAppointment = async ({ userId, id }) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(appointmentWithFollowUp),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data: appointmentWithFollowUp });
@@ -233,7 +235,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
     }
 
     const { patient_id: patientId } = patient;
-    const cacheKey = `patient:${patientId}:apppointments:uuid:${uuId}`;
+    const cacheKey = `patient:${patientId}:appointments:uuid:${uuId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -254,6 +256,7 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(appointment),
+      expiry: 60,
     });
     return Response.SUCCESS({ data: appointment });
   } catch (error) {
