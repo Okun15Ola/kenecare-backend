@@ -2,6 +2,7 @@ const feedbackRepository = require("../../repository/appointmentFeedbacks.reposi
 const { redisClient } = require("../../config/redis.config");
 const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
+const { mapAppointmentFeedback } = require("../../utils/db-mapper.utils");
 
 exports.addAppointmentFeedbackService = async (appointmentId, feedback) => {
   try {
@@ -48,15 +49,17 @@ exports.getAppointmentFeedbackService = async (appointmentId) => {
       });
     }
 
+    const feedback = mapAppointmentFeedback(data);
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(feedback),
       expiry: 3600,
     });
 
-    return Response.SUCCESS({ data });
+    return Response.SUCCESS({ data: feedback });
   } catch (error) {
-    logger.error("addAppointmentFeedbackService", error);
+    logger.error("getAppointmentFeedbackService", error);
     throw error;
   }
 };
