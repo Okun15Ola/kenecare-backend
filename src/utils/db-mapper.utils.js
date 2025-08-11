@@ -1369,3 +1369,51 @@ exports.mapDoctorBlog = async (blog) => {
     updatedAt: updatedAt ? moment(updatedAt).format("YYYY-MM-DD HH:mm") : null,
   };
 };
+
+exports.mapAppointmentFeedback = (feedbacks) => {
+  const {
+    appointment_feedback_id: feedbackId,
+    appointment_id: appointmentId,
+    feedback_content: feedback,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  } = feedbacks;
+  return {
+    feedbackId,
+    appointmentId,
+    feedback,
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
+  };
+};
+
+exports.mapDoctorReview = (reviews, includeApproval = false) => {
+  const {
+    feedback_id: reviewId,
+    doctor_id: doctorId,
+    doctorName,
+    first_name: patientFirstName,
+    last_name: patientLastName,
+    patient_id: patientId,
+    feedback_content: review,
+    is_feedback_approved: isApproved,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  } = reviews;
+
+  const mapped = {
+    reviewId,
+    doctorId,
+    doctor: `Dr. ${doctorName}`,
+    patientId,
+    patient: `${patientFirstName} ${patientLastName}`,
+    review,
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
+  };
+
+  if (includeApproval) {
+    mapped.isApproved = isApproved;
+  }
+  return mapped;
+};

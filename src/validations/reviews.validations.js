@@ -35,11 +35,16 @@ exports.reviewValidation = [
       }
       return true;
     }),
-  body("feedback")
+  body("review")
     .notEmpty()
-    .withMessage("Feedback content is required.")
+    .withMessage("Review content is required.")
+    .bail()
     .isString()
-    .withMessage("Feedback content must be a string.")
+    .withMessage("Review content must be a string.")
+    .bail()
     .isLength({ min: 5, max: 1000 })
-    .withMessage("Feedback content must be between 5 to 1000 characters."),
+    .withMessage("Review content must be between 5 to 1000 characters.")
+    .bail()
+    .trim()
+    .escape(),
 ];

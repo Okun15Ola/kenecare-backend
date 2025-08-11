@@ -315,13 +315,14 @@ exports.AppointmentIdValidation = [
 ];
 
 exports.FeedBackValidation = [
-  body("id")
+  body("appointmentId")
     .notEmpty()
     .withMessage("Appointment ID is required.")
     .bail()
     .isInt({ gt: 0, allow_leading_zeroes: false })
     .withMessage("Appointment ID must be a valid positive number")
     .bail()
+    .trim()
     .escape(),
   body("feedback")
     .notEmpty()
