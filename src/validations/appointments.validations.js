@@ -338,8 +338,11 @@ exports.FeedBackValidation = [
   body("feedback")
     .notEmpty()
     .withMessage("Feedback content is required.")
+    .bail()
     .isString()
     .withMessage("Feedback content must be a string.")
+    .bail()
     .isLength({ min: 5, max: 1000 })
-    .withMessage("Feedback content must be between 5 to 1000 characters."),
+    .withMessage("Feedback content must be between 5 to 1000 characters.")
+    .escape(),
 ];
