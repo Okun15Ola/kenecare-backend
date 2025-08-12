@@ -109,6 +109,7 @@ exports.getUserById = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(user),
+      expiry: 60,
     });
     return user;
   } catch (error) {
@@ -140,6 +141,7 @@ exports.getUserByMobileNumber = async (number) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(user),
+      expiry: 60,
     });
     return user;
   } catch (error) {
@@ -172,6 +174,7 @@ exports.getUserByEmail = async (userEmail) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(user),
+      expiry: 60,
     });
     return user;
   } catch (error) {
@@ -237,7 +240,7 @@ exports.registerNewUser = async ({
     if (!insertId) {
       logger.error("Fail to create user");
       return Response.INTERNAL_SERVER_ERROR({
-        message: "Fail to create user account. Please try again.",
+        message: `Fail to create ${type === USERTYPE.PATIENT ? "patient" : "doctor"} account. Please try again.`,
       });
     }
 
