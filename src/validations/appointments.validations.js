@@ -1,5 +1,8 @@
 const { body, param } = require("express-validator");
 const moment = require("moment");
+const {
+  getAppointmentByID,
+} = require("../repository/patientAppointments.repository");
 const { getSpecialtiyById } = require("../repository/specialities.repository");
 const {
   getDoctorById,
@@ -323,7 +326,15 @@ exports.FeedBackValidation = [
     .withMessage("Appointment ID must be a valid positive number")
     .bail()
     .trim()
-    .escape(),
+    .escape()
+    .custom(async (value) => {
+      const appointmentId = parseInt(value, 10);
+      const appointment = await getAppointmentByID(appointmentId);
+      console.log(appointment);
+      if (!appointment) {
+        throw new Error("Specified Appointment Does Not Exist");
+      }
+    }),
   body("feedback")
     .notEmpty()
     .withMessage("Feedback content is required.")
