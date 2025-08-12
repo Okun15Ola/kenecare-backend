@@ -333,6 +333,7 @@ exports.FeedBackValidation = [
       if (!appointment) {
         throw new Error("Specified Appointment Does Not Exist");
       }
+      return true;
     }),
   body("feedback")
     .notEmpty()
