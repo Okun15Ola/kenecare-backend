@@ -330,7 +330,6 @@ exports.FeedBackValidation = [
     .custom(async (value) => {
       const appointmentId = parseInt(value, 10);
       const appointment = await getAppointmentByID(appointmentId);
-      console.log(appointment);
       if (!appointment) {
         throw new Error("Specified Appointment Does Not Exist");
       }
