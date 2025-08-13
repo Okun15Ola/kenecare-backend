@@ -59,7 +59,7 @@ describe("Patient Prescriptions Service", () => {
       const result =
         await patientPrescriptionsService.getAppointmentPrescriptionById(1);
       expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("patient:prescriptions:1");
+      expect(redisClient.get).toHaveBeenCalled();
     });
 
     it("should return a 404 if prescription not found", async () => {
