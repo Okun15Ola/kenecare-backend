@@ -70,6 +70,7 @@ jest.mock("../../../src/config/redis.config", () => ({
     get: jest.fn(),
     set: jest.fn(),
     delete: jest.fn(),
+    clearCacheByPattern: jest.fn(),
   },
 }));
 
