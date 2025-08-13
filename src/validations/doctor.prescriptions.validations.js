@@ -1,7 +1,6 @@
 const { param, body, check } = require("express-validator");
-const { getDoctorByUserId } = require("../repository/doctors.repository");
 const {
-  getDoctorAppointmentById,
+  getAppointmentById,
 } = require("../repository/doctorAppointments.repository");
 const {
   getAppointmentPrescriptionById,
@@ -13,21 +12,13 @@ exports.CreatePrescriptionValidation = [
     .withMessage("Appointment ID is required")
     .bail()
     .isInt({ gt: 0 })
-    .custom(async (value, { req }) => {
-      const doctor = await getDoctorByUserId(req.user.id);
-
-      if (doctor) {
-        const { doctor_id: doctorId } = doctor;
-        const appointment = await getDoctorAppointmentById({
-          doctorId,
-          appointmentId: value,
-        });
-        if (!appointment) {
-          throw new Error("Specified Doctor Appointment Not Found");
-        }
-        return true;
+    .bail()
+    .custom(async (value) => {
+      const appointment = await getAppointmentById(value);
+      if (!appointment) {
+        throw new Error("Specified Doctor Appointment Not Found");
       }
-      throw new Error("Unauthorized Action. Please Try Again");
+      return true;
     }),
   body("diagnosis")
     .notEmpty()
@@ -88,21 +79,12 @@ exports.UpadatePrescriptionValidation = [
     .withMessage("Appointment ID is required")
     .bail()
     .isInt({ gt: 0 })
-    .custom(async (value, { req }) => {
-      const doctor = await getDoctorByUserId(req.user.id);
-
-      if (doctor) {
-        const { doctor_id: doctorId } = doctor;
-        const appointment = await getDoctorAppointmentById({
-          doctorId,
-          appointmentId: value,
-        });
-        if (!appointment) {
-          throw new Error("Appointment Not Found");
-        }
-        return true;
+    .custom(async (value) => {
+      const appointment = await getAppointmentById(value);
+      if (!appointment) {
+        throw new Error("Specified Doctor Appointment Not Found");
       }
-      throw new Error("Unauthorized Action");
+      return true;
     }),
   body("diagnosis")
     .notEmpty()
@@ -149,18 +131,10 @@ exports.GetPrescriptionsByAppointmentValidation = [
     .isInt({ gt: 0 })
     .trim()
     .escape()
-    .custom(async (value, { req }) => {
-      const doctor = await getDoctorByUserId(req.user.id);
-      if (!doctor) {
-        throw new Error("Doctor Not Found!");
-      }
-      const { doctor_id: doctorId } = doctor;
-      const appointment = await getDoctorAppointmentById({
-        doctorId,
-        appointmentId: value,
-      });
+    .custom(async (value) => {
+      const appointment = await getAppointmentById(value);
       if (!appointment) {
-        throw new Error("Appointment Not Found");
+        throw new Error("Specified Doctor Appointment Not Found");
       }
       return true;
     }),

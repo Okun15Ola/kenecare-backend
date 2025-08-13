@@ -7,16 +7,6 @@ const {
 const { decryptText } = require("./auth.utils");
 const availableDaysDB = require("../repository/doctorAvailableDays.repository");
 
-const safeDecrypt = (encryptedText, key) => {
-  if (!encryptedText || !key) return null;
-  try {
-    return decryptText({ encryptedText, key });
-  } catch (e) {
-    console.error("Decryption failed:", e);
-    return null;
-  }
-};
-
 exports.mapCommonSymptomsRow = async (
   commonSymptoms,
   includeImageUrl = false,
@@ -732,43 +722,6 @@ exports.mapPatientMedicalHistoryRow = (medicalHistory) => {
   };
 };
 
-exports.mapAppointmentPrescriptionRow = (prescription) => {
-  const {
-    prescription_id: prescriptionId,
-    appointment_id: appointmentId,
-    created_at: dateCreated,
-    updated_at: dateUpdated,
-    access_jwt: hashedToken,
-    diagnosis,
-    medicines,
-    doctors_comment: doctorComment,
-  } = prescription;
-
-  const decryptedDiagnosis = safeDecrypt(diagnosis, hashedToken);
-  const decryptedMedicines = safeDecrypt(medicines, hashedToken);
-  const decryptedComment = safeDecrypt(doctorComment, hashedToken);
-
-  let medicinesParsed = null;
-  if (decryptedMedicines) {
-    try {
-      medicinesParsed = JSON.parse(decryptedMedicines);
-    } catch (e) {
-      console.error(e);
-      medicinesParsed = null;
-    }
-  }
-
-  return {
-    prescriptionId,
-    appointmentId,
-    diagnosis: decryptedDiagnosis,
-    medicines: medicinesParsed,
-    comment: decryptedComment,
-    createdAt: dateCreated,
-    updatedAt: dateUpdated,
-  };
-};
-
 exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
   let doctorAvailableDays = [];
   const {
@@ -1219,7 +1172,6 @@ exports.mapMedicalRecordRow = (medicalRecord) => {
 
 exports.mapPrescriptionRow = (
   prescription,
-  hashedToken = null,
   includeDiagnosis = false,
   includeMedicines = false,
   includeComments = false,
@@ -1236,30 +1188,25 @@ exports.mapPrescriptionRow = (
   const mapped = {
     prescrtiptionId,
     appointmentId,
-    createdAt: moment(dateCreated).format("YYYY-MM-DD"),
-    updatedAt: moment(dateUpdated).format("YYYY-MM-DD"),
+    createdAt: moment(dateCreated).format("YYYY-MM-DD HH:mm:ss"),
+    updatedAt: moment(dateUpdated).format("YYYY-MM-DD HH:mm:ss"),
   };
 
   if (includeDiagnosis) {
-    mapped.diagnosis = safeDecrypt(diagnosis, hashedToken);
+    const decryptedDiagnosis = decryptText(diagnosis);
+    mapped.diagnosis = decryptedDiagnosis || null;
   }
 
   if (includeMedicines) {
-    const decryptedMedicines = safeDecrypt(medicines, hashedToken);
-    let medicinesParsed = null;
-    if (decryptedMedicines) {
-      try {
-        medicinesParsed = JSON.parse(decryptedMedicines);
-      } catch (e) {
-        console.error(e);
-        medicinesParsed = null;
-      }
-    }
-    mapped.medicines = medicinesParsed;
+    const decryptedMedicines = decryptText(medicines);
+    mapped.medicines = decryptedMedicines
+      ? JSON.parse(decryptedMedicines)
+      : null;
   }
 
   if (includeComments) {
-    mapped.comment = safeDecrypt(doctorComment, hashedToken);
+    const decryptedComment = decryptText(doctorComment);
+    mapped.comment = decryptedComment || null;
   }
 
   return mapped;

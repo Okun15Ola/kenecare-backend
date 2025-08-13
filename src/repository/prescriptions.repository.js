@@ -2,14 +2,10 @@ const { query } = require("./db.connection");
 const queries = require("./queries/prescriptions.queries");
 
 exports.getAppointmentPrescriptions = async (appointmentId) => {
-  return query(queries.GET_PRESCRIPTIONS_BY_APPOINTMENT_ID, [appointmentId]);
-};
-
-exports.countAppointmentPrescriptions = async (appointmentId) => {
-  const result = await query(queries.COUNT_PRESCRIPTIONS_BY_APPOINTMENT_ID, [
+  const row = await query(queries.GET_PRESCRIPTIONS_BY_APPOINTMENT_ID, [
     appointmentId,
   ]);
-  return result[0];
+  return row[0];
 };
 
 exports.getAppointmentPrescriptionById = async (prescriptionId) => {
@@ -37,14 +33,12 @@ exports.createAppointmentPrescriptions = async ({
   diagnosis,
   medicines,
   comment,
-  accessToken,
 }) => {
   return query(queries.CREATE_PRESCRIPTION, [
     appointmentId,
     diagnosis,
     medicines,
     comment,
-    accessToken,
   ]);
 };
 

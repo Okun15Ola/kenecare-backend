@@ -6,17 +6,16 @@ const {
   getAppointmentPrescriptionById,
 } = require("../../services/prescriptions.services");
 
-const GetPrescriptionsController = async (req, res, next) => {
-  try {
-    const { limit, page } = req.query;
-    const id = parseInt(req.user.id, 10);
-    const response = await getAppointmentPrescriptions(id, limit, page);
-    return res.status(response.statusCode).json(response);
-  } catch (error) {
-    logger.error(error);
-    return next(error);
-  }
-};
+// const GetPrescriptionsController = async (req, res, next) => {
+//   try {
+//     const id = parseInt(req.user.id, 10);
+//     const response = await getAppointmentPrescriptions(id);
+//     return res.status(response.statusCode).json(response);
+//   } catch (error) {
+//     logger.error(error);
+//     return next(error);
+//   }
+// };
 
 const GetAppointmentPrescriptionController = async (req, res, next) => {
   try {
@@ -31,13 +30,8 @@ const GetAppointmentPrescriptionController = async (req, res, next) => {
 
 const GetAppointmentPrescriptionsController = async (req, res, next) => {
   try {
-    const { limit, page } = req.query;
     const appointmentId = parseInt(req.params.id, 10);
-    const response = await getAppointmentPrescriptions(
-      appointmentId,
-      limit,
-      page,
-    );
+    const response = await getAppointmentPrescriptions(appointmentId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
@@ -87,6 +81,6 @@ module.exports = {
   GetAppointmentPrescriptionsController,
   GetAppointmentPrescriptionController,
   CreatePrescriptionController,
-  GetPrescriptionsController,
+  // GetPrescriptionsController,
   UpdatePrescriptionController,
 };

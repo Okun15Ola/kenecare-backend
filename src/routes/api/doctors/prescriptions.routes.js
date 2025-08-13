@@ -12,7 +12,7 @@ const {
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
 
-router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware, Rate limiting & Authorization middleware applied to all routes in this router
+router.use(authenticateUser, limiter, authorizeDoctor);
 
 const {
   CreatePrescriptionValidation,
@@ -20,13 +20,10 @@ const {
   GetPrescriptionsByAppointmentValidation,
   GetPrescriptionByIdValidation,
 } = require("../../../validations/doctor.prescriptions.validations");
-const {
-  paginationValidation,
-} = require("../../../validations/pagination.validations");
 
 router.get(
   "/appointment/:id",
-  [...GetPrescriptionsByAppointmentValidation, ...paginationValidation],
+  GetPrescriptionsByAppointmentValidation,
   Validate,
   GetAppointmentPrescriptionsController,
 );
