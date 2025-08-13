@@ -362,7 +362,7 @@ exports.loginUser = async ({
 
     const streamToken = await generateStreamUserToken(userId.toString());
 
-    await redisClient.clearCacheByPattern("doctors:all*");
+    await redisClient.clearCacheByPattern("doctors:all:*");
 
     // Return access token
     return Response.SUCCESS({
@@ -408,7 +408,7 @@ exports.logoutUser = async ({ userId, token, tokenExpiry }) => {
     await Promise.all([
       blacklistToken(token, tokenExpiry),
       redisClient.delete(`user:${userId}`),
-      redisClient.clearCacheByPattern("doctors:all*"),
+      redisClient.clearCacheByPattern("doctors:all:*"),
     ]);
 
     return Response.SUCCESS({
@@ -450,6 +450,7 @@ exports.logoutAllDevices = async ({ userId, token, tokenExpiry }) => {
     await Promise.all([
       blacklistToken(token, tokenExpiry),
       blacklistAllUserTokens(userId),
+      redisClient.clearCacheByPattern("doctors:all:*"),
     ]);
 
     return Response.SUCCESS({

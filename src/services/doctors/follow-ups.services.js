@@ -142,7 +142,12 @@ exports.createFollowUp = async ({
       followUpTime,
     });
 
-    await redisClient.clearCacheByPattern("doctor:*");
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.delete(`doctor:${doctorId}:follow-up`),
+      redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
 
     return Response.CREATED({
       message: "Appointment Follow-up created successfully",
@@ -241,7 +246,12 @@ exports.updateAppointmentFollowUpService = async ({
       return Response.NOT_MODIFIED({});
     }
 
-    await redisClient.clearCacheByPattern("doctor:*");
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.delete(`doctor:${doctorId}:follow-up`),
+      // redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
 
     return Response.SUCCESS({
       message: "Appointment Follow-up updated successfully",
@@ -257,11 +267,6 @@ exports.getAllAppointmentFollowupService = async ({
   appointmentId,
 }) => {
   try {
-    const cacheKey = `doctor:appointment:follow-up:${userId}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
     const doctor = await getDoctorByUserId(userId);
 
     if (!doctor) {
@@ -272,6 +277,12 @@ exports.getAllAppointmentFollowupService = async ({
       });
     }
     const { doctor_id: doctorId } = doctor;
+
+    const cacheKey = `doctor:${doctorId}:follow-up`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
 
     // check if the appointment belongs to the requesting doctor
     const isDoctorsAppointment = await getDoctorAppointmentById({
@@ -312,18 +323,18 @@ exports.getAllAppointmentFollowupService = async ({
 
 exports.getFollowUpByIdService = async ({ userId, id }) => {
   try {
-    const cacheKey = `doctor:appointment:follow-up:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
-
     const { doctor_id: doctorId } = await getDoctorByUserId(userId);
     if (!doctorId) {
       logger.error(`Doctor not found for userId: ${userId}`);
       return Response.UNAUTHORIZED({
         message: "UnAuthorized Action.",
       });
+    }
+
+    const cacheKey = `doctor:${doctorId}:follow-up:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
     }
 
     const rawData = await followUpRepo.getDoctorFollowUpById({
@@ -339,6 +350,11 @@ exports.getFollowUpByIdService = async ({ userId, id }) => {
     }
 
     const followUp = mapFollowUpRow(rawData);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(followUp),
+    });
 
     return Response.SUCCESS({
       data: followUp,
@@ -394,8 +410,11 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
       return Response.NOT_MODIFIED({});
     }
 
-    // Invalidate cache
-    await redisClient.clearCacheByPattern("doctor:*");
+    await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+      redisClient.delete(`doctor:${doctorId}:follow-up`),
+      redisClient.clearCacheByPattern("admin:appointments:*"),
+    ]);
 
     return Response.SUCCESS({
       message: "Appointment Follow-up Deleted Successfully",
