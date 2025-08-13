@@ -359,6 +359,8 @@ exports.loginUser = async ({
 
     const streamToken = await generateStreamUserToken(userId.toString());
 
+    await redisClient.clearCacheByPattern("doctors:all*");
+
     // Return access token
     return Response.SUCCESS({
       message: "Logged In Successfully",
@@ -399,9 +401,11 @@ exports.logoutUser = async ({ userId, token, tokenExpiry }) => {
       });
     }
 
+    console.log("In here");
     await Promise.all([
       blacklistToken(token, tokenExpiry),
       redisClient.delete(`user:${userId}`),
+      redisClient.clearCacheByPattern("doctors:all*"),
     ]);
 
     return Response.SUCCESS({

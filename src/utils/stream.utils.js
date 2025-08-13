@@ -75,8 +75,25 @@ const createStreamCall = async (call) => {
   }
 };
 
+const endStreamCall = async ({ callType, callID }) => {
+  try {
+    const streamCall = client.video.call(callType, callID);
+    const callExist = await streamCall.get();
+    console.log(callExist);
+    if (callExist) {
+      return await streamCall.end();
+    }
+    return null;
+  } catch (error) {
+    logger.error("END_STREAM_CALL_ERROR: ", error);
+    console.error("END_STREAM_CALL_ERROR: ", error);
+    throw error;
+  }
+};
+
 module.exports = {
   createOrUpdateStreamUser,
   createStreamCall,
+  endStreamCall,
   generateStreamUserToken,
 };

@@ -14,7 +14,7 @@ const logger = require("../../middlewares/logger.middleware");
 const {
   getAppointmentFollowUps,
 } = require("../../repository/follow-up.repository");
-const { createStreamCall } = require("../../utils/stream.utils");
+const { createStreamCall, endStreamCall } = require("../../utils/stream.utils");
 const { nodeEnv } = require("../../config/default.config");
 const { redisClient } = require("../../config/redis.config");
 const {
@@ -502,6 +502,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       first_name: firstName,
       last_name: lastName,
       appointment_status: appointmentStatus,
+      appointment_uuid: appointmentUUID,
     } = appointment;
 
     if (appointmentStatus === "completed") {
@@ -511,6 +512,9 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       );
       return Response.NOT_MODIFIED();
     }
+
+    const callType = nodeEnv === "development" ? "development" : "default";
+    await endStreamCall({ callType, callID: appointmentUUID });
 
     const [patient] = await Promise.allSettled([
       getPatientById(patientId),
