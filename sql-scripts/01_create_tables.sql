@@ -979,6 +979,13 @@ CREATE TABLE IF NOT EXISTS `faqs` (
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+ALTER TABLE `appointment_prescriptions` DROP COLUMN `access_token`;
+ALTER TABLE `appointment_prescriptions` DROP COLUMN `access_jwt`;
+
+-- ALTER TABLE `users` ADD COLUMN `last_used` TIMESTAMP NULL DEFAULT NULL;
+-- ALTER TABLE `users`
+-- ADD `two_factor_secret` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL;
+
 -- future updates
 
 -- CREATE TABLE IF NOT EXISTS feature_flags (
