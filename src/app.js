@@ -1,4 +1,4 @@
-// require("newrelic");
+require("newrelic");
 require("dotenv").config();
 require("module-alias/register");
 const express = require("express");
