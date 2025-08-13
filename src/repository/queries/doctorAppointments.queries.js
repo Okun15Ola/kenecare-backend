@@ -190,6 +190,10 @@ module.exports = {
   LIMIT 1;
   `,
 
+  GET_APPOINTMENT_BY_ID: `
+    SELECT * FROM medical_appointments WHERE appointment_id = ? LIMIT 1;
+  `,
+
   GET_APPOINTMENT_BY_MEETING_ID: `
     ${COMMON_SELECT}
     WHERE medical_appointments.meeting_id = ? AND payment_status = 'success'

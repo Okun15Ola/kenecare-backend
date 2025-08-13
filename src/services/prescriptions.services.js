@@ -3,69 +3,38 @@ const {
   createAppointmentPrescriptions,
   updateAppointmentPrescriptions,
   getAppointmentPrescriptionById,
-  countAppointmentPrescriptions,
 } = require("../repository/prescriptions.repository");
 const Response = require("../utils/response.utils");
-const {
-  generateVerificationToken,
-  hashUsersPassword,
-  encryptText,
-} = require("../utils/auth.utils");
-const { sendPrescriptionToken } = require("../utils/sms.utils");
-const {
-  getAppointmentByID,
-} = require("../repository/patientAppointments.repository");
-const { getPatientById } = require("../repository/patients.repository");
 const { redisClient } = require("../config/redis.config");
-const {
-  cacheKeyBulider,
-  getCachedCount,
-  getPaginationInfo,
-} = require("../utils/caching.utils");
 const { mapPrescriptionRow } = require("../utils/db-mapper.utils");
 const logger = require("../middlewares/logger.middleware");
+const { encryptText } = require("../utils/auth.utils");
 
-exports.getAppointmentPrescriptions = async (id, limit, page) => {
+exports.getAppointmentPrescriptions = async (id) => {
   try {
-    const offset = (page - 1) * limit;
-    const countCacheKey = "appointment-prescriptions:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => countAppointmentPrescriptions(id),
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No prescriptions found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
-    const cacheKey = cacheKeyBulider(
-      "appointment-prescriptions:all",
-      limit,
-      offset,
-    );
+    const cacheKey = `appointment:${id}:prescriptions`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
         data: JSON.parse(cachedData),
-        pagination: paginationInfo,
       });
     }
-    const rawData = await getAppointmentPrescriptions(limit, offset, id);
+    const rawData = await getAppointmentPrescriptions(id);
 
-    if (!rawData?.length) {
-      return Response.SUCCESS({ message: "No prescriptions found", data: [] });
+    if (!rawData) {
+      return Response.NOT_FOUND({
+        message: "Prescription Not Found.",
+      });
     }
 
-    const prescriptions = rawData.map(mapPrescriptionRow);
+    const prescription = mapPrescriptionRow(rawData, true, true, true);
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(prescriptions),
+      value: JSON.stringify(prescription),
     });
     return Response.SUCCESS({
-      data: prescriptions,
-      pagination: paginationInfo,
+      data: prescription,
     });
   } catch (error) {
     logger.error("getAppointmentPrescriptions: ", error);
@@ -75,7 +44,7 @@ exports.getAppointmentPrescriptions = async (id, limit, page) => {
 
 exports.getAppointmentPrescriptionById = async (id) => {
   try {
-    const cacheKey = `appointment-prescriptions:${id}`;
+    const cacheKey = `prescriptions:${id}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -88,13 +57,9 @@ exports.getAppointmentPrescriptionById = async (id) => {
         message: "Prescription not found. Try again",
       });
     }
-    const { access_jwt: hashedToken } = prescriptionExist;
-
-    // Check accesstoken
 
     const prescription = mapPrescriptionRow(
       prescriptionExist,
-      hashedToken,
       true,
       true,
       true,
@@ -102,6 +67,7 @@ exports.getAppointmentPrescriptionById = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(prescription),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data: prescription });
@@ -119,30 +85,10 @@ exports.createPrescription = async ({
 }) => {
   try {
     const stringifiedMedicines = JSON.stringify(medicines);
-
-    const appointment = await getAppointmentByID(appointmentId);
-
-    if (!appointment) {
-      logger.warn(`Appointment Not Found for ID ${appointmentId}`);
-      return Response.NOT_FOUND({
-        message: "Appointment Not Found! Please Try again",
-      });
-    }
-
-    const { patient_id: patientId, doctor_last_name: doctorName } = appointment;
-
-    const { mobile_number: mobileNumber } = await getPatientById(patientId);
-
-    // Generate Prescription Access Token
-    const accessToken = generateVerificationToken();
-
-    // Hash Generated Access Token
-    const hashedToken = await hashUsersPassword(accessToken);
-
-    // Use Hashed Token to encyrpt presctiption
-    const encDiagnosis = encryptText(diagnosis, hashedToken);
-    const encMedicines = encryptText(stringifiedMedicines, hashedToken);
-    const encComment = encryptText(comment, hashedToken);
+    // encyrpt patient prescription
+    const encDiagnosis = encryptText(diagnosis);
+    const encMedicines = encryptText(stringifiedMedicines);
+    const encComment = encryptText(comment);
 
     // Save encrypted prescription with access token in database
     const { insertId } = await createAppointmentPrescriptions({
@@ -150,26 +96,18 @@ exports.createPrescription = async ({
       diagnosis: encDiagnosis,
       medicines: encMedicines,
       comment: encComment,
-      accessToken: hashedToken,
     });
 
     if (!insertId) {
       logger.warn(
         `Failed to create prescription for Appointment ID ${appointmentId}`,
       );
-      return Response.BAD_REQUEST({
-        message: "Failed to create prescription. Try again",
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Something Went Wrong. Please Try Again.",
       });
     }
 
-    // send access token to user for later use
-    await sendPrescriptionToken({
-      mobileNumber,
-      doctorName,
-    });
-
-    await redisClient.clearCacheByPattern("appointment-prescriptions:*");
-    await redisClient.clearCacheByPattern("patient:prescriptions:*");
+    await redisClient.delete(`appointment:${appointmentId}:prescriptions`);
 
     return Response.CREATED({
       message: "Prescription Created Successfully",
@@ -190,12 +128,16 @@ exports.updatePrescriptions = async ({
   try {
     const stringifiedMedicines = JSON.stringify(medicines);
 
+    const encDiagnosis = encryptText(diagnosis);
+    const encMedicines = encryptText(stringifiedMedicines);
+    const encComment = encryptText(comment);
+
     const { affectedRows } = await updateAppointmentPrescriptions({
       appointmentId,
       prescriptionId,
-      diagnosis,
-      medicines: stringifiedMedicines,
-      comment,
+      diagnosis: encDiagnosis,
+      medicines: encMedicines,
+      comment: encComment,
     });
 
     if (!affectedRows || affectedRows < 1) {
@@ -205,8 +147,7 @@ exports.updatePrescriptions = async ({
       return Response.NOT_MODIFIED({});
     }
 
-    const cacheKey = `appointment-prescriptions:${prescriptionId}`;
-    await redisClient.delete(cacheKey);
+    await redisClient.delete(`appointment:${appointmentId}:prescriptions`);
 
     return Response.SUCCESS({
       message: "Prescription Updated Successfully",

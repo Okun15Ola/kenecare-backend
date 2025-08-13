@@ -4,14 +4,12 @@ const {
 } = require("../../repository/prescriptions.repository");
 const Response = require("../../utils/response.utils");
 const { redisClient } = require("../../config/redis.config");
-const {
-  mapAppointmentPrescriptionRow,
-} = require("../../utils/db-mapper.utils");
+const { mapPrescriptionRow } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
 
 exports.getAppointmentPrescriptions = async (id) => {
   try {
-    const cacheKey = `patient:prescriptions:${id}`;
+    const cacheKey = `appointment:${id}:prescriptions`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({
@@ -26,15 +24,15 @@ exports.getAppointmentPrescriptions = async (id) => {
       });
     }
 
-    const prescriptions = mapAppointmentPrescriptionRow(rawData);
+    const prescription = mapPrescriptionRow(rawData, true, true, true);
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(prescriptions),
+      value: JSON.stringify(prescription),
     });
 
     return Response.SUCCESS({
-      data: prescriptions,
+      data: prescription,
     });
   } catch (error) {
     logger.error("getAppointmentPrescriptions: ", error);
@@ -44,7 +42,7 @@ exports.getAppointmentPrescriptions = async (id) => {
 
 exports.getAppointmentPrescriptionById = async (presId) => {
   try {
-    const cacheKey = `patient:prescriptions:${presId}`;
+    const cacheKey = `prescriptions:${presId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -57,7 +55,14 @@ exports.getAppointmentPrescriptionById = async (presId) => {
         message: "Prescription Not Found. Try again",
       });
     }
-    const prescription = mapAppointmentPrescriptionRow(rawData);
+
+    const prescription = mapPrescriptionRow(rawData, true, true, true);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(prescription),
+      expiry: 60,
+    });
 
     return Response.SUCCESS({ data: prescription });
   } catch (error) {

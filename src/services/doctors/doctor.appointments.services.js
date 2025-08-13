@@ -349,8 +349,8 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       getPatientById(patientId),
     ]);
 
-    const { affectedRows, changedRows } = approveResult.value;
-    if (affectedRows <= 0 && changedRows <= 0) {
+    const { affectedRows } = approveResult.value;
+    if (!affectedRows || affectedRows < 1) {
       logger.warn(
         "Failed to approve appointment appointmentId:",
         appointmentId,

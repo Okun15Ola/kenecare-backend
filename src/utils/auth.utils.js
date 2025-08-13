@@ -18,6 +18,7 @@ const { redisClient } = require("../config/redis.config");
 const { generateTokenExpiryTime } = require("./time.utils");
 const { sendAuthTokenSMS } = require("./sms.utils");
 const Response = require("./response.utils");
+const { encryptionKey } = require("../config/default.config");
 
 const SL_COUNTRY_CODE = "+232";
 const MOBILE_NETWORK_CODES = [
@@ -57,39 +58,45 @@ const hashUsersPassword = async (password) => {
 };
 
 /**
- * Encrypts a given text using AES-256-CBC.
+ * Securely encrypts a given text using AES-256-CBC.
+ *
  * @param {string} text - The text to encrypt.
- * @param {Buffer|string} key - The encryption key.
- * @returns {string} The encrypted text in hexadecimal format.
+ * @param {string} key - A secret key (preferably 32-bytes).
+ * @returns {string} The IV and encrypted text, concatenated as a single hexadecimal string.
  */
-const encryptText = (text, key) => {
-  const hash = crypto.createHash("md5").update(String(key)).digest();
-  const iv = hash.subarray(0, 16);
-  const keyBuffer = crypto.createHash("sha256").update(String(key)).digest();
-  const cipher = crypto.createCipheriv("aes-256-cbc", keyBuffer, iv);
-  // cipher.setAutoPadding(true); // Enable PKCS#7 padding (default and secure)
+const encryptText = (text) => {
+  if (!encryptionKey) {
+    throw new Error("Encryption key not found");
+  }
+  // Use a secure key derivation function to generate a 32-byte key from the provided secret.
+  const derivedKey = crypto.scryptSync(encryptionKey, "salt", 32);
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv("aes-256-cbc", derivedKey, iv);
   let encryptedText = cipher.update(text, "utf8", "hex");
   encryptedText += cipher.final("hex");
-  return encryptedText;
+  return `${iv.toString("hex")}:${encryptedText}`;
 };
 
 /**
- * Decrypts an encrypted text using AES-256-CBC.
- * @param {Object} params
- * @param {string} params.encryptedText - The encrypted text in hexadecimal format.
- * @param {Buffer|string} params.key - The decryption key.
+ * Securely decrypts an encrypted text using AES-256-CBC.
+ *
+ * @param {string} text - The IV and encrypted text, concatenated as a single hexadecimal string.
+ * @param {string} key - A secret key.
  * @returns {string} The decrypted plain text.
  */
-const decryptText = ({ encryptedText, key }) => {
-  const hash = crypto.createHash("md5").update(String(key)).digest();
-  const iv = hash.subarray(0, 16);
-  const keyBuffer = crypto.createHash("sha256").update(String(key)).digest();
-  const decipher = crypto.createDecipheriv("aes-256-cbc", keyBuffer, iv);
-  // Enable PKCS#7 padding (default and secure)
-  // decipher.setAutoPadding(true);
+const decryptText = (text) => {
+  if (!encryptionKey) {
+    throw new Error("Encryption key not found");
+  }
+  const [ivHex, encryptedText] = text.split(":");
+  if (!ivHex || !encryptedText) {
+    console.log("Invalid encrypted data format.");
+  }
+  const derivedKey = crypto.scryptSync(encryptionKey, "salt", 32);
+  const iv = Buffer.from(ivHex, "hex");
+  const decipher = crypto.createDecipheriv("aes-256-cbc", derivedKey, iv);
   let decryptedText = decipher.update(encryptedText, "hex", "utf8");
   decryptedText += decipher.final("utf8");
-
   return decryptedText;
 };
 

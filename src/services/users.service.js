@@ -109,6 +109,7 @@ exports.getUserById = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(user),
+      expiry: 60,
     });
     return user;
   } catch (error) {
@@ -140,6 +141,7 @@ exports.getUserByMobileNumber = async (number) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(user),
+      expiry: 60,
     });
     return user;
   } catch (error) {
@@ -172,6 +174,7 @@ exports.getUserByEmail = async (userEmail) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(user),
+      expiry: 60,
     });
     return user;
   } catch (error) {
@@ -237,7 +240,7 @@ exports.registerNewUser = async ({
     if (!insertId) {
       logger.error("Fail to create user");
       return Response.INTERNAL_SERVER_ERROR({
-        message: "Fail to create user account. Please try again.",
+        message: `Fail to create ${type === USERTYPE.PATIENT ? "patient" : "doctor"} account. Please try again.`,
       });
     }
 
@@ -359,7 +362,7 @@ exports.loginUser = async ({
 
     const streamToken = await generateStreamUserToken(userId.toString());
 
-    await redisClient.clearCacheByPattern("doctors:all*");
+    await redisClient.clearCacheByPattern("doctors:all:*");
 
     // Return access token
     return Response.SUCCESS({
@@ -405,7 +408,7 @@ exports.logoutUser = async ({ userId, token, tokenExpiry }) => {
     await Promise.all([
       blacklistToken(token, tokenExpiry),
       redisClient.delete(`user:${userId}`),
-      redisClient.clearCacheByPattern("doctors:all*"),
+      redisClient.clearCacheByPattern("doctors:all:*"),
     ]);
 
     return Response.SUCCESS({
@@ -447,6 +450,7 @@ exports.logoutAllDevices = async ({ userId, token, tokenExpiry }) => {
     await Promise.all([
       blacklistToken(token, tokenExpiry),
       blacklistAllUserTokens(userId),
+      redisClient.clearCacheByPattern("doctors:all:*"),
     ]);
 
     return Response.SUCCESS({

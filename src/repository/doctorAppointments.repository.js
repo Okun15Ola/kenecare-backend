@@ -39,6 +39,11 @@ exports.getDoctorAppointmentById = async ({ doctorId, appointmentId }) => {
   return row[0];
 };
 
+exports.getAppointmentById = async (appointmentId) => {
+  const row = await query(queries.GET_APPOINTMENT_BY_ID, [appointmentId]);
+  return row[0];
+};
+
 exports.getAppointmentByMeetingId = async (meetingId) => {
   const row = await query(queries.GET_APPOINTMENT_BY_MEETING_ID, [meetingId]);
   return row[0];
