@@ -15,3 +15,12 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Env check passed. Proceeding with push..."
+
+npm test
+
+if [ $? -ne 0 ]; then
+  echo "❌ Unit Tests Failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ Test Passed. Proceeding with push..."
