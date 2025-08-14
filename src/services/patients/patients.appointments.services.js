@@ -37,6 +37,7 @@ const {
   getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
+const { decryptText, encryptText } = require("../../utils/auth.utils");
 
 exports.getPatientAppointmentMetrics = async (userId) => {
   try {
@@ -350,6 +351,12 @@ exports.createPatientAppointment = async ({
       mobile_number: mobileNumber,
     } = patient.value;
 
+    // encrypt patient data
+    const patientFirstName = decryptText(userFirstName);
+    const patientLastName = decryptText(userLastName);
+    const encryptedPatientName = encryptText(patientName);
+    const encryptedSymptoms = encryptText(symptoms);
+
     const {
       consultation_fee: consultationFee,
       first_name: doctorFirstName,
@@ -363,9 +370,9 @@ exports.createPatientAppointment = async ({
       uuid: generatedOrderId,
       patientId,
       doctorId,
-      patientName,
+      patientName: encryptedPatientName,
       patientNumber,
-      symptoms,
+      symptoms: encryptedSymptoms,
       appointmentType,
       consultationFee,
       specialtyId,
@@ -402,7 +409,7 @@ exports.createPatientAppointment = async ({
         updatePatientFirstAppointmentStatus(patientId),
         appointmentBookedSms({
           mobileNumber,
-          patientName: `${userFirstName} ${userLastName}`,
+          patientName: `${patientFirstName} ${patientLastName}`,
           doctorName: `${doctorFirstName} ${doctorLastName}`,
           patientNameOnPrescription: patientName,
           appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),

@@ -25,7 +25,10 @@ const {
   mapPatientDocumentRow,
 } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
-const { generateVerificationToken } = require("../../utils/auth.utils");
+const {
+  generateVerificationToken,
+  decryptText,
+} = require("../../utils/auth.utils");
 
 exports.getPatientMedicalDocuments = async (userId) => {
   try {
@@ -328,6 +331,9 @@ exports.createPatientSharedMedicalDocument = async ({
       last_name: doctorLastName,
     } = doctor;
 
+    const patientFirstName = decryptText(firstName);
+    const patientLastName = decryptText(lastName);
+
     // check if the document was previously shared with the doctor
     const alreadyShared = await getSharedMedicalDocumentByIdAndDoctorId({
       documentId,
@@ -364,7 +370,7 @@ exports.createPatientSharedMedicalDocument = async ({
     await documentSharedWithDoctorSMS({
       doctorName: `${doctorFirstName} ${doctorLastName}`,
       mobileNumber: doctorMobileNumber,
-      patientName: `${firstName} ${lastName}`,
+      patientName: `${patientFirstName} ${patientLastName}`,
     });
 
     await Promise.all([
