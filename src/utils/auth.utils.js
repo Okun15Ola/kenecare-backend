@@ -61,7 +61,6 @@ const hashUsersPassword = async (password) => {
  * Securely encrypts a given text using AES-256-CBC.
  *
  * @param {string} text - The text to encrypt.
- * @param {string} key - A secret key (preferably 32-bytes).
  * @returns {string} The IV and encrypted text, concatenated as a single hexadecimal string.
  */
 const encryptText = (text) => {
@@ -81,23 +80,39 @@ const encryptText = (text) => {
  * Securely decrypts an encrypted text using AES-256-CBC.
  *
  * @param {string} text - The IV and encrypted text, concatenated as a single hexadecimal string.
- * @param {string} key - A secret key.
  * @returns {string} The decrypted plain text.
  */
 const decryptText = (text) => {
   if (!encryptionKey) {
     throw new Error("Encryption key not found");
   }
-  const [ivHex, encryptedText] = text.split(":");
-  if (!ivHex || !encryptedText) {
-    console.log("Invalid encrypted data format.");
+  const parts = text.split(":");
+  const isValidEncryptedFormat =
+    parts.length === 2 &&
+    parts[0].length === 32 && // IV is 16 bytes, which is 32 hex chars
+    /^[0-9a-fA-F]+$/.test(parts[0]) && // Check if IV is valid hex
+    /^[0-9a-fA-F]+$/.test(parts[1]); // Check if encrypted part is valid hex
+
+  if (!isValidEncryptedFormat) {
+    return text;
   }
-  const derivedKey = crypto.scryptSync(encryptionKey, "salt", 32);
-  const iv = Buffer.from(ivHex, "hex");
-  const decipher = crypto.createDecipheriv("aes-256-cbc", derivedKey, iv);
-  let decryptedText = decipher.update(encryptedText, "hex", "utf8");
-  decryptedText += decipher.final("utf8");
-  return decryptedText;
+  const [ivHex, encryptedText] = parts;
+
+  try {
+    if (!ivHex || !encryptedText) {
+      console.error("Invalid encrypted data format.");
+      return text;
+    }
+    const derivedKey = crypto.scryptSync(encryptionKey, "salt", 32);
+    const iv = Buffer.from(ivHex, "hex");
+    const decipher = crypto.createDecipheriv("aes-256-cbc", derivedKey, iv);
+    let decryptedText = decipher.update(encryptedText, "hex", "utf8");
+    decryptedText += decipher.final("utf8");
+    return decryptedText;
+  } catch (error) {
+    console.error("Error decrypting data: ", error);
+    return text;
+  }
 };
 
 /**
