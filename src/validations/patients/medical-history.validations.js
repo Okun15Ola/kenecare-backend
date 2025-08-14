@@ -51,7 +51,7 @@ exports.createMedicalHistoryValidation = [
     }),
 
   binaryBooleanValidator(
-    "useTobacco",
+    "tobaccoIntake",
     "Tobacco intake must be a boolean value",
   ),
 
@@ -64,7 +64,7 @@ exports.createMedicalHistoryValidation = [
     .escape()
     .custom((value, { req }) => {
       // Frequency required if tobacco use is true
-      if (req.body.useTobacco === 1 && !value) {
+      if (req.body.tobaccoIntake === 1 && !value) {
         throw new Error(
           "Tobacco intake frequency is required when tobacco intake is true",
         );
