@@ -1,5 +1,5 @@
 const COMMON_SELECT = `
-    SELECT mds.sharing_id, mds.document_id, pmd.document_uuid, pmd.document_title, mds.patient_id, p.first_name as 'patient_first_name', p.last_name as 'patient_last_name', d.first_name as 'doctor_first_name', d.last_name as 'doctor_last_name', mds.note, mds.created_at
+    SELECT mds.sharing_id, mds.document_id, pmd.document_uuid, pmd.document_title, mds.patient_id, p.first_name as patient_first_name, p.last_name as patient_last_name, d.first_name as doctor_first_name, d.last_name as doctor_last_name, mds.note, mds.created_at
     FROM medical_document_sharing as mds
     INNER JOIN patient_medical_documents as pmd ON mds.document_id = pmd.medical_document_id
     INNER JOIN patients as p ON mds.patient_id = p.patient_id
