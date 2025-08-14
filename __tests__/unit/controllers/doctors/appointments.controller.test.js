@@ -245,13 +245,19 @@ describe("Doctor Appointments Controllers", () => {
   describe("EndDoctorAppointmentController", () => {
     it("should end appointment", async () => {
       const mockResponse = { statusCode: 200, data: {} };
+      const req = {
+        user: { id: "1" },
+        params: { id: "test-uuid" },
+        query: {},
+        body: {},
+      };
       services.endDoctorAppointment.mockResolvedValue(mockResponse);
 
       await EndDoctorAppointmentController(req, res, next);
 
       expect(services.endDoctorAppointment).toHaveBeenCalledWith({
         userId: 1,
-        appointmentId: 2,
+        appointmentUuid: req.params.id,
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);

@@ -388,7 +388,7 @@ describe("doctor.appointments.services", () => {
       });
       const result = await doctorAppointmentsService.endDoctorAppointment({
         userId: 1,
-        appointmentId: 2,
+        appointmentUuid: "test-uuid",
       });
       expect(result.status).toBe("error");
       expect(result.statusCode).toBe(401);
@@ -399,7 +399,7 @@ describe("doctor.appointments.services", () => {
       dbObject.getDoctorAppointmentById.mockResolvedValue(null);
       const result = await doctorAppointmentsService.endDoctorAppointment({
         userId: 1,
-        appointmentId: 2,
+        appointmentUuid: "test-uuid",
       });
       expect(result.status).toBe("error");
       expect(result.statusCode).toBe(404);
@@ -407,12 +407,12 @@ describe("doctor.appointments.services", () => {
 
     it("should return NOT_MODIFIED if already completed", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
-      dbObject.getDoctorAppointmentById.mockResolvedValue({
+      dbObject.getDoctorAppointmentByUuid.mockResolvedValue({
         appointment_status: "completed",
       });
       const result = await doctorAppointmentsService.endDoctorAppointment({
         userId: 1,
-        appointmentId: 2,
+        appointmentUuid: "test-uuid",
       });
       expect(result.status).toBe("not modified");
       expect(result.statusCode).toBe(304);
@@ -424,19 +424,19 @@ describe("doctor.appointments.services", () => {
         first_name: "Doc",
         last_name: "Tor",
       });
-      dbObject.getDoctorAppointmentById.mockResolvedValue({
+      dbObject.getDoctorAppointmentByUuid.mockResolvedValue({
         appointment_status: "started",
         patient_id: 2,
         first_name: "Pat",
         last_name: "Ient",
       });
-      authUtils.encryptText.mockReturnValue("enc");
+      authUtils.decryptText.mockReturnValue("enc");
       patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
       dbObject.updateDoctorAppointmentEndTime.mockResolvedValue();
       smsUtils.appointmentEndedSms.mockResolvedValue();
       const result = await doctorAppointmentsService.endDoctorAppointment({
         userId: 1,
-        appointmentId: 2,
+        appointmentUuid: "test-uuid",
       });
       expect(result.status).toBe("success");
       expect(result.statusCode).toBe(200);
