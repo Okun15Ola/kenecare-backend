@@ -7,7 +7,7 @@ echo "🧪 Running environment check before push..."
 ENV="${ENV:-production}"
 
 # Run the check
-node check-env.js $ENV
+node ./src/check-env.js $ENV
 
 if [ $? -ne 0 ]; then
   echo "❌ Env check failed. Push aborted."
