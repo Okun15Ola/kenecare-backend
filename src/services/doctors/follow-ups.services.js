@@ -10,6 +10,7 @@ const { newFollowAppointmentSms } = require("../../utils/sms.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapFollowUpRow } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
+const { decryptText } = require("../../utils/auth.utils");
 
 exports.getDoctorFollowUpMetrics = async (userId) => {
   try {
@@ -115,6 +116,8 @@ exports.createFollowUp = async ({
     } = appointment;
     const { mobile_number: mobileNumber } = await getPatientById(patientId);
 
+    const decryptedPatientName = decryptText(patientNameOnPrescription);
+
     const { insertId } = await followUpRepo.createNewFollowUp({
       appointmentId,
       followUpDate,
@@ -135,7 +138,7 @@ exports.createFollowUp = async ({
 
     //  Send notfication to user for new follow-up
     await newFollowAppointmentSms({
-      patientNameOnPrescription,
+      patientNameOnPrescription: decryptedPatientName,
       mobileNumber,
       doctorName: `${doctorTitle} ${doctorFirstName} ${doctorLastName}`,
       followUpDate,

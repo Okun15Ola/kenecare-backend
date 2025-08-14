@@ -1,5 +1,6 @@
 const { body, param } = require("express-validator");
 const moment = require("moment");
+const he = require("he");
 const {
   getAppointmentByID,
 } = require("../repository/patientAppointments.repository");
@@ -49,11 +50,20 @@ exports.CreateAppointmentValidation = [
     .isInt({ allow_leading_zeroes: false, gt: 0 })
     .withMessage("Invalid Doctor Id")
     .bail()
-    .custom(async (doctorId) => {
+    .custom(async (doctorId, { req }) => {
       const data = await getDoctorById(doctorId);
       if (!data) {
         throw new Error("Specified Doctor Not Found");
       }
+
+      const { specialization_id: doctorSpecialty } = data;
+
+      const specifiedSpecialty = Number(req.body.specialtyId);
+
+      if (specifiedSpecialty !== doctorSpecialty) {
+        throw new Error("Incorrect Doctor Specialty");
+      }
+
       return true;
     }),
   body("specialtyId")
@@ -76,14 +86,18 @@ exports.CreateAppointmentValidation = [
     .bail()
     .toLowerCase()
     .trim()
-    .escape(),
+    .escape()
+    .customSanitizer((value) => {
+      return he.encode(value);
+    }),
   body("appointmentType")
     .notEmpty()
     .withMessage("Appointment Type is required")
     .bail()
     .toLowerCase()
-    .isIn(["online_consultation", "doctor_visit", "patient_visit"])
+    .isIn(["online_consultation", "online consultation"]) //  "doctor_visit", "patient_visit"
     .withMessage("Invalid Appointment Type")
+    .bail()
     .escape(),
   body("appointmentDate")
     .notEmpty()
@@ -344,5 +358,8 @@ exports.FeedBackValidation = [
     .bail()
     .isLength({ min: 5, max: 1000 })
     .withMessage("Feedback content must be between 5 to 1000 characters.")
-    .escape(),
+    .escape()
+    .customSanitizer((value) => {
+      return he.encode(value);
+    }),
 ];

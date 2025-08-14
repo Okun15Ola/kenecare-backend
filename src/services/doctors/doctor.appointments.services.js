@@ -26,6 +26,7 @@ const {
   getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
+const { decryptText } = require("../../utils/auth.utils");
 
 exports.getDoctorAppointmentMetrics = async (userId) => {
   try {
@@ -323,6 +324,10 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
       payment_status: paymentStatus,
     } = appointment;
 
+    const decryptedPatientName = decryptText(patientNameOnPrescription);
+    const patientFirstName = decryptText(firstName);
+    const patientLastName = decryptText(lastName);
+
     if (paymentStatus !== "success") {
       logger.warn("Appointment payment unsuccessful: ", paymentStatus);
       return Response.BAD_REQUEST({
@@ -364,8 +369,8 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
 
     await appointmentApprovalSms({
       doctorName: `${doctorFirstName} ${doctorLastName}`,
-      patientName: `${firstName} ${lastName}`,
-      patientNameOnPrescription,
+      patientName: `${patientFirstName} ${patientLastName}`,
+      patientNameOnPrescription: decryptedPatientName,
       mobileNumber,
       appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
       appointmentTime,
@@ -513,6 +518,9 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       return Response.NOT_MODIFIED();
     }
 
+    const patientFirstName = decryptText(firstName);
+    const patientLastName = decryptText(lastName);
+
     const callType = nodeEnv === "development" ? "development" : "default";
     await endStreamCall({ callType, callID: appointmentUUID });
 
@@ -529,7 +537,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
 
     await appointmentEndedSms({
       doctorName: `${doctorFirstName} ${doctorLastName}`,
-      patientName: `${firstName} ${lastName}`,
+      patientName: `${patientFirstName} ${patientLastName}`,
       mobileNumber,
     });
 
@@ -597,6 +605,8 @@ exports.cancelDoctorAppointment = async ({
       patient_id: patientId,
     } = rawData;
 
+    const decryptedPatientName = decryptText(patientNameOnPrescription);
+
     const now = moment();
     const appointmentDateTime = moment(
       `${appointmentDate} ${appointmentTime}`,
@@ -649,7 +659,7 @@ exports.cancelDoctorAppointment = async ({
     await doctorAppointmentCancelledSms({
       mobileNumber,
       doctorName: `Dr. ${doctorLastName}`,
-      patientNameOnPrescription,
+      patientNameOnPrescription: decryptedPatientName,
       appointmentDate,
       appointmentTime,
       cancelReason,
@@ -710,6 +720,10 @@ exports.postponeDoctorAppointment = async ({
       doctor_last_name: doctorLastName,
     } = rawData;
 
+    const decryptedPatientName = decryptText(patientNameOnPrescription);
+    const decryptedPatientFirstName = decryptText(patientFirstName);
+    const decryptedPatientLastName = decryptText(patientLastName);
+
     // check if the date and time has already been booked
     const timeSlotBooked = await dbObject.getDoctorAppointByDateAndTime({
       doctorId,
@@ -751,8 +765,8 @@ exports.postponeDoctorAppointment = async ({
 
     // Send a notification(email,sms) to the user
     await appointmentPostponedSms({
-      patientName: `${patientFirstName} ${patientLastName}`,
-      patientNameOnPrescription,
+      patientName: `${decryptedPatientFirstName} ${decryptedPatientLastName}`,
+      patientNameOnPrescription: decryptedPatientName,
       mobileNumber,
       doctorName: `${doctorFirstName} ${doctorLastName}`,
       appointmentDate: postponedDate,
