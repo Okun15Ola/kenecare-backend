@@ -1,11 +1,7 @@
 const moment = require("moment");
 const repo = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
-const {
-  USERTYPE,
-  STATUS,
-  VERIFICATIONSTATUS,
-} = require("../../utils/enum.utils");
+const { USERTYPE } = require("../../utils/enum.utils");
 const { getUserById } = require("../../repository/users.repository");
 const {
   getMarketerByReferralCode,
@@ -32,6 +28,7 @@ const {
   deleteFileFromS3Bucket,
 } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
+const { encryptText } = require("../../utils/auth.utils");
 
 exports.getAllPatients = async (limit, page) => {
   try {
@@ -226,6 +223,7 @@ exports.getPatientByUser = async (id) => {
     }
 
     const cacheKey = `patient:${patient.patientId}:user:${id}`;
+    console.log("User ", cacheKey);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -271,26 +269,9 @@ exports.createPatientProfile = async ({
         message: "Error Creating Patient Profile, please try again!",
       });
     }
-    const {
-      user_type: userType,
-      referral_code: referralCode,
-      mobile_number: userMobileNumber,
-      is_verified: isVerified,
-      is_account_active: isAccountActive,
-    } = user;
+    const { referral_code: referralCode, mobile_number: userMobileNumber } =
+      user;
 
-    if (
-      userType !== USERTYPE.PATIENT ||
-      isVerified !== VERIFICATIONSTATUS.VERIFIED ||
-      isAccountActive !== STATUS.ACTIVE
-    ) {
-      logger.warn(
-        `Unauthorized action for user ID: ${userId}. User Type: ${userType}, Verification Status: ${isVerified}, Account Status: ${isAccountActive}`,
-      );
-      return Response.FORBIDDEN({
-        message: "Unauthorized Action. Please Try again",
-      });
-    }
     const patient = await repo.getPatientByUserId(userId);
 
     if (patient) {
@@ -306,11 +287,16 @@ exports.createPatientProfile = async ({
       ? moment(dateOfBirth).format("YYYY-MM-DD")
       : null;
 
+    // encrypt Patient Data
+    const encryptedFirstName = encryptText(firstName);
+    const encryptedLastName = encryptText(lastName);
+    const encryptedMiddleName = encryptText(middleName);
+
     const { affectedRows } = await repo.createPatient({
       userId,
-      firstName,
-      middleName,
-      lastName,
+      firstName: encryptedFirstName,
+      middleName: encryptedMiddleName,
+      lastName: encryptedLastName,
       gender,
       dateOfBirth: formattedDate,
     });
@@ -325,13 +311,16 @@ exports.createPatientProfile = async ({
     }
 
     // Only proceed with caching and SMS if patient profile was successfully created
-    if (affectedRows > 0) {
+    if (!affectedRows || affectedRows > 0) {
       // Re-fetch patient to ensure it's not null before caching
       const newPatient = await repo.getPatientByUserId(userId);
       if (newPatient) {
         await redisClient.delete(`patient:${newPatient.patient_id}:*`);
         await redisClient.clearCacheByPattern(
           `patients:${newPatient.patient_id}:*`,
+        );
+        await redisClient.clearCacheByPattern(
+          `patient:${newPatient.patient_id}:user:${userId}`,
         );
       }
 
@@ -368,78 +357,6 @@ exports.createPatientProfile = async ({
     throw error;
   }
 };
-exports.createPatientMedicalInfo = async ({
-  userId,
-  height,
-  weight,
-  allergies,
-  isDisabled,
-  disabilityDesc,
-  tobaccoIntake,
-  tobaccoIntakeFreq,
-  alcoholIntake,
-  alcoholIntakeFreq,
-  caffineIntake,
-  caffineIntakeFreq,
-}) => {
-  try {
-    const { patient_id: patientId } = await repo.getPatientByUserId(userId);
-    if (!patientId) {
-      logger.warn(
-        `Patient Profile Does not exist for User ID: ${userId}. Patient ID: ${patientId}`,
-      );
-      return Response.BAD_REQUEST({
-        message: "Patient Profile Does not exist for the logged in user",
-      });
-    }
-
-    const medicalInfoExist =
-      await repo.getPatientMedicalInfoByPatientId(patientId);
-    if (medicalInfoExist) {
-      logger.warn(
-        `Medical Information already exists for Patient ID: ${patientId}. User ID: ${userId}`,
-      );
-      return Response.BAD_REQUEST({
-        message:
-          "Medical Information Already Exist for the current user. Please update",
-      });
-    }
-
-    const { insertId } = await repo.createPatientMedicalInfo({
-      patientId,
-      height,
-      weight,
-      allergies,
-      isDisabled,
-      disabilityDesc,
-      tobaccoIntake,
-      tobaccoIntakeFreq,
-      alcoholIntake,
-      alcoholIntakeFreq,
-      caffineIntake,
-      caffineIntakeFreq,
-    });
-
-    if (!insertId) {
-      logger.error(
-        `Failed to create Patient Medical Info for Patient ID: ${patientId}. Insert ID: ${insertId}`,
-      );
-      return Response.BAD_REQUEST({
-        message: "Failed to create Patient Medical Info. Try again",
-      });
-    }
-
-    await redisClient.delete(`patient:${patientId}:*`);
-    await redisClient.clearCacheByPattern(`patients:${patientId}:*`);
-
-    return Response.CREATED({
-      message: "Patient Medical Info Created Successfully.",
-    });
-  } catch (error) {
-    logger.error("createPatientMedicalInfo: ", error);
-    throw error;
-  }
-};
 
 exports.updatePatientProfile = async ({
   userId,
@@ -450,26 +367,20 @@ exports.updatePatientProfile = async ({
   dateOfBirth,
 }) => {
   try {
-    const { user_type: userType } = await getUserById(userId);
     const { patient_id: patientId } = await repo.getPatientByUserId(userId);
-
-    if (userType !== USERTYPE.PATIENT) {
-      logger.warn(
-        `Unauthorized action for user ID: ${userId}. User Type: ${userType}`,
-      );
-      return Response.UNAUTHORIZED({
-        message:
-          "Unauthorized action, you must register as a pateint to update a pateient profile",
-      });
-    }
 
     const formattedDate = moment(dateOfBirth).format("YYYY-MM-DD");
 
+    // encrypt Patient Data
+    const encryptedFirstName = encryptText(firstName);
+    const encryptedLastName = encryptText(lastName);
+    const encryptedMiddleName = encryptText(middleName);
+
     const { affectedRows } = await repo.updatePatientById({
       patientId,
-      firstName,
-      middleName,
-      lastName,
+      firstName: encryptedFirstName,
+      middleName: encryptedMiddleName,
+      lastName: encryptedLastName,
       gender,
       dateOfBirth: formattedDate,
     });
@@ -483,6 +394,9 @@ exports.updatePatientProfile = async ({
 
     await redisClient.delete(`patient:${patientId}:*`);
     await redisClient.clearCacheByPattern(`patients:${patientId}:*`);
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:user:${userId}`,
+    );
 
     return Response.SUCCESS({
       message: "Patient profile updated successfully.",
@@ -499,7 +413,7 @@ exports.updatePatientProfilePicture = async ({ userId, file }) => {
         message: "No file provided for upload",
       });
     }
-    const { profile_pic_url: oldProfilePicUrl } =
+    const { profile_pic_url: oldProfilePicUrl, patient_id: patientId } =
       await repo.getPatientByUserId(userId);
 
     let imageUrl = null;
@@ -541,8 +455,11 @@ exports.updatePatientProfilePicture = async ({ userId, file }) => {
       }
     }
 
-    await redisClient.clearCacheByPattern("patient:*");
-    await redisClient.clearCacheByPattern("patients:*");
+    await redisClient.delete(`patient:${patientId}:*`);
+    await redisClient.clearCacheByPattern(`patients:${patientId}:*`);
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:user:${userId}`,
+    );
 
     return Response.SUCCESS({
       message: "Patient's profile picture updated successfully.",

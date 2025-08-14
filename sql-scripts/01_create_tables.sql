@@ -982,17 +982,19 @@ CREATE TABLE IF NOT EXISTS `faqs` (
 
 
 
--- future updates
+CREATE TABLE IF NOT EXISTS feature_flags (
+    flag_id INT PRIMARY KEY AUTO_INCREMENT,
+    flag_name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    is_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    rollout_percentage INT DEFAULT 100 CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
--- CREATE TABLE IF NOT EXISTS feature_flags (
---     flag_id INT PRIMARY KEY AUTO_INCREMENT,
---     flag_name VARCHAR(100) UNIQUE NOT NULL,
---     description TEXT,
---     is_enabled TINYINT(1) NOT NULL DEFAULT 0,
---     rollout_percentage INT DEFAULT 100 CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100),
---     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
--- );
+-- ALTER TABLE `patient_medical_history`
+-- MODIFY COLUMN `height` VARCHAR(20) DEFAULT NULL,
+-- MODIFY COLUMN `weight` VARCHAR(20) DEFAULT NULL;
 
 -- CREATE TABLE user_devices (
 --     device_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -1006,3 +1008,190 @@ CREATE TABLE IF NOT EXISTS `faqs` (
 --     CONSTRAINT unique_user_device UNIQUE (user_id, device_token),
 --     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 -- );
+
+-- CREATE TABLE medicine_categories (
+--     category_id INT AUTO_INCREMENT PRIMARY KEY,
+--     category_name VARCHAR(100) NOT NULL UNIQUE,
+--     description TEXT,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+
+-- -- Centralized phone number management for users, admin, doctors, patient, pharmacies, etc.
+-- CREATE TABLE phone_numbers (
+--     phone_id INT AUTO_INCREMENT PRIMARY KEY,
+--     country_code VARCHAR(10) NOT NULL,
+--     number VARCHAR(20) NOT NULL UNIQUE,
+--     is_verified BOOLEAN DEFAULT FALSE,
+--     verified_at TIMESTAMP NULL,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+
+-- CREATE TABLE countries (
+--     country_id INT AUTO_INCREMENT PRIMARY KEY,
+--     country_name VARCHAR(100) NOT NULL UNIQUE,
+--     country_code_iso CHAR(3) UNIQUE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+
+-- -- Centralized address management for pharmacies, users, patients, etc.
+-- CREATE TABLE addresses (
+--     address_id INT AUTO_INCREMENT PRIMARY KEY,
+--     street_address VARCHAR(255) NOT NULL,
+--     city VARCHAR(100) NOT NULL,
+--     state_province VARCHAR(100),
+--     zip_code VARCHAR(20),
+--     country_id INT NOT NULL DEFAULT (SELECT country_id FROM countries WHERE country_code_iso = 'SL'), -- Default to Sierra Leone
+--     latitude DECIMAL(10, 8), -- Optional: for geo-location
+--     longitude DECIMAL(11, 8), -- Optional: for geo-location
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     FOREIGN KEY (country_id) REFERENCES countries(country_id)
+-- );
+
+-- PHARMACY MANAGEMENT DATABASE SCHEMA
+
+-- -- Table: pharmacy
+-- CREATE TABLE pharmacies (
+--     pharmacy_id INT AUTO_INCREMENT PRIMARY KEY,
+--     name VARCHAR(100) NOT NULL,
+--     address_id INT, -- Foreign key to centralized addresses table
+--     contact_phone_id INT,
+--     email VARCHAR(100),
+--     registration_number VARCHAR(100) UNIQUE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     FOREIGN KEY (address_id) REFERENCES addresses(address_id),
+--     FOREIGN KEY (contact_phone_id) REFERENCES phone_numbers(phone_id)
+-- );
+
+-- -- Stores detailed operating hours for each pharmacy
+-- CREATE TABLE pharmacy_operating_hours (
+--     hours_id INT AUTO_INCREMENT PRIMARY KEY,
+--     pharmacy_id INT NOT NULL,
+--     day_of_week ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,
+--     open_time TIME,
+--     close_time TIME,
+--     is_closed BOOLEAN DEFAULT FALSE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     FOREIGN KEY (pharmacy_id) REFERENCES pharmacies(pharmacy_id),
+--     UNIQUE (pharmacy_id, day_of_week) -- Each pharmacy has one entry per day
+-- );
+
+-- -- Table: medicine_types
+-- CREATE TABLE medicine_types (
+--     type_id INT AUTO_INCREMENT PRIMARY KEY,
+--     type_name VARCHAR(100) NOT NULL UNIQUE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+
+-- -- Table: medicine
+-- CREATE TABLE medicine (
+--     medicine_id INT AUTO_INCREMENT PRIMARY KEY,
+--     pharmacy_id INT NOT NULL,
+--     name VARCHAR(100) NOT NULL,
+--     generic_name VARCHAR(100),
+--     brand_name VARCHAR(100),
+--     description TEXT,
+--     medicine_images JSON, -- stores array of image URLs
+--     medicine_type_id INT,
+--     medicine_strength VARCHAR(50),
+--     strength_unit VARCHAR(20),
+--     medicine_shape VARCHAR(50),
+--     medicine_color VARCHAR(50),
+--     mfg_date DATE,
+--     manufacturer_details TEXT,
+--     unit_price DECIMAL(10, 2),
+--     expiry_date DATE,
+--     is_discounted BOOLEAN DEFAULT FALSE,
+--     discount_percentage DECIMAL(5, 2),
+--     discount_price DECIMAL(10, 2),
+--     batch_number VARCHAR(100),
+--     storage_requirement TEXT,
+--     side_effects TEXT,
+--     category ENUM('pain_reliever', 'antibiotics', 'antihistamine'),
+--     is_prescription_required BOOLEAN DEFAULT FALSE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     FOREIGN KEY (pharmacy_id) REFERENCES pharmacy(pharmacy_id),
+--     FOREIGN KEY (medicine_type_id) REFERENCES medicine_types(type_id)
+-- );
+
+-- -- Table: medicine_stocks
+-- CREATE TABLE medicine_stocks (
+--     stock_id INT AUTO_INCREMENT PRIMARY KEY,
+--     medicine_id INT NOT NULL,
+--     quantity INT NOT NULL,
+--     notification_qty INT DEFAULT 10,
+--     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     FOREIGN KEY (medicine_id) REFERENCES medicine(medicine_id)
+-- );
+
+-- -- Table: pharmacy_prescriptions
+-- CREATE TABLE pharmacy_prescriptions (
+--     prescription_id INT AUTO_INCREMENT PRIMARY KEY,
+--     pharmacy_id INT NOT NULL,
+--     appointment_id INT, -- assumed to reference appointments table
+--     date_dispensed DATE,
+--     dispensed_by VARCHAR(100),
+--     status ENUM('pending', 'fulfilled', 'canceled') DEFAULT 'pending',
+--     comments TEXT,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     FOREIGN KEY (pharmacy_id) REFERENCES pharmacy(pharmacy_id)
+-- );
+
+-- -- Table: pharmacy_prescription_dispatch
+-- CREATE TABLE pharmacy_prescription_dispatch (
+--     dispatch_id INT AUTO_INCREMENT PRIMARY KEY,
+--     prescription_id INT NOT NULL,
+--     dispatcher_id INT, -- references a user/operator
+--     dispatch_status ENUM('dispatched', 'in_transit', 'delivered', 'failed') DEFAULT 'dispatched',
+--     dispatched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (prescription_id) REFERENCES pharmacy_prescriptions(prescription_id)
+-- );
+
+-- -- Table: pharmacy_operators
+-- CREATE TABLE pharmacy_operators (
+--     operator_id INT AUTO_INCREMENT PRIMARY KEY,
+--     pharmacy_id INT NOT NULL,
+--     full_name VARCHAR(100),
+--     username VARCHAR(50) UNIQUE NOT NULL,
+--     password VARCHAR(255) NOT NULL,
+--     email VARCHAR(100),
+--     phone_number VARCHAR(20),
+--     role ENUM('admin', 'staff') DEFAULT 'staff',
+--     last_login TIMESTAMP NULL,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (pharmacy_id) REFERENCES pharmacy(pharmacy_id)
+-- );
+
+-- -- Table: pharmacy_operator_permissions
+-- CREATE TABLE pharmacy_operator_permissions (
+--     permission_id INT AUTO_INCREMENT PRIMARY KEY,
+--     role ENUM('admin', 'staff') UNIQUE,
+--     can_add_medicine BOOLEAN DEFAULT FALSE,
+--     can_update_medicine BOOLEAN DEFAULT FALSE,
+--     can_dispense_prescriptions BOOLEAN DEFAULT FALSE,
+--     can_manage_pharmacy BOOLEAN DEFAULT FALSE,
+--     can_view_logs BOOLEAN DEFAULT FALSE
+-- );
+
+-- -- Table: pharmacy_activity_log
+-- CREATE TABLE pharmacy_activity_log (
+--     log_id INT AUTO_INCREMENT PRIMARY KEY,
+--     operator_id INT NOT NULL,
+--     pharmacy_id INT NOT NULL,
+--     activity_type VARCHAR(100),
+--     activity_details TEXT,
+--     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     ip_address VARCHAR(45),
+--     FOREIGN KEY (operator_id) REFERENCES pharmacy_operators(operator_id),
+--     FOREIGN KEY (pharmacy_id) REFERENCES pharmacy(pharmacy_id)
+-- );
+
+-- Optional: triggers or constraints to ensure referential integrity and business rules can be added as needed.

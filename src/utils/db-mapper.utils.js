@@ -113,17 +113,22 @@ exports.mapAdminAppointmentRow = (appointments) => {
     postponed_by: postponedBy,
     created_at: createAt,
   } = appointments;
+  const patientFirstName = decryptText(firstName);
+  const patientLastName = decryptText(lastName);
+  const patientDecryptedSymptoms = decryptText(patientSymptoms);
   return {
     appointmentId,
     appointmentUUID,
     patient,
-    username: `${firstName} ${lastName}`,
+    username: `${patientFirstName} ${patientLastName}`,
     doctorId,
     doctor: `Dr. ${doctorFirstName} ${doctorLastName}`,
     appointmentType,
     patientNameOnPrescription,
     patientMobileNumber,
-    patientSymptoms,
+    patientSymptoms: patientDecryptedSymptoms
+      ? he.decode(patientDecryptedSymptoms)
+      : null,
     consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
     specialty,
     timeSlot,
@@ -455,19 +460,27 @@ exports.mapDoctorAppointmentRow = (doctorAppointment, title) => {
     payment_status: paymentStatus,
     transactionId: paymentTransactionId,
   } = doctorAppointment;
+  const patientFirstName = decryptText(firstName);
+  const patientLastName = decryptText(lastName);
+  const patientDecryptedSymptoms = decryptText(patientSymptoms);
+  const decryptedPatientNameOnPrescription = decryptText(
+    patientNameOnPrescription,
+  );
   return {
     appointmentId,
     appointmentUUID,
     patient,
-    username: `${firstName} ${lastName}`,
+    username: `${patientFirstName} ${patientLastName}`,
     doctorId,
     doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
     appointmentDate,
     appointmentTime,
     appointmentType,
-    patientNameOnPrescription,
+    patientNameOnPrescription: decryptedPatientNameOnPrescription,
     patientMobileNumber,
-    patientSymptoms,
+    patientSymptoms: patientDecryptedSymptoms
+      ? he.decode(patientDecryptedSymptoms)
+      : null,
     consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
     specialty,
     timeSlot,
@@ -598,13 +611,15 @@ exports.mapDoctorSharedMedicalDocs = async (
     note,
     created_at: createdAt,
   } = docs;
+  const decryptedPatientFirstName = decryptText(patientFirstName);
+  const decryptedPatientLastName = decryptText(patientLastName);
   const mapped = {
     sharingId,
     documentId,
     documentUUID,
     documentTitle,
     patientId,
-    patientName: `${patientFirstName} ${patientLastName}`,
+    patientName: `${decryptedPatientFirstName} ${decryptedPatientLastName}`,
     doctorName: `${title} ${doctorFirstName} ${doctorLastName}`,
     note,
     createdAt,
@@ -653,20 +668,28 @@ exports.mapPatientAppointments = (appointment) => {
     payment_status: paymentStatus,
     transactionId: paymentTransactionId,
   } = appointment;
+  const patientFirstName = decryptText(firstName);
+  const patientLastName = decryptText(lastName);
+  const patientDecryptedSymptoms = decryptText(patientSymptoms);
+  const decryptedPatientNameOnPrescription = decryptText(
+    patientNameOnPrescription,
+  );
   return {
     appointmentId,
     appointmentUUID,
     patient,
-    username: `${firstName} ${lastName}`,
+    username: `${patientFirstName} ${patientLastName}`,
     gender,
     doctorId,
     doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
     appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
     appointmentTime,
     appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
-    patientNameOnPrescription,
+    patientNameOnPrescription: decryptedPatientNameOnPrescription,
     patientMobileNumber,
-    patientSymptoms,
+    patientSymptoms: patientDecryptedSymptoms
+      ? he.decode(patientDecryptedSymptoms)
+      : null,
     consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
     specialtyId,
     specialty,
@@ -896,20 +919,28 @@ exports.mapPatientAppointment = (appointment) => {
     payment_status: paymentStatus,
     transactionId: paymentTransactionId,
   } = appointment;
+  const patientFirstName = decryptText(firstName);
+  const patientLastName = decryptText(lastName);
+  const patientDecryptedSymptoms = decryptText(patientSymptoms);
+  const decryptedPatientNameOnPrescription = decryptText(
+    patientNameOnPrescription,
+  );
   return {
     appointmentId,
     appointmentUUID,
     patient,
-    username: `${firstName} ${lastName}`,
+    username: `${patientFirstName} ${patientLastName}`,
     gender,
     doctorId,
     doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
     appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
     appointmentTime,
     appointmentType: appointmentType.split("_").join(" ").toUpperCase(),
-    patientNameOnPrescription,
+    patientNameOnPrescription: decryptedPatientNameOnPrescription,
     patientMobileNumber,
-    patientSymptoms,
+    patientSymptoms: patientDecryptedSymptoms
+      ? he.decode(patientDecryptedSymptoms)
+      : null,
     consultationFees: `SLE ${parseInt(consultationFees, 10)}`,
     specialtyId,
     specialty,
@@ -951,9 +982,11 @@ exports.mapTestimonialRow = async (testimonial, includeImageUrl = false) => {
   } else {
     imageData = await getFileUrlFromS3Bucket(patientPic);
   }
+  const patientFirstName = decryptText(firstName);
+  const patientLastName = decryptText(lastName);
   return {
     testimonialId,
-    patientName: `${firstName} ${lastName}`,
+    patientName: `${patientFirstName} ${patientLastName}`,
     patientPic: imageData,
     content,
     isActive,
@@ -1061,14 +1094,15 @@ exports.mapPatientMedicalDocumentRow = async (
     note,
     created_at: createdAt,
   } = document;
-
+  const decryptedPatientFirstName = decryptText(patientFirstName);
+  const decryptedPatientLastName = decryptText(patientLastName);
   const mapped = {
     sharingId,
     documentId,
     documentUUID,
     documentTitle,
     patientId,
-    patientName: `${patientFirstName} ${patientLastName}`,
+    patientName: `${decryptedPatientFirstName} ${decryptedPatientLastName}`,
     doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
     note,
     createdAt,
@@ -1126,9 +1160,9 @@ exports.mapPatientRow = async (patient) => {
   return {
     patientId,
     title,
-    firstName,
-    middleName,
-    lastName,
+    firstName: decryptText(firstName),
+    middleName: decryptText(middleName),
+    lastName: decryptText(lastName),
     gender,
     profilePic: imageUrl,
     dob: moment(dob).format("YYYY-MM-DD"),
@@ -1304,8 +1338,8 @@ exports.mapDoctorBlog = async (blog) => {
   return {
     blogUuid,
     doctorId,
-    title: he.decode(title || ""),
-    content: he.decode(content || ""),
+    title: title ? he.decode(title) : null,
+    content: content ? he.decode(content) : null,
     status,
     image: imageUrl,
     tags: parsedTags,
@@ -1328,7 +1362,7 @@ exports.mapAppointmentFeedback = (feedbacks) => {
   return {
     feedbackId,
     appointmentId,
-    feedback,
+    feedback: feedback ? he.decode(feedback) : null,
     createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
@@ -1347,13 +1381,14 @@ exports.mapDoctorReview = (reviews, includeApproval = false) => {
     created_at: createdAt,
     updated_at: updatedAt,
   } = reviews;
-
+  const decryptedPatientFirstName = decryptText(patientFirstName);
+  const decryptedPatientLastName = decryptText(patientLastName);
   const mapped = {
     reviewId,
     doctorId,
     doctor: `Dr. ${doctorName}`,
     patientId,
-    patient: `${patientFirstName} ${patientLastName}`,
+    patient: `${decryptedPatientFirstName} ${decryptedPatientLastName}`,
     review,
     createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),

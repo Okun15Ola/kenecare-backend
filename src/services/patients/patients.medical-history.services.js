@@ -102,6 +102,7 @@ exports.createPatientMedicalHistory = async ({
 
     const cacheKey = `patient:${patientId}:medical-history:all`;
     await redisClient.delete(cacheKey);
+    await redisClient.clearCacheByPattern(`patient:${patientId}:*`);
 
     return Response.CREATED({
       message: "Patient Medical Info Created Successfully.",
@@ -164,6 +165,7 @@ exports.updatePatientMedicalHistory = async ({
 
     const cacheKey = `patient:${patientId}:medical-history:all`;
     await redisClient.delete(cacheKey);
+    await redisClient.clearCacheByPattern(`patient:${patientId}:*`);
 
     return Response.SUCCESS({
       message: "Patient Medical Info Updated Successfully.",

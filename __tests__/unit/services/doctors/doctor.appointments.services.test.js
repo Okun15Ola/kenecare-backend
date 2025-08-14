@@ -13,9 +13,10 @@ const redisConfig = require("../../../../src/config/redis.config");
 const enumUtils = require("../../../../src/utils/enum.utils");
 const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const cachingUtils = require("../../../../src/utils/caching.utils");
+const authUtils = require("../../../../src/utils/auth.utils");
 
 jest.mock("../../../../src/utils/caching.utils");
-
+jest.mock("../../../../src/utils/auth.utils");
 jest.mock("../../../../src/repository/doctorAppointments.repository");
 jest.mock("../../../../src/repository/doctors.repository");
 jest.mock("../../../../src/repository/users.repository");
@@ -308,6 +309,7 @@ describe("doctor.appointments.services", () => {
         affectedRows: 1,
         changedRows: 1,
       });
+      authUtils.encryptText.mockReturnValue("enc");
       patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
       smsUtils.appointmentApprovalSms.mockResolvedValue();
       Response.SUCCESS.mockReturnValue({ status: "success", statusCode: 200 });
@@ -428,6 +430,7 @@ describe("doctor.appointments.services", () => {
         first_name: "Pat",
         last_name: "Ient",
       });
+      authUtils.encryptText.mockReturnValue("enc");
       patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
       dbObject.updateDoctorAppointmentEndTime.mockResolvedValue();
       smsUtils.appointmentEndedSms.mockResolvedValue();
@@ -620,6 +623,7 @@ describe("doctor.appointments.services", () => {
         doctor_first_name: "Doc",
         doctor_last_name: "Tor",
       });
+      authUtils.encryptText.mockReturnValue("enc");
       dbObject.getDoctorAppointByDateAndTime.mockResolvedValue(false);
       patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
       dbObject.postponeDoctorAppointmentById.mockResolvedValue({

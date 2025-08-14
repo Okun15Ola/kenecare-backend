@@ -8,6 +8,7 @@ const smsUtils = require("../../../../src/utils/sms.utils");
 const { redisClient } = require("../../../../src/config/redis.config");
 const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const logger = require("../../../../src/middlewares/logger.middleware");
+const authUtils = require("../../../../src/utils/auth.utils");
 
 jest.mock("../../../../src/repository/doctorAppointments.repository");
 jest.mock("../../../../src/repository/doctors.repository");
@@ -25,6 +26,7 @@ jest.mock("../../../../src/config/redis.config", () => ({
 }));
 jest.mock("../../../../src/utils/db-mapper.utils");
 jest.mock("../../../../src/middlewares/logger.middleware");
+jest.mock("../../../../src/utils/auth.utils");
 
 describe("follow-ups.services", () => {
   beforeAll(() => {
@@ -133,6 +135,7 @@ describe("follow-ups.services", () => {
         patient_id: 3,
         patient_name_on_prescription: "Jane Doe",
       });
+      authUtils.encryptText.mockReturnValue("enc");
       patientsRepo.getPatientById.mockResolvedValue({
         mobile_number: "1234567890",
       });
