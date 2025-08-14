@@ -468,7 +468,7 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
   }
 };
 
-exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
+exports.endDoctorAppointment = async ({ userId, appointmentUuid }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
     if (!doctor) {
@@ -483,14 +483,14 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       last_name: doctorLastName,
     } = doctor;
     // Get doctor's appointment by ID
-    const appointment = await dbObject.getDoctorAppointmentById({
+    const appointment = await dbObject.getDoctorAppointmentByUuid({
       doctorId,
-      appointmentId,
+      appointmentUuid,
     });
 
     // Check if the appointment exists
     if (!appointment) {
-      logger.warn("Appointment not found for appointmentId:", appointmentId);
+      logger.warn("Appointment not found for appointmentId:", appointmentUuid);
       return Response.NOT_FOUND({
         message: "Appointment Not Found! Please Try Again!",
       });
@@ -503,12 +503,13 @@ exports.endDoctorAppointment = async ({ userId, appointmentId }) => {
       last_name: lastName,
       appointment_status: appointmentStatus,
       appointment_uuid: appointmentUUID,
+      appointment_id: appointmentId,
     } = appointment;
 
     if (appointmentStatus === "completed") {
       logger.warn(
         "Appointment already completed for appointmentId:",
-        appointmentId,
+        appointmentUUID,
       );
       return Response.NOT_MODIFIED();
     }

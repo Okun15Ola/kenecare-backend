@@ -136,11 +136,11 @@ exports.StartDoctorAppointmentController = async (req, res, next) => {
 exports.EndDoctorAppointmentController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const appointmentId = parseInt(req.params.id, 10);
+    const appointmentUuid = req.params.id;
 
     const response = await endDoctorAppointment({
       userId,
-      appointmentId,
+      appointmentUuid,
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {

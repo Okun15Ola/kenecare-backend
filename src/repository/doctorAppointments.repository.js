@@ -38,6 +38,13 @@ exports.getDoctorAppointmentById = async ({ doctorId, appointmentId }) => {
   ]);
   return row[0];
 };
+exports.getDoctorAppointmentByUuid = async ({ doctorId, appointmentUuid }) => {
+  const row = await query(queries.GET_DOCTOR_APPOINTMENT_BY_UUID, [
+    doctorId,
+    appointmentUuid,
+  ]);
+  return row[0];
+};
 
 exports.getAppointmentById = async (appointmentId) => {
   const row = await query(queries.GET_APPOINTMENT_BY_ID, [appointmentId]);
