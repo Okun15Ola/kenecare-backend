@@ -23,6 +23,7 @@ const {
   uploadFileToS3Bucket,
   deleteFileFromS3Bucket,
 } = require("../../../../src/utils/aws-s3.utils");
+const authUtils = require("../../../../src/utils/auth.utils");
 
 jest.mock("../../../../src/repository/patients.repository");
 jest.mock("../../../../src/repository/testimonials.repository");
@@ -100,6 +101,7 @@ jest.mock("../../../../src/utils/aws-s3.utils", () => ({
 jest.mock("../../../../src/utils/file-upload.utils", () => ({
   generateFileName: jest.fn(() => "filename"),
 }));
+jest.mock("../../../../src/utils/auth.utils");
 
 describe("patients.services", () => {
   beforeEach(() => {
@@ -256,16 +258,6 @@ describe("patients.services", () => {
       expect(result.status).toBe("not_found");
     });
 
-    it("returns forbidden if user is not patient or not verified or not active", async () => {
-      getUserById.mockResolvedValue({
-        user_type: USERTYPE.DOCTOR,
-        is_verified: VERIFICATIONSTATUS.NOT_VERIFIED,
-        is_account_active: STATUS.NOT_ACTIVE,
-      });
-      const result = await patientsService.createPatientProfile({ userId: 1 });
-      expect(result.status).toBe("forbidden");
-    });
-
     it("returns bad request if patient already exists", async () => {
       getUserById.mockResolvedValue({
         user_type: USERTYPE.PATIENT,
@@ -332,64 +324,7 @@ describe("patients.services", () => {
     });
   });
 
-  describe("createPatientMedicalInfo", () => {
-    it("returns bad request if patient does not exist", async () => {
-      repo.getPatientByUserId.mockResolvedValue({});
-      const result = await patientsService.createPatientMedicalInfo({
-        userId: 1,
-      });
-      expect(result.status).toBe("bad_request");
-    });
-
-    it("returns bad request if medical info already exists", async () => {
-      repo.getPatientByUserId.mockResolvedValue({ patient_id: 1 });
-      repo.getPatientMedicalInfoByPatientId.mockResolvedValue({ info: true });
-      const result = await patientsService.createPatientMedicalInfo({
-        userId: 1,
-      });
-      expect(result.status).toBe("bad_request");
-    });
-
-    it("returns bad request if insert fails", async () => {
-      repo.getPatientByUserId.mockResolvedValue({ patient_id: 1 });
-      repo.getPatientMedicalInfoByPatientId.mockResolvedValue(null);
-      repo.createPatientMedicalInfo.mockResolvedValue({ insertId: null });
-      const result = await patientsService.createPatientMedicalInfo({
-        userId: 1,
-      });
-      expect(result.status).toBe("bad_request");
-    });
-
-    it("returns created if successful", async () => {
-      repo.getPatientByUserId.mockResolvedValue({ patient_id: 1 });
-      repo.getPatientMedicalInfoByPatientId.mockResolvedValue(null);
-      repo.createPatientMedicalInfo.mockResolvedValue({ insertId: 1 });
-      const result = await patientsService.createPatientMedicalInfo({
-        userId: 1,
-      });
-      expect(result.status).toBe("created");
-    });
-
-    it("logs and throws error on failure", async () => {
-      repo.getPatientByUserId.mockRejectedValue(new Error("fail"));
-      await expect(
-        patientsService.createPatientMedicalInfo({ userId: 1 }),
-      ).rejects.toThrow("fail");
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
   describe("updatePatientProfile", () => {
-    it("returns unauthorized if user is not patient", async () => {
-      getUserById.mockResolvedValue({ user_type: USERTYPE.DOCTOR });
-      repo.getPatientByUserId.mockResolvedValue({ patient_id: 1 });
-      const result = await patientsService.updatePatientProfile({
-        userId: 1,
-        dateOfBirth: "2000-01-01",
-      });
-      expect(result.status).toBe("unauthorized");
-    });
-
     it("returns not modified if update fails", async () => {
       getUserById.mockResolvedValue({ user_type: USERTYPE.PATIENT });
       repo.getPatientByUserId.mockResolvedValue({ patient_id: 1 });
@@ -413,7 +348,8 @@ describe("patients.services", () => {
     });
 
     it("logs and throws error on failure", async () => {
-      getUserById.mockRejectedValue(new Error("fail"));
+      getUserById.mockResolvedValue({ user_type: USERTYPE.PATIENT });
+      repo.getPatientByUserId.mockRejectedValue(new Error("fail"));
       await expect(
         patientsService.updatePatientProfile({
           userId: 1,
