@@ -1,5 +1,5 @@
-require("newrelic");
 require("dotenv").config();
+require("newrelic");
 require("module-alias/register");
 const express = require("express");
 const cors = require("cors");
