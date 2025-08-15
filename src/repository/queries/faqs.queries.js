@@ -1,18 +1,62 @@
 module.exports = {
-  GET_ALL_FAQS: "SELECT * FROM blogs",
-  GET_FAQ_BY_ID: "SELECT * FROM blogs WHERE blog_id = ? LIMIT 1;",
   CREATE_FAQ: `
-    INSERT INTO blogs (blog_category_id, title, description, image, tags, is_featured, inputted_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?);
+    INSERT INTO faqs (faq_uuid, question, answer, category, is_published)
+    VALUES (?, ?, ?, ?, ?)
   `,
-  UPDATE_FAQ_BY_ID: `
-    UPDATE blogs SET blog_category_id = ?, title = ?, description = ?, image = ?, tags = ?, is_featured = ?
-    WHERE blog_id = ?;
+
+  GET_ALL_FAQS: `
+    SELECT faq_id, faq_uuid, question, answer, category, is_published, created_at, updated_at
+    FROM faqs
+    ORDER BY created_at DESC
   `,
-  UPDATE_FAQ_STATUS_BY_ID: `
-    UPDATE blogs SET is_active = ? WHERE blog_id = ?;
+
+  COUNT_FAQ: `
+    SELECT COUNT(*) AS totalRows FROM faqs;
   `,
-  DELETE_FAQ_BY_ID: `
-    DELETE FROM blogs WHERE blog_id = ?;
+
+  GET_PUBLISHED_FAQS: `
+    SELECT faq_id, faq_uuid, question, answer, category, is_published, created_at, updated_at
+    FROM faqs
+    WHERE is_published = 1
+    ORDER BY created_at DESC
+  `,
+
+  COUNT_PUBLISHED_FAQ: `
+    SELECT COUNT(*) AS totalRows FROM faqs WHERE is_published = 1;
+  `,
+
+  GET_FAQ_BY_ID: `
+    SELECT faq_id, faq_uuid, question, answer, category, is_published, created_at, updated_at
+    FROM faqs
+    WHERE faq_id = ?
+  `,
+
+  GET_FAQ_BY_UUID: `
+    SELECT faq_id, faq_uuid, question, answer, category, is_published, created_at, updated_at
+    FROM faqs
+    WHERE faq_uuid = ?
+  `,
+
+  UPDATE_FAQ: `
+    UPDATE faqs
+    SET question = ?, answer = ?, category = ?, is_published = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE faq_uuid = ?
+  `,
+
+  DELETE_FAQ: `
+    DELETE FROM faqs
+    WHERE faq_uuid = ?
+  `,
+
+  PUBLISH_FAQ: `
+    UPDATE faqs
+    SET is_published = 1, updated_at = CURRENT_TIMESTAMP
+    WHERE faq_uuid = ?
+  `,
+
+  UNPUBLISH_FAQ: `
+    UPDATE faqs
+    SET is_published = 0, updated_at = CURRENT_TIMESTAMP
+    WHERE faq_uuid = ?
   `,
 };

@@ -973,28 +973,47 @@ CREATE TABLE IF NOT EXISTS `faqs` (
     `faq_uuid` CHAR(36) NOT NULL UNIQUE,
     `question` VARCHAR(500) NOT NULL,
     `answer` TEXT NOT NULL,
-    -- category VARCHAR(100),
+    `category` VARCHAR(100),
     `is_published` TINYINT(1) DEFAULT 0,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-ALTER TABLE `appointment_prescriptions` DROP COLUMN `access_token`;
-ALTER TABLE `appointment_prescriptions` DROP COLUMN `access_jwt`;
+-- ALTER TABLE `appointment_prescriptions` DROP COLUMN `access_token`;
+-- ALTER TABLE `appointment_prescriptions` DROP COLUMN `access_jwt`;
+
+ALTER TABLE `users`
+ADD COLUMN `last_seen_at` timestamp NULL DEFAULT NULL AFTER `is_online`;
+
+ALTER TABLE `doctor_feedbacks`
+ADD UNIQUE KEY `uq_patient_doctor_feedback` (`patient_id`, `doctor_id`);
+
+ALTER TABLE `appointment_feedbacks`
+ADD UNIQUE KEY `uq_appointment_id_appointment_feedbacks` (`appointment_id`);
+
+ALTER TABLE `patients_testimonial`
+ADD UNIQUE KEY `uq_patient_testimonial` (`patient_id`);
+
+update users set last_seen_at = NOW() where is_online=1;
 
 -- ALTER TABLE `users` ADD COLUMN `last_used` TIMESTAMP NULL DEFAULT NULL;
 -- ALTER TABLE `users`
 -- ADD `two_factor_secret` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL;
 
-CREATE TABLE IF NOT EXISTS feature_flags (
-    flag_id INT PRIMARY KEY AUTO_INCREMENT,
-    flag_name VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    is_enabled TINYINT(1) NOT NULL DEFAULT 0,
-    rollout_percentage INT DEFAULT 100 CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- CREATE TABLE IF NOT EXISTS feature_flags (
+--     flag_id INT PRIMARY KEY AUTO_INCREMENT,
+--     flag_name VARCHAR(100) UNIQUE NOT NULL,
+--     description TEXT,
+--     is_enabled TINYINT(1) NOT NULL DEFAULT 0,
+--     rollout_percentage INT DEFAULT 100 CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100),
+--     environment ENUM('development', 'staging', 'production') NOT NULL DEFAULT 'production',
+--     target_user_types VARCHAR(100) DEFAULT NULL COMMENT 'Comma-separated list of user_type IDs',
+--     target_rules JSON DEFAULT NULL COMMENT 'Advanced targeting rules in JSON',
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+
+
 
 -- ALTER TABLE `patient_medical_history`
 -- MODIFY COLUMN `height` VARCHAR(20) DEFAULT NULL,

@@ -1,16 +1,11 @@
 const logger = require("../../middlewares/logger.middleware");
+const faqService = require("../../services/admin/faqs.services");
 
 exports.GetFaqsController = async (req, res, next) => {
   try {
-    return res.send("Get FAQ'S");
-  } catch (error) {
-    logger.error(error);
-    return next(error);
-  }
-};
-exports.GetFaqByIdController = async (req, res, next) => {
-  try {
-    return res.send("Get FAQ By ID");
+    const { page, limit } = req.query;
+    const response = await faqService.getFaqs(page, limit);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
     return next(error);
@@ -18,7 +13,14 @@ exports.GetFaqByIdController = async (req, res, next) => {
 };
 exports.CreateFaqController = async (req, res, next) => {
   try {
-    return res.send("Create FAQ'S");
+    const { question, answer, category, isPublished } = req.body;
+    const response = await faqService.createFaq({
+      question,
+      answer,
+      category,
+      isPublished,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
     return next(error);
@@ -27,15 +29,38 @@ exports.CreateFaqController = async (req, res, next) => {
 
 exports.UpdateFaqByIdController = async (req, res, next) => {
   try {
-    return res.send("Get FAQ'S");
+    const { question, answer, category, isPublished } = req.body;
+    const { id } = req.params;
+    const response = await faqService.updateFaq({
+      faqUuid: id,
+      question,
+      answer,
+      category,
+      isPublished,
+    });
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
     return next(error);
   }
 };
-exports.UpdateFaqStatusController = async (req, res, next) => {
+
+exports.PublishFaqController = async (req, res, next) => {
   try {
-    return res.send("Get FAQ'S");
+    const { id } = req.params;
+    const response = await faqService.publishFaq(id);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.UnPublishFaqController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const response = await faqService.unPublishFaq(id);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
     return next(error);
@@ -44,7 +69,9 @@ exports.UpdateFaqStatusController = async (req, res, next) => {
 
 exports.DeleteFaqByIdController = async (req, res, next) => {
   try {
-    return res.sendStatus(200);
+    const { id } = req.params;
+    const response = await faqService.deleteFaq(id);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
     return next(error);

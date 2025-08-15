@@ -1,23 +1,50 @@
 const router = require("express").Router();
-
-const {
-  GetFaqsController,
-  GetFaqByIdController,
-  CreateFaqController,
-  UpdateFaqByIdController,
-  UpdateFaqStatusController,
-  DeleteFaqByIdController,
-} = require("../../../controllers/admin/faqs.controller");
+const faqController = require("../../../controllers/admin/faqs.controller");
 const { adminLimiter } = require("../../../utils/rate-limit.utils");
 const { authenticateAdmin } = require("../../../middlewares/auth.middleware");
+const validation = require("../../../validations/admin/faq.validations");
+const { Validate } = require("../../../validations/validate");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
 
-router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+router.use(authenticateAdmin, adminLimiter);
 
-router.get("/", GetFaqsController);
-router.post("/:id", GetFaqByIdController);
-router.post("/", CreateFaqController);
-router.put("/:id", UpdateFaqByIdController);
-router.patch("/:id/:status", UpdateFaqStatusController);
-router.delete("/:id", DeleteFaqByIdController);
+router.get(
+  "/",
+  paginationValidation,
+  Validate,
+  faqController.GetFaqsController,
+);
+router.post(
+  "/",
+  validation.faqValidation,
+  Validate,
+  faqController.CreateFaqController,
+);
+router.put(
+  "/:id",
+  [...validation.faqIdParamValidation, ...validation.faqValidation],
+  Validate,
+  faqController.UpdateFaqByIdController,
+);
+router.patch(
+  "/:id/publish",
+  validation.faqIdParamValidation,
+  Validate,
+  faqController.PublishFaqController,
+);
+router.patch(
+  "/:id/unpublish",
+  validation.faqIdParamValidation,
+  Validate,
+  faqController.UnPublishFaqController,
+);
+router.delete(
+  "/:id",
+  validation.faqIdParamValidation,
+  Validate,
+  faqController.DeleteFaqByIdController,
+);
 
 module.exports = router;
