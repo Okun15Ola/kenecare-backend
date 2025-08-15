@@ -966,12 +966,10 @@ exports.createTestimonial = async ({ userId, content }) => {
   try {
     const patient = await patientRepository.getPatientByUserId(userId);
 
-    if (patient) {
-      logger.warn(
-        `Patient Profile already exists for user ID: ${userId}. Patient ID: ${patient.patientId}`,
-      );
-      return Response.BAD_REQUEST({
-        message: "Patient Profile already exist for logged in user.",
+    if (!patient) {
+      logger.warn("Patient Not Found");
+      return Response.NOT_FOUND({
+        message: "Patient Not Found.",
       });
     }
     const { patient_id: patientId } = patient;
