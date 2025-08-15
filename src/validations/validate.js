@@ -11,14 +11,20 @@ const Validate = (req, res, next) => {
     if (req.file) {
       deleteFile(req.file?.path);
     }
-    errors = errors.map((error) => ({
+    // Prepare errors for internal logging (includes field)
+    const errorsForLog = errors.map((error) => ({
       field: error.path,
       msg: error.msg,
     }));
-    logger.error("Validation Error: ", errors);
+
+    // Prepare errors for client response (only message)
+    errors = errors.map((error) => ({
+      msg: error.msg,
+    }));
+    logger.error("Validation Error: ", errorsForLog);
 
     if (nodeEnv === "development") {
-      console.error("Validation Error: ", { errors });
+      console.error("Validation Error: ", { errorsForLog });
     }
     return res
       .status(400)
