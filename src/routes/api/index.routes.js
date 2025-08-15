@@ -4,16 +4,16 @@ const { Validate } = require("../../validations/validate");
 const {
   doctorIdValidation,
   doctorPaginationValidation,
-  // patientTestimonialValidation,
+  patientTestimonialValidation,
 } = require("../../validations/index.validations");
 const { limiter } = require("../../utils/rate-limit.utils");
 const {
   paginationValidation,
 } = require("../../validations/pagination.validations");
-// const {
-//   authenticateUser,
-//   authorizePatient,
-// } = require("../../middlewares/auth.middleware");
+const {
+  authenticateUser,
+  authorizePatient,
+} = require("../../middlewares/auth.middleware");
 
 router.get(
   "/doctor-health-blogs/:id",
@@ -97,15 +97,15 @@ router.get(
   Validate,
   IndexController.GetTestimonialsController,
 );
-// router.post(
-//   "/testimonials",
-//   authenticateUser,
-//   authorizePatient,
-//   limiter,
-//   patientTestimonialValidation,
-//   Validate,
-//   IndexController.CreatePatientTestimonialController,
-// );
+router.post(
+  "/testimonials",
+  authenticateUser,
+  authorizePatient,
+  limiter,
+  patientTestimonialValidation,
+  Validate,
+  IndexController.CreatePatientTestimonialController,
+);
 router.get(
   "/common-symptoms",
   limiter,
