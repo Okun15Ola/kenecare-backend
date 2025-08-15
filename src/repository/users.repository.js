@@ -115,6 +115,10 @@ exports.updateUserOnlineStatus = async ({ userId, status }) => {
   return query(queries.UPDATE_USER_ONLINE_STATUS, [status, userId]);
 };
 
+exports.markUserOffline = async () => {
+  return query(queries.UPDATE_INACTIVE_OFFLINE_USERS);
+};
+
 exports.deleteUserById = async (deletedAt, userId) => {
   return query(queries.SOFT_DELETE_USER_BY_ID, [deletedAt, userId]);
 };
