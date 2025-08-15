@@ -12,7 +12,7 @@ if (!ENV_NAME) {
 }
 
 const envFile = `.env.${ENV_NAME}`;
-const envPath = path.resolve(__dirname, envFile);
+const envPath = path.resolve(__dirname, "..", envFile);
 
 if (!fs.existsSync(envPath)) {
   console.error(`❌ ${envFile} not found!`);
@@ -27,12 +27,7 @@ const totalEnvVars = Object.keys(envConfig).length;
 console.log(`📦 Loaded ${totalEnvVars} environment variables from ${envFile}`);
 
 // Read the config file
-const configPath = path.resolve(
-  __dirname,
-  "src",
-  "config",
-  "default.config.js",
-);
+const configPath = path.resolve(__dirname, "config", "default.config.js");
 const configContent = fs.readFileSync(configPath, "utf-8");
 
 // Find all process.env.XXX or env.XXX patterns
