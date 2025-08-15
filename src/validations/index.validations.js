@@ -1,4 +1,5 @@
-const { param, query } = require("express-validator");
+const { param, query, body } = require("express-validator");
+const he = require("he");
 const { getDoctorById } = require("../repository/doctors.repository");
 const { getSpecialtiyById } = require("../repository/specialities.repository");
 const { getCityById } = require("../repository/cities.repository");
@@ -87,4 +88,19 @@ exports.doctorPaginationValidation = [
     )
     .bail()
     .toInt(),
+];
+
+exports.patientTestimonialValidation = [
+  body("content")
+    .notEmpty()
+    .withMessage("Testimonial content is required")
+    .bail()
+    .isLength({ min: 10, max: 450 })
+    .withMessage("Content must be within 10 to 450 characters long.")
+    .bail()
+    .trim()
+    .escape()
+    .customSanitizer((value) => {
+      return he.encode(value);
+    }),
 ];
