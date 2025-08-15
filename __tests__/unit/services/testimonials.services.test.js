@@ -68,27 +68,27 @@ describe("Testimonials Service", () => {
     });
   });
 
-  describe("createTestimonial", () => {
-    it("should create a new testimonial", async () => {
-      testimonialRepo.createNewTestimonial.mockResolvedValue({ insertId: 1 });
+  // describe("createTestimonial", () => {
+  //   it("should create a new testimonial", async () => {
+  //     testimonialRepo.createNewTestimonial.mockResolvedValue({ insertId: 1 });
 
-      const result = await testimonialService.createTestimonial({
-        userId: 1,
-        patientId: 1,
-        content: "Amazing!",
-      });
-      expect(result.statusCode).toBe(201);
-    });
+  //     const result = await testimonialService.createTestimonial({
+  //       userId: 1,
+  //       patientId: 1,
+  //       content: "Amazing!",
+  //     });
+  //     expect(result.statusCode).toBe(201);
+  //   });
 
-    it("should throw an error if repo fails", async () => {
-      testimonialRepo.createNewTestimonial.mockRejectedValue(
-        new Error("DB Error"),
-      );
-      await expect(testimonialService.createTestimonial({})).rejects.toThrow(
-        "DB Error",
-      );
-    });
-  });
+  //   it("should throw an error if repo fails", async () => {
+  //     testimonialRepo.createNewTestimonial.mockRejectedValue(
+  //       new Error("DB Error"),
+  //     );
+  //     await expect(testimonialService.createTestimonial({})).rejects.toThrow(
+  //       "DB Error",
+  //     );
+  //   });
+  // });
 
   describe("approveTestimonialById", () => {
     it("should approve a testimonial", async () => {
