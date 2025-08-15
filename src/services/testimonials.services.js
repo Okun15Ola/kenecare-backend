@@ -77,27 +77,37 @@ exports.getTestimonialById = async (id) => {
   }
 };
 
-exports.createTestimonial = async ({ userId, patientId, content }) => {
-  try {
-    const { insertId } = await repo.createNewTestimonial({
-      patientId,
-      content,
-      inputtedBy: userId,
-    });
+// exports.createTestimonial = async ({ patientId, content }) => {
+//   try {
+//     const { insertId } = await repo.createNewTestimonial({
+//       patientId,
+//       content,
+//     });
 
-    if (!insertId) {
-      logger.warn("Failed to create testimonial");
-      return Response.NOT_MODIFIED({ message: "Testimonial Not Created" });
-    }
+//     if (!insertId) {
+//       logger.warn("Failed to create testimonial");
+//       return Response.NOT_MODIFIED({ message: "Testimonial Not Created" });
+//     }
 
-    await redisClient.clearCacheByPattern("testimonials:*");
+//     await redisClient.clearCacheByPattern("testimonials:*");
 
-    return Response.CREATED({ message: "Testimonial Created Successfully" });
-  } catch (error) {
-    logger.error("createTestimonial: ", error);
-    throw error;
-  }
-};
+//     return Response.CREATED({ message: "Testimonial Created Successfully" });
+//   } catch (error) {
+//     if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
+//       console.error(
+//         `Testimonial submission failed: Duplicate entry for patient ${patientId}.`,
+//       );
+//       logger.error(
+//         `Testimonial submission failed: Duplicate entry for patient ${patientId}.`,
+//       );
+//       return Response.CONFLICT({
+//         message: "You have already submitted a testimonial",
+//       });
+//     }
+//     logger.error("createTestimonial: ", error);
+//     throw error;
+//   }
+// };
 
 exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
   try {

@@ -2,7 +2,6 @@ const logger = require("../../middlewares/logger.middleware");
 const {
   getTestimonials,
   getTestimonialById,
-  createTestimonial,
   approveTestimonialById,
   denyTestimonialById,
 } = require("../../services/testimonials.services");
@@ -56,31 +55,6 @@ exports.DenyTestimonialController = async (req, res, next) => {
     return next(error);
   }
 };
-exports.CreateTestimonialController = async (req, res, next) => {
-  try {
-    const userId = parseInt(req.user.id, 10);
-    const { patientId, content } = req.body;
-    const response = await createTestimonial({
-      userId,
-      patientId,
-      content,
-    });
-    return res.status(response.statusCode).json(response);
-  } catch (error) {
-    logger.error(error);
-    return next(error);
-  }
-};
-
-exports.UpdateTestimonialByIdController = async (req, res, next) => {
-  try {
-    return res.sendStatus(200);
-  } catch (error) {
-    logger.error(error);
-    return next(error);
-  }
-};
-
 exports.DeleteTestimonialByIdController = async (req, res, next) => {
   try {
     return res.sendStatus(200);

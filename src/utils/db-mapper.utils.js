@@ -988,7 +988,7 @@ exports.mapTestimonialRow = async (testimonial, includeImageUrl = false) => {
     testimonialId,
     patientName: `${patientFirstName} ${patientLastName}`,
     patientPic: imageData,
-    content,
+    content: he.decode(content),
     isActive,
     isApproved,
     approvedBy,
