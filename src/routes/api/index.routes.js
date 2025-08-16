@@ -113,5 +113,11 @@ router.get(
   Validate,
   IndexController.GetCommonSymptomsController,
 );
+router.get(
+  "/features/:name/available",
+  authenticateUser,
+  limiter,
+  IndexController.CheckUserFeatureController,
+);
 
 module.exports = router;
