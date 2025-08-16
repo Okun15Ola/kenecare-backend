@@ -223,7 +223,6 @@ exports.getPatientByUser = async (id) => {
     }
 
     const cacheKey = `patient:${patient.patientId}:user:${id}`;
-    console.log("User ", cacheKey);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
