@@ -75,7 +75,8 @@ const adminAppointmentsRouter = require("./routes/api/admin/appointments.routes"
 const adminMarketersRouter = require("./routes/api/admin/marketers.routes");
 const adminApiClientRouter = require("./routes/api/apiClient.routes");
 const adminApiKeyRouter = require("./routes/api/apiKey.routes");
-const adminDoctorReviews = require("./routes/api/admin/doctors.reviews.routes");
+const adminDoctorReviewsRouter = require("./routes/api/admin/doctors.reviews.routes");
+const adminFeatureFlagRouter = require("./routes/api/admin/featureFlags.routes");
 
 // Replace your current CORS setup with this more secure configuration
 const corsOptions = {
@@ -182,7 +183,8 @@ app.use("/api/v1/admin/council-regsitrations", adminCouncilRegistrationRouter);
 app.use("/api/v1/admin/withdrawals", adminWithdrawalsRoute);
 app.use("/api/v1/admin/marketers", adminMarketersRouter);
 app.use("/api/v1/marketers", adminMarketersRouter);
-app.use("/api/v1/admin/doctor-reviews", adminDoctorReviews);
+app.use("/api/v1/admin/doctor-reviews", adminDoctorReviewsRouter);
+app.use("/api/v1/admin/feature-flags", adminFeatureFlagRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {

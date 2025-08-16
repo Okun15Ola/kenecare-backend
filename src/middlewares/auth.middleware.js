@@ -131,7 +131,7 @@ const authenticateUser = async (req, res, next) => {
 
     req.user = {
       id: decoded.sub,
-      isOnline: STATUS.ACTIVE,
+      // isOnline: STATUS.ACTIVE,
     };
 
     req.token = token;
