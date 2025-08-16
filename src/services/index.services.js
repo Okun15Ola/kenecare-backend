@@ -110,6 +110,7 @@ exports.getAllDoctorIndexService = async (limit, page) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(doctors),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
@@ -170,6 +171,7 @@ exports.getDoctorByQueryIndexService = async (
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(doctors),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
@@ -232,6 +234,7 @@ exports.getDoctorBySpecialtyIdIndexService = async (
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(doctors),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
@@ -262,6 +265,7 @@ exports.getDoctorByIdIndexService = async (id) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(doctor),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data: doctor });
