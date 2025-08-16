@@ -47,9 +47,12 @@ const createOrUpdateStreamUser = async ({
 
 const createStreamCall = async (call) => {
   try {
+    if (!call || !call.callType || !call.callID || !call.userId) {
+      throw new Error("Invalid call parameters");
+    }
     const { callType, callID, userId, appointmentId, members } = call;
     const streamCall = client.video.call(callType, callID);
-    return await streamCall.getOrCreate({
+    const response = await streamCall.getOrCreate({
       members_limit: members?.length || 2,
       // Ring and Notify cannot be both true
       // notify: true,
@@ -68,6 +71,7 @@ const createStreamCall = async (call) => {
         },
       },
     });
+    return response;
   } catch (error) {
     logger.error("CREATE_STREAM_CALL_ERROR: ", error);
     console.error("CREATE_STREAM_CALL_ERROR: ", error);
