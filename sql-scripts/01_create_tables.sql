@@ -996,24 +996,20 @@ ADD UNIQUE KEY `uq_patient_testimonial` (`patient_id`);
 
 update users set last_seen_at = NOW() where is_online=1;
 
+CREATE TABLE IF NOT EXISTS `feature_flags` (
+    `flag_id` INT PRIMARY KEY AUTO_INCREMENT,
+    `flag_uuid` CHAR(36) NOT NULL UNIQUE,
+    `flag_name` VARCHAR(100) UNIQUE NOT NULL,
+    `description` TEXT,
+    `is_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+    `rollout_percentage` INT DEFAULT 0 CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100),
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- ALTER TABLE `users` ADD COLUMN `last_used` TIMESTAMP NULL DEFAULT NULL;
 -- ALTER TABLE `users`
 -- ADD `two_factor_secret` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL;
-
--- CREATE TABLE IF NOT EXISTS feature_flags (
---     flag_id INT PRIMARY KEY AUTO_INCREMENT,
---     flag_name VARCHAR(100) UNIQUE NOT NULL,
---     description TEXT,
---     is_enabled TINYINT(1) NOT NULL DEFAULT 0,
---     rollout_percentage INT DEFAULT 100 CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100),
---     environment ENUM('development', 'staging', 'production') NOT NULL DEFAULT 'production',
---     target_user_types VARCHAR(100) DEFAULT NULL COMMENT 'Comma-separated list of user_type IDs',
---     target_rules JSON DEFAULT NULL COMMENT 'Advanced targeting rules in JSON',
---     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
--- );
-
-
 
 -- ALTER TABLE `patient_medical_history`
 -- MODIFY COLUMN `height` VARCHAR(20) DEFAULT NULL,
