@@ -4,7 +4,7 @@ const DOCTOR_COLUMNS = `
   d.specialization_id, ms.speciality_name, d.qualifications, 
   d.consultation_fee, c.city_name, c.latitude, c.longitude, 
   d.years_of_experience, d.is_profile_approved, d.user_id, 
-  u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online, 
+  u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online, u.last_seen_at,
   dcr.registration_status
 `;
 
@@ -80,7 +80,7 @@ module.exports = {
     d.specialization_id, ms.speciality_name, d.qualifications, 
     d.consultation_fee, c.city_name, c.latitude, c.longitude, 
     d.years_of_experience, d.is_profile_approved, d.user_id, 
-    u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online , u.notification_token
+    u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online , u.notification_token, u.last_seen_at
     FROM doctors d
     INNER JOIN users u ON d.user_id = u.user_id
     INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id

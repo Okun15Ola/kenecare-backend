@@ -770,6 +770,7 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     user_type: userType,
     is_account_active: isAccountActive,
     is_online: isOnline,
+    last_seen_at: lastSeen,
     registration_status: councilRegistrationStatus,
   } = doctor;
 
@@ -814,6 +815,7 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     userType,
     isAccountActive,
     isOnline,
+    lastSeen: moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow(),
     councilRegistrationStatus,
     doctorAvailableDays,
   };
@@ -840,6 +842,7 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     mobile_number: mobileNumber,
     email,
     is_online: isOnline,
+    last_seen_at: lastSeen,
     user_id: userId,
     user_type: userType,
     registration_status: councilRegistrationStatus,
@@ -877,6 +880,7 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     yearOfExperience,
     isProfileApproved,
     isOnline,
+    lastSeen: moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow(),
     councilRegistrationStatus,
     doctorAvailableDays,
   };
@@ -1155,6 +1159,7 @@ exports.mapPatientRow = async (patient) => {
     user_id: userId,
     is_account_active: isAccountActive,
     is_online: isOnline,
+    last_seen_at: lastSeen,
   } = patient;
   const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
   return {
@@ -1172,6 +1177,7 @@ exports.mapPatientRow = async (patient) => {
     userId,
     isAccountActive,
     isOnline,
+    lastSeen: moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow(),
   };
 };
 
