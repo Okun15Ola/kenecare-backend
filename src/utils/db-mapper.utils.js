@@ -792,7 +792,7 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
       isAvailable: day.is_available,
     }));
   }
-  return {
+  const mapped = {
     doctorId,
     title,
     firstName,
@@ -815,10 +815,15 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     userType,
     isAccountActive,
     isOnline,
-    lastSeen: moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow(),
     councilRegistrationStatus,
     doctorAvailableDays,
   };
+
+  if (isOnline === 0) {
+    mapped.lastSeen = moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow();
+  }
+
+  return mapped;
 };
 
 exports.mapDoctorUserProfileRow = async (doctor) => {
@@ -859,7 +864,7 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
       isAvailable: day.is_available,
     }));
   }
-  return {
+  const mapped = {
     doctorId,
     userId,
     userType,
@@ -880,10 +885,15 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     yearOfExperience,
     isProfileApproved,
     isOnline,
-    lastSeen: moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow(),
     councilRegistrationStatus,
     doctorAvailableDays,
   };
+
+  if (isOnline === 0) {
+    mapped.lastSeen = moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow();
+  }
+
+  return mapped;
 };
 
 exports.mapPatientAppointment = (appointment) => {
@@ -1162,7 +1172,7 @@ exports.mapPatientRow = async (patient) => {
     last_seen_at: lastSeen,
   } = patient;
   const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
-  return {
+  const mapped = {
     patientId,
     title,
     firstName: decryptText(firstName),
@@ -1177,8 +1187,13 @@ exports.mapPatientRow = async (patient) => {
     userId,
     isAccountActive,
     isOnline,
-    lastSeen: moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow(),
   };
+
+  if (isOnline === 0) {
+    mapped.lastSeen = moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow();
+  }
+
+  return mapped;
 };
 
 exports.mapMedicalRecordRow = (medicalRecord) => {
