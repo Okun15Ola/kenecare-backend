@@ -1001,7 +1001,7 @@ CREATE TABLE IF NOT EXISTS `feature_flags` (
     `flag_uuid` CHAR(36) NOT NULL UNIQUE,
     `flag_name` VARCHAR(100) UNIQUE NOT NULL,
     `description` TEXT,
-    `is_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+    `is_enabled` TINYINT NOT NULL DEFAULT 0,
     `rollout_percentage` INT DEFAULT 0 CHECK (rollout_percentage >= 0 AND rollout_percentage <= 100),
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
