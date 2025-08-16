@@ -2,8 +2,6 @@ const router = require("express").Router();
 const {
   GetTestimonialsController,
   GetTestimonialByIDController,
-  CreateTestimonialController,
-  UpdateTestimonialByIdController,
   ApproveTestimonialController,
   DenyTestimonialController,
   DeleteTestimonialByIdController,
@@ -15,12 +13,10 @@ const {
 } = require("../../../validations/pagination.validations");
 const { Validate } = require("../../../validations/validate");
 
-router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+router.use(authenticateAdmin, adminLimiter);
 
 router.get("/", paginationValidation, Validate, GetTestimonialsController);
 router.get("/:id", GetTestimonialByIDController);
-router.post("/", CreateTestimonialController);
-router.put("/:id", UpdateTestimonialByIdController);
 router.patch("/:id/approve", ApproveTestimonialController);
 router.patch("/:id/deny", DenyTestimonialController);
 router.delete("/:id", DeleteTestimonialByIdController);

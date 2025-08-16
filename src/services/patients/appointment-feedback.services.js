@@ -23,6 +23,17 @@ exports.addAppointmentFeedbackService = async (appointmentId, feedback) => {
 
     return Response.CREATED({ message: "Feedback added successfully!" });
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
+      console.error(
+        `Feedback submission failed: Duplicate entry for appointment ${appointmentId}.`,
+      );
+      logger.error(
+        `Feedback submission failed: Duplicate entry for appointment ${appointmentId}.`,
+      );
+      return Response.CONFLICT({
+        message: "You have already submitted feedback for this appointment",
+      });
+    }
     logger.error("addAppointmentFeedbackService", error);
     throw error;
   }

@@ -4,11 +4,16 @@ const { Validate } = require("../../validations/validate");
 const {
   doctorIdValidation,
   doctorPaginationValidation,
+  patientTestimonialValidation,
 } = require("../../validations/index.validations");
 const { limiter } = require("../../utils/rate-limit.utils");
 const {
   paginationValidation,
 } = require("../../validations/pagination.validations");
+const {
+  authenticateUser,
+  authorizePatient,
+} = require("../../middlewares/auth.middleware");
 
 router.get(
   "/doctor-health-blogs/:id",
@@ -71,13 +76,6 @@ router.get(
   IndexController.GetDoctorsController,
 );
 
-// router.get(
-//   "/active",
-//   paginationValidation,
-//   Validate,
-//   doctorFaqController.GetDoctorActiveFaqsController,
-// );
-
 router.get(
   "/doctor/:id",
   limiter,
@@ -98,6 +96,15 @@ router.get(
   paginationValidation,
   Validate,
   IndexController.GetTestimonialsController,
+);
+router.post(
+  "/testimonials",
+  authenticateUser,
+  authorizePatient,
+  limiter,
+  patientTestimonialValidation,
+  Validate,
+  IndexController.CreatePatientTestimonialController,
 );
 router.get(
   "/common-symptoms",

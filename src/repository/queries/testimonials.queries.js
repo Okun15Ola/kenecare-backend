@@ -16,8 +16,8 @@ module.exports = {
     WHERE testimonial_id = ? AND is_approved = 1 AND is_active = 1 LIMIT 1;
   `,
   CREATE_TESTIMONIAL: `
-    INSERT INTO patients_testimonial (patient_id, testimonial_content, is_approved, is_active, approved_by)
-    VALUES (?, ?, ?, ?, ?);
+    INSERT INTO patients_testimonial (patient_id, testimonial_content)
+    VALUES (?, ?);
   `,
   UPDATE_TESTIMONIAL_BY_ID: `
     UPDATE patients_testimonial SET testimonial_content = ? WHERE testimonial_id = ? AND patient_id = ?;

@@ -9,8 +9,6 @@ const {
   GetTestimonialByIDController,
   ApproveTestimonialController,
   DenyTestimonialController,
-  CreateTestimonialController,
-  UpdateTestimonialByIdController,
   DeleteTestimonialByIdController,
 } = require("../../../../src/controllers/admin/testimonials.controller");
 
@@ -141,53 +139,6 @@ describe("Testimonials Admin Controllers", () => {
 
       expect(logger.error).toHaveBeenCalledWith(error);
       expect(next).toHaveBeenCalledWith(error);
-    });
-  });
-
-  describe("CreateTestimonialController", () => {
-    it("should create testimonial", async () => {
-      req.user.id = 4;
-      req.body = { patientId: 7, content: "Great!" };
-      const mockResponse = { statusCode: 201, data: { id: 20 } };
-      services.createTestimonial.mockResolvedValue(mockResponse);
-
-      await CreateTestimonialController(req, res, next);
-
-      expect(services.createTestimonial).toHaveBeenCalledWith({
-        userId: 4,
-        patientId: 7,
-        content: "Great!",
-      });
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith(mockResponse);
-    });
-
-    it("should handle errors", async () => {
-      req.user.id = 4;
-      req.body = { patientId: 7, content: "Great!" };
-      const error = new Error("fail");
-      services.createTestimonial.mockRejectedValue(error);
-
-      await CreateTestimonialController(req, res, next);
-
-      expect(logger.error).toHaveBeenCalledWith(error);
-      expect(next).toHaveBeenCalledWith(error);
-    });
-  });
-
-  describe("UpdateTestimonialByIdController", () => {
-    it("should send 200 status", async () => {
-      await UpdateTestimonialByIdController(req, res, next);
-      expect(res.sendStatus).toHaveBeenCalledWith(200);
-    });
-
-    it("should handle errors", async () => {
-      res.sendStatus.mockImplementation(() => {
-        throw new Error("fail");
-      });
-      await UpdateTestimonialByIdController(req, res, next);
-      expect(logger.error).toHaveBeenCalled();
-      expect(next).toHaveBeenCalled();
     });
   });
 

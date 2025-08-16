@@ -156,7 +156,9 @@ exports.GetDoctorByIDController = async (req, res, next) => {
 };
 exports.GetFaqsController = async (req, res, next) => {
   try {
-    return res.sendStatus(200);
+    const { page, limit } = req.query;
+    const response = await service.getIndexFaqService(page, limit);
+    return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetFaqsController: ", error);
     return next(error);
@@ -301,6 +303,17 @@ exports.GetTestimonialByIDController = async (req, res, next) => {
     return res.sendStatus(200);
   } catch (error) {
     logger.error("GetTestimonialByIDController: ", error);
+    return next(error);
+  }
+};
+exports.CreatePatientTestimonialController = async (req, res, next) => {
+  try {
+    const { id: userId } = req.user;
+    const { content } = req.body;
+    const response = await service.createTestimonial({ userId, content });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("CreatePatientTestimonialController: ", error);
     return next(error);
   }
 };

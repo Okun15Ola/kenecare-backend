@@ -6,6 +6,7 @@ const autoEndAppointment = require("../jobs/autoEndAppointment.job");
 const blogPublisher = require("../jobs/blogPublisher.job");
 const dailyPendingAppointment = require("../jobs/pendingAppointmentsNotifier.job");
 const dailyApprovedAppointment = require("../jobs/upcomingAppointmentNotifier.job");
+const userOnlineStatus = require("../jobs/markUserOfflineIfInactive.job");
 
 // Track job instances
 const jobInstances = {};
@@ -54,6 +55,7 @@ const dailyPendingAppointmentFunctions = createJobFunctions(
 const dailyApprovedAppointmentFunctions = createJobFunctions(
   dailyApprovedAppointment,
 );
+const userOnlineStatusFunctions = createJobFunctions(userOnlineStatus);
 
 module.exports = {
   startAppointmentCron: appointmentFunctions.start,
@@ -74,6 +76,9 @@ module.exports = {
   startApprovedAppointmentCron: dailyApprovedAppointmentFunctions.start,
   stopApprovedAppointmentCron: dailyApprovedAppointmentFunctions.stop,
 
+  startUserOnlineStatusCron: userOnlineStatusFunctions.start,
+  stopUserOnlineStatusCron: userOnlineStatusFunctions.stop,
+
   startAllCronJobs: () => {
     appointmentFunctions.start();
     timeSlotFunctions.start();
@@ -81,6 +86,7 @@ module.exports = {
     blogPublishingFunctions.start();
     dailyPendingAppointmentFunctions.start();
     dailyApprovedAppointmentFunctions.start();
+    userOnlineStatusFunctions.start();
   },
 
   stopAllCronJobs: () => {
@@ -90,5 +96,6 @@ module.exports = {
     blogPublishingFunctions.stop();
     dailyPendingAppointmentFunctions.stop();
     dailyApprovedAppointmentFunctions.stop();
+    userOnlineStatusFunctions.stop();
   },
 };

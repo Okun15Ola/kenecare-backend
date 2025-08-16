@@ -34,6 +34,17 @@ exports.addDoctorReviewService = async (userId, doctorId, review) => {
 
     return Response.CREATED({ message: "Review added successfully!" });
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
+      console.error(
+        `Feedback submission failed: Duplicate entry for doctor ${doctorId}.`,
+      );
+      logger.error(
+        `Feedback submission failed: Duplicate entry for doctor ${doctorId}.`,
+      );
+      return Response.CONFLICT({
+        message: "You have already submitted feedback for this doctor",
+      });
+    }
     logger.error("addDoctorReviewService", error);
     throw error;
   }

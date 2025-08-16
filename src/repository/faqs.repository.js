@@ -1,46 +1,76 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/faqs.queries");
 
-exports.getAllFaqs = async (limit = 20, offset = 1) => {
+exports.getAllFaqs = async (limit, offset) => {
   const optimizedQuery = `${queries.GET_ALL_FAQS} LIMIT ${limit} OFFSET ${offset}`;
   return query(optimizedQuery);
 };
 
-exports.getFaqById = async (id) => {
-  const result = await query(queries.GET_FAQ_BY_ID, [id]);
+exports.getPublishedFaqs = async (limit, offset) => {
+  const optimizedQuery = `${queries.GET_PUBLISHED_FAQS} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery);
+};
+
+exports.countPublishFaq = async () => {
+  const result = await query(queries.COUNT_PUBLISHED_FAQ);
   return result[0];
 };
 
-exports.createNewFaq = async (blog) => {
-  const { category, title, content, image, tags, featured, inputtedBy } = blog;
+exports.countFaq = async () => {
+  const result = await query(queries.COUNT_FAQ);
+  return result[0];
+};
+
+exports.getFaqById = async (faqId) => {
+  const result = await query(queries.GET_FAQ_BY_ID, [faqId]);
+  return result[0];
+};
+
+exports.getFaqByUuid = async (faqUuid) => {
+  const result = await query(queries.GET_FAQ_BY_UUID, [faqUuid]);
+  return result[0];
+};
+
+exports.createNewFaq = async ({
+  faqUuid,
+  question,
+  answer,
+  category,
+  isPublished = 0,
+}) => {
   return query(queries.CREATE_FAQ, [
+    faqUuid,
+    question,
+    answer,
     category,
-    title,
-    content,
-    image,
-    tags,
-    featured,
-    inputtedBy,
+    isPublished,
   ]);
 };
 
-exports.updateFaqById = async ({ id, blog }) => {
-  const { category, title, content, image, tags, featured } = blog;
-  return query(queries.UPDATE_FAQ_BY_ID, [
+exports.updateFaqByUuid = async ({
+  faqUuid,
+  question,
+  answer,
+  category,
+  isPublished = 0,
+}) => {
+  return query(queries.UPDATE_FAQ, [
+    question,
+    answer,
     category,
-    title,
-    content,
-    image,
-    tags,
-    featured,
-    id,
+    isPublished,
+    faqUuid,
   ]);
 };
 
-exports.updateFaqStatusById = async ({ id, status }) => {
-  return query(queries.UPDATE_FAQ_STATUS_BY_ID, [status, id]);
+exports.publishFaq = async (faqUuid) => {
+  return query(queries.PUBLISH_FAQ, [faqUuid]);
 };
 
-exports.deleteFaqById = async (id) => {
-  return query(queries.DELETE_FAQ_BY_ID, [id]);
+exports.unpublishFaq = async (faqUuid) => {
+  return query(queries.UNPUBLISH_FAQ, [faqUuid]);
+};
+
+exports.deleteFaqByUuid = async (faqUuid) => {
+  return query(queries.DELETE_FAQ, [faqUuid]);
 };
