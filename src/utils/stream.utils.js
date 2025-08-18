@@ -6,7 +6,9 @@ const {
   streamSdkApiSecret,
 } = require("../config/default.config");
 
-const client = new StreamClient(streamSdkApiKey, streamSdkApiSecret);
+const client = new StreamClient(streamSdkApiKey, streamSdkApiSecret, {
+  timeout: 50000,
+});
 
 const generateStreamUserToken = async (userId) => {
   try {

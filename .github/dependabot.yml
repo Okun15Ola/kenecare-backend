@@ -3,12 +3,8 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-
-    # 👇 Target a specific branch for PRs instead of the default branch
+      interval: "monthly"
     target-branch: "development"
-
-    # 👇 Add custom labels to Dependabot PRs
     labels:
       - "dependencies"
       - "autoupdate"

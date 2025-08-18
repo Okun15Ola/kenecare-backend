@@ -516,7 +516,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentUuid }) => {
         "Appointment already completed for appointmentId:",
         appointmentUUID,
       );
-      return Response.NOT_MODIFIED();
+      return Response.SUCCESS();
     }
 
     const patientFirstName = decryptText(firstName);
