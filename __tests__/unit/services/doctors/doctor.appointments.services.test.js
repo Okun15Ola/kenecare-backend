@@ -405,7 +405,7 @@ describe("doctor.appointments.services", () => {
       expect(result.statusCode).toBe(404);
     });
 
-    it("should return NOT_MODIFIED if already completed", async () => {
+    it("should return SUCCESS if already completed", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       dbObject.getDoctorAppointmentByUuid.mockResolvedValue({
         appointment_status: "completed",
@@ -414,8 +414,8 @@ describe("doctor.appointments.services", () => {
         userId: 1,
         appointmentUuid: "test-uuid",
       });
-      expect(result.status).toBe("not modified");
-      expect(result.statusCode).toBe(304);
+      expect(result.status).toBe("success");
+      expect(result.statusCode).toBe(200);
     });
 
     it("should end appointment and send sms", async () => {
