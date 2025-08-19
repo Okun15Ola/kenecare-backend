@@ -62,3 +62,7 @@ exports.updateMedicalCouncilStatusById = async ({ id, status }) => {
 exports.deleteMedicalCouncilById = async (id) => {
   return query(queries.DELETE_MEDICAL_COUNCIL_BY_ID, [id]);
 };
+
+exports.getAllActiveDoctorRegistrationsWithDoctorDetails = async () => {
+  return query(queries.SELECT_ACTIVE_DOCTOR_REGISTRATIONS_WITH_DETAILS);
+};
