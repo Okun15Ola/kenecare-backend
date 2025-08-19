@@ -51,6 +51,15 @@ module.exports = {
     LIMIT 1
   `,
 
+  GET_EXISITING_APPOINTMENTS: `
+  SELECT appointment_date, appointment_time, appointment_duration_minutes
+  FROM medical_appointments
+  WHERE doctor_id = ?
+  AND appointment_date = ?
+  AND appointment_status IN ('approved', 'pending', 'started', 'postponed')
+  ORDER BY appointment_date, appointment_time;
+  `,
+
   GET_PATIENT_APPOINTMENT_BY_UUID: `
     ${COMMON_SELECT}
     WHERE medical_appointments.patient_id = ? AND medical_appointments.appointment_uuid = ?
