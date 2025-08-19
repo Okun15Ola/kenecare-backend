@@ -13,11 +13,11 @@ const NOTIFICATION_TYPES = {
 
 const SMS_MESSAGES = {
   SEVEN_DAYS: (doctorName, expiryDate) =>
-    `Dear Dr. ${doctorName}, your medical council certificate will expire in 7 days on ${expiryDate}. Please renew it to avoid service interruption.`,
+    `Dear Dr. ${doctorName}\n\n, your medical council certificate will expire in 7 days on ${expiryDate}. Please renew it to avoid service interruption.\n\n\nKENECARE TEAM.`,
   TWO_DAYS: (doctorName, expiryDate) =>
-    `URGENT: Dr. ${doctorName}, your medical council certificate will expire in 2 days on ${expiryDate}. Renew now!`,
+    `URGENT: Dr. ${doctorName}\n\n, your medical council certificate will expire in 2 days on ${expiryDate}. Renew now!\n\n\nKENECARE TEAM.`,
   EXPIRED: (doctorName, expiryDate) =>
-    `ACTION REQUIRED: Dr. ${doctorName}, your medical council certificate expired today, ${expiryDate}. Please renew immediately.`,
+    `ACTION REQUIRED: Dr. ${doctorName},\n\n your medical council certificate expired today, ${expiryDate}. Please renew immediately.\n\n\nKENECARE TEAM.`,
 };
 
 /**
