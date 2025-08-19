@@ -38,6 +38,7 @@ const {
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const { decryptText, encryptText } = require("../../utils/auth.utils");
+const { checkDoctorAvailability } = require("../../utils/time.utils");
 
 exports.getPatientAppointmentMetrics = async (userId) => {
   try {
@@ -299,6 +300,20 @@ exports.createPatientAppointment = async ({
       });
     }
 
+    const {
+      patient_id: patientId,
+      first_name: userFirstName,
+      last_name: userLastName,
+      booked_first_appointment: hasBookedFirstAppointment,
+      mobile_number: mobileNumber,
+    } = patient.value;
+
+    // encrypt patient data
+    const patientFirstName = decryptText(userFirstName);
+    const patientLastName = decryptText(userLastName);
+    const encryptedPatientName = encryptText(patientName);
+    const encryptedSymptoms = encryptText(symptoms);
+
     // validate doctor
     if (doctor.status === "rejected") {
       logger.warn("Doctor Not Found for ID");
@@ -307,6 +322,13 @@ exports.createPatientAppointment = async ({
       });
     }
 
+    const {
+      consultation_fee: consultationFee,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
+      mobile_number: doctorMobileNumber,
+    } = doctor.value;
+
     if (timeBooked.status === "fulfilled" && timeBooked.value) {
       logger.warn(
         `Appointment already booked for Doctor ${doctorId} on ${appointmentDate} at ${appointmentTime}`,
@@ -314,6 +336,22 @@ exports.createPatientAppointment = async ({
       return Response.BAD_REQUEST({
         message:
           "An appointment has already been booked for the specified time. Please choose a new appointment time",
+      });
+    }
+
+    const proposedAppointmentStartDateTime = `${appointmentDate} ${appointmentTime}`;
+    const isDoctorAvailable = await checkDoctorAvailability(
+      doctorId,
+      proposedAppointmentStartDateTime,
+    );
+
+    if (!isDoctorAvailable) {
+      logger.warn(
+        `Doctor ${doctorId} is unavailable at ${proposedAppointmentStartDateTime} due to existing commitments or off-hours.`,
+      );
+      return Response.CONFLICT({
+        message:
+          "Doctor is not available at the requested time. Please choose another time slot.",
       });
     }
 
@@ -342,27 +380,6 @@ exports.createPatientAppointment = async ({
       value: Date.now().toString(),
       expiry: 600, // 10 mins
     });
-
-    const {
-      patient_id: patientId,
-      first_name: userFirstName,
-      last_name: userLastName,
-      booked_first_appointment: hasBookedFirstAppointment,
-      mobile_number: mobileNumber,
-    } = patient.value;
-
-    // encrypt patient data
-    const patientFirstName = decryptText(userFirstName);
-    const patientLastName = decryptText(userLastName);
-    const encryptedPatientName = encryptText(patientName);
-    const encryptedSymptoms = encryptText(symptoms);
-
-    const {
-      consultation_fee: consultationFee,
-      first_name: doctorFirstName,
-      last_name: doctorLastName,
-      mobile_number: doctorMobileNumber,
-    } = doctor.value;
 
     const generatedOrderId = uuidv4();
 
@@ -438,6 +455,7 @@ exports.createPatientAppointment = async ({
             doctorAppointmentSms.reason,
         );
         await repo.deleteAppointmentById({ appointmentId });
+        await redisClient.del(idempotencyCacheKey);
         await redisClient.clearCacheByPattern(
           `patient:${patientId}:appointments:*`,
         );
@@ -445,7 +463,8 @@ exports.createPatientAppointment = async ({
           `doctor:${doctorId}:appointments:*`,
         );
         return Response.INTERNAL_SERVER_ERROR({
-          message: "An Error Occured on our side, please try again",
+          message:
+            "An error occurred on our side during first appointment processing. Please try again.",
         });
       }
       await redisClient.clearCacheByPattern(
@@ -464,7 +483,7 @@ exports.createPatientAppointment = async ({
       });
     }
     // Get and send payment url to process payment
-    const response = await getPaymentUSSD({
+    const paymentResponse = await getPaymentUSSD({
       orderId: generatedOrderId,
       amount: consultationFee,
     }).catch((error) => {
@@ -475,40 +494,49 @@ exports.createPatientAppointment = async ({
       throw error;
     });
 
-    if (!response) {
+    if (!paymentResponse) {
       logger.error(
         `Failed to get payment URL for appointment ID ${appointmentId}`,
       );
       await repo.deleteAppointmentById({ appointmentId });
+      await redisClient.del(idempotencyCacheKey);
       await redisClient.clearCacheByPattern(
         `patient:${patientId}:appointments:*`,
       );
+      await redisClient.clearCacheByPattern(
+        `doctor:${doctorId}:appointments:*`,
+      );
       return Response.INTERNAL_SERVER_ERROR({
-        message: "An Error Occured on our side, please try again",
+        message: "An error occurred when preparing payment. Please try again.",
       });
     }
 
     const { ussdCode, paymentCodeId, idempotencyKey, expiresAt, cancelUrl } =
-      response;
+      paymentResponse;
 
     // create new appointment payments record
-    const { insertId } = await createAppointmentPayment({
+    const appointmentPaymentRecord = await createAppointmentPayment({
       appointmentId,
       amountPaid: consultationFee,
       orderId: generatedOrderId,
-      paymentMethod: "",
+      paymentMethod: "MOBILE_MONEY",
       paymentToken: ussdCode,
       notificationToken: idempotencyKey,
       transactionId: paymentCodeId,
     });
 
-    if (!insertId) {
+    if (!appointmentPaymentRecord || !appointmentPaymentRecord.insertId) {
       logger.error(
         `Failed to create appointment payment record for appointment ID ${appointmentId}`,
       );
       await repo.deleteAppointmentById({ appointmentId });
+      await redisClient.del(idempotencyCacheKey);
+      await redisClient.clearCacheByPattern(
+        `patient:${patientId}:appointments:*`,
+      );
       return Response.INTERNAL_SERVER_ERROR({
-        message: "An Error Occured on our side, please try again",
+        message:
+          "An error occurred while saving payment details. Please try again.",
       });
     }
 
@@ -525,7 +553,7 @@ exports.createPatientAppointment = async ({
       },
     });
   } catch (error) {
-    logger.error("createPatientAppointment", error);
+    logger.error("Error in createPatientAppointment:", error);
     throw error;
   }
 };

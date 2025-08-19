@@ -23,6 +23,7 @@ const {
   doctorAppointmentBookedSms,
   appointmentBookedSms,
 } = require("../utils/sms.utils");
+const { decryptText } = require("../utils/auth.utils");
 // const { sendPushNotification } = require("../utils/notification.utils");
 
 const CONFIG = {
@@ -260,6 +261,10 @@ exports.processAppointmentPayment = async ({
       return await handleExpiredPayment(appointmentId);
     }
 
+    const patientFirstName = decryptText(userFirstName);
+    const patientLastName = decryptText(userLastName);
+    const patientName = decryptText(patientNameOnPrescription);
+
     // Validate payment record
     const appointmentPaymentRecord =
       await getAppointmentPaymentByAppointmentId(appointmentId);
@@ -313,13 +318,13 @@ exports.processAppointmentPayment = async ({
       await sendNotifications({
         doctorMobileNumber,
         doctorLastName,
-        patientNameOnPrescription,
+        patientNameOnPrescription: patientName,
         appointmentDate,
         appointmentTime,
         doctorNotification,
         mobileNumber,
-        userFirstName,
-        userLastName,
+        userFirstName: patientFirstName,
+        userLastName: patientLastName,
         doctorFirstName,
         patientNotification,
       });

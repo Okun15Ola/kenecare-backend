@@ -27,6 +27,7 @@ const {
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const { decryptText } = require("../../utils/auth.utils");
+const { checkDoctorAvailability } = require("../../utils/time.utils");
 
 exports.getDoctorAppointmentMetrics = async (userId) => {
   try {
@@ -744,6 +745,23 @@ exports.postponeDoctorAppointment = async ({
           "An appointment has already been booked for the specified time on that date. Please choose another time.",
       });
     }
+
+    const proposedAppointmentStartDateTime = `${postponedDate} ${postponedTime}`;
+    const isDoctorAvailable = await checkDoctorAvailability(
+      doctorId,
+      proposedAppointmentStartDateTime,
+    );
+
+    if (!isDoctorAvailable) {
+      logger.warn(
+        `Doctor ${doctorId} is unavailable at ${proposedAppointmentStartDateTime} due to existing commitments or off-hours.`,
+      );
+      return Response.CONFLICT({
+        message:
+          "Doctor is not available at the requested time. Please choose another time slot.",
+      });
+    }
+
     const { mobile_number: mobileNumber } = await getPatientById(patientId);
     // UPDATE appointment status to 'approved'
     const result = await dbObject.postponeDoctorAppointmentById({
