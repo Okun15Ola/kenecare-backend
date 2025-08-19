@@ -73,6 +73,11 @@ module.exports = {
       const doctorsWithCertificates =
         await councilRepository.getAllActiveDoctorRegistrationsWithDoctorDetails();
 
+      if (!doctorsWithCertificates?.length) {
+        logger.info("No expired council registraion found.");
+        console.info("No expired council registraion found.");
+      }
+
       for (const registration of doctorsWithCertificates) {
         const expiryDate = moment(registration.certificate_expiry_date).startOf(
           "day",
