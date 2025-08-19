@@ -23,7 +23,9 @@ const {
   updateDoctorWalletBalance,
 } = require("../../../src/repository/doctor-wallet.repository");
 const { cancelPaymentUSSD } = require("../../../src/utils/payment.utils");
+const authUtils = require("../../../src/utils/auth.utils");
 
+jest.mock("../../../src/utils/auth.utils");
 jest.mock("../../../src/repository/patientAppointments.repository", () => ({
   deleteAppointmentById: jest.fn(),
   getAppointmentByUUID: jest.fn(),
@@ -170,6 +172,7 @@ describe("payment.services", () => {
 
     it("should process successful payment and send notifications", async () => {
       getAppointmentByUUID.mockResolvedValue(mockAppointment);
+      authUtils.decryptText = jest.fn().mockResolvedValue("text");
       getAppointmentPaymentByAppointmentId.mockResolvedValue({
         ...mockPayment,
         payment_status: "pending",
