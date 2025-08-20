@@ -85,12 +85,7 @@ async function validateEntities({
     };
   }
 
-  console.log(doctorAvailability);
-
-  if (
-    doctorAvailability.status === "rejected" ||
-    !doctorAvailability.value.isAvailable
-  ) {
+  if (doctorAvailability.status === "rejected" || !doctorAvailability.value) {
     return {
       error: Response.BAD_REQUEST({
         message:
@@ -288,7 +283,6 @@ async function processRegularAppointment(appointment) {
       },
     });
   } catch (error) {
-    console.error(error);
     logger.error(
       `Error getting payment URL for appointment ID ${appointment.id}:`,
       error,
@@ -605,6 +599,7 @@ exports.createPatientAppointment = async ({
   symptoms,
   specialtyId,
 }) => {
+  console.time("createAppointmentTimer");
   try {
     // Step 1: Validate entities
     const {
@@ -654,7 +649,9 @@ exports.createPatientAppointment = async ({
       });
     }
     // Step 7: Process regular appointment
-    return await processRegularAppointment(appointmentResult);
+    const response = await processRegularAppointment(appointmentResult);
+    console.timeEnd("createAppointmentTimer");
+    return response;
   } catch (error) {
     console.error(error);
     logger.error("createPatientAppointment", error);
