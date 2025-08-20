@@ -1,12 +1,13 @@
 const { CronJob } = require("cron");
 const logger = require("../middlewares/logger.middleware");
 const appointmentNotifier = require("../jobs/appointmentNotifier.job");
-const timeSlotGenerator = require("../jobs/timeSlotGenerator.job");
+// const timeSlotGenerator = require("../jobs/timeSlotGenerator.job");
 const autoEndAppointment = require("../jobs/autoEndAppointment.job");
 const blogPublisher = require("../jobs/blogPublisher.job");
 const dailyPendingAppointment = require("../jobs/pendingAppointmentsNotifier.job");
 const dailyApprovedAppointment = require("../jobs/upcomingAppointmentNotifier.job");
 const userOnlineStatus = require("../jobs/markUserOfflineIfInactive.job");
+const certificateExpiryNotifier = require("../jobs/certificateExpiryNotifier.job");
 
 // Track job instances
 const jobInstances = {};
@@ -46,7 +47,7 @@ const createJobFunctions = (jobModule) => {
 
 // Create functions for each job
 const appointmentFunctions = createJobFunctions(appointmentNotifier);
-const timeSlotFunctions = createJobFunctions(timeSlotGenerator);
+// const timeSlotFunctions = createJobFunctions(timeSlotGenerator);
 const autoEndFunctions = createJobFunctions(autoEndAppointment);
 const blogPublishingFunctions = createJobFunctions(blogPublisher);
 const dailyPendingAppointmentFunctions = createJobFunctions(
@@ -56,13 +57,16 @@ const dailyApprovedAppointmentFunctions = createJobFunctions(
   dailyApprovedAppointment,
 );
 const userOnlineStatusFunctions = createJobFunctions(userOnlineStatus);
+const certificateExpiryFunctions = createJobFunctions(
+  certificateExpiryNotifier,
+);
 
 module.exports = {
   startAppointmentCron: appointmentFunctions.start,
   stopAppointmentCron: appointmentFunctions.stop,
 
-  startTimeSlotCron: timeSlotFunctions.start,
-  stopTimeSlotCron: timeSlotFunctions.stop,
+  // startTimeSlotCron: timeSlotFunctions.start,
+  // stopTimeSlotCron: timeSlotFunctions.stop,
 
   startAutoEndAppointmentCron: autoEndFunctions.start,
   stopAutoEndAppointmentCron: autoEndFunctions.stop,
@@ -79,23 +83,28 @@ module.exports = {
   startUserOnlineStatusCron: userOnlineStatusFunctions.start,
   stopUserOnlineStatusCron: userOnlineStatusFunctions.stop,
 
+  startRegistrationCertificateExpiryCron: certificateExpiryFunctions.start,
+  stopRegistrationCertificateExpiryCron: certificateExpiryFunctions.stop,
+
   startAllCronJobs: () => {
     appointmentFunctions.start();
-    timeSlotFunctions.start();
+    // timeSlotFunctions.start();
     autoEndFunctions.start();
     blogPublishingFunctions.start();
     dailyPendingAppointmentFunctions.start();
     dailyApprovedAppointmentFunctions.start();
     userOnlineStatusFunctions.start();
+    certificateExpiryFunctions.start();
   },
 
   stopAllCronJobs: () => {
     appointmentFunctions.stop();
-    timeSlotFunctions.stop();
+    // timeSlotFunctions.stop();
     autoEndFunctions.stop();
     blogPublishingFunctions.stop();
     dailyPendingAppointmentFunctions.stop();
     dailyApprovedAppointmentFunctions.stop();
     userOnlineStatusFunctions.stop();
+    certificateExpiryFunctions.stop();
   },
 };

@@ -582,6 +582,25 @@ const sendApproveAppointmentReminderSMS = async ({
   }
 };
 
+const sendCertificateExpirySms = async ({ mobileNumber, message }) => {
+  try {
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content: message,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendAuthTokenSMS,
   sendVerificationTokenSMS,
@@ -606,4 +625,5 @@ module.exports = {
   sendDoctorPendingAppointmentSMS,
   sendPendingAppointmentReminderSMS,
   sendApproveAppointmentReminderSMS,
+  sendCertificateExpirySms,
 };

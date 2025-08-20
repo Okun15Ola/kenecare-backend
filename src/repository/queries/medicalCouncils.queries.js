@@ -15,4 +15,19 @@ module.exports = {
     "UPDATE medical_councils SET is_active = ? WHERE council_id = ?",
   DELETE_MEDICAL_COUNCIL_BY_ID:
     "DELETE FROM medical_councils WHERE council_id = ?",
+  SELECT_ACTIVE_DOCTOR_REGISTRATIONS_WITH_DETAILS: `
+        SELECT
+            dcr.council_registration_id,
+            dcr.certificate_expiry_date,
+            d.doctor_id,
+            d.first_name,
+            d.last_name,
+            d.mobile_number
+        FROM
+            doctors_council_registration dcr
+        INNER JOIN
+            doctors d ON dcr.doctor_id = d.doctor_id
+        WHERE
+            dcr.registration_status = 'approved' AND d.is_profile_approved = 1
+    `,
 };
