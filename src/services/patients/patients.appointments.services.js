@@ -39,6 +39,251 @@ const {
 } = require("../../utils/caching.utils");
 const { decryptText, encryptText } = require("../../utils/auth.utils");
 
+async function validateEntities({
+  userId,
+  doctorId,
+  appointmentDate,
+  appointmentTime,
+}) {
+  const [patient, doctor, timeBooked] = await Promise.allSettled([
+    getPatientByUserId(userId),
+    getDoctorById(doctorId),
+    getDoctorAppointByDateAndTime({
+      doctorId,
+      date: appointmentDate,
+      time: appointmentTime,
+    }),
+  ]);
+
+  if (patient.status === "rejected") {
+    return {
+      error: Response.BAD_REQUEST({
+        message:
+          "Please create a patient profile before booking an appointment",
+      }),
+    };
+  }
+
+  if (doctor.status === "rejected") {
+    return {
+      error: Response.BAD_REQUEST({
+        message: "Specified Doctor does not exist. Please try again",
+      }),
+    };
+  }
+
+  if (timeBooked.status === "fulfilled" && timeBooked.value) {
+    return {
+      error: Response.BAD_REQUEST({
+        message:
+          "An appointment has already been booked for the specified time. Please choose another time",
+      }),
+    };
+  }
+
+  return { patient: patient.value, doctor: doctor.value };
+}
+
+async function checkIdempotency({
+  userId,
+  doctorId,
+  appointmentDate,
+  appointmentTime,
+  patientName,
+}) {
+  const requestHash = crypto
+    .createHash("sha256")
+    .update(
+      `${userId}:${doctorId}:${appointmentDate}:${appointmentTime}:${patientName}`,
+    )
+    .digest("hex");
+
+  const cacheKey = `appointment:idempotency:${requestHash}`;
+  const existing = await redisClient.get(cacheKey);
+
+  if (existing) {
+    return {
+      error: Response.BAD_REQUEST({
+        message:
+          "It appears you've already submitted this appointment request. Please check your appointments",
+      }),
+    };
+  }
+
+  await redisClient.set({
+    key: cacheKey,
+    value: Date.now().toString(),
+    expiry: 600, // 10 mins
+  });
+
+  return { requestHash };
+}
+
+async function clearAppointmentCaches(patientId, doctorId) {
+  await Promise.all([
+    redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+    redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
+  ]);
+}
+
+async function rollbackAppointment(appointmentId, patientId, doctorId) {
+  await repo.deleteAppointmentById({ appointmentId });
+  await clearAppointmentCaches(patientId, doctorId);
+}
+
+function failResponse(message, code = 500) {
+  return Response[code === 400 ? "BAD_REQUEST" : "INTERNAL_SERVER_ERROR"]({
+    message,
+  });
+}
+async function sendAppointmentNotifications(appointment, { patient, doctor }) {
+  if (!appointment || !patient || !doctor) {
+    throw new Error("Missing appointment, patient, or doctor information");
+  }
+  const patientFirstName = decryptText(patient.first_name);
+  const patientLastName = decryptText(patient.last_name);
+
+  const [appointmentSms, doctorAppointmentSms] = await Promise.allSettled([
+    appointmentBookedSms({
+      mobileNumber: patient.mobile_number,
+      patientName: `${patientFirstName} ${patientLastName}`,
+      doctorName: `${doctor.first_name} ${doctor.last_name}`,
+      patientNameOnPrescription: appointment.patientName,
+      appointmentDate: moment(appointment.appointmentDate).format("YYYY-MM-DD"),
+      appointmentTime: appointment.appointmentTime,
+    }),
+    doctorAppointmentBookedSms({
+      mobileNumber: doctor.mobile_number,
+      doctorName: doctor.last_name,
+      patientNameOnPrescription: appointment.patientName,
+      appointmentDate: moment(appointment.appointmentDate).format("YYYY-MM-DD"),
+      appointmentTime: appointment.appointmentTime,
+    }),
+  ]);
+
+  if (
+    appointmentSms.status === "rejected" ||
+    doctorAppointmentSms.status === "rejected"
+  ) {
+    throw new Error("Failed to send notifications");
+  }
+}
+
+async function processFirstAppointment(appointment, { patient, doctor }) {
+  const tasks = [
+    createFirstAppointmentPayment({
+      appointmentId: appointment.id,
+      amountPaid: appointment.consultationFee,
+      orderId: appointment.orderId,
+      paymentMethod: "FIRST_FREE_APPOINTMENT",
+      transactionId: "FIRST_FREE_APPOINTMENT",
+      paymentToken: "FIRST_FREE_APPOINTMENT",
+      notificationToken: "FIRST_FREE_APPOINTMENT",
+      status: "success",
+    }),
+    updatePatientFirstAppointmentStatus(appointment.patientId),
+    sendAppointmentNotifications(appointment, { patient, doctor }),
+  ];
+
+  const results = await Promise.allSettled(tasks);
+  const hasFailure = results.some((result) => result.status === "rejected");
+
+  if (hasFailure) {
+    await rollbackAppointment(
+      appointment.id,
+      appointment.patientId,
+      appointment.doctorId,
+    );
+    const error = results.find((r) => r.status === "rejected")?.reason;
+    logger.error(
+      `Error processing first appointment booking for appointment ID ${appointment.id}:`,
+      error,
+    );
+    return Response.INTERNAL_SERVER_ERROR({
+      message: "An Error Occurred on our side, please try again",
+    });
+  }
+
+  await clearAppointmentCaches(appointment.patientId, appointment.doctorId);
+
+  return Response.CREATED({
+    message:
+      "First Free Medical Appointment Booked Successfully. Thank you for choosing Kenecare",
+    data: {
+      paymentUrl: null,
+      firstAppointment: true,
+    },
+  });
+}
+
+// Regular appointment processing - single responsibility
+async function processRegularAppointment(appointment) {
+  try {
+    const paymentResponse = await getPaymentUSSD({
+      orderId: appointment.orderId,
+      amount: appointment.consultationFee,
+    });
+
+    if (!paymentResponse) {
+      await rollbackAppointment(
+        appointment.id,
+        appointment.patientId,
+        appointment.doctorId,
+      );
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "An Error Occurred on our side, please try again",
+      });
+    }
+
+    const { ussdCode, paymentCodeId, idempotencyKey, expiresAt, cancelUrl } =
+      paymentResponse;
+
+    const paymentRecord = await createAppointmentPayment({
+      appointmentId: appointment.id,
+      amountPaid: appointment.consultationFee,
+      orderId: appointment.orderId,
+      paymentMethod: "",
+      paymentToken: ussdCode,
+      notificationToken: idempotencyKey,
+      transactionId: paymentCodeId,
+    });
+
+    if (!paymentRecord.insertId) {
+      await rollbackAppointment(
+        appointment.id,
+        appointment.patientId,
+        appointment.doctorId,
+      );
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "An Error Occurred on our side, please try again",
+      });
+    }
+
+    await clearAppointmentCaches(appointment.patientId, appointment.doctorId);
+
+    return Response.CREATED({
+      message: "Appointment Booked Successfully. Proceed to payment.",
+      data: {
+        paymentUrl: ussdCode,
+        cancelUrl,
+        paymentUrlExpiresAt: expiresAt,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    logger.error(
+      `Error getting payment URL for appointment ID ${appointment.id}:`,
+      error,
+    );
+    await rollbackAppointment(
+      appointment.id,
+      appointment.patientId,
+      appointment.doctorId,
+    );
+    throw error;
+  }
+}
+
 exports.getPatientAppointmentMetrics = async (userId) => {
   try {
     const { patient_id: patientId } = await getPatientByUserId(userId);
@@ -223,6 +468,12 @@ exports.getPatientAppointment = async ({ userId, id }) => {
   }
 };
 
+/**
+  @param {Object} params - The parameters for retrieving the appointment.
+ * @param {string} params.userId - The ID of the user requesting the appointment.
+ * @param {string} params.uuId - The UUID of the appointment to retrieve.
+ * @returns {Promise<Object>} - A promise that resolves to the response object containing the appointment details or an error message.
+ */
 exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
   try {
     const patient = await getPatientByUserId(userId);
@@ -265,7 +516,66 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
     throw error;
   }
 };
+async function createAppointment(appointmentData, { patient, doctor }) {
+  const {
+    patientName,
+    symptoms,
+    doctorId,
+    appointmentType,
+    specialtyId,
+    appointmentDate,
+    appointmentTime,
+  } = appointmentData;
 
+  const generatedOrderId = uuidv4();
+  const encryptedPatientName = encryptText(patientName);
+  const encryptedSymptoms = encryptText(symptoms);
+
+  const appointmentResult = await repo.createNewPatientAppointment({
+    uuid: generatedOrderId,
+    patientId: patient.patient_id,
+    doctorId,
+    patientName: encryptedPatientName,
+    patientNumber: appointmentData.patientNumber,
+    symptoms: encryptedSymptoms,
+    appointmentType,
+    consultationFee: doctor.consultation_fee,
+    specialtyId,
+    appointmentDate,
+    appointmentTime,
+  });
+
+  if (!appointmentResult.insertId) {
+    logger.error("Failed to create new patient appointment");
+    throw new Error("Failed to create appointment");
+  }
+
+  return {
+    id: appointmentResult.insertId,
+    orderId: generatedOrderId,
+    patientId: patient.patient_id,
+    doctorId,
+    consultationFee: doctor.consultation_fee,
+    patientName,
+    appointmentDate,
+    appointmentTime,
+  };
+}
+// TODO @Mevizcode I made some refactors here, please review
+/**
+ * Creates a new patient appointment.
+ * @param {Object} params - The parameters for creating the appointment.
+ * @param {string} params.userId - The ID of the user creating the appointment.
+ * @param {string} params.doctorId - The ID of the doctor for the appointment.
+ * @param {string} params.patientName - The name of the patient.
+ * @param {string} params.patientNumber - The phone number of the patient.
+ * @param {string} params.appointmentType - The type of appointment (e.g., "consultation").
+ * @param {string} params.appointmentDate - The date of the appointment.
+ * @param {string} params.appointmentTime - The time of the appointment.
+ * @param {string} params.symptoms - The symptoms the patient is experiencing.
+ * @param {string} params.specialtyId - The ID of the specialty for the appointment.
+ * @returns {Promise<Object>} - A promise that resolves to the response object containing the appointment details or an error message.
+ */
 exports.createPatientAppointment = async ({
   userId,
   doctorId,
@@ -277,255 +587,59 @@ exports.createPatientAppointment = async ({
   symptoms,
   specialtyId,
 }) => {
-  let appointmentId = null;
   try {
-    // Parallel validation - Get patient, doctor, and check availability
-    const [patient, doctor, timeBooked] = await Promise.allSettled([
-      getPatientByUserId(userId),
-      getDoctorById(doctorId),
-      getDoctorAppointByDateAndTime({
-        doctorId,
-        date: appointmentDate,
-        time: appointmentTime,
-      }),
-    ]);
-
-    //  validate patient
-    if (patient.status === "rejected") {
-      logger.warn("Patient Profile Not Found for user");
-      return Response.BAD_REQUEST({
-        message:
-          "Please create a patient profile before booking an appointment",
-      });
-    }
-
-    // validate doctor
-    if (doctor.status === "rejected") {
-      logger.warn("Doctor Not Found for ID");
-      return Response.BAD_REQUEST({
-        message: "Specified Doctor does not exist. Please try again",
-      });
-    }
-
-    if (timeBooked.status === "fulfilled" && timeBooked.value) {
-      logger.warn(
-        `Appointment already booked for Doctor ${doctorId} on ${appointmentDate} at ${appointmentTime}`,
-      );
-      return Response.BAD_REQUEST({
-        message:
-          "An appointment has already been booked for the specified time. Please choose a new appointment time",
-      });
-    }
-
-    // create a hash of the request
-    const requestHash = crypto
-      .createHash("sha256")
-      .update(
-        `${userId}:${doctorId}:${appointmentDate}:${appointmentTime}:${patientName}`,
-      )
-      .digest("hex");
-
-    // check if we've seen this request recently
-    const idempotencyCacheKey = `appointment:idempotency:${requestHash}`;
-    const existingRequest = await redisClient.get(idempotencyCacheKey);
-
-    if (existingRequest) {
-      logger.warn(`Duplicate appointment request detected: ${requestHash}`);
-      return Response.BAD_REQUEST({
-        message:
-          "It appears you've already submitted this appointment request. Please check your appointments.",
-      });
-    }
-
-    await redisClient.set({
-      key: idempotencyCacheKey,
-      value: Date.now().toString(),
-      expiry: 600, // 10 mins
-    });
-
+    // Step 1: Validate entities
     const {
-      patient_id: patientId,
-      first_name: userFirstName,
-      last_name: userLastName,
-      booked_first_appointment: hasBookedFirstAppointment,
-      mobile_number: mobileNumber,
-    } = patient.value;
-
-    // encrypt patient data
-    const patientFirstName = decryptText(userFirstName);
-    const patientLastName = decryptText(userLastName);
-    const encryptedPatientName = encryptText(patientName);
-    const encryptedSymptoms = encryptText(symptoms);
-
-    const {
-      consultation_fee: consultationFee,
-      first_name: doctorFirstName,
-      last_name: doctorLastName,
-      mobile_number: doctorMobileNumber,
-    } = doctor.value;
-
-    const generatedOrderId = uuidv4();
-
-    const appointmentResult = await repo.createNewPatientAppointment({
-      uuid: generatedOrderId,
-      patientId,
+      patient,
+      doctor,
+      error: validationError,
+    } = await validateEntities({
+      userId,
       doctorId,
-      patientName: encryptedPatientName,
-      patientNumber,
-      symptoms: encryptedSymptoms,
-      appointmentType,
-      consultationFee,
-      specialtyId,
       appointmentDate,
       appointmentTime,
     });
+    if (validationError) return validationError;
 
-    appointmentId = appointmentResult.insertId;
-
-    if (!appointmentId) {
-      logger.error("Failed to create new patient appointment");
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "An error occurred, please try again",
-      });
-    }
-
-    if (!hasBookedFirstAppointment) {
-      const [
-        appointmentResult,
-        updateAppointmentResult,
-        appointmentSms,
-        doctorAppointmentSms,
-      ] = await Promise.allSettled([
-        createFirstAppointmentPayment({
-          appointmentId,
-          amountPaid: consultationFee,
-          orderId: generatedOrderId,
-          paymentMethod: "FIRST_FREE_APPOINTMENT",
-          transactionId: "FIRST_FREE_APPOINTMENT",
-          paymentToken: "FIRST_FREE_APPOINTMENT",
-          notificationToken: "FIRST_FREE_APPOINTMENT",
-          status: "success",
-        }),
-        updatePatientFirstAppointmentStatus(patientId),
-        appointmentBookedSms({
-          mobileNumber,
-          patientName: `${patientFirstName} ${patientLastName}`,
-          doctorName: `${doctorFirstName} ${doctorLastName}`,
-          patientNameOnPrescription: patientName,
-          appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
-          appointmentTime,
-        }),
-        doctorAppointmentBookedSms({
-          mobileNumber: doctorMobileNumber,
-          doctorName: `${doctorLastName}`,
-          patientNameOnPrescription: patientName,
-          appointmentDate: moment(appointmentDate).format("YYYY-MM-DD"),
-          appointmentTime,
-        }),
-      ]);
-
-      if (
-        appointmentResult.status === "rejected" ||
-        updateAppointmentResult.status === "rejected" ||
-        appointmentSms.status === "rejected" ||
-        doctorAppointmentSms.status === "rejected"
-      ) {
-        logger.error(
-          `Error processing first appointment booking for appointment ID ${appointmentId}: `,
-          appointmentResult.reason ||
-            updateAppointmentResult.reason ||
-            appointmentSms.reason ||
-            doctorAppointmentSms.reason,
-        );
-        await repo.deleteAppointmentById({ appointmentId });
-        await redisClient.clearCacheByPattern(
-          `patient:${patientId}:appointments:*`,
-        );
-        await redisClient.clearCacheByPattern(
-          `doctor:${doctorId}:appointments:*`,
-        );
-        return Response.INTERNAL_SERVER_ERROR({
-          message: "An Error Occured on our side, please try again",
-        });
-      }
-      await redisClient.clearCacheByPattern(
-        `patient:${patientId}:appointments:*`,
-      );
-      await redisClient.clearCacheByPattern(
-        `doctor:${doctorId}:appointments:*`,
-      );
-      return Response.CREATED({
-        message:
-          "First Free Medical Appointment Booked Successfully. Thank you for choosing Kenecare",
-        data: {
-          paymentUrl: null,
-          firstAppointment: true,
-        },
-      });
-    }
-    // Get and send payment url to process payment
-    const response = await getPaymentUSSD({
-      orderId: generatedOrderId,
-      amount: consultationFee,
-    }).catch((error) => {
-      logger.error(
-        `Error getting payment URL for appointment ID ${appointmentId}: `,
-        error,
-      );
-      throw error;
+    // Step 2: Prevent duplicate request
+    const { error: idempotencyError } = await checkIdempotency({
+      userId,
+      doctorId,
+      appointmentDate,
+      appointmentTime,
+      patientName,
     });
+    if (idempotencyError) return idempotencyError;
 
-    if (!response) {
-      logger.error(
-        `Failed to get payment URL for appointment ID ${appointmentId}`,
-      );
-      await repo.deleteAppointmentById({ appointmentId });
-      await redisClient.clearCacheByPattern(
-        `patient:${patientId}:appointments:*`,
-      );
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "An Error Occured on our side, please try again",
-      });
-    }
+    // Step 3: Extract patient details
+    const { booked_first_appointment: hasBookedFirstAppointment } = patient;
 
-    const { ussdCode, paymentCodeId, idempotencyKey, expiresAt, cancelUrl } =
-      response;
-
-    // create new appointment payments record
-    const { insertId } = await createAppointmentPayment({
-      appointmentId,
-      amountPaid: consultationFee,
-      orderId: generatedOrderId,
-      paymentMethod: "",
-      paymentToken: ussdCode,
-      notificationToken: idempotencyKey,
-      transactionId: paymentCodeId,
-    });
-
-    if (!insertId) {
-      logger.error(
-        `Failed to create appointment payment record for appointment ID ${appointmentId}`,
-      );
-      await repo.deleteAppointmentById({ appointmentId });
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "An Error Occured on our side, please try again",
-      });
-    }
-
-    await redisClient.clearCacheByPattern(
-      `patient:${patientId}:appointments:*`,
-    );
-    await redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`);
-    return Response.CREATED({
-      message: "Appointment Booked Successfully. Proceed to payment.",
-      data: {
-        paymentUrl: ussdCode,
-        cancelUrl,
-        paymentUrlExpiresAt: expiresAt,
+    const appointmentResult = await createAppointment(
+      {
+        patientName,
+        patientNumber,
+        doctorId,
+        symptoms,
+        appointmentType,
+        specialtyId,
+        appointmentDate,
+        appointmentTime,
       },
-    });
+      { patient, doctor },
+    );
+
+    // Step 6: Handle first free appointment
+    if (!hasBookedFirstAppointment) {
+      return await processFirstAppointment(appointmentResult, {
+        patient,
+        doctor,
+      });
+    }
+    // Step 7: Process regular appointment
+    return await processRegularAppointment(appointmentResult);
   } catch (error) {
+    console.error(error);
     logger.error("createPatientAppointment", error);
-    throw error;
+    return failResponse("Unexpected error, please try again");
   }
 };
