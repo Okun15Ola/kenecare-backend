@@ -5,7 +5,7 @@ const DOCTOR_COLUMNS = `
   d.consultation_fee, c.city_name, c.latitude, c.longitude, 
   d.years_of_experience, d.is_profile_approved, d.user_id, 
   u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online, u.last_seen_at,
-  dcr.registration_status
+  dcr.registration_status, dcr.certificate_expiry_date
 `;
 
 const DOCTOR_JOINS = `
@@ -81,10 +81,12 @@ module.exports = {
     d.consultation_fee, c.city_name, c.latitude, c.longitude, 
     d.years_of_experience, d.is_profile_approved, d.user_id, 
     u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online , u.notification_token, u.last_seen_at
+    dcr.certificate_expiry_date
     FROM doctors d
     INNER JOIN users u ON d.user_id = u.user_id
     INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
     INNER JOIN cities c ON d.city_id = c.city_id  
+    INNER JOIN doctors_council_registration dcr ON d.doctor_id = dcr.doctor_id
     WHERE d.user_id = ?
     LIMIT 1
   `,

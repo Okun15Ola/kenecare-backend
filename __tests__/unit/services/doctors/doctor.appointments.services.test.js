@@ -14,9 +14,11 @@ const enumUtils = require("../../../../src/utils/enum.utils");
 const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const cachingUtils = require("../../../../src/utils/caching.utils");
 const authUtils = require("../../../../src/utils/auth.utils");
+const timeUtils = require("../../../../src/utils/time.utils");
 
 jest.mock("../../../../src/utils/caching.utils");
 jest.mock("../../../../src/utils/auth.utils");
+jest.mock("../../../../src/utils/time.utils");
 jest.mock("../../../../src/repository/doctorAppointments.repository");
 jest.mock("../../../../src/repository/doctors.repository");
 jest.mock("../../../../src/repository/users.repository");
@@ -625,6 +627,7 @@ describe("doctor.appointments.services", () => {
       });
       authUtils.encryptText.mockReturnValue("enc");
       dbObject.getDoctorAppointByDateAndTime.mockResolvedValue(false);
+      timeUtils.checkDoctorAvailability.mockResolvedValue(true);
       patientsRepo.getPatientById.mockResolvedValue({ mobile_number: "123" });
       dbObject.postponeDoctorAppointmentById.mockResolvedValue({
         affectedRows: 1,

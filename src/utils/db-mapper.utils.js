@@ -746,7 +746,6 @@ exports.mapPatientMedicalHistoryRow = (medicalHistory) => {
 };
 
 exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
-  let doctorAvailableDays = [];
   const {
     doctor_id: doctorId,
     title,
@@ -781,17 +780,18 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
       : await getFileUrlFromS3Bucket(profilePic);
   }
 
-  const mappedAvailableDays =
+  const rawAvailableDays =
     await availableDaysDB.getDoctorsAvailableDays(doctorId);
-  if (mappedAvailableDays && mappedAvailableDays.length > 0) {
-    doctorAvailableDays = mappedAvailableDays.map((day) => ({
-      dayId: day.day_slot_id,
-      day: day.day_of_week,
-      startTime: day.day_start_time,
-      endTime: day.day_end_time,
-      isAvailable: day.is_available,
-    }));
-  }
+  const doctorAvailableDays =
+    rawAvailableDays && rawAvailableDays.length > 0
+      ? rawAvailableDays.map((day) => ({
+          dayId: day.day_slot_id,
+          day: day.day_of_week,
+          startTime: day.day_start_time,
+          endTime: day.day_end_time,
+          isAvailable: Boolean(day.is_available),
+        }))
+      : [];
   const mapped = {
     doctorId,
     title,
@@ -799,35 +799,35 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     middleName,
     lastName,
     gender,
-    professionalSummary,
+    professionalSummary: he.decode(professionalSummary),
     profilePic: profilePicData || null,
     specialtyId,
     specialization,
-    qualifications,
+    qualifications: he.decode(qualifications),
     consultationFee,
     location,
     latitude,
     longitude,
     yearOfExperience,
-    isProfileApproved,
+    isProfileApproved: Boolean(isProfileApproved),
     mobileNumber,
     email,
     userType,
-    isAccountActive,
-    isOnline,
+    isAccountActive: Boolean(isAccountActive),
+    isOnline: Boolean(isOnline),
     councilRegistrationStatus,
-    doctorAvailableDays,
   };
 
   if (isOnline === 0) {
     mapped.lastSeen = moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow();
   }
 
+  mapped.doctorAvailableDays = doctorAvailableDays;
+
   return mapped;
 };
 
 exports.mapDoctorUserProfileRow = async (doctor) => {
-  let doctorAvailableDays = [];
   const {
     doctor_id: doctorId,
     title,
@@ -851,19 +851,21 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     user_id: userId,
     user_type: userType,
     registration_status: councilRegistrationStatus,
+    certificate_expiry_date: certificateExpiryDate,
   } = doctor;
   const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
-  const mappedAvailableDays =
+  const rawAvailableDays =
     await availableDaysDB.getDoctorsAvailableDays(doctorId);
-  if (mappedAvailableDays && mappedAvailableDays.length > 0) {
-    doctorAvailableDays = mappedAvailableDays.map((day) => ({
-      dayId: day.day_slot_id,
-      day: day.day_of_week,
-      startTime: day.day_start_time,
-      endTime: day.day_end_time,
-      isAvailable: day.is_available,
-    }));
-  }
+  const doctorAvailableDays =
+    rawAvailableDays && rawAvailableDays.length > 0
+      ? rawAvailableDays.map((day) => ({
+          dayId: day.day_slot_id,
+          day: day.day_of_week,
+          startTime: day.day_start_time,
+          endTime: day.day_end_time,
+          isAvailable: Boolean(day.is_available),
+        }))
+      : [];
   const mapped = {
     doctorId,
     userId,
@@ -875,23 +877,32 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     gender,
     mobileNumber,
     email,
-    professionalSummary,
+    professionalSummary: he.decode(professionalSummary),
     profilePic: imageUrl,
     specialtyId,
     specialization,
-    qualifications,
+    qualifications: he.decode(qualifications),
     consultationFees,
     city,
     yearOfExperience,
-    isProfileApproved,
-    isOnline,
+    isProfileApproved: Boolean(isProfileApproved),
+    isOnline: Boolean(isOnline),
     councilRegistrationStatus,
-    doctorAvailableDays,
   };
 
   if (isOnline === 0) {
     mapped.lastSeen = moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow();
   }
+
+  const expiryMoment = moment(certificateExpiryDate);
+  const now = moment();
+  if (expiryMoment.isSameOrBefore(now, "day")) {
+    mapped.certificateExpiryDate = moment(certificateExpiryDate).format(
+      "YYYY-MM-DD",
+    );
+  }
+
+  mapped.doctorAvailableDays = doctorAvailableDays;
 
   return mapped;
 };

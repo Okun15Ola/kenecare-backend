@@ -106,8 +106,9 @@ exports.CreateAppointmentValidation = [
     .toLowerCase()
     .trim()
     .escape()
-    .custom(async (date) => {
+    .custom((date) => {
       validateDate(date);
+      return true;
     }),
   body("appointmentTime")
     .notEmpty()
@@ -115,9 +116,10 @@ exports.CreateAppointmentValidation = [
     .bail()
     .trim()
     .escape()
-    .custom(async (time, { req }) => {
+    .custom((time, { req }) => {
       const date = req.body.appointmentDate;
       validateDateTime({ date, time });
+      return true;
     }),
 ];
 

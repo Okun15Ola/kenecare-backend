@@ -3,12 +3,16 @@ const logger = require("../middlewares/logger.middleware");
 const {
   getAvailableDoctors,
   getDoctorSpecificDayAvailability,
+  getSpecificDayAvailability,
 } = require("../repository/doctorAvailableDays.repository");
 const {
   DELETE_SLOTS,
   DELETE_SLOTS_FOR_DAY,
   BULK_INSERT_DOCTOR_TIME_SLOTS,
 } = require("../repository/queries/doctorTimeSlot.queries");
+const {
+  getExisitingAppointments,
+} = require("../repository/patientAppointments.repository");
 const { withTransaction } = require("../repository/db.connection");
 
 const SL_COUNTRY_CODE = "+232";
@@ -93,7 +97,6 @@ const refineMobileNumber = (mobileNumber) => {
  * @throws {Error} If the date is invalid or in the past.
  */
 const validateDate = (date) => {
-  // const today = moment().format("YYYY-MM-DD");
   const today = moment().startOf("day"); // Keep as a Moment object
   const userDate = moment(date, "YYYY-MM-DD", true);
 
@@ -117,17 +120,19 @@ const validateDate = (date) => {
 
 /**
  * Validates an appointment date and time.
- * Ensures the date is in 'YYYY-MM-DD' format and is not in the past.
- * If the date is today, it checks whether the selected time is still in the future.
+ * Ensures the combined datetime is valid and in the future.
+ * For today's appointments, it ensures it's at least 1 hour from the current time.
  *
- * @param {string} date - The appointment date (YYYY-MM-DD).
- * @param {string} time - The appointment time (HH:mm).
- * @throws {Error} If the date/time is invalid or in the past.
+ * @param {object} params
+ * @param {string} params.date - The appointment date (YYYY-MM-DD).
+ * @param {string} params.time - The appointment time (HH:mm).
+ * @throws {Error} If the date/time is invalid or in the past/too soon.
  */
 const validateDateTime = ({ date, time }) => {
   const now = moment();
   const userDateTime = moment(`${date} ${time}`, "YYYY-MM-DD HH:mm", true);
-  const today = moment().format("YYYY-MM-DD");
+  const todayFormatted = moment().format("YYYY-MM-DD"); // To compare just the date string
+
   if (!userDateTime.isValid()) {
     throw new Error(
       "Appointment date and time must be valid (YYYY-MM-DD HH:mm)",
@@ -140,9 +145,9 @@ const validateDateTime = ({ date, time }) => {
     );
   }
 
-  // If the appointment is today, ensure it's at least 1 hours from the current time
-  if (date === today) {
-    const minAppointmentTime = now.add(1, "hours");
+  // If the appointment is today, ensure it's at least 1 hour from the current time
+  if (date === todayFormatted) {
+    const minAppointmentTime = now.clone().add(1, "hour"); // Use clone to avoid modifying 'now'
     if (userDateTime.isBefore(minAppointmentTime)) {
       throw new Error(
         "Appointments for today must be at least 1 hour from the current time.",
@@ -150,6 +155,139 @@ const validateDateTime = ({ date, time }) => {
     }
   }
 };
+
+const DEFAULT_APPOINTMENT_DURATION_MINUTES = 30;
+const DOCTOR_BREAK_MINUTES = 10;
+const TOTAL_APPOINTMENT_BLOCK_MINUTES =
+  DEFAULT_APPOINTMENT_DURATION_MINUTES + DOCTOR_BREAK_MINUTES;
+const PRE_APPOINTMENT_BUFFER_MINUTES = 10;
+
+const dayOfWeekMap = {
+  0: "Sunday",
+  1: "Monday",
+  2: "Tuesday",
+  3: "Wednesday",
+  4: "Thursday",
+  5: "Friday",
+  6: "Saturday",
+};
+
+/**
+ * Checks if a doctor is available for a new appointment at a specific time,
+ * considering general availability, existing appointments (with duration + 10 min break),
+ * and a 10-minute pre-appointment buffer before existing appointments.
+ *
+ * @param {number} doctorId The ID of the doctor.
+ * @param {string} proposedAppointmentStartDateTime String representing proposed start (e.g., 'YYYY-MM-DD HH:mm:ss').
+ * @returns {Promise<boolean>} True if available, false otherwise.
+ */
+async function checkDoctorAvailability(
+  doctorId,
+  proposedAppointmentStartDateTime,
+) {
+  const proposedStart = moment(proposedAppointmentStartDateTime);
+  const proposedEndWithBuffer = proposedStart
+    .clone()
+    .add(TOTAL_APPOINTMENT_BLOCK_MINUTES, "minutes");
+
+  const proposedDayOfWeekString = dayOfWeekMap[proposedStart.day()];
+
+  // Step 1: Check if the proposed time falls within doctor's general availability days/hours
+  const availableDays = await getSpecificDayAvailability(
+    doctorId,
+    proposedDayOfWeekString,
+  );
+  console.log("Available days for doctor:", availableDays);
+
+  let isInGeneralAvailability = false;
+  if (availableDays.length === 0) {
+    console.log(
+      `Doctor ${doctorId} has no general availability defined for ${proposedDayOfWeekString}.`,
+    );
+    return false;
+  }
+
+  isInGeneralAvailability = availableDays.some((daySlot) => {
+    const slotStartTime = moment(daySlot.day_start_time, "HH:mm:ss");
+    const slotEndTime = moment(daySlot.day_end_time, "HH:mm:ss");
+
+    const slotStartDateTimeOnProposedDate = proposedStart
+      .clone()
+      .hour(slotStartTime.hour())
+      .minute(slotStartTime.minute())
+      .second(slotStartTime.second());
+    const slotEndDateTimeOnProposedDate = proposedStart
+      .clone()
+      .hour(slotEndTime.hour())
+      .minute(slotEndTime.minute())
+      .second(slotEndTime.second());
+
+    // Check if the entire proposed block (appointment + following break) fits within an available slot
+    return (
+      proposedStart.isSameOrAfter(slotStartDateTimeOnProposedDate) &&
+      proposedEndWithBuffer.isSameOrBefore(slotEndDateTimeOnProposedDate)
+    );
+  });
+
+  if (!isInGeneralAvailability) {
+    console.log(
+      `Doctor ${doctorId} is not generally available on ${proposedDayOfWeekString} at ${proposedStart.format("HH:mm")}.`,
+    );
+    return false; // Proposed time is outside the doctor's standard working hours for that day
+  }
+
+  // Step 2: Check for conflicts with existing appointments + 10-min break + 10-min pre-appointment buffer
+  const existingAppointments = await getExisitingAppointments(
+    doctorId,
+    proposedStart,
+  );
+
+  const conflictFound = existingAppointments.some((existingAppt) => {
+    const existingApptDate = moment(existingAppt.appointment_date).format(
+      "YYYY-MM-DD",
+    );
+    const existingApptStart = moment(
+      `${existingApptDate} ${existingAppt.appointment_time}`,
+    );
+
+    // Calculate the end time of the *existing* appointment block for the doctor,
+    // including its actual duration and the required break after it.
+    const existingApptEndWithBreak = existingApptStart
+      .clone()
+      .add(
+        DEFAULT_APPOINTMENT_DURATION_MINUTES + DOCTOR_BREAK_MINUTES,
+        "minutes",
+      );
+
+    // Calculate the effective start time of the *existing* appointment block considering its pre-appointment buffer.
+    const existingApptStartWithPreBuffer = existingApptStart
+      .clone()
+      .subtract(PRE_APPOINTMENT_BUFFER_MINUTES, "minutes");
+
+    // Define the TOTAL blocked period for this existing appointment (inclusive of pre-buffer and post-break)
+    const totalBlockedPeriodStart = existingApptStartWithPreBuffer;
+    const totalBlockedPeriodEnd = existingApptEndWithBreak;
+
+    // Check for overlap between the proposed appointment block and the total blocked period of an existing appointment.
+    // Overlap occurs if (proposed block starts before total blocked period ends)
+    // AND (proposed block ends after total blocked period starts)
+    const overlaps =
+      proposedStart.isBefore(totalBlockedPeriodEnd) &&
+      proposedEndWithBuffer.isAfter(totalBlockedPeriodStart);
+
+    if (overlaps) {
+      console.log(
+        `Conflict for Doctor ${doctorId}: Proposed appointment ${proposedStart.format("HH:mm")} - ${proposedEndWithBuffer.format("HH:mm")} ` +
+          `overlaps with existing appointment ${existingApptStart.format("HH:mm")} - ${existingApptEndWithBreak.format("HH:mm")} ` +
+          `(pre-buffer starts at ${existingApptStartWithPreBuffer.format("HH:mm")}, actual appt starts at ${existingApptStart.format("HH:mm")}, ` +
+          `ends at ${existingApptEndWithBreak.format("HH:mm")} including break).`,
+      );
+    }
+    return overlaps;
+  });
+
+  return !conflictFound; // Returns true if no conflict, false otherwise
+}
 
 /**
  * Generates a token expiry time by adding the specified number of minutes to the current time.
@@ -393,4 +531,5 @@ module.exports = {
   validateTimeRange,
   generateDoctorTimeSlots,
   generateDoctorTimeSlotsForAvailableDay,
+  checkDoctorAvailability,
 };

@@ -38,6 +38,7 @@ const {
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const { decryptText, encryptText } = require("../../utils/auth.utils");
+const { checkDoctorAvailability } = require("../../utils/time.utils");
 
 async function validateEntities({
   userId,
@@ -45,15 +46,18 @@ async function validateEntities({
   appointmentDate,
   appointmentTime,
 }) {
-  const [patient, doctor, timeBooked] = await Promise.allSettled([
-    getPatientByUserId(userId),
-    getDoctorById(doctorId),
-    getDoctorAppointByDateAndTime({
-      doctorId,
-      date: appointmentDate,
-      time: appointmentTime,
-    }),
-  ]);
+  const proposedAppointmentStartDateTime = `${appointmentDate} ${appointmentTime}`;
+  const [patient, doctor, timeBooked, doctorAvailability] =
+    await Promise.allSettled([
+      getPatientByUserId(userId),
+      getDoctorById(doctorId),
+      getDoctorAppointByDateAndTime({
+        doctorId,
+        date: appointmentDate,
+        time: appointmentTime,
+      }),
+      checkDoctorAvailability(doctorId, proposedAppointmentStartDateTime),
+    ]);
 
   if (patient.status === "rejected") {
     return {
@@ -77,6 +81,20 @@ async function validateEntities({
       error: Response.BAD_REQUEST({
         message:
           "An appointment has already been booked for the specified time. Please choose another time",
+      }),
+    };
+  }
+
+  console.log(doctorAvailability);
+
+  if (
+    doctorAvailability.status === "rejected" ||
+    !doctorAvailability.value.isAvailable
+  ) {
+    return {
+      error: Response.BAD_REQUEST({
+        message:
+          "Doctor is not available at the specified time. Please choose another time",
       }),
     };
   }
