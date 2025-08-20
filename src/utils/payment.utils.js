@@ -44,9 +44,15 @@ const getPaymentUSSD = async ({ orderId, amount }) => {
     const response = await axios
       .post(`${monimeeApiUrl}/payment-codes`, body, options)
       .catch((error) => {
+        console.error(error);
         logger.error("Error creating payment code: ", error);
         throw error;
       });
+
+    if (!response?.data || response?.status !== 200) {
+      logger.error("Failed to create payment code, status: ", response.status);
+      return null;
+    }
 
     const { success, result } = response.data;
 
