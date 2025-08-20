@@ -2,7 +2,7 @@ const logger = require("../middlewares/logger.middleware");
 const { markUserOffline } = require("../repository/users.repository");
 
 module.exports = {
-  schedule: "*/10 * * * *", // Every 10 minutes
+  schedule: "*/3 * * * *", // Every 3 minutes
   name: "user-online-status",
 
   async execute() {

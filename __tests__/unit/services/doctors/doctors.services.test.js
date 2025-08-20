@@ -389,7 +389,19 @@ describe("Doctors Service", () => {
       dbObject.getDoctorByUserId.mockResolvedValue(null);
       dbObject.createDoctor.mockResolvedValue({ insertId: null });
       Response.INTERNAL_SERVER_ERROR.mockReturnValue("internal_error");
-      const result = await doctorsService.createDoctorProfile({ userId: 4 });
+      const result = await doctorsService.createDoctorProfile({
+        userId: 5,
+        firstName: "John",
+        middleName: "M",
+        lastName: "Doe",
+        gender: "male",
+        professionalSummary: "test",
+        specializationId: 1,
+        qualifications: "test",
+        consultationFee: 1.0,
+        cityId: 1,
+        yearOfExperience: "2 yrs",
+      });
       expect(Response.INTERNAL_SERVER_ERROR).toHaveBeenCalled();
       expect(result).toBe("internal_error");
     });
@@ -414,6 +426,13 @@ describe("Doctors Service", () => {
         firstName: "John",
         middleName: "M",
         lastName: "Doe",
+        gender: "male",
+        professionalSummary: "test",
+        specializationId: 1,
+        qualifications: "test",
+        consultationFee: 1.0,
+        cityId: 1,
+        yearOfExperience: "2 yrs",
       });
       expect(adminDoctorProfileRegistrationEmail).toHaveBeenCalled();
       expect(createDoctorWallet).toHaveBeenCalled();
@@ -427,7 +446,7 @@ describe("Doctors Service", () => {
     it("returns NOT_FOUND if doctor not found", async () => {
       dbObject.getDoctorByUserId.mockResolvedValue(null);
       Response.NOT_FOUND.mockReturnValue("not_found");
-      const result = await doctorsService.updateDoctorProfile({ userId: 1 });
+      await doctorsService.updateDoctorProfile({ userId: 1 });
       expect(Response.NOT_FOUND).toBeDefined();
     });
 
@@ -473,7 +492,19 @@ describe("Doctors Service", () => {
       });
       dbObject.updateDoctorById.mockResolvedValue({ affectedRows: 0 });
       Response.NOT_MODIFIED.mockReturnValue("not_modified");
-      const result = await doctorsService.updateDoctorProfile({ userId: 5 });
+      const result = await doctorsService.updateDoctorProfile({
+        userId: 5,
+        firstName: "John",
+        middleName: "M",
+        lastName: "Doe",
+        gender: "male",
+        professionalSummary: "test",
+        specializationId: 1,
+        qualifications: "test",
+        consultationFee: 1.0,
+        cityId: 1,
+        yearOfExperience: "2 yrs",
+      });
       expect(Response.NOT_MODIFIED).toHaveBeenCalled();
       expect(result).toBe("not_modified");
     });
@@ -488,7 +519,19 @@ describe("Doctors Service", () => {
       dbObject.updateDoctorById.mockResolvedValue({ affectedRows: 1 });
       redisClient.delete.mockResolvedValue();
       Response.SUCCESS.mockReturnValue("success");
-      const result = await doctorsService.updateDoctorProfile({ userId: 6 });
+      const result = await doctorsService.updateDoctorProfile({
+        userId: 5,
+        firstName: "John",
+        middleName: "M",
+        lastName: "Doe",
+        gender: "male",
+        professionalSummary: "test",
+        specializationId: 1,
+        qualifications: "test",
+        consultationFee: 1.0,
+        cityId: 1,
+        yearOfExperience: "2 yrs",
+      });
       expect(redisClient.delete).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalled();
       expect(result).toBe("success");
