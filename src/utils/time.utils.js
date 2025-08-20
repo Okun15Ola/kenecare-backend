@@ -197,7 +197,6 @@ async function checkDoctorAvailability(
     doctorId,
     proposedDayOfWeekString,
   );
-  console.log("Available days for doctor:", availableDays);
 
   let isInGeneralAvailability = false;
   if (!availableDays || availableDays.is_available === 0) {
@@ -236,7 +235,7 @@ async function checkDoctorAvailability(
   // Step 2: Check for conflicts with existing appointments + 10-min break + 10-min pre-appointment buffer
   const existingAppointments = await getExisitingAppointments(
     doctorId,
-    proposedStart,
+    proposedAppointmentStartDateTime,
   );
 
   const conflictFound = existingAppointments.some((existingAppt) => {
