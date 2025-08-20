@@ -199,34 +199,31 @@ async function checkDoctorAvailability(
   );
 
   let isInGeneralAvailability = false;
-  if (availableDays.length === 0) {
+  if (!availableDays || availableDays.is_available === 0) {
     console.log(
       `Doctor ${doctorId} has no general availability defined for ${proposedDayOfWeekString}.`,
     );
     return false;
   }
 
-  isInGeneralAvailability = availableDays.some((daySlot) => {
-    const slotStartTime = moment(daySlot.day_start_time, "HH:mm:ss");
-    const slotEndTime = moment(daySlot.day_end_time, "HH:mm:ss");
+  const slotStartTime = moment(availableDays.day_start_time, "HH:mm:ss");
+  const slotEndTime = moment(availableDays.day_end_time, "HH:mm:ss");
 
-    const slotStartDateTimeOnProposedDate = proposedStart
-      .clone()
-      .hour(slotStartTime.hour())
-      .minute(slotStartTime.minute())
-      .second(slotStartTime.second());
-    const slotEndDateTimeOnProposedDate = proposedStart
-      .clone()
-      .hour(slotEndTime.hour())
-      .minute(slotEndTime.minute())
-      .second(slotEndTime.second());
+  const slotStartDateTimeOnProposedDate = proposedStart
+    .clone()
+    .hour(slotStartTime.hour())
+    .minute(slotStartTime.minute())
+    .second(slotStartTime.second());
+  const slotEndDateTimeOnProposedDate = proposedStart
+    .clone()
+    .hour(slotEndTime.hour())
+    .minute(slotEndTime.minute())
+    .second(slotEndTime.second());
 
-    // Check if the entire proposed block (appointment + following break) fits within an available slot
-    return (
-      proposedStart.isSameOrAfter(slotStartDateTimeOnProposedDate) &&
-      proposedEndWithBuffer.isSameOrBefore(slotEndDateTimeOnProposedDate)
-    );
-  });
+  // Check if the entire proposed block (appointment + following break) fits within an available slot
+  isInGeneralAvailability =
+    proposedStart.isSameOrAfter(slotStartDateTimeOnProposedDate) &&
+    proposedEndWithBuffer.isSameOrBefore(slotEndDateTimeOnProposedDate);
 
   if (!isInGeneralAvailability) {
     console.log(
