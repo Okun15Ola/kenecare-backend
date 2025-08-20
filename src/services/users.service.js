@@ -404,7 +404,6 @@ exports.logoutUser = async ({ userId, token, tokenExpiry }) => {
       });
     }
 
-    console.log("In here");
     await Promise.all([
       blacklistToken(token, tokenExpiry),
       redisClient.delete(`user:${userId}`),
