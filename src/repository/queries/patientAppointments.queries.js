@@ -52,7 +52,7 @@ module.exports = {
   `,
 
   GET_EXISITING_APPOINTMENTS: `
-  SELECT appointment_date, appointment_time, appointment_duration_minutes
+  SELECT appointment_date, appointment_time
   FROM medical_appointments
   WHERE doctor_id = ?
   AND appointment_date = ?
