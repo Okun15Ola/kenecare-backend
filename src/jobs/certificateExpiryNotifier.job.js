@@ -33,7 +33,7 @@ async function sendCertificateExpirySms(
   expiryDateFormatted,
   notificationType,
 ) {
-  const doctorName = `DR. ${doctor.last_name}`;
+  const doctorName = `${doctor.title} ${doctor.last_name}`;
   const mobileNumber = doctor.mobile_number;
   const message = SMS_MESSAGES[notificationType](
     doctorName,
