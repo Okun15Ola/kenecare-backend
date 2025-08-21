@@ -30,6 +30,7 @@ exports.LoginValidations = [
     .trim()
     .escape()
     .custom(async (mobileNumber, { req }) => {
+      console.time("Login");
       const refinedMobileNumber = refineMobileNumber(mobileNumber);
 
       const dbUser = await getUserByMobileNumber(refinedMobileNumber);
@@ -78,6 +79,7 @@ exports.LoginValidations = [
       }
 
       req.user = user;
+      console.timeEnd("Login");
       return true;
     }),
   body("password")
