@@ -1,6 +1,8 @@
+/* eslint-disable import/no-extraneous-dependencies */
 require("dotenv").config();
 require("newrelic");
 require("module-alias/register");
+const compression = require("compression");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -77,6 +79,7 @@ const adminApiClientRouter = require("./routes/api/apiClient.routes");
 const adminApiKeyRouter = require("./routes/api/apiKey.routes");
 const adminDoctorReviewsRouter = require("./routes/api/admin/doctors.reviews.routes");
 const adminFeatureFlagRouter = require("./routes/api/admin/featureFlags.routes");
+const adminCacheRouter = require("./routes/api/cache.routes");
 
 // Replace your current CORS setup with this more secure configuration
 const corsOptions = {
@@ -110,6 +113,15 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  compression({
+    level: 6,
+    threshold: 1024, // only compress responses > 1kb
+    filter: (req, res) => {
+      return res.getHeader("Content-Type")?.includes("application/json");
+    },
+  }),
+);
 
 app.use("/api/v1/health-check", (req, res) =>
   res
@@ -185,6 +197,7 @@ app.use("/api/v1/admin/marketers", adminMarketersRouter);
 app.use("/api/v1/marketers", adminMarketersRouter);
 app.use("/api/v1/admin/doctor-reviews", adminDoctorReviewsRouter);
 app.use("/api/v1/admin/feature-flags", adminFeatureFlagRouter);
+app.use("/api/v1/admin/caches", adminCacheRouter);
 
 // Catch-all route for handling unknown routes
 app.use((req, res, next) => {
