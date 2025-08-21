@@ -123,6 +123,8 @@ app.use(
   }),
 );
 
+app.set("etag", true);
+
 app.use("/api/v1/health-check", (req, res) =>
   res
     .status(200)
