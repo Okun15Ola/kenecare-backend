@@ -333,38 +333,17 @@ exports.loginUser = async ({
 }) => {
   try {
     if (is2faEnabled === STATUS.ACTIVE) {
-      const response = await generateAndSendVerificationOTP({
-        userId,
-        mobileNumber,
-      });
-      return response;
+      return generateAndSendVerificationOTP({ userId, mobileNumber });
     }
 
-    await createStreamUserProfile(userType, userId);
+    const [accessToken, streamToken] = await Promise.all([
+      generateUsersJwtAccessToken({ sub: userId }),
+      generateStreamUserToken(userId.toString()),
+      createStreamUserProfile(userType, userId), // profile creation
+    ]);
 
-    const { affectedRows } = await repo.updateUserAccountStatusById({
-      userId,
-      status: STATUS.ACTIVE,
-    });
-    await repo.updateUserOnlineStatus({
-      userId,
-      status: STATUS.ACTIVE,
-    });
+    redisClient.clearCacheByPattern("doctors:all:*");
 
-    if (!affectedRows || affectedRows < 1) {
-      logger.error("loginUser: Failed to update user account status");
-      return Response.NOT_MODIFIED({});
-    }
-
-    const accessToken = generateUsersJwtAccessToken({
-      sub: userId,
-    });
-
-    const streamToken = await generateStreamUserToken(userId.toString());
-
-    await redisClient.clearCacheByPattern("doctors:all:*");
-
-    // Return access token
     return Response.SUCCESS({
       message: "Logged In Successfully",
       data: {
@@ -473,7 +452,7 @@ exports.requestUserLoginOtp = async ({ userId, mobileNumber }) => {
   try {
     const token = generateVerificationToken();
     const tokenExpiry = generateTokenExpiryTime(15);
-    console.log("AUTH TOKEN: ", token);
+
     const [updateResult, smsResult] = await Promise.allSettled([
       repo.updateUserVerificationTokenById({ userId, token, tokenExpiry }),
       sendAuthTokenSMS({ token, mobileNumber }),
