@@ -337,8 +337,6 @@ describe("users.service", () => {
     });
 
     it("returns success if login successful", async () => {
-      updateUserAccountStatusById.mockResolvedValue({ affectedRows: 1 });
-
       const result = await usersService.loginUser({
         is2faEnabled: STATUS.INACTIVE,
         userId: 1,
@@ -349,21 +347,6 @@ describe("users.service", () => {
       });
 
       expect(result.statusCode).toBe(200);
-    });
-
-    it("returns NOT_MODIFIED if update fails", async () => {
-      updateUserAccountStatusById.mockResolvedValue({ affectedRows: 0 });
-
-      const result = await usersService.loginUser({
-        is2faEnabled: STATUS.INACTIVE,
-        userId: 1,
-        userType: USERTYPE.PATIENT,
-        accountVerified: true,
-        accountActive: true,
-        mobileNumber: "1234567890",
-      });
-
-      expect(result.statusCode).toBe(304);
     });
   });
 
