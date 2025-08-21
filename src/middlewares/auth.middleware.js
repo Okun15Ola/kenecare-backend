@@ -124,11 +124,11 @@ const authenticateUser = async (req, res, next) => {
       );
     }
 
-    updateUserOnlineStatus({
-      userId,
-      status: STATUS.ACTIVE,
-    });
+    updateUserOnlineStatus({ userId, status: STATUS.ACTIVE }).catch((err) =>
+      logger.error("Failed to update online status", { userId, err }),
+    );
 
+    req.userDetails = user;
     req.user = {
       id: decoded.sub,
       // isOnline: STATUS.ACTIVE,
@@ -192,22 +192,23 @@ const authenticateUser = async (req, res, next) => {
  */
 const authorizeDoctor = async (req, res, next) => {
   try {
-    const { id: userId } = req.user;
-    const user = await getUserById(userId);
-    if (!user) {
-      logger.error(`[DOCTOR_AUTH] User not found for ID: ${userId}`);
-      return res.status(404).json(
-        Response.NOT_FOUND({
-          message: "User not found",
-        }),
-      );
-    }
+    // const { id: userId } = req.user;
+    // const user = await getUserById(userId);
+    // if (!user) {
+    //   logger.error(`[DOCTOR_AUTH] User not found for ID: ${userId}`);
+    //   return res.status(404).json(
+    //     Response.NOT_FOUND({
+    //       message: "User not found",
+    //     }),
+    //   );
+    // }
 
     const {
       user_type: userType,
+      user_id: userId,
       is_account_active: isAccountActive,
       is_verified: isVerified,
-    } = user;
+    } = req.userDetails;
 
     if (
       userType !== USERTYPE.DOCTOR ||
@@ -300,30 +301,31 @@ const authorizeDoctor = async (req, res, next) => {
  */
 const authorizePatient = async (req, res, next) => {
   try {
-    logger.info(
-      `[PATIENT_AUTH] Starting patient authorization for user: ${req.user?.id}`,
-    );
+    // logger.info(
+    //   `[PATIENT_AUTH] Starting patient authorization for user: ${req.user?.id}`,
+    // );
 
-    const { id: userId } = req.user;
-    logger.debug(
-      `[PATIENT_AUTH] Fetching user data for patient authorization: ${userId}`,
-    );
+    // const { id: userId } = req.user;
+    // logger.debug(
+    //   `[PATIENT_AUTH] Fetching user data for patient authorization: ${userId}`,
+    // );
 
-    const user = await getUserById(userId);
-    if (!user) {
-      logger.error(`[PATIENT_AUTH] User not found for ID: ${userId}`);
-      return res.status(404).json(
-        Response.NOT_FOUND({
-          message: "User not found",
-        }),
-      );
-    }
+    // const user = await getUserById(userId);
+    // if (!user) {
+    //   logger.error(`[PATIENT_AUTH] User not found for ID: ${userId}`);
+    //   return res.status(404).json(
+    //     Response.NOT_FOUND({
+    //       message: "User not found",
+    //     }),
+    //   );
+    // }
 
     const {
       user_type: userType,
+      user_id: userId,
       is_account_active: isAccountActive,
       is_verified: isVerified,
-    } = user;
+    } = req.userDetails;
 
     if (
       userType !== USERTYPE.PATIENT ||
