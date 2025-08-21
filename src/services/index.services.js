@@ -59,6 +59,7 @@ const {
   mapSpecialityRow,
   mapTestimonialRow,
   mapDoctorBlog,
+  mapDoctorUserProfileRow,
 } = require("../utils/db-mapper.utils");
 const doctorBlogRepository = require("../repository/doctorBlogs.repository");
 const doctorFaqRepository = require("../repository/doctorFaqs.repository");
@@ -260,7 +261,7 @@ exports.getDoctorByIdIndexService = async (id) => {
       return Response.NOT_FOUND({ message: "Doctor Not Found" });
     }
 
-    const doctor = await mapDoctorRow(data, true);
+    const doctor = await mapDoctorUserProfileRow(data);
 
     await redisClient.set({
       key: cacheKey,
