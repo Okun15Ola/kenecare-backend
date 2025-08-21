@@ -149,6 +149,7 @@ function failResponse(message, code = 500) {
     message,
   });
 }
+
 async function sendAppointmentNotifications(appointment, { patient, doctor }) {
   if (!appointment || !patient || !doctor) {
     throw new Error("Missing appointment, patient, or doctor information");
@@ -228,7 +229,6 @@ async function processFirstAppointment(appointment, { patient, doctor }) {
     },
   });
 }
-
 // Regular appointment processing - single responsibility
 async function processRegularAppointment(appointment) {
   try {
@@ -294,6 +294,52 @@ async function processRegularAppointment(appointment) {
     );
     throw error;
   }
+}
+
+async function createAppointment(appointmentData, { patient, doctor }) {
+  const {
+    patientName,
+    symptoms,
+    doctorId,
+    appointmentType,
+    specialtyId,
+    appointmentDate,
+    appointmentTime,
+  } = appointmentData;
+
+  const generatedOrderId = uuidv4();
+  const encryptedPatientName = encryptText(patientName);
+  const encryptedSymptoms = encryptText(symptoms);
+
+  const appointmentResult = await repo.createNewPatientAppointment({
+    uuid: generatedOrderId,
+    patientId: patient.patient_id,
+    doctorId,
+    patientName: encryptedPatientName,
+    patientNumber: appointmentData.patientNumber,
+    symptoms: encryptedSymptoms,
+    appointmentType,
+    consultationFee: doctor.consultation_fee,
+    specialtyId,
+    appointmentDate,
+    appointmentTime,
+  });
+
+  if (!appointmentResult.insertId) {
+    logger.error("Failed to create new patient appointment");
+    throw new Error("Failed to create appointment");
+  }
+
+  return {
+    id: appointmentResult.insertId,
+    orderId: generatedOrderId,
+    patientId: patient.patient_id,
+    doctorId,
+    consultationFee: doctor.consultation_fee,
+    patientName,
+    appointmentDate,
+    appointmentTime,
+  };
 }
 
 exports.getPatientAppointmentMetrics = async (userId) => {
@@ -528,52 +574,6 @@ exports.getPatientAppointmentByUUID = async ({ userId, uuId }) => {
     throw error;
   }
 };
-async function createAppointment(appointmentData, { patient, doctor }) {
-  const {
-    patientName,
-    symptoms,
-    doctorId,
-    appointmentType,
-    specialtyId,
-    appointmentDate,
-    appointmentTime,
-  } = appointmentData;
-
-  const generatedOrderId = uuidv4();
-  const encryptedPatientName = encryptText(patientName);
-  const encryptedSymptoms = encryptText(symptoms);
-
-  const appointmentResult = await repo.createNewPatientAppointment({
-    uuid: generatedOrderId,
-    patientId: patient.patient_id,
-    doctorId,
-    patientName: encryptedPatientName,
-    patientNumber: appointmentData.patientNumber,
-    symptoms: encryptedSymptoms,
-    appointmentType,
-    consultationFee: doctor.consultation_fee,
-    specialtyId,
-    appointmentDate,
-    appointmentTime,
-  });
-
-  if (!appointmentResult.insertId) {
-    logger.error("Failed to create new patient appointment");
-    throw new Error("Failed to create appointment");
-  }
-
-  return {
-    id: appointmentResult.insertId,
-    orderId: generatedOrderId,
-    patientId: patient.patient_id,
-    doctorId,
-    consultationFee: doctor.consultation_fee,
-    patientName,
-    appointmentDate,
-    appointmentTime,
-  };
-}
-// TODO @Mevizcode I made some refactors here, please review
 /**
  * Creates a new patient appointment.
  * @param {Object} params - The parameters for creating the appointment.
