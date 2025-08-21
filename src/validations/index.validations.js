@@ -49,7 +49,7 @@ exports.doctorPaginationValidation = [
     .optional()
     .trim()
     .escape()
-    .isInt({ gt: 1, allow_leading_zeroes: false })
+    .isInt({ gt: 0, allow_leading_zeroes: false })
     .withMessage("Location ID must be a number greater than 0")
     .bail()
     .custom(async (value) => {
