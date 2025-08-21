@@ -91,6 +91,43 @@ class RedisClient {
     }
   }
 
+  async deleteAll() {
+    try {
+      return await this.client.flushall();
+    } catch (error) {
+      console.error("❌ Redis DELETE ALL Error:", error);
+      logger.error("❌ Redis DELETE ALL Error:", error);
+      throw error;
+    }
+  }
+
+  async getAllKeys(pattern = "*") {
+    try {
+      let cursor = "0";
+      let keys = [];
+
+      do {
+        // eslint-disable-next-line no-await-in-loop
+        const reply = await this.client.scan(
+          cursor,
+          "MATCH",
+          pattern,
+          "COUNT",
+          100,
+        );
+
+        const [nextCursor, scannedKeys] = reply;
+        cursor = nextCursor;
+        keys = keys.concat(scannedKeys);
+      } while (cursor !== "0");
+      return keys;
+    } catch (error) {
+      console.error("❌ Redis SCAN Error:", error);
+      logger.error("❌ Redis SCAN Error:", error);
+      throw error;
+    }
+  }
+
   async clearCacheByPattern(pattern) {
     try {
       const keys = await this.keys(pattern);
