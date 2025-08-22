@@ -6,6 +6,9 @@ const {
 } = require("./aws-s3.utils");
 const { decryptText } = require("./auth.utils");
 const availableDaysDB = require("../repository/doctorAvailableDays.repository");
+const {
+  getApprovedDoctorReviewsByDoctorId,
+} = require("../repository/doctorReviews.repository");
 
 exports.mapCommonSymptomsRow = async (
   commonSymptoms,
@@ -779,6 +782,29 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
       ? await getPublicFileUrlFromS3Bucket(profilePic)
       : await getFileUrlFromS3Bucket(profilePic);
   }
+
+  let mappedReviews = [];
+  const fetchedReviews = await getApprovedDoctorReviewsByDoctorId(doctorId);
+  if (fetchedReviews && fetchedReviews.length) {
+    mappedReviews = fetchedReviews.map((review) => {
+      const {
+        feedback_id: reviewId,
+        first_name: patientFirstName,
+        last_name: patientLastName,
+        feedback_content: reviewContent,
+      } = review;
+
+      const decryptedPatientFirstName = decryptText(patientFirstName);
+      const decryptedPatientLastName = decryptText(patientLastName);
+
+      return {
+        reviewId,
+        patient: `${decryptedPatientFirstName} ${decryptedPatientLastName}`,
+        review: reviewContent,
+      };
+    });
+  }
+
   const mapped = {
     doctorId,
     title,
@@ -803,6 +829,7 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     isAccountActive: Boolean(isAccountActive),
     isOnline: Boolean(isOnline),
     councilRegistrationStatus,
+    reviews: mappedReviews,
   };
 
   if (isOnline === 0) {
