@@ -232,11 +232,16 @@ async function checkDoctorAvailability(
     return false; // Proposed time is outside the doctor's standard working hours for that day
   }
 
+  console.log(proposedAppointmentStartDateTime);
+  const formattedApptDate = proposedAppointmentStartDateTime.split(" ")[0];
+  console.log("formatted Appt Date: ", formattedApptDate);
   // Step 2: Check for conflicts with existing appointments + 10-min break + 10-min pre-appointment buffer
   const existingAppointments = await getExisitingAppointments(
     doctorId,
-    proposedAppointmentStartDateTime,
+    formattedApptDate,
   );
+
+  console.log("Exisiting Appointments: ", existingAppointments);
 
   const conflictFound = existingAppointments.some((existingAppt) => {
     const existingApptDate = moment(existingAppt.appointment_date).format(

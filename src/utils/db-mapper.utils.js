@@ -779,19 +779,6 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
       ? await getPublicFileUrlFromS3Bucket(profilePic)
       : await getFileUrlFromS3Bucket(profilePic);
   }
-
-  const rawAvailableDays =
-    await availableDaysDB.getDoctorsAvailableDays(doctorId);
-  const doctorAvailableDays =
-    rawAvailableDays && rawAvailableDays.length > 0
-      ? rawAvailableDays.map((day) => ({
-          dayId: day.day_slot_id,
-          day: day.day_of_week,
-          startTime: day.day_start_time,
-          endTime: day.day_end_time,
-          isAvailable: Boolean(day.is_available),
-        }))
-      : [];
   const mapped = {
     doctorId,
     title,
@@ -821,8 +808,6 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
   if (isOnline === 0) {
     mapped.lastSeen = moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow();
   }
-
-  mapped.doctorAvailableDays = doctorAvailableDays;
 
   return mapped;
 };

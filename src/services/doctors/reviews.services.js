@@ -48,3 +48,37 @@ exports.getApprovedDoctorReviewsService = async (userId) => {
     throw error;
   }
 };
+
+exports.getApprovedDoctorReviewsIndexService = async (doctorId) => {
+  try {
+    const cacheKey = `doctor:${doctorId}:reviews`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+
+    const reviews =
+      await doctorReviewRepository.getApprovedDoctorReviewsByDoctorId(doctorId);
+
+    if (!reviews?.length) {
+      return Response.SUCCESS({
+        message: "No reviews found for this doctor.",
+        data: [],
+      });
+    }
+
+    const data = reviews.map(mapDoctorReview);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(data),
+    });
+
+    return Response.SUCCESS({
+      data,
+    });
+  } catch (error) {
+    logger.error("getApprovedDoctorReviewsIndexService", error);
+    throw error;
+  }
+};

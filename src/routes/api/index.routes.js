@@ -14,6 +14,7 @@ const {
   authenticateUser,
   authorizePatient,
 } = require("../../middlewares/auth.middleware");
+const cache = require("../../middlewares/cache.middlewares");
 
 router.get(
   "/doctor-health-blogs/:id",
@@ -33,14 +34,21 @@ router.get(
 
 router.get(
   "/blogs",
+  cache(600),
   limiter,
   paginationValidation,
   Validate,
   IndexController.GetBlogsController,
 );
-router.get("/blogs/:id", limiter, IndexController.GetBlogByIDController);
+router.get(
+  "/blogs/:id",
+  cache(60),
+  limiter,
+  IndexController.GetBlogByIDController,
+);
 router.get(
   "/blog-categories",
+  cache(60),
   limiter,
   paginationValidation,
   Validate,
@@ -48,6 +56,7 @@ router.get(
 );
 router.get(
   "/cities",
+  cache(600),
   limiter,
   paginationValidation,
   Validate,
@@ -55,6 +64,7 @@ router.get(
 );
 router.get(
   "/specialties",
+  cache(60),
   limiter,
   paginationValidation,
   Validate,
@@ -62,6 +72,7 @@ router.get(
 );
 router.get(
   "/medical-councils",
+  cache(600),
   limiter,
   paginationValidation,
   Validate,
@@ -108,6 +119,7 @@ router.post(
 );
 router.get(
   "/common-symptoms",
+  cache(600),
   limiter,
   paginationValidation,
   Validate,

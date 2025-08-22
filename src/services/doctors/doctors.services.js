@@ -338,7 +338,7 @@ exports.createDoctorProfile = async ({
     await Promise.all([
       redisClient.delete(`doctor:user:${userId}`),
       redisClient.delete(`doctor:${insertId}`),
-      redisClient.delete("doctors:all"),
+      redisClient.clearCacheByPattern("doctors:all:*"),
       redisClient.delete("doctors:count:approved"),
       redisClient.clearCacheByPattern("admin:doctors:*"),
     ]);
@@ -436,7 +436,7 @@ exports.updateDoctorProfile = async ({
     await Promise.all([
       redisClient.delete(`doctor:user:${userId}`),
       redisClient.delete(`doctor:${doctorId}`),
-      redisClient.delete("doctors:all"),
+      redisClient.clearCacheByPattern("doctors:all:*"),
       redisClient.delete("doctors:count:approved"),
       redisClient.clearCacheByPattern("admin:doctors:*"),
     ]);
@@ -517,7 +517,7 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
     await Promise.all([
       redisClient.delete(`doctor:user:${userId}`),
       redisClient.delete(`doctor:${doctorId}`),
-      redisClient.delete("doctors:all"),
+      redisClient.clearCacheByPattern("doctors:all:*"),
       redisClient.delete("doctors:count:approved"),
       redisClient.clearCacheByPattern("admin:doctors:*"),
     ]);
@@ -559,8 +559,12 @@ exports.approveDoctorProfile = async ({ doctorId, approvedBy }) => {
       }),
     ]);
 
-    await redisClient.delete("doctors:*");
-    await redisClient.clearCacheByPattern("doctor:user:*");
+    await Promise.all([
+      redisClient.delete(`doctor:${doctorId}`),
+      redisClient.clearCacheByPattern("doctors:all:*"),
+      redisClient.delete("doctors:count:approved"),
+      redisClient.clearCacheByPattern("admin:doctors:*"),
+    ]);
     return Response.SUCCESS({
       message: "Doctor profile approved successfully.",
     });
