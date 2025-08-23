@@ -211,6 +211,13 @@ exports.createDoctorFaqService = async (userId, question, answer) => {
 
     return Response.SUCCESS({ message: "Faq added successfully!" });
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
+      console.error("FAQ submission failed: Duplicate entry for doctor faq.");
+      logger.error("FAQ submission failed: Duplicate entry for doctor faq.");
+      return Response.CONFLICT({
+        message: "You have already submitted this FAQ",
+      });
+    }
     logger.error("createDoctorFaqService: ", error);
     throw error;
   }
@@ -244,6 +251,13 @@ exports.updateDoctorFaqService = async (userId, id, question, answer) => {
 
     return Response.SUCCESS({ message: "Faq updated successfully!" });
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
+      console.error("FAQ submission failed: Duplicate entry for doctor faq.");
+      logger.error("FAQ submission failed: Duplicate entry for doctor faq.");
+      return Response.CONFLICT({
+        message: "You have already submitted this FAQ",
+      });
+    }
     logger.error("updateDoctorFaqService: ", error);
     throw error;
   }

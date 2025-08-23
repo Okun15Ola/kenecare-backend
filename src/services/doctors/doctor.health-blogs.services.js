@@ -75,6 +75,17 @@ exports.createDoctorBlogService = async ({
       message: "Health Blog Created Successfully!",
     });
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
+      console.error(
+        "HEALTH BLOG submission failed: Duplicate entry for doctor health blog.",
+      );
+      logger.error(
+        "HEALTH BLOG submission failed: Duplicate entry for doctor health blog.",
+      );
+      return Response.CONFLICT({
+        message: "You have already submitted this HEALTH BLOG",
+      });
+    }
     logger.error("createDoctorBlogService : ", error);
     throw error;
   }
@@ -149,6 +160,17 @@ exports.updateDoctorBlogService = async ({
       message: "Health Blog Updated Successfully!",
     });
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
+      console.error(
+        "HEALTH BLOG submission failed: Duplicate entry for doctor health blog.",
+      );
+      logger.error(
+        "HEALTH BLOG submission failed: Duplicate entry for doctor health blog.",
+      );
+      return Response.CONFLICT({
+        message: "You have already submitted this HEALTH BLOG",
+      });
+    }
     logger.error("updateDoctorBlogService : ", error);
     throw error;
   }
