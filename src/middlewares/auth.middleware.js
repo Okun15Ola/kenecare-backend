@@ -18,6 +18,7 @@ const {
   isTokenBlacklisted,
 } = require("../utils/auth.utils");
 const logger = require("./logger.middleware");
+const { redisClient } = require("../config/redis.config");
 
 /**
  * Middleware for extracting the JWT token from the Authorization header.
@@ -83,7 +84,21 @@ const authenticateUser = async (req, res, next) => {
         .json({ message: "Session expired. Please login again" });
     }
 
-    const user = await getUserById(decoded.sub);
+    let user;
+    const cacheKey = `app:user:${decoded.sub}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      user = JSON.parse(cachedData);
+    } else {
+      user = await getUserById(decoded.sub);
+
+      if (user) {
+        await redisClient.set({
+          key: cacheKey,
+          value: JSON.stringify(user),
+        });
+      }
+    }
 
     if (!user) {
       logger.error(`[AUTH] User not found in database for ID: ${decoded.sub}`);
@@ -192,17 +207,6 @@ const authenticateUser = async (req, res, next) => {
  */
 const authorizeDoctor = async (req, res, next) => {
   try {
-    // const { id: userId } = req.user;
-    // const user = await getUserById(userId);
-    // if (!user) {
-    //   logger.error(`[DOCTOR_AUTH] User not found for ID: ${userId}`);
-    //   return res.status(404).json(
-    //     Response.NOT_FOUND({
-    //       message: "User not found",
-    //     }),
-    //   );
-    // }
-
     const {
       user_type: userType,
       user_id: userId,
@@ -238,7 +242,21 @@ const authorizeDoctor = async (req, res, next) => {
       );
     }
 
-    const doctor = await getDoctorByUserId(userId);
+    let doctor;
+    const cacheKey = `app:doctor:${userId}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      doctor = JSON.parse(cachedData);
+    } else {
+      doctor = await getDoctorByUserId(userId);
+
+      if (doctor) {
+        await redisClient.set({
+          key: cacheKey,
+          value: JSON.stringify(doctor),
+        });
+      }
+    }
 
     if (!doctor) {
       logger.warn(`[DOCTOR_AUTH] Doctor profile not found for user: ${userId}`);
@@ -301,25 +319,6 @@ const authorizeDoctor = async (req, res, next) => {
  */
 const authorizePatient = async (req, res, next) => {
   try {
-    // logger.info(
-    //   `[PATIENT_AUTH] Starting patient authorization for user: ${req.user?.id}`,
-    // );
-
-    // const { id: userId } = req.user;
-    // logger.debug(
-    //   `[PATIENT_AUTH] Fetching user data for patient authorization: ${userId}`,
-    // );
-
-    // const user = await getUserById(userId);
-    // if (!user) {
-    //   logger.error(`[PATIENT_AUTH] User not found for ID: ${userId}`);
-    //   return res.status(404).json(
-    //     Response.NOT_FOUND({
-    //       message: "User not found",
-    //     }),
-    //   );
-    // }
-
     const {
       user_type: userType,
       user_id: userId,
