@@ -62,7 +62,7 @@ async function sendCertificateExpirySms(
 
 module.exports = {
   schedule: "0 8 * * *", // every day at 08:00"
-  name: "certificateExpiryNotifications",
+  name: "certificate-expiry-notifications",
 
   async execute() {
     const today = moment().startOf("day");
