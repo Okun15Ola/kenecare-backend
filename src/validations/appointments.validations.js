@@ -330,7 +330,15 @@ exports.AppointmentIdValidation = [
     .isInt({ gt: 0, allow_leading_zeroes: false })
     .withMessage("Appointment ID must be a valid positive number")
     .bail()
-    .escape(),
+    .escape()
+    .custom(async (value) => {
+      const appointmentId = parseInt(value, 10);
+      const appointment = await getAppointmentByID(appointmentId);
+      if (!appointment) {
+        throw new Error("Specified Appointment Does Not Exist");
+      }
+      return true;
+    }),
 ];
 
 exports.FeedBackValidation = [
