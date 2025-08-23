@@ -1,13 +1,10 @@
 const patientsAppointmentsService = require("../../../../src/services/patients/patients.appointments.services");
 const repo = require("../../../../src/repository/patientAppointments.repository");
 const patientsRepo = require("../../../../src/repository/patients.repository");
-// const appointmentRepo = require("../../../../src/repository/doctorAppointments.repository");
-// const doctorRepo = require("../../../../src/repository/doctors.repository");
 const followUpRepo = require("../../../../src/repository/follow-up.repository");
 const Response = require("../../../../src/utils/response.utils");
 const { redisClient } = require("../../../../src/config/redis.config");
-// const timeUtils = require("../../../../src/utils/time.utils");
-// const authUtils = require("../../../../src/utils/auth.utils");
+const helper = require("../../../../src/utils/helpers.utils");
 
 jest.mock("../../../../src/repository/patientAppointments.repository");
 jest.mock("../../../../src/repository/follow-up.repository");
@@ -21,6 +18,7 @@ jest.mock("../../../../src/utils/time.utils");
 jest.mock("../../../../src/utils/payment.utils");
 jest.mock("../../../../src/utils/caching.utils");
 jest.mock("../../../../src/utils/db-mapper.utils");
+jest.mock("../../../../src/utils/helpers.utils");
 
 describe("patients.appointments.services", () => {
   beforeAll(() => {
@@ -283,6 +281,121 @@ describe("patients.appointments.services", () => {
       expect(result.data.uuid).toBe("uuid2");
       expect(redisClient.set).toHaveBeenCalled();
       expect(Response.SUCCESS).toHaveBeenCalled();
+    });
+  });
+
+  describe("createPatientAppointment", () => {
+    it("should create a first-time appointment", async () => {
+      helper.validateEntities.mockResolvedValue({
+        patient: { booked_first_appointment: false, patient_id: "p1" },
+        doctor: { doctor_id: "d1", consultation_fee: 100 },
+      });
+      helper.checkIdempotency.mockResolvedValue({ error: null });
+
+      helper.createAppointment.mockResolvedValue({
+        id: 1,
+        patientId: "p1",
+        doctorId: "d1",
+        consultationFee: 100,
+      });
+
+      helper.processFirstAppointment.mockResolvedValue({
+        message: "First appointment booked",
+      });
+
+      const result = await patientsAppointmentsService.createPatientAppointment(
+        {
+          userId: "u1",
+          doctorId: "d1",
+          patientName: "John",
+          patientNumber: "123",
+          appointmentType: "consultation",
+          appointmentDate: "2025-08-22",
+          appointmentTime: "10:00",
+          symptoms: "cough",
+          specialtyId: "s1",
+        },
+      );
+      expect(helper.validateEntities).toHaveBeenCalled();
+      expect(helper.checkIdempotency).toHaveBeenCalled();
+      expect(helper.createAppointment).toHaveBeenCalled();
+      expect(helper.processFirstAppointment).toHaveBeenCalled();
+      expect(result).toEqual({ message: "First appointment booked" });
+    });
+
+    it("should create a regular appointment", async () => {
+      helper.validateEntities.mockResolvedValue({
+        patient: { booked_first_appointment: true, patient_id: "p1" },
+        doctor: { doctor_id: "d1", consultation_fee: 100 },
+      });
+      helper.checkIdempotency.mockResolvedValue({ error: null });
+      helper.createAppointment.mockResolvedValue({
+        id: 2,
+        patientId: "p1",
+        doctorId: "d1",
+        consultationFee: 100,
+      });
+      helper.processRegularAppointment.mockResolvedValue({
+        message: "Regular appointment booked",
+      });
+
+      const result = await patientsAppointmentsService.createPatientAppointment(
+        {
+          userId: "u1",
+          doctorId: "d1",
+          patientName: "Jane",
+          patientNumber: "456",
+          appointmentType: "consultation",
+          appointmentDate: "2025-08-23",
+          appointmentTime: "11:00",
+          symptoms: "fever",
+          specialtyId: "s2",
+        },
+      );
+
+      expect(helper.validateEntities).toHaveBeenCalled();
+      expect(helper.checkIdempotency).toHaveBeenCalled();
+      expect(helper.createAppointment).toHaveBeenCalled();
+      expect(helper.processRegularAppointment).toHaveBeenCalled();
+      expect(result).toEqual({ message: "Regular appointment booked" });
+    });
+
+    it("should return validation error", async () => {
+      helper.validateEntities.mockResolvedValue({
+        error: { message: "Validation failed" },
+      });
+
+      const result = await patientsAppointmentsService.createPatientAppointment(
+        {
+          userId: "u1",
+          doctorId: "d1",
+        },
+      );
+
+      expect(helper.validateEntities).toHaveBeenCalled();
+      expect(result).toEqual({ message: "Validation failed" });
+    });
+
+    it("should return idempotency error", async () => {
+      helper.validateEntities.mockResolvedValue({
+        patient: { booked_first_appointment: true, patient_id: "p1" },
+        doctor: { doctor_id: "d1", consultation_fee: 100 },
+      });
+      helper.checkIdempotency.mockResolvedValue({
+        error: { message: "Duplicate request" },
+      });
+
+      const result = await patientsAppointmentsService.createPatientAppointment(
+        {
+          userId: "u1",
+          doctorId: "d1",
+          patientName: "Jane",
+        },
+      );
+
+      expect(helper.validateEntities).toHaveBeenCalled();
+      expect(helper.checkIdempotency).toHaveBeenCalled();
+      expect(result).toEqual({ message: "Duplicate request" });
     });
   });
 });

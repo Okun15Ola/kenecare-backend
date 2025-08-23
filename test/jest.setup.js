@@ -111,6 +111,9 @@ global.console = {
   error: jest.fn(),
   debug: jest.fn(),
   trace: jest.fn(),
+  time: jest.fn(),
+  timeEnd: jest.fn(),
+  timeLog: jest.fn(),
 };
 
 // Close connection pool after tests

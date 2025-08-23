@@ -40,6 +40,8 @@ const MOBILE_NETWORK_CODES = [
   "88",
   "90",
   "99",
+  "81",
+  "80",
 ];
 
 /**
