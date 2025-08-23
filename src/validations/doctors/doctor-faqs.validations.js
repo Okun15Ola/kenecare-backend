@@ -1,5 +1,4 @@
 const { param, body } = require("express-validator");
-const { binaryBooleanValidator } = require("../../utils/helpers.utils");
 const {
   validateDoctorFaqId,
 } = require("../../repository/doctorFaqs.repository");
@@ -41,8 +40,4 @@ exports.faqContentValidation = [
     .isLength({ min: 3, max: 1000 })
     .bail()
     .withMessage("Answer must be between 3 and 1000 characters"),
-];
-
-exports.updateDoctorFaqStatusValidation = [
-  binaryBooleanValidator("isActive", "Is active must be a boolean value"),
 ];

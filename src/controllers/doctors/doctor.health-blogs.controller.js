@@ -85,13 +85,28 @@ exports.UpdateDoctorBlogController = async (req, res, next) => {
   }
 };
 
-exports.UpdateDoctorBlogStatusController = async (req, res, next) => {
+exports.PublishDoctorBlogStatusController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const { status } = req.body;
     const { blogUuid } = req.params;
     const response = await doctorBlogService.updateDoctorBlogStatusService({
-      status,
+      status: "published",
+      userId,
+      blogUuid,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.ArchivedDoctorBlogStatusController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const { blogUuid } = req.params;
+    const response = await doctorBlogService.updateDoctorBlogStatusService({
+      status: "archived",
       userId,
       blogUuid,
     });

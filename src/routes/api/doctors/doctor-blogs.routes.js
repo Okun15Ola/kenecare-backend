@@ -53,14 +53,19 @@ router.put(
 );
 
 router.patch(
-  "/status/:blogUuid",
+  "/status/:blogUuid/publish",
   authorizeDoctor,
-  [
-    ...doctorBlogValidation.blogUuidValidation,
-    ...doctorBlogValidation.updateBlogStatusValidation,
-  ],
+  doctorBlogValidation.blogUuidValidation,
   Validate,
-  doctorBlogController.UpdateDoctorBlogStatusController,
+  doctorBlogController.PublishDoctorBlogStatusController,
+);
+
+router.patch(
+  "/status/:blogUuid/archive",
+  authorizeDoctor,
+  doctorBlogValidation.blogUuidValidation,
+  Validate,
+  doctorBlogController.ArchivedDoctorBlogStatusController,
 );
 
 router.delete(

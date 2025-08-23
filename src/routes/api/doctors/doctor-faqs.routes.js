@@ -55,14 +55,19 @@ router.put(
 );
 
 router.patch(
-  "/status/:id",
+  "/status/:id/active",
   authorizeDoctor,
-  [
-    ...doctorFaqValidation.faqIdValidation,
-    ...doctorFaqValidation.updateDoctorFaqStatusValidation,
-  ],
+  doctorFaqValidation.faqIdValidation,
   Validate,
-  doctorFaqController.UpdateDoctorFaqStatusController,
+  doctorFaqController.ApproveDoctorFaqStatusController,
+);
+
+router.patch(
+  "/status/:id/inactive",
+  authorizeDoctor,
+  doctorFaqValidation.faqIdValidation,
+  Validate,
+  doctorFaqController.RejectDoctorFaqStatusController,
 );
 
 router.delete(

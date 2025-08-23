@@ -263,7 +263,7 @@ exports.updateDoctorFaqService = async (userId, id, question, answer) => {
   }
 };
 
-exports.updateDoctorFaqStatusService = async (userId, id, isActive) => {
+exports.updateDoctorFaqStatusService = async ({ userId, id, isActive }) => {
   try {
     const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
 

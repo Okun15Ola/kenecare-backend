@@ -1,5 +1,6 @@
 const logger = require("../../middlewares/logger.middleware");
 const doctorFaqService = require("../../services/doctors/doctor.faqs.services");
+const { STATUS } = require("../../utils/enum.utils");
 
 exports.GetDoctorFaqsController = async (req, res, next) => {
   try {
@@ -79,16 +80,31 @@ exports.UpdateDoctorFaqController = async (req, res, next) => {
   }
 };
 
-exports.UpdateDoctorFaqStatusController = async (req, res, next) => {
+exports.ApproveDoctorFaqStatusController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
     const id = Number(req.params.id);
-    const { isActive } = req.body;
-    const response = await doctorFaqService.updateDoctorFaqStatusService(
+    const response = await doctorFaqService.updateDoctorFaqStatusService({
       userId,
       id,
-      isActive,
-    );
+      isActive: STATUS.ACTIVE,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.RejectDoctorFaqStatusController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const id = Number(req.params.id);
+    const response = await doctorFaqService.updateDoctorFaqStatusService({
+      userId,
+      id,
+      isActive: STATUS.NOT_ACTIVE,
+    });
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);
