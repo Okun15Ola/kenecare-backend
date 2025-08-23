@@ -1,6 +1,124 @@
 // const geoip = require("geoip-lite"); // npm install geoip-lite
 // const logger = require("./logger.middleware");
 
+// // Helper functions for threat detection
+// function containsSqlInjection(req) {
+//   const sqlPatterns = [
+//     /(%27)|(')|(--)|(%23)|(#)/i,
+//     /((%3D)|(=))[^\n]*((%27)|(')|(--)|(%3B)|(;))/i,
+//     /\w*((%27)|('))((%6F)|o|(%4F))((%72)|r|(%52))/i,
+//     /(union).+(select)/i,
+//     /exec[\s+]+(s|x)p/i,
+//   ];
+
+//   const checkString = (str) => {
+//     if (!str) return false;
+//     return sqlPatterns.some((pattern) => pattern.test(str));
+//   };
+
+//   // Check URL path
+//   if (checkString(req.path)) return true;
+
+//   // Check query parameters
+//   if (req.query) {
+//     if (Object.keys(req.query).some((key) => checkString(req.query[key]))) {
+//       return true;
+//     }
+//   }
+
+//   // Check body if it exists and is an object
+//   if (req.body && typeof req.body === "object") {
+//     const bodyStr = JSON.stringify(req.body);
+//     if (checkString(bodyStr)) return true;
+//   }
+
+//   return false;
+// }
+
+// function containsXss(req) {
+//   const xssPatterns = [
+//     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+//     /on\w+\s*=/gi,
+//     /javascript:/gi,
+//     /eval\(/gi,
+//     /expression\(/gi,
+//   ];
+
+//   const checkString = (str) => {
+//     if (!str) return false;
+//     return xssPatterns.some((pattern) => pattern.test(str));
+//   };
+
+//   // Similar checks as in SQL injection function
+//   if (checkString(req.path)) return true;
+
+//   if (req.query) {
+//     if (Object.keys(req.query).some((key) => checkString(req.query[key]))) {
+//       return true;
+//     }
+//   }
+
+//   if (req.body && typeof req.body === "object") {
+//     const bodyStr = JSON.stringify(req.body);
+//     if (checkString(bodyStr)) return true;
+//   }
+
+//   return false;
+// }
+
+// function containsPathTraversal(str) {
+//   if (!str) return false;
+//   return /\.\.\/|\.\.\\|%2e%2e%2f|%252e%252e%252f|%c0%ae%c0%ae%c0%af/i.test(
+//     str,
+//   );
+// }
+
+// function isSuspiciousUserAgent(userAgent) {
+//   if (!userAgent) return false;
+//   const suspiciousAgents = [
+//     /sqlmap/i,
+//     /nikto/i,
+//     /nessus/i,
+//     /burpsuite/i,
+//     /w3af/i,
+//     /masscan/i,
+//     /nmap/i,
+//     /acunetix/i,
+//     /zap/i,
+//   ];
+
+//   return suspiciousAgents.some((pattern) => pattern.test(userAgent));
+// }
+
+// function isAbnormalRequest(req) {
+//   // Check for abnormal headers
+//   const abnormalHeaders = [
+//     "x-scan-signature",
+//     "x-hacker",
+//     "acunetix-product",
+//     "x-scanner",
+//   ];
+
+//   if (abnormalHeaders.some((header) => req.headers[header])) {
+//     return true;
+//   }
+
+//   // Unusual content-type for the given path
+//   if (
+//     req.path.endsWith(".jpg") &&
+//     req.headers["content-type"] &&
+//     !req.headers["content-type"].includes("image")
+//   ) {
+//     return true;
+//   }
+
+//   // Unusual request methods for typical endpoints
+//   return (
+//     (req.path.includes("/images/") || req.path.includes(".css")) &&
+//     req.method !== "GET"
+//   );
+// }
+
 // /**
 //  * Enhanced security logging middleware with threat detection
 //  */
@@ -135,125 +253,7 @@
 //     }
 //   };
 
-//   next();
+//   return next();
 // };
-
-// // Helper functions for threat detection
-// function containsSqlInjection(req) {
-//   const sqlPatterns = [
-//     /(%27)|(')|(--)|(%23)|(#)/i,
-//     /((%3D)|(=))[^\n]*((%27)|(')|(--)|(%3B)|(;))/i,
-//     /\w*((%27)|('))((%6F)|o|(%4F))((%72)|r|(%52))/i,
-//     /(union).+(select)/i,
-//     /exec[\s+]+(s|x)p/i,
-//   ];
-
-//   const checkString = (str) => {
-//     if (!str) return false;
-//     return sqlPatterns.some((pattern) => pattern.test(str));
-//   };
-
-//   // Check URL path
-//   if (checkString(req.path)) return true;
-
-//   // Check query parameters
-//   if (req.query) {
-//     if (Object.keys(req.query).some((key) => checkString(req.query[key]))) {
-//       return true;
-//     }
-//   }
-
-//   // Check body if it exists and is an object
-//   if (req.body && typeof req.body === "object") {
-//     const bodyStr = JSON.stringify(req.body);
-//     if (checkString(bodyStr)) return true;
-//   }
-
-//   return false;
-// }
-
-// function containsXss(req) {
-//   const xssPatterns = [
-//     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-//     /on\w+\s*=/gi,
-//     /javascript:/gi,
-//     /eval\(/gi,
-//     /expression\(/gi,
-//   ];
-
-//   const checkString = (str) => {
-//     if (!str) return false;
-//     return xssPatterns.some((pattern) => pattern.test(str));
-//   };
-
-//   // Similar checks as in SQL injection function
-//   if (checkString(req.path)) return true;
-
-//   if (req.query) {
-//     if (Object.keys(req.query).some((key) => checkString(req.query[key]))) {
-//       return true;
-//     }
-//   }
-
-//   if (req.body && typeof req.body === "object") {
-//     const bodyStr = JSON.stringify(req.body);
-//     if (checkString(bodyStr)) return true;
-//   }
-
-//   return false;
-// }
-
-// function containsPathTraversal(str) {
-//   if (!str) return false;
-//   return /\.\.\/|\.\.\\|%2e%2e%2f|%252e%252e%252f|%c0%ae%c0%ae%c0%af/i.test(
-//     str,
-//   );
-// }
-
-// function isSuspiciousUserAgent(userAgent) {
-//   if (!userAgent) return false;
-//   const suspiciousAgents = [
-//     /sqlmap/i,
-//     /nikto/i,
-//     /nessus/i,
-//     /burpsuite/i,
-//     /w3af/i,
-//     /masscan/i,
-//     /nmap/i,
-//     /acunetix/i,
-//     /zap/i,
-//   ];
-
-//   return suspiciousAgents.some((pattern) => pattern.test(userAgent));
-// }
-
-// function isAbnormalRequest(req) {
-//   // Check for abnormal headers
-//   const abnormalHeaders = [
-//     "x-scan-signature",
-//     "x-hacker",
-//     "acunetix-product",
-//     "x-scanner",
-//   ];
-
-//   if (abnormalHeaders.some((header) => req.headers[header])) {
-//     return true;
-//   }
-
-//   // Unusual content-type for the given path
-//   if (
-//     req.path.endsWith(".jpg") &&
-//     req.headers["content-type"] &&
-//     !req.headers["content-type"].includes("image")
-//   ) {
-//     return true;
-//   }
-
-//   // Unusual request methods for typical endpoints
-//   return (
-//     (req.path.includes("/images/") || req.path.includes(".css")) &&
-//     req.method !== "GET"
-//   );
-// }
 
 // module.exports = securityLogger;
