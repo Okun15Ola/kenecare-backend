@@ -307,17 +307,6 @@ exports.GetTestimonialByIDController = async (req, res, next) => {
     return next(error);
   }
 };
-exports.CreatePatientTestimonialController = async (req, res, next) => {
-  try {
-    const { id: userId } = req.user;
-    const { content } = req.body;
-    const response = await service.createTestimonial({ userId, content });
-    return res.status(response.statusCode).json(response);
-  } catch (error) {
-    logger.error("CreatePatientTestimonialController: ", error);
-    return next(error);
-  }
-};
 exports.CheckUserFeatureController = async (req, res, next) => {
   try {
     const { id: userId } = req.user;

@@ -1000,7 +1000,11 @@ exports.mapPatientAppointment = (appointment) => {
   };
 };
 
-exports.mapTestimonialRow = async (testimonial, includeImageUrl = false) => {
+exports.mapTestimonialRow = async (
+  testimonial,
+  includeImageUrl = false,
+  includeAprroval = false,
+) => {
   const {
     testimonial_id: testimonialId,
     first_name: firstName,
@@ -1021,15 +1025,24 @@ exports.mapTestimonialRow = async (testimonial, includeImageUrl = false) => {
   }
   const patientFirstName = decryptText(firstName);
   const patientLastName = decryptText(lastName);
-  return {
+  const mapped = {
     testimonialId,
     patientName: `${patientFirstName} ${patientLastName}`,
     patientPic: imageData,
     content: he.decode(content),
-    isActive,
-    isApproved,
-    approvedBy,
   };
+
+  if (includeImageUrl) {
+    mapped.patientPic = imageData;
+  }
+
+  if (includeAprroval) {
+    mapped.isActive = Boolean(isActive);
+    mapped.isApproved = Boolean(isApproved);
+    mapped.approvedBy = approvedBy;
+  }
+
+  return mapped;
 };
 
 exports.mapSpecialityRow = async (

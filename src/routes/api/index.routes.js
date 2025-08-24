@@ -4,16 +4,12 @@ const { Validate } = require("../../validations/validate");
 const {
   doctorIdValidation,
   doctorPaginationValidation,
-  patientTestimonialValidation,
 } = require("../../validations/index.validations");
 const { limiter } = require("../../utils/rate-limit.utils");
 const {
   paginationValidation,
 } = require("../../validations/pagination.validations");
-const {
-  authenticateUser,
-  authorizePatient,
-} = require("../../middlewares/auth.middleware");
+const { authenticateUser } = require("../../middlewares/auth.middleware");
 const cache = require("../../middlewares/cache.middlewares");
 
 router.get(
@@ -107,15 +103,6 @@ router.get(
   paginationValidation,
   Validate,
   IndexController.GetTestimonialsController,
-);
-router.post(
-  "/testimonials",
-  authenticateUser,
-  authorizePatient,
-  limiter,
-  patientTestimonialValidation,
-  Validate,
-  IndexController.CreatePatientTestimonialController,
 );
 router.get(
   "/common-symptoms",

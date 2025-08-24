@@ -71,8 +71,6 @@ const {
 } = require("../utils/caching.utils");
 const logger = require("../middlewares/logger.middleware");
 const faqRepository = require("../repository/faqs.repository");
-const testimonialRepository = require("../repository/testimonials.repository");
-const patientRepository = require("../repository/patients.repository");
 
 exports.getAllDoctorIndexService = async (limit, page) => {
   try {
@@ -907,7 +905,7 @@ exports.getTestimonialsIndexService = async (limit, page) => {
     }
 
     const testimonials = await Promise.all(
-      rawData.map((testimonial) => mapTestimonialRow(testimonial, true)),
+      rawData.map((testimonial) => mapTestimonialRow(testimonial, true, true)),
     );
     await redisClient.set({
       key: cacheKey,
@@ -963,49 +961,6 @@ exports.getIndexFaqService = async (page, limit) => {
     return Response.SUCCESS({ data: faqs, pagination: paginationInfo });
   } catch (error) {
     logger.error("getIndexFaqService", error);
-    throw error;
-  }
-};
-
-exports.createTestimonial = async ({ userId, content }) => {
-  try {
-    const patient = await patientRepository.getPatientByUserId(userId);
-
-    if (!patient) {
-      logger.warn("Patient Not Found");
-      return Response.NOT_FOUND({
-        message: "Patient Not Found.",
-      });
-    }
-    const { patient_id: patientId } = patient;
-    const { insertId } = await testimonialRepository.createNewTestimonial({
-      patientId,
-      content,
-    });
-
-    if (!insertId) {
-      logger.warn("Failed to create testimonial");
-      return Response.INTERNAL_SERVER_ERROR({
-        message: "Testimonial Not Created",
-      });
-    }
-
-    await redisClient.clearCacheByPattern("testimonials:*");
-
-    return Response.CREATED({ message: "Testimonial Created Successfully" });
-  } catch (error) {
-    if (error.code === "ER_DUP_ENTRY" || error.errno === 1062) {
-      console.error(
-        `Testimonial submission failed: Duplicate entry for user ${userId}.`,
-      );
-      logger.error(
-        `Testimonial submission failed: Duplicate entry for user ${userId}.`,
-      );
-      return Response.CONFLICT({
-        message: "You have already submitted a testimonial",
-      });
-    }
-    logger.error("createTestimonial: ", error);
     throw error;
   }
 };

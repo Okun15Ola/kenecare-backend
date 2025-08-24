@@ -16,6 +16,13 @@ exports.getTestimonialById = async (testimonialId) => {
   return result[0];
 };
 
+exports.getTestimonialByPatientId = async (patientId) => {
+  const result = await query(queries.GET_TESTIMONIAL_BY_PATIENT_ID, [
+    patientId,
+  ]);
+  return result[0];
+};
+
 exports.createNewTestimonial = async ({ patientId, content }) => {
   return query(queries.CREATE_TESTIMONIAL, [patientId, content]);
 };

@@ -55,6 +55,7 @@ const appointmentPaymentRoutes = require("./routes/api/patients/appointment.paym
 const patientPrescriptionRoutes = require("./routes/api/patients/prescriptions.routes");
 const patientFollowUpRoutes = require("./routes/api/patients/follow-up.routes");
 const patientDoctorReviews = require("./routes/api/patients/doctor.reviews.routes");
+const patientTestimonialRoutes = require("./routes/api/patients/testimonial.routes");
 
 // ADMIN ROUTES
 const adminDoctorsRoute = require("./routes/api/admin/doctors.routes");
@@ -172,6 +173,7 @@ app.use("/api/v1/patients/medical-info", patientMedicalHistoryRouter);
 app.use("/api/v1/patients/prescriptions", patientPrescriptionRoutes);
 app.use("/api/v1/patients/follow-ups", patientFollowUpRoutes);
 app.use("/api/v1/patients/doctor-reviews", patientDoctorReviews);
+app.use("/api/v1/patients/testimonials", patientTestimonialRoutes);
 
 // PAYMENT ROUTES
 app.use("/api/v1/payments", appointmentPaymentRoutes);
