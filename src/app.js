@@ -40,7 +40,7 @@ const doctorsWalletRouter = require("./routes/api/doctors/wallet.routes");
 const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.routes");
 const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.routes");
 const doctorsFollowUpRouter = require("./routes/api/doctors/followups.routes");
-const doctorsTimeSlotRouter = require("./routes/api/doctors/time-slot.routes");
+// const doctorsTimeSlotRouter = require("./routes/api/doctors/time-slot.routes");
 const doctorFaqRouter = require("./routes/api/doctors/doctor-faqs.routes");
 const doctorBlogRouter = require("./routes/api/doctors/doctor-blogs.routes");
 const doctorReviews = require("./routes/api/doctors/reviews.routes");
@@ -159,7 +159,7 @@ app.use(
 );
 app.use("/api/v1/doctors/appointments", doctorsAppointmentRouter);
 app.use("/api/v1/doctors/follow-ups", doctorsFollowUpRouter);
-app.use("/api/v1/doctors/slots", doctorsTimeSlotRouter);
+// app.use("/api/v1/doctors/slots", doctorsTimeSlotRouter);
 app.use("/api/v1/doctors/faqs", doctorFaqRouter);
 app.use("/api/v1/doctors/blogs", doctorBlogRouter);
 app.use("/api/v1/doctors/reviews", doctorReviews);

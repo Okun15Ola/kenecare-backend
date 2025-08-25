@@ -1,73 +1,73 @@
-const router = require("express").Router();
-const controller = require("../../../controllers/doctors/time-slot.controller");
-const { limiter } = require("../../../utils/rate-limit.utils");
-const {
-  authenticateUser,
-  authorizeDoctor,
-} = require("../../../middlewares/auth.middleware");
-const { Validate } = require("../../../validations/validate");
-const {
-  dayParamValidation,
-  validateSlotIdParam,
-} = require("../../../validations/doctors/time-slot.validations");
+// const router = require("express").Router();
+// const controller = require("../../../controllers/doctors/time-slot.controller");
+// const { limiter } = require("../../../utils/rate-limit.utils");
+// const {
+//   authenticateUser,
+//   authorizeDoctor,
+// } = require("../../../middlewares/auth.middleware");
+// const { Validate } = require("../../../validations/validate");
+// const {
+//   dayParamValidation,
+//   validateSlotIdParam,
+// } = require("../../../validations/doctors/time-slot.validations");
 
-router.use(authenticateUser, limiter, authorizeDoctor);
+// router.use(authenticateUser, limiter, authorizeDoctor);
 
-router.get("/week", controller.getDoctorWeekSlotsController);
+// router.get("/week", controller.getDoctorWeekSlotsController);
 
-router.get("/booked", controller.getDoctorBookedSlotsController);
+// router.get("/booked", controller.getDoctorBookedSlotsController);
 
-router.get(
-  "/:day/day",
-  dayParamValidation,
-  Validate,
-  controller.getDoctorAvailableDaySlotsController,
-);
-
-// router.post("/", controller.createSlotController);
-
-// router.post(
-//   "/multiple-time-slots",
-//   controller.createMultipleTimeSlotsSlotsController,
+// router.get(
+//   "/:day/day",
+//   dayParamValidation,
+//   Validate,
+//   controller.getDoctorAvailableDaySlotsController,
 // );
 
-// router.patch("/update", controller.updateSlotTimingController);
+// // router.post("/", controller.createSlotController);
 
-router.patch(
-  "/:slotId/available",
-  validateSlotIdParam,
-  Validate,
-  controller.markSlotAvailableController,
-);
+// // router.post(
+// //   "/multiple-time-slots",
+// //   controller.createMultipleTimeSlotsSlotsController,
+// // );
 
-router.patch(
-  "/:slotId/unavailable",
-  validateSlotIdParam,
-  Validate,
-  controller.markSlotUnvailableController,
-);
+// // router.patch("/update", controller.updateSlotTimingController);
 
-router.patch(
-  "/day/:day/unavailable",
-  dayParamValidation,
-  Validate,
-  controller.markDaySlotUnavailableController,
-);
+// router.patch(
+//   "/:slotId/available",
+//   validateSlotIdParam,
+//   Validate,
+//   controller.markSlotAvailableController,
+// );
 
-router.delete("/week", controller.deleteDoctorWeekSlotsController);
+// router.patch(
+//   "/:slotId/unavailable",
+//   validateSlotIdParam,
+//   Validate,
+//   controller.markSlotUnvailableController,
+// );
 
-router.delete(
-  "/day/:day",
-  dayParamValidation,
-  Validate,
-  controller.deleteDaySlotsController,
-);
+// router.patch(
+//   "/day/:day/unavailable",
+//   dayParamValidation,
+//   Validate,
+//   controller.markDaySlotUnavailableController,
+// );
 
-router.delete(
-  "/:id",
-  validateSlotIdParam,
-  Validate,
-  controller.deleteSlotByIdController,
-);
+// router.delete("/week", controller.deleteDoctorWeekSlotsController);
 
-module.exports = router;
+// router.delete(
+//   "/day/:day",
+//   dayParamValidation,
+//   Validate,
+//   controller.deleteDaySlotsController,
+// );
+
+// router.delete(
+//   "/:id",
+//   validateSlotIdParam,
+//   Validate,
+//   controller.deleteSlotByIdController,
+// );
+
+// module.exports = router;

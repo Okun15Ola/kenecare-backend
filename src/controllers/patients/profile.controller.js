@@ -5,6 +5,7 @@ const {
   updatePatientProfile,
   updatePatientProfilePicture,
   getDoctorsPatientsHasMet,
+  deletePatientProfileService,
 } = require("../../services/patients/patients.services");
 
 exports.GetPatientProfileController = async (req, res, next) => {
@@ -75,6 +76,16 @@ exports.UpdatePatientProfilePictureController = async (req, res, next) => {
       userId: id,
       file,
     });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+exports.DeletePatientProfileController = async (req, res, next) => {
+  try {
+    const { id: userId } = req.user;
+    const response = await deletePatientProfileService(userId);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

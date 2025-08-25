@@ -142,3 +142,7 @@ exports.updatePatientMedicalHistory = async ({
     patientId,
   ]);
 };
+
+exports.deletePatientProfile = async (userId, patientId) => {
+  return query(queries.DELETE_PATIENT_PROFILE, [userId, patientId]);
+};

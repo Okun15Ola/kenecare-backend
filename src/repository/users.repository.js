@@ -120,5 +120,5 @@ exports.markUserOffline = async () => {
 };
 
 exports.deleteUserById = async (deletedAt, userId) => {
-  return query(queries.SOFT_DELETE_USER_BY_ID, [deletedAt, userId]);
+  return query(queries.DELETE_USER_BY_ID, [deletedAt, userId]);
 };
