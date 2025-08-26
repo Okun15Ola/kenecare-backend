@@ -42,8 +42,9 @@ module.exports = {
     UPDATE users
     SET is_online = 0
     WHERE is_online = 1
+      AND deleted_at IS NULL
       AND last_seen_at < (NOW() - INTERVAL 5 MINUTE);
   `,
-  SOFT_DELETE_USER_BY_ID:
+  DELETE_USER_BY_ID:
     "UPDATE users SET deleted_at = ?, is_online = 0, is_verified = 0, is_active = 0, is_2fa_enabled = 0, verified_at = NULL WHERE user_id = ? AND deleted_at IS NULL;",
 };

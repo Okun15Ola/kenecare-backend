@@ -368,6 +368,13 @@ exports.updatePatientProfile = async ({
   try {
     const { patient_id: patientId } = await repo.getPatientByUserId(userId);
 
+    if (!patientId) {
+      logger.warn(`Patient Not Found: ${patientId}`);
+      return Response.NOT_FOUND({
+        message: "Patient Not Found.",
+      });
+    }
+
     const formattedDate = moment(dateOfBirth).format("YYYY-MM-DD");
 
     // encrypt Patient Data
@@ -414,6 +421,13 @@ exports.updatePatientProfilePicture = async ({ userId, file }) => {
     }
     const { profile_pic_url: oldProfilePicUrl, patient_id: patientId } =
       await repo.getPatientByUserId(userId);
+
+    if (!patientId) {
+      logger.warn(`Patient Not Found: ${patientId}`);
+      return Response.NOT_FOUND({
+        message: "Patient Not Found.",
+      });
+    }
 
     let imageUrl = null;
 
@@ -465,6 +479,41 @@ exports.updatePatientProfilePicture = async ({ userId, file }) => {
     });
   } catch (error) {
     logger.error("updatePatientProfilePicture: ", error);
+    throw error;
+  }
+};
+exports.deletePatientProfileService = async (userId) => {
+  try {
+    const { patient_id: patientId } = await repo.getPatientByUserId(userId);
+
+    if (!patientId) {
+      logger.warn(`Patient Not Found: ${patientId}`);
+      return Response.NOT_FOUND({
+        message: "Patient Not Found.",
+      });
+    }
+
+    const { affectedRows } = await repo.deletePatientProfile(userId, patientId);
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(
+        `Failed to delete patient profile for Patient ID: ${patientId}. Affected Rows: ${affectedRows}`,
+      );
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.delete(`app:user:${userId}`);
+    await redisClient.delete(`patient:${patientId}:*`);
+    await redisClient.clearCacheByPattern(`patients:${patientId}:*`);
+    await redisClient.clearCacheByPattern(
+      `patient:${patientId}:user:${userId}`,
+    );
+
+    return Response.SUCCESS({
+      message: "Patient Account Deleted Successfully.",
+    });
+  } catch (error) {
+    logger.error("deletePatientProfile: ", error);
     throw error;
   }
 };

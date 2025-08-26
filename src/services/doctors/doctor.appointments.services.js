@@ -378,6 +378,7 @@ exports.approveDoctorAppointment = async ({ userId, appointmentId }) => {
     });
 
     await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:all:*`),
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
@@ -457,6 +458,7 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
     ]);
 
     await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:all:*`),
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
@@ -544,6 +546,7 @@ exports.endDoctorAppointment = async ({ userId, appointmentUuid }) => {
     });
 
     await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:all:*`),
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
@@ -668,6 +671,7 @@ exports.cancelDoctorAppointment = async ({
     });
 
     await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:all:*`),
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
@@ -793,6 +797,7 @@ exports.postponeDoctorAppointment = async ({
     });
 
     await Promise.all([
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:all:*`),
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
