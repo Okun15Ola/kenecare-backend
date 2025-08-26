@@ -368,8 +368,24 @@ describe("patients.services", () => {
       expect(result.status).toBe("bad_request");
     });
 
+    it("returns not found if patient does not exist", async () => {
+      repo.getPatientByUserId.mockResolvedValue({
+        profile_pic_url: null,
+        patient_id: null,
+      });
+      const result = await patientsService.updatePatientProfilePicture({
+        userId: 1,
+        file: { buffer: Buffer.alloc(0), mimetype: "image/png" }, // simpler & clearer
+      });
+
+      expect(result.status).toBe("not_found");
+    });
+
     it("returns bad request if upload fails", async () => {
-      repo.getPatientByUserId.mockResolvedValue({ profile_pic_url: null });
+      repo.getPatientByUserId.mockResolvedValue({
+        patient_id: 1,
+        profile_pic_url: null,
+      });
       uploadFileToS3Bucket.mockRejectedValue(new Error("fail"));
       const result = await patientsService.updatePatientProfilePicture({
         userId: 1,
@@ -379,7 +395,10 @@ describe("patients.services", () => {
     });
 
     it("returns not modified if update fails", async () => {
-      repo.getPatientByUserId.mockResolvedValue({ profile_pic_url: null });
+      repo.getPatientByUserId.mockResolvedValue({
+        profile_pic_url: null,
+        patient_id: 1,
+      });
       uploadFileToS3Bucket.mockResolvedValue();
       repo.updatePatientProfilePictureByUserId.mockResolvedValue({
         affectedRows: 0,
@@ -392,7 +411,10 @@ describe("patients.services", () => {
     });
 
     it("deletes old profile pic if exists", async () => {
-      repo.getPatientByUserId.mockResolvedValue({ profile_pic_url: "old_pic" });
+      repo.getPatientByUserId.mockResolvedValue({
+        profile_pic_url: "old_pic",
+        patient_id: 1,
+      });
       uploadFileToS3Bucket.mockResolvedValue();
       repo.updatePatientProfilePictureByUserId.mockResolvedValue({
         affectedRows: 1,
