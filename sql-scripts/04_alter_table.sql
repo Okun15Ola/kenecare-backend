@@ -15,6 +15,57 @@ SET
 ALTER TABLE `appointment_prescriptions` DROP COLUMN `access_token`;
 ALTER TABLE `appointment_prescriptions` DROP COLUMN `access_jwt`;
 
+-- Start
+SELECT ma1.*
+FROM medical_appointments ma1
+JOIN (
+    SELECT 
+        MIN(appointment_id) AS keep_id,  -- this is the row we will keep
+        doctor_id,
+        appointment_date,
+        appointment_time,
+        appointment_status
+    FROM medical_appointments
+    GROUP BY doctor_id, appointment_date, appointment_time, appointment_status
+    HAVING COUNT(*) > 1
+) dup
+ON ma1.doctor_id = dup.doctor_id
+AND ma1.appointment_date = dup.appointment_date
+AND ma1.appointment_time = dup.appointment_time
+AND ma1.appointment_status = dup.appointment_status
+AND ma1.appointment_id <> dup.keep_id;
+
+
+
+DELETE ma1
+FROM medical_appointments ma1
+JOIN (
+    SELECT 
+        MIN(appointment_id) AS keep_id,  -- keep the lowest id per duplicate group
+        doctor_id,
+        appointment_date,
+        appointment_time,
+        appointment_status
+    FROM medical_appointments
+    GROUP BY doctor_id, appointment_date, appointment_time, appointment_status
+    HAVING COUNT(*) > 1
+) dup
+ON ma1.doctor_id = dup.doctor_id
+AND ma1.appointment_date = dup.appointment_date
+AND ma1.appointment_time = dup.appointment_time
+AND ma1.appointment_status = dup.appointment_status
+AND ma1.appointment_id <> dup.keep_id;
+
+
+DELETE m1
+FROM medical_appointments m1
+JOIN medical_appointments m2
+  ON m1.doctor_id = m2.doctor_id
+ AND m1.appointment_date = m2.appointment_date
+ AND m1.appointment_time = m2.appointment_time
+ AND IFNULL(m1.appointment_status, '') = IFNULL(m2.appointment_status, '')
+ AND m1.appointment_id > m2. appointment_id;
+-- End 
 -- ALTER TABLE `users` ADD COLUMN `last_used` TIMESTAMP NULL DEFAULT NULL;
 -- ALTER TABLE `users`
 -- ADD `two_factor_secret` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL;
@@ -33,9 +84,9 @@ SELECT question, COUNT(*) FROM `doctor_faqs` GROUP BY question HAVING COUNT(*) >
 SELECT title, COUNT(*) FROM `doctor_health_blogs` GROUP BY title HAVING COUNT(*) > 1;
 
 -- 0.4. Find duplicates for UNIQUE KEY `uq_doctor_datetime_slot` on `medical_appointments`
-SELECT doctor_id, appointment_date, appointment_time, COUNT(*)
+SELECT doctor_id, appointment_date, appointment_time, appointment_status, COUNT(*)
 FROM `medical_appointments`
-GROUP BY doctor_id, appointment_date, appointment_time
+GROUP BY doctor_id, appointment_date, appointment_time, appointment_status
 HAVING COUNT(*) > 1;
 
 -- 0.5. Find and resolve orphan records for `medical_document_sharing.document_id`
@@ -155,10 +206,12 @@ ALTER TABLE `doctor_faqs` ADD INDEX `idx_faq_is_active` (`is_active`), ADD INDEX
 ALTER TABLE `doctor_feedbacks` ADD UNIQUE KEY `uq_doctor_patient_feedback` (`doctor_id`, `patient_id`), MODIFY COLUMN `is_feedback_approved` TINYINT NOT NULL DEFAULT '0', ADD INDEX `idx_feedback_approved` (`is_feedback_approved`), ADD INDEX `idx_feedback_created_at` (`created_at` DESC);
 ALTER TABLE `doctors` MODIFY COLUMN `user_id` INT NOT NULL UNIQUE, MODIFY COLUMN `professional_summary` TEXT DEFAULT NULL, MODIFY COLUMN `qualifications` TEXT DEFAULT NULL, MODIFY COLUMN `is_profile_approved` TINYINT NOT NULL DEFAULT '0', ADD INDEX `idx_doctors_approved_gender_experience` (`is_profile_approved`, `gender`, `years_of_experience`), ADD INDEX `idx_doctors_consultation_fee` (`consultation_fee`);
 ALTER TABLE `doctors_council_registration` MODIFY COLUMN `registration_number` VARCHAR(255) NOT NULL UNIQUE, ADD UNIQUE KEY `uq_doctor_council_reg` (`doctor_id`, `medical_council_id`), MODIFY COLUMN `registration_status` ENUM('pending','approved','rejected', 'active', 'expired') NOT NULL DEFAULT 'pending', ADD INDEX `idx_cert_expiry_date_status` (`certificate_expiry_date`, `registration_status`);
-ALTER TABLE `doctors_educational_background` ADD UNIQUE KEY `uq_doctor_education` (`doctor_id`, `institution_name`, `degree_attained`, `year_completed`), ADD INDEX `idx_education_institution_degree` (`institution_name`, `degree_att_ained`);
+ALTER TABLE `doctors_educational_background` ADD UNIQUE KEY `uq_doctor_education` (`doctor_id`, `institution_name`, `degree_attained`, `year_completed`), ADD INDEX `idx_education_institution_degree` (`institution_name`, `degree_attained`);
 ALTER TABLE `doctors_wallet` MODIFY COLUMN `doctor_id` INT NOT NULL UNIQUE;
 ALTER TABLE `marketers` MODIFY COLUMN `phone_number` VARCHAR(50) NOT NULL UNIQUE, MODIFY COLUMN `email` VARCHAR(150) UNIQUE DEFAULT NULL, MODIFY COLUMN `id_document_number` VARCHAR(50) NOT NULL UNIQUE, MODIFY COLUMN `nin` VARCHAR(50) UNIQUE DEFAULT NULL, ADD INDEX `idx_marketer_name` (`first_name`, `last_name`), ADD INDEX `idx_marketer_phone_verified` (`is_phone_verified`), ADD INDEX `idx_marketer_email_verified` (`is_email_verified`);
+
 ALTER TABLE `medical_appointments` ADD UNIQUE KEY `uq_doctor_datetime_slot` (`doctor_id`, `appointment_date`, `appointment_time`), ADD INDEX `idx_appointment_datetime` (`appointment_date`, `appointment_time`), ADD INDEX `idx_appointment_status` (`appointment_status`), ADD INDEX `idx_appointment_time` (`appointment_time`), ADD INDEX `idx_appointment_created_at` (`created_at`), ADD INDEX `idx_appointment_updated_at` (`updated_at`), ADD INDEX `idx_appointment_type` (`appointment_type`), ADD INDEX `idx_appointment_patient_status_date` (`patient_id`, `appointment_status`, `appointment_date` DESC), ADD INDEX `idx_appointment_doctor_date_status_time` (`doctor_id`, `appointment_date`, `appointment_status`, `appointment_time`), ADD INDEX `idx_appointment_patient_doctor_status` (`patient_id`, `doctor_id`, `appointment_status`);
+
 ALTER TABLE `medical_appointments` ADD CONSTRAINT `fk_appoinment_zoom_id` FOREIGN KEY (`meeting_id`) REFERENCES `zoom_meetings` (`meeting_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE `medical_councils` MODIFY COLUMN `council_name` VARCHAR(255) NOT NULL UNIQUE, MODIFY COLUMN `email` VARCHAR(150) UNIQUE DEFAULT NULL, MODIFY COLUMN `mobile_number` VARCHAR(50) UNIQUE DEFAULT NULL, ADD INDEX `idx_council_active` (`is_active`);
 ALTER TABLE `medical_document_sharing` MODIFY COLUMN `otp` VARCHAR(6) NOT NULL UNIQUE, ADD UNIQUE KEY `uq_document_patient_doctor` (`document_id`, `patient_id`, `doctor_id`);
@@ -167,10 +220,10 @@ ALTER TABLE `medical_specialities` MODIFY COLUMN `speciality_name` VARCHAR(255) 
 ALTER TABLE `patient_medical_documents` ADD INDEX `idx_document_title` (`document_title`);
 ALTER TABLE `patient_medical_history` MODIFY COLUMN `patient_id` INT NOT NULL UNIQUE, ADD INDEX `idx_medical_history_disabled` (`is_patient_disabled`), ADD INDEX `idx_medical_history_tobacco_alcohol` (`tobacco_use`, `alcohol_use`);
 ALTER TABLE `patient_medical_history` ADD CONSTRAINT `fk_medical_history_patient_id` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE `patients` MODIFY COLUMN `user_id` INT NOT NULL UNIQUE, ADD INDEX `idx_patient_mobile_number` (`mobile_number`), ADD INDEX `idx_patient_email` (`email`), ADD INDEX `idx_patient_first_appointment_booked` (`booked_first_appointment`);
-ALTER TABLE `patients_testimonial` MODIFY COLUMN `is_approved` TINYINT NOT NULL DEFAULT '0', MODIFY COLUMN `is_active` TINYINT NOT NULL DEFAULT '0', ADD UNIQUE KEY `uq_patient_testimonial` (`patient_id`), ADD INDEX `idx_testimonial_approved_active` (`is_approved`, `is_active`), ADD INDEX `idx_testimonial_created_at` (`created_at` DESC);
+ALTER TABLE `patients` MODIFY COLUMN `user_id` INT NOT NULL UNIQUE, ADD INDEX `idx_patient_first_appointment_booked` (`booked_first_appointment`);
+ALTER TABLE `patients_testimonial` MODIFY COLUMN `is_approved` TINYINT NOT NULL DEFAULT '0', MODIFY COLUMN `is_active` TINYINT NOT NULL DEFAULT '0', ADD INDEX `idx_testimonial_approved_active` (`is_approved`, `is_active`), ADD INDEX `idx_testimonial_created_at` (`created_at` DESC);
 ALTER TABLE `specializations` MODIFY COLUMN `is_active` TINYINT NOT NULL DEFAULT '1', ADD INDEX `idx_specialization_active` (`is_active`);
-ALTER TABLE `users` ADD COLUMN `two_fa_secret` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL AFTER `is_2fa_enabled`, ADD COLUMN `is_account_locked` TINYINT DEFAULT '0' AFTER `is_otp_enabled`, ADD COLUMN `failed_login_attempts` INT DEFAULT '0' AFTER `is_account_locked`, ADD COLUMN `last_login_at` TIMESTAMP NULL DEFAULT NULL AFTER `failed_login_attempts`, ADD INDEX `idx_users_type_active_online` (`user_type`, `is_account_active`, `is_online`), ADD INDEX `idx_users_is_verified` (`is_verified`), ADD INDEX `idx_users_is_account_active` (`is_account_active`), ADD INDEX `idx_users_is_deleted` (`is_deleted`), ADD INDEX `idx_users_referral_code` (`referral_code`), ADD INDEX `idx_users_created_at` (`created_at` DESC), ADD INDEX `idx_users_updated_at` (`updated_at` DESC), ADD INDEX `idx_users_last_seen_at` (`last_seen_at` DESC), ADD INDEX `idx_users_last_login_at` (`last_login_at`);
+ALTER TABLE `users` ADD COLUMN `two_fa_secret` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL AFTER `is_2fa_enabled`, ADD COLUMN `is_account_locked` TINYINT DEFAULT '0' AFTER `is_2fa_enabled`, ADD COLUMN `failed_login_attempts` INT DEFAULT '0' AFTER `is_account_locked`, ADD COLUMN `last_login_at` TIMESTAMP NULL DEFAULT NULL AFTER `failed_login_attempts`, ADD INDEX `idx_users_type_active_online` (`user_type`, `is_account_active`, `is_online`), ADD INDEX `idx_users_is_verified` (`is_verified`), ADD INDEX `idx_users_is_account_active` (`is_account_active`), ADD INDEX `idx_users_is_deleted` (`is_deleted`), ADD INDEX `idx_users_referral_code` (`referral_code`), ADD INDEX `idx_users_created_at` (`created_at` DESC), ADD INDEX `idx_users_updated_at` (`updated_at` DESC), ADD INDEX `idx_users_last_seen_at` (`last_seen_at` DESC), ADD INDEX `idx_users_last_login_at` (`last_login_at`);
 ALTER TABLE `withdrawal_requests` ADD INDEX `idx_request_status_doctor` (`request_status`, `doctor_id`), ADD INDEX `idx_request_created_at` (`created_at` DESC);
 ALTER TABLE `zoom_meetings` MODIFY COLUMN `join_url` TEXT DEFAULT NULL, MODIFY COLUMN `start_url` TEXT DEFAULT NULL, ADD COLUMN `host_id` INT DEFAULT NULL AFTER `encrypted_password`, ADD CONSTRAINT `fk_meeting_host_id` FOREIGN KEY (`host_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE, ADD INDEX `idx_meetings_host_id` (`host_id`);
 ALTER TABLE `api_clients` ADD INDEX `idx_api_clients_name` (`name`);
