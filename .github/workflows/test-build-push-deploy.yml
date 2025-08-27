@@ -1,6 +1,10 @@
 name: test-build-push-and-deploy
 
 on:
+  push:
+    branches:
+      - hotfix
+      - hotfix/*
   workflow_dispatch:
     inputs:
       ENV:
@@ -11,6 +15,7 @@ on:
         options:
           - staging
           - prod
+  
 
 env:
   # Basic Environment info
