@@ -54,6 +54,18 @@ exports.createDoctorProfileValidations = [
     .bail()
     .trim()
     .escape(),
+  body("consultationfee")
+    .notEmpty()
+    .withMessage("Consultation Fee is required")
+    .bail()
+    .isNumeric({ no_symbols: true })
+    .withMessage("Consultation Fee must be a valid amount")
+    .bail()
+    .isFloat({ min: 0, max: 100000 }) // Assuming a reasonable upper limit
+    .withMessage("Consultation Fee must be a positive amount")
+    .bail()
+    .trim()
+    .escape(),
   body("city")
     .notEmpty()
     .withMessage("City is required")
