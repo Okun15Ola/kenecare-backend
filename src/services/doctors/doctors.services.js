@@ -7,9 +7,9 @@ const {
   VERIFICATIONSTATUS,
 } = require("../../utils/enum.utils");
 const { getUserById } = require("../../repository/users.repository");
-const {
-  adminDoctorProfileRegistrationEmail,
-} = require("../../utils/email.utils");
+// const {
+//   adminDoctorProfileRegistrationEmail,
+// } = require("../../utils/email.utils");
 const { doctorProfileApprovalSms } = require("../../utils/sms.utils");
 const {
   createDoctorWallet,
@@ -31,7 +31,7 @@ const {
   deleteFileFromS3Bucket,
 } = require("../../utils/aws-s3.utils");
 const { generateFileName } = require("../../utils/file-upload.utils");
-const { nodeEnv } = require("../../config/default.config");
+// const { nodeEnv } = require("../../config/default.config");
 
 exports.getAllDoctors = async (limit, page) => {
   try {
@@ -268,6 +268,7 @@ exports.createDoctorProfile = async ({
 }) => {
   try {
     const user = await getUserById(userId);
+
     if (!user) {
       logger.error(`User not found for ID: ${userId}`);
       return Response.NOT_FOUND({
@@ -286,6 +287,7 @@ exports.createDoctorProfile = async ({
       });
     }
     const doctorExist = await dbObject.getDoctorByUserId(userId);
+
     if (doctorExist) {
       logger.error(
         `Doctor profile already exists for userId: ${userId}. Cannot create a new profile.`,
@@ -319,15 +321,9 @@ exports.createDoctorProfile = async ({
         message: "Error Creating Doctor Profile, please try again!",
       });
     }
-
-    if (nodeEnv !== "development") {
-      // Send Email to admins
-      await adminDoctorProfileRegistrationEmail({
-        doctorName: `${firstName} ${middleName} ${lastName}`,
-      });
-    } else {
-      console.log("Simulate Sending Email");
-    }
+    // await adminDoctorProfileRegistrationEmail({
+    //   doctorName: `${firstName} ${middleName} ${lastName}`,
+    // });
 
     const hashedPin = await hashUsersPassword("1234");
     await createDoctorWallet({

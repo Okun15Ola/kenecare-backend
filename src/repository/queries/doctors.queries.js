@@ -86,7 +86,7 @@ module.exports = {
     INNER JOIN users u ON d.user_id = u.user_id
     INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
     INNER JOIN cities c ON d.city_id = c.city_id  
-    INNER JOIN doctors_council_registration dcr ON d.doctor_id = dcr.doctor_id
+    LEFT JOIN doctors_council_registration dcr ON d.doctor_id = dcr.doctor_id
     WHERE d.user_id = ?
     LIMIT 1
   `,
