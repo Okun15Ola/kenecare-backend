@@ -55,9 +55,7 @@ const createStreamCall = async (call) => {
     const { callType, callID, userId, appointmentId, members } = call;
     const streamCall = client.video.call(callType, callID);
     const response = await streamCall.getOrCreate({
-      members_limit: members?.length || 2,
-      // Ring and Notify cannot be both true
-      // notify: true,
+      members_limit: members?.length,
       ring: true,
       video: true,
       data: {
@@ -69,6 +67,7 @@ const createStreamCall = async (call) => {
         settings_override: {
           limits: {
             max_duration_seconds: 1800,
+            max_participants: members?.length,
           },
         },
       },
