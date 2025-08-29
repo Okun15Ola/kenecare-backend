@@ -264,27 +264,27 @@ exports.updateDoctorWorkHoursAvailability = async (
       return Response.NOT_FOUND({ message: "Doctor not found" });
     }
 
-    const appointments = await getDoctorTodayAppointments(doctorId);
+    // const appointments = await getDoctorTodayAppointments(doctorId);
 
-    if (appointments?.length > 0) {
-      // Check if any appointments are for the day being updated
-      const dayAppointments = appointments.filter((appt) => {
-        const appointmentDate = new Date(appt.appointment_date);
-        const appointmentDayName = appointmentDate.toLocaleLowerCase("en-US", {
-          weekday: "long",
-        });
-        return appointmentDayName === dayOfWeek.toLowerCase();
-      });
+    // if (appointments?.length > 0) {
+    //   // Check if any appointments are for the day being updated
+    //   const dayAppointments = appointments.filter((appt) => {
+    //     const appointmentDate = new Date(appt.appointment_date);
+    //     const appointmentDayName = appointmentDate.toLocaleLowerCase("en-US", {
+    //       weekday: "long",
+    //     });
+    //     return appointmentDayName === dayOfWeek.toLowerCase();
+    //   });
 
-      if (dayAppointments.length > 0) {
-        logger.warn(
-          `Cannot update ${dayOfWeek} availability due to existing appointments`,
-        );
-        return Response.CONFLICT({
-          message: `Cannot update ${dayOfWeek} availability because you have ${dayAppointments.length} appointment(s) scheduled on this day`,
-        });
-      }
-    }
+    //   if (dayAppointments.length > 0) {
+    //     logger.warn(
+    //       `Cannot update ${dayOfWeek} availability due to existing appointments`,
+    //     );
+    //     return Response.CONFLICT({
+    //       message: `Cannot update ${dayOfWeek} availability because you have ${dayAppointments.length} appointment(s) scheduled on this day`,
+    //     });
+    //   }
+    // }
 
     const { affectedRows } = await db.updateWorkingHours(
       doctorId,
