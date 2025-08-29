@@ -37,22 +37,22 @@ exports.getWithdrawalRequestByDoctorIdAndDate = async ({ doctorId, date }) => {
   return query(queries.GET_WITHDRAWAL_REQUEST_BY_DATE, [date, doctorId]);
 };
 
-exports.createWithDrawalRequest = async ({
-  doctorId,
-  amount,
-  paymentMethod,
-  mobileMoneyNumber,
-  bankName,
-  accountName,
-  accountNumber,
-}) => {
-  return query(queries.CREATE_WITHDRAWAL_REQUEST, [
-    doctorId,
-    amount,
-    paymentMethod,
-    mobileMoneyNumber,
-    bankName,
-    accountName,
-    accountNumber,
-  ]);
-};
+// exports.createWithDrawalRequest = async ({
+//   doctorId,
+//   amount,
+//   paymentMethod,
+//   mobileMoneyNumber,
+//   bankName,
+//   accountName,
+//   accountNumber,
+// }) => {
+//   return query(queries.CREATE_WITHDRAWAL_REQUEST, [
+//     doctorId,
+//     amount,
+//     paymentMethod,
+//     mobileMoneyNumber,
+//     bankName,
+//     accountName,
+//     accountNumber,
+//   ]);
+// };
