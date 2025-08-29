@@ -7,7 +7,25 @@ echo "🧪 Running environment check before push..."
 ENV="${ENV:-production}"
 
 # Run the check
-node ./src/check-env.js $ENV
+# Check for --skip-check argument
+SKIP_CHECK=false
+SKIP_TEST=false
+for arg in "$@"; do
+  if [ "$arg" = "--skip-check" ]; then
+    SKIP_CHECK=true
+    break
+  fi
+  if [ "$arg" = "--skip-test" ]; then
+    SKIP_TEST=true
+    break
+  fi
+done
+
+if [ "$SKIP_CHECK" = false ]; then
+  node ./src/check-env.js $ENV
+else
+  echo "⚠️  Skipping environment check as requested."
+fi
 
 if [ $? -ne 0 ]; then
   echo "❌ Env check failed. Push aborted."
@@ -16,7 +34,14 @@ fi
 
 echo "✅ Env check passed. Proceeding with push..."
 
-npm test
+if [ "$SKIP_TEST" = false ]; then
+  npm test
+
+else
+  echo "⚠️  Skipping tests as requested."
+  exit 0
+fi
+
 
 if [ $? -ne 0 ]; then
   echo "❌ Unit Tests Failed. Push aborted."

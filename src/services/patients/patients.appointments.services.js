@@ -289,7 +289,6 @@ exports.createPatientAppointment = async ({
   symptoms,
   specialtyId,
 }) => {
-  console.time("createAppointmentTimer");
   try {
     // Step 1: Validate entities
     const {
@@ -340,7 +339,7 @@ exports.createPatientAppointment = async ({
     }
     // Step 7: Process regular appointment
     const response = await processRegularAppointment(appointmentResult);
-    console.timeEnd("createAppointmentTimer");
+
     return response;
   } catch (error) {
     console.error(error);

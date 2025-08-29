@@ -85,7 +85,6 @@ const endStreamCall = async ({ callType, callID }) => {
   try {
     const streamCall = client.video.call(callType, callID);
     const callExist = await streamCall.get();
-    // console.log(callExist);
     if (callExist) {
       return await streamCall.end();
     }

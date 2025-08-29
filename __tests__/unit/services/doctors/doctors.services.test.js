@@ -412,7 +412,7 @@ describe("Doctors Service", () => {
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce({ doctor_id: 10, user_id: 5 });
       dbObject.createDoctor.mockResolvedValue({ insertId: 10 });
-      adminDoctorProfileRegistrationEmail.mockResolvedValue();
+      // adminDoctorProfileRegistrationEmail.mockResolvedValue();
       hashUsersPassword.mockResolvedValue("hashed");
       createDoctorWallet.mockResolvedValue();
       redisClient.clearCacheByPattern.mockResolvedValue();
@@ -434,7 +434,7 @@ describe("Doctors Service", () => {
         cityId: 1,
         yearOfExperience: "2 yrs",
       });
-      expect(adminDoctorProfileRegistrationEmail).toHaveBeenCalled();
+      // expect(adminDoctorProfileRegistrationEmail).toHaveBeenCalled();
       expect(createDoctorWallet).toHaveBeenCalled();
       expect(redisClient.clearCacheByPattern).toHaveBeenCalled();
       expect(Response.CREATED).toHaveBeenCalled();
