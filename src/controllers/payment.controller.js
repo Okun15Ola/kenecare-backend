@@ -3,6 +3,7 @@ const {
   processAppointmentPayment,
   cancelAppointmentPayment,
   getPaymentStatusByConsultationId,
+  processDoctorWithdrawalService,
 } = require("../services/payment.services");
 const logger = require("../middlewares/logger.middleware");
 const {
@@ -11,6 +12,7 @@ const {
   REFERRAL,
   STATUS_COMPLETED,
   STATUS_SUCCESS,
+  STATUS_FAILED,
   STATUS_EXPIRED,
 } = require("../constants/payment.constants");
 
@@ -77,7 +79,7 @@ exports.paymentStatusController = async (req, res, next) => {
   }
 };
 
-exports.webhookHandler = async (req, res, next) => {
+exports.paymentNotificationHandler = async (req, res, next) => {
   try {
     const { data } = req.body || {};
     const {
@@ -107,6 +109,38 @@ exports.webhookHandler = async (req, res, next) => {
     return res.sendStatus(200);
   } catch (err) {
     logger.error("Webhook error:", err);
+    return next(err);
+  }
+};
+
+exports.payoutOutHandler = async (req, res, next) => {
+  try {
+    const { data } = req.body || {};
+    const {
+      status,
+      id: transactionId,
+      source: { transactionReference },
+    } = data;
+
+    res.sendStatus(200);
+
+    let response = {};
+
+    const baseParams = {
+      transactionId,
+      referrer: REFERRAL,
+      transactionReference,
+      paymentEventStatus: status,
+    };
+
+    if (status === STATUS_COMPLETED || status === STATUS_FAILED) {
+      response = await processDoctorWithdrawalService(baseParams);
+    }
+
+    logger.info(response);
+    return res.sendStatus(200);
+  } catch (err) {
+    logger.error("payout webhook error:", err);
     return next(err);
   }
 };

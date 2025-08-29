@@ -4,6 +4,7 @@ const {
   UpdateWalletPinController,
   RequestWithdrawalController,
 } = require("../../../controllers/doctors/wallet.controller");
+const paymentController = require("../../../controllers/payment.controller");
 const { Validate } = require("../../../validations/validate");
 const {
   walletWithdrawalValidations,
@@ -15,15 +16,33 @@ const {
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
 
-router.use(authenticateUser, limiter, authorizeDoctor); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+router.get(
+  "/",
+  authenticateUser,
+  limiter,
+  authorizeDoctor,
+  GetDoctorWalletController,
+);
 
-router.get("/", GetDoctorWalletController);
 router.post(
   "/withdrawal",
+  authenticateUser,
+  limiter,
+  authorizeDoctor,
   walletWithdrawalValidations,
   Validate,
   RequestWithdrawalController,
 );
-router.patch("/", walletPinValidation, Validate, UpdateWalletPinController);
+router.patch(
+  "/",
+  authenticateUser,
+  limiter,
+  authorizeDoctor,
+  walletPinValidation,
+  Validate,
+  UpdateWalletPinController,
+);
+
+router.post("/monimee/webhook/payout", paymentController.payoutOutHandler);
 
 module.exports = router;

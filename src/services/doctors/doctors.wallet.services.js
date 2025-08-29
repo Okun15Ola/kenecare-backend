@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const moment = require("moment");
+const { v4: uuidV4 } = require("uuid");
 const { getDoctorByUserId } = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 const {
@@ -7,12 +7,21 @@ const {
   getWalletById,
   createDoctorWallet,
   updateWalletPin,
-  createWithDrawalRequest,
+  updateDoctorWalletBalance,
+  // createWithDrawalRequest,
   getWithdrawalRequestByDoctorId,
-  getWithdrawalRequestByDoctorIdAndDate,
 } = require("../../repository/doctor-wallet.repository");
 const { hashUsersPassword } = require("../../utils/auth.utils");
-const { adminWithdrawalRequestEmail } = require("../../utils/email.utils");
+const {
+  createWithdrawalRequest,
+} = require("../../repository/withdrawal-requests.repository");
+// const { adminWithdrawalRequestEmail } = require("../../utils/email.utils");
+const { processPayout } = require("../../utils/payment.utils");
+const {
+  PAYMENT_PROVIDERS,
+  MOMO_PROVIDERS,
+  PAYMENT_METHOD,
+} = require("../../utils/enum.utils");
 const logger = require("../../middlewares/logger.middleware");
 
 exports.getDoctorsWallet = async (userId) => {
@@ -81,11 +90,8 @@ exports.updateDoctorWalletPin = async ({ userId, newPin }) => {
 exports.requestWithdrawal = async ({
   userId,
   amount,
-  paymentMethod,
+  provider,
   mobileMoneyNumber,
-  bankName,
-  accountName,
-  accountNumber,
 }) => {
   try {
     const doctor = await getDoctorByUserId(userId);
@@ -95,8 +101,8 @@ exports.requestWithdrawal = async ({
     }
     const {
       doctor_id: doctorId,
-      first_name: firstName,
-      last_name: lastName,
+      // first_name: firstName,
+      // last_name: lastName,
     } = doctor;
     const wallet = await getWalletByDoctorId(doctorId);
     if (!wallet) {
@@ -130,46 +136,80 @@ exports.requestWithdrawal = async ({
       });
     }
 
-    //  get all requests for today's date
-    const today = moment().format("YYYY-MM-DD");
-    const requestsForToday = await getWithdrawalRequestByDoctorIdAndDate({
-      doctorId,
-      date: today,
-    });
-    //  check maximum request per day
-    if (requestsForToday.length >= 3) {
+    let momoType;
+    if (provider === MOMO_PROVIDERS.ORANGE_MONEY) {
+      momoType = PAYMENT_PROVIDERS.ORANGE_MONEY;
+    } else if (provider === MOMO_PROVIDERS.AFRI_MONEY) {
+      momoType = PAYMENT_PROVIDERS.AFRI_MONEY;
+    }
+
+    let result;
+    try {
+      result = await processPayout({
+        amount,
+        provider: momoType,
+        phoneNumber: mobileMoneyNumber,
+      });
+
+      const { id, status, failureDetails } = result;
+
+      if (status === "failed" || failureDetails) {
+        const errorMessage =
+          result.messages?.join(", ") || "Unknown payout failure.";
+        logger.error(
+          `Payout failed for doctorId: ${doctorId}. Error Code: ${failureDetails.code} Reason: ${failureDetails.message} ${errorMessage}`,
+        );
+
+        await createWithdrawalRequest({
+          doctorId,
+          transactionId: id,
+          orderId: uuidV4(),
+          amount: requestedWithdrawalAmount,
+          currency: "SLE",
+          paymentType: "mobile_money",
+          mobileMoneyProvider: provider,
+          mobileNumber: mobileMoneyNumber,
+          status: "failed",
+          reason: failureDetails.message,
+        });
+
+        return Response.INTERNAL_SERVER_ERROR({
+          message: "The withdrawal request failed. Please try again.",
+        });
+      }
+    } catch (error) {
+      const apiErrorData = error.response?.data || error.message;
       logger.error(
-        `Exceeded daily maximum withdrawal requests for doctorId: ${doctorId}. Requests today: ${requestsForToday.length}`,
+        `API error during payout for doctorId: ${doctorId}. Details: ${JSON.stringify(apiErrorData)}`,
       );
-      return Response.BAD_REQUEST({
+
+      return Response.INTERNAL_SERVER_ERROR({
         message:
-          "Exceeded Daily Maximum Withdrawal Request. Please Try Again Tomorrow",
+          "An unexpected error occurred while processing your request. Please try again.",
       });
     }
 
-    await Promise.allSettled([
-      createWithDrawalRequest({
+    const { id, source, payoutAmount } = result;
+
+    const newBalance = currentBalance - requestedWithdrawalAmount;
+    Promise.all([
+      createWithdrawalRequest({
         doctorId,
-        amount,
-        paymentMethod,
-        mobileMoneyNumber,
-        bankName,
-        accountName,
-        accountNumber,
+        transactionId: id,
+        orderId: uuidV4(),
+        amount: requestedWithdrawalAmount,
+        currency: payoutAmount.currency,
+        paymentType: PAYMENT_METHOD.MOBILE_MONEY,
+        financialAccountId: source.financialAccountId,
+        mobileMoneyProvider: provider,
+        mobileNumber: mobileMoneyNumber,
       }),
-      adminWithdrawalRequestEmail({
-        doctorName: `${firstName} ${lastName}`,
-        amount,
-        paymentMethod,
-        mobileMoneyNumber,
-        bankName,
-        accountName,
-        accountNumber,
-      }),
+      updateDoctorWalletBalance({ doctorId, newBalance }),
+      // TODO: send email alert to admin
     ]);
 
     return Response.CREATED({
-      message: "Withdrawal Requested Successfully, Awaiting Approval",
+      message: "Withdrawal Requested Successfully, Funds are being disbursed.",
     });
   } catch (error) {
     logger.error("requestWithdrawal: ", error);
