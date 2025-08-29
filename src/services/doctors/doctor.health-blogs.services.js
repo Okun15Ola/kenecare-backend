@@ -70,6 +70,7 @@ exports.createDoctorBlogService = async ({
     }
 
     await redisClient.clearCacheByPattern(`doctor:${doctorId}:blogs:*`);
+    await redisClient.delete(`doctor_blog_img:${doctorId}`);
 
     return Response.CREATED({
       message: "Health Blog Created Successfully!",
@@ -154,6 +155,7 @@ exports.updateDoctorBlogService = async ({
       return Response.NOT_MODIFIED({});
     }
 
+    await redisClient.delete(`doctor_blog_img:${doctorId}`);
     await redisClient.clearCacheByPattern(`doctor:${doctorId}:blogs:*`);
 
     return Response.SUCCESS({
@@ -379,12 +381,12 @@ exports.deleteDoctorBlogService = async (userId, blogUuid) => {
     if (imageFileName) {
       try {
         await deleteFileFromS3Bucket(imageFileName);
-        logger.info(`Successfully deleted blog image: ${imageFileName}`);
       } catch (s3Error) {
         logger.error(`Error deleting blog image from S3: ${s3Error.message}`);
       }
     }
 
+    await redisClient.delete(`doctor_blog_img:${doctorId}`);
     await redisClient.clearCacheByPattern(`doctor:${doctorId}:blogs:*`);
 
     return Response.SUCCESS({

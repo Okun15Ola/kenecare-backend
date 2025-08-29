@@ -1,6 +1,6 @@
 module.exports = {
   GET_ALL_TESTIMONIALS: `
-    SELECT testimonial_id, first_name, last_name, profile_pic_url, testimonial_content, is_approved, is_active, fullname as 'approved_by'
+    SELECT testimonial_id, first_name, last_name, patients_testimonial.patient_id, profile_pic_url, testimonial_content, is_approved, is_active, fullname as 'approved_by'
     FROM patients_testimonial
     INNER JOIN patients ON patients_testimonial.patient_id = patients.patient_id
     LEFT JOIN admins ON patients_testimonial.approved_by = admins.admin_id

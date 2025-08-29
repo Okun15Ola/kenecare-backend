@@ -468,6 +468,9 @@ exports.updatePatientProfilePicture = async ({ userId, file }) => {
       }
     }
 
+    await redisClient.delete(`patient_public_profile_pic:${patientId}`);
+    await redisClient.delete(`patient_private_profile_pic:${patientId}`);
+    await redisClient.delete(`patient_pic:${patientId}`);
     await redisClient.delete(`patient:${patientId}:*`);
     await redisClient.clearCacheByPattern(`patients:${patientId}:*`);
     await redisClient.clearCacheByPattern(

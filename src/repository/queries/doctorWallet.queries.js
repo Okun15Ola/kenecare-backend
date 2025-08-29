@@ -23,13 +23,9 @@ module.exports = {
     UPDATE doctors_wallet SET balance = ? WHERE doctor_id = ?;
   `,
   GET_WITHDRAWAL_REQUEST: `
-    SELECT * FROM withdrawal_requests WHERE doctor_id = ? AND request_status = 'pending' LIMIT 1;
+    SELECT * FROM withdrawal_requests WHERE doctor_id = ? AND status = 'pending' LIMIT 1;
   `,
   GET_WITHDRAWAL_REQUEST_BY_DATE: `
     SELECT * FROM withdrawal_requests WHERE doctor_id = ? AND DATE_FORMAT(created_at, '%Y-%m-%d') = ?;
-  `,
-  CREATE_WITHDRAWAL_REQUEST: `
-    INSERT INTO withdrawal_requests (doctor_id, requested_amount, payment_method, mobile_money_number, bank_name, bank_account_name, bank_account_number)
-    VALUES (?, ?, ?, ?, ?, ?, ?);
   `,
 };

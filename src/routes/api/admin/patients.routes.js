@@ -10,6 +10,7 @@ const {
   paginationValidation,
 } = require("../../../validations/pagination.validations");
 const { Validate } = require("../../../validations/validate");
+const logger = require("../../../middlewares/logger.middleware");
 
 router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
 
@@ -20,7 +21,7 @@ router.get("/testimonials", GetPatientTestimonialsController);
 
 router.put("/:id", (req, res, next) => {
   try {
-    console.log("Welcome Home");
+    logger.info("Welcome Home");
   } catch (error) {
     console.error(error);
     next(error);
@@ -29,7 +30,7 @@ router.put("/:id", (req, res, next) => {
 
 router.delete("/:id", (req, res, next) => {
   try {
-    console.log("Welcome Home");
+    logger.info("Welcome Home");
   } catch (error) {
     console.error(error);
     next(error);

@@ -136,6 +136,8 @@ exports.createCommonSymptom = async ({
     }
 
     const cacheKey = cacheKeyBulider("common-symptoms:*");
+    await redisClient.clearCacheByPattern("symptom_public_img:*");
+    await redisClient.clearCacheByPattern("symptom_private_img:*");
     await redisClient.clearCacheByPattern(cacheKey);
 
     return Response.CREATED({
@@ -190,6 +192,8 @@ exports.updateCommonSymptom = async ({
 
     const cacheKey = `common-symptoms:${id}`;
     await redisClient.delete(cacheKey);
+    await redisClient.clearCacheByPattern("symptom_public_img:*");
+    await redisClient.clearCacheByPattern("symptom_private_img:*");
 
     return Response.SUCCESS({
       message: "Common Symptom Updated Succcessfully",
@@ -234,6 +238,8 @@ exports.deleteCommonSymptom = async (id) => {
 
     const cacheKey = `common-symptoms:${id}`;
     await redisClient.delete(cacheKey);
+    await redisClient.clearCacheByPattern("symptom_public_img:*");
+    await redisClient.clearCacheByPattern("symptom_private_img:*");
 
     return Response.SUCCESS({ message: "Common Symptom Deleted Successfully" });
   } catch (error) {
