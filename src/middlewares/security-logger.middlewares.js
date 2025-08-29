@@ -223,7 +223,6 @@
 //     req.path.includes("/api/v1/doctors")
 //   ) {
 //     // Log sensitive endpoints at info level
-//     logger.info("SENSITIVE_ENDPOINT_ACCESS", requestData);
 //   } else {
 //     // Log normal traffic at debug level to avoid log bloat
 //     logger.debug("API_REQUEST", requestData);
