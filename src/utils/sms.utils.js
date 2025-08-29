@@ -33,7 +33,7 @@ const sendVerificationTokenSMS = async ({ token, mobileNumber }) => {
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -58,7 +58,7 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -84,7 +84,7 @@ const sendMarketerVerificationTokenSMS = async ({
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -110,7 +110,7 @@ const sendMarketerPhoneVerifiedSMS = async ({
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -137,7 +137,7 @@ const sendMarketerUserRegisteredSMS = async ({
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -159,7 +159,7 @@ const sendForgotPasswordRequestTokenSMS = async ({ token, mobileNumber }) => {
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -181,7 +181,7 @@ const sendPasswordResetSMS = async (mobileNumber) => {
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -203,7 +203,7 @@ const sendPrescriptionToken = async ({ doctorName, mobileNumber }) => {
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -233,7 +233,7 @@ const appointmentApprovalSms = async ({
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -262,7 +262,7 @@ const newFollowAppointmentSms = async ({
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -289,7 +289,7 @@ const appointmentStartedSms = async ({
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -315,7 +315,7 @@ const appointmentEndedSms = async ({
 
     config.data = data;
     if (nodeEnv === "development") {
-      console.log("SIMULATION SEND SMS", data);
+      logger.info("SIMULATION SEND SMS", data);
     } else {
       await axios.request(config).catch((error) => {
         throw error;
@@ -485,7 +485,7 @@ const withdrawalApprovedSMS = async ({ mobileNumber, doctorName }) => {
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Hi! Dr. ${doctorName}.\n\nYour wallet withdarwal has successfully been approved. You requested amount will be deposited into your respective account shortly.\n\nKENECARE TEAM`,
+      content: `Hi! Dr. ${doctorName}.\n\nYour wallet withdrawal has successfully been approved. You requested amount will be deposited into your respective account shortly.\n\nKENECARE TEAM`,
     });
 
     config.data = data;
@@ -503,7 +503,7 @@ const withdrawalDeniedSMS = async ({ mobileNumber, doctorName, comment }) => {
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Hi! Dr. ${doctorName}.\n\nYour wallet withdarwal was declined, below is the reason for your request denial.\n\nCOMMENT:\n\n${comment}.\n\nKENECARE TEAM`,
+      content: `Hi! Dr. ${doctorName}.\n\nYour wallet withdrawal was declined, below is the reason for your request denial.\n\nCOMMENT:\n\n${comment}.\n\nKENECARE TEAM`,
     });
 
     config.data = data;

@@ -48,7 +48,7 @@ const newPatientAppointmentEmail = async ({
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -89,7 +89,7 @@ const newDoctorAppointmentEmail = async ({
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -115,7 +115,7 @@ const adminDoctorCouncilRegistrationEmail = async ({ doctorName }) => {
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -140,7 +140,7 @@ const adminDoctorProfileRegistrationEmail = async ({ doctorName }) => {
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -188,7 +188,7 @@ const adminWithdrawalRequestEmail = async ({
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -224,7 +224,7 @@ const doctorCouncilRegistrationEmail = async ({ doctorEmail, doctorName }) => {
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -261,7 +261,7 @@ const doctorCouncilRegistrationApprovedEmail = async ({
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -301,7 +301,7 @@ const doctorCouncilRegistrationRejectedEmail = async ({
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -351,7 +351,7 @@ const patientAppointmentApprovalEmail = async ({
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -379,7 +379,7 @@ const paymentCanceledPatientAppointmentEmail = async ({
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);
@@ -408,7 +408,7 @@ const marketerEmailVerificationToken = async ({
         throw err;
       });
     } else {
-      console.log("SIMULATING EMAIL: ", message);
+      logger.info("SIMULATING EMAIL: ", message);
     }
   } catch (error) {
     logger.error(error);

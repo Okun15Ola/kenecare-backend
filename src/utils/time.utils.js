@@ -200,9 +200,9 @@ async function checkDoctorAvailability(
 
   let isInGeneralAvailability = false;
   if (!availableDays || availableDays.is_available === 0) {
-    console.log(
-      `Doctor ${doctorId} has no general availability defined for ${proposedDayOfWeekString}.`,
-    );
+    // console.log(
+    //   `Doctor ${doctorId} has no general availability defined for ${proposedDayOfWeekString}.`,
+    // );
     return false;
   }
 
@@ -226,22 +226,22 @@ async function checkDoctorAvailability(
     proposedEndWithBuffer.isSameOrBefore(slotEndDateTimeOnProposedDate);
 
   if (!isInGeneralAvailability) {
-    console.log(
-      `Doctor ${doctorId} is not generally available on ${proposedDayOfWeekString} at ${proposedStart.format("HH:mm")}.`,
-    );
+    // console.log(
+    //   `Doctor ${doctorId} is not generally available on ${proposedDayOfWeekString} at ${proposedStart.format("HH:mm")}.`,
+    // );
     return false; // Proposed time is outside the doctor's standard working hours for that day
   }
 
-  console.log(proposedAppointmentStartDateTime);
+  // console.log(proposedAppointmentStartDateTime);
   const formattedApptDate = proposedAppointmentStartDateTime.split(" ")[0];
-  console.log("formatted Appt Date: ", formattedApptDate);
+  // console.log("formatted Appt Date: ", formattedApptDate);
   // Step 2: Check for conflicts with existing appointments + 10-min break + 10-min pre-appointment buffer
   const existingAppointments = await getExisitingAppointments(
     doctorId,
     formattedApptDate,
   );
 
-  console.log("Exisiting Appointments: ", existingAppointments);
+  // console.log("Exisiting Appointments: ", existingAppointments);
 
   const conflictFound = existingAppointments.some((existingAppt) => {
     const existingApptDate = moment(existingAppt.appointment_date).format(
@@ -277,7 +277,7 @@ async function checkDoctorAvailability(
       proposedEndWithBuffer.isAfter(totalBlockedPeriodStart);
 
     if (overlaps) {
-      console.log(
+      logger.info(
         `Conflict for Doctor ${doctorId}: Proposed appointment ${proposedStart.format("HH:mm")} - ${proposedEndWithBuffer.format("HH:mm")} ` +
           `overlaps with existing appointment ${existingApptStart.format("HH:mm")} - ${existingApptEndWithBreak.format("HH:mm")} ` +
           `(pre-buffer starts at ${existingApptStartWithPreBuffer.format("HH:mm")}, actual appt starts at ${existingApptStart.format("HH:mm")}, ` +

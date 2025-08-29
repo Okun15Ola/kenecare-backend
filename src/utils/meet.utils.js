@@ -26,7 +26,7 @@ async function loadSavedCredentialsIfExist() {
     const credentials = JSON.parse(content);
     return auth.fromJSON(credentials);
   } catch (err) {
-    logger.info(err);
+    logger.error(err);
     return null;
   }
 }

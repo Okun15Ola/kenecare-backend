@@ -19,7 +19,6 @@ const createJobFunctions = (jobModule) => {
   const start = () => {
     if (jobInstances[name]) {
       logger.info(`${name} job is already running...`);
-      console.info(`${name} job is already running...`);
       return;
     }
 
@@ -27,7 +26,6 @@ const createJobFunctions = (jobModule) => {
 
     jobInstances[name].start();
     logger.info(`${name} job started successfully`);
-    console.info(`${name} job started successfully`);
   };
 
   const stop = () => {
@@ -35,10 +33,8 @@ const createJobFunctions = (jobModule) => {
       jobInstances[name].stop();
       jobInstances[name] = null;
       logger.info(`${name} job stopped`);
-      console.info(`${name} job stopped`);
     } else {
       logger.info(`No active ${name} job to stop`);
-      console.info(`No active ${name} job to stop`);
     }
   };
 
