@@ -143,32 +143,32 @@ The application is deployed using Docker. The `Dockerfile.prod` and `docker-comp
 
 The project includes a `Makefile` with various commands to automate common tasks. Here are some of the most useful commands:
 
-| Command | Description |
-| --- | --- |
-| `make help` | Displays a help message with all available commands. |
-| `make build-dev` | Builds the Docker image for the development environment. |
-| `make build-staging` | Builds the Docker image for the staging environment. |
-| `make build-prod` | Builds the Docker image for the production environment. |
-| `make run-dev` | Runs the entire stack in development mode (DB, Redis, API). |
-| `make stop-dev` | Stops the entire development stack. |
-| `make run-db` | Runs only the database service. |
-| `make stop-db` | Stops the database service. |
-| `make run-redis` | Runs only the Redis service. |
-| `make stop-redis` | Stops the Redis service. |
-| `make run-api` | Runs only the API service. |
-| `make stop-api` | Stops the API service. |
-| `make run-staging` | Deploys the application to staging. |
-| `make stop-staging` | Stops the staging environment. |
-| `make deploy-prod` | Deploys the application to production. |
-| `make stop-prod` | Stops the production environment. |
-| `make rollback` | Rolls back the production deployment to the previous image. |
-| `make test-deploy` | Performs a health check after a production deployment. |
-| `make push-staging-image` | Pushes the staging Docker image to the registry. |
-| `make push-production-image` | Pushes the production Docker image to the registry. |
-| `make logs` | Streams logs for the API service. |
-| `make redis-cli` | Opens Redis CLI for the development environment. |
-| `make flush-cache` | Flushes Redis cache for the development environment. |
-| `make clean` | Cleans up all Docker containers, networks, and volumes. |
+| Command                      | Description                                                 |
+| ---------------------------- | ----------------------------------------------------------- |
+| `make help`                  | Displays a help message with all available commands.        |
+| `make build-dev`             | Builds the Docker image for the development environment.    |
+| `make build-staging`         | Builds the Docker image for the staging environment.        |
+| `make build-prod`            | Builds the Docker image for the production environment.     |
+| `make run-dev`               | Runs the entire stack in development mode (DB, Redis, API). |
+| `make stop-dev`              | Stops the entire development stack.                         |
+| `make run-db`                | Runs only the database service.                             |
+| `make stop-db`               | Stops the database service.                                 |
+| `make run-redis`             | Runs only the Redis service.                                |
+| `make stop-redis`            | Stops the Redis service.                                    |
+| `make run-api`               | Runs only the API service.                                  |
+| `make stop-api`              | Stops the API service.                                      |
+| `make run-staging`           | Deploys the application to staging.                         |
+| `make stop-staging`          | Stops the staging environment.                              |
+| `make deploy-prod`           | Deploys the application to production.                      |
+| `make stop-prod`             | Stops the production environment.                           |
+| `make rollback`              | Rolls back the production deployment to the previous image. |
+| `make test-deploy`           | Performs a health check after a production deployment.      |
+| `make push-staging-image`    | Pushes the staging Docker image to the registry.            |
+| `make push-production-image` | Pushes the production Docker image to the registry.         |
+| `make logs`                  | Streams logs for the API service.                           |
+| `make redis-cli`             | Opens Redis CLI for the development environment.            |
+| `make flush-cache`           | Flushes Redis cache for the development environment.        |
+| `make clean`                 | Cleans up all Docker containers, networks, and volumes.     |
 
 ## Contributing
 
