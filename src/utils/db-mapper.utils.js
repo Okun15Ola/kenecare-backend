@@ -903,8 +903,8 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
       ? rawAvailableDays.map((day) => ({
           dayId: day.day_slot_id,
           day: day.day_of_week,
-          startTime: moment(day.day_start_time).format("HH:mm:ss"),
-          endTime: moment(day.day_end_time).format("HH:mm:ss"),
+          startTime: day.day_start_time,
+          endTime: day.day_end_time,
           isAvailable: Boolean(day.is_available),
         }))
       : [];
