@@ -45,10 +45,28 @@ const ERROR_CODES = Enum({
   DOCTOR_PROFILE_NOT_FOUND: 2404,
 });
 
+const PAYMENT_PROVIDERS = Enum({
+  ORANGE_MONEY: "m17",
+  AFRI_MONEY: "m18",
+});
+
+const MOMO_PROVIDERS = Enum({
+  ORANGE_MONEY: "orange_money",
+  AFRI_MONEY: "afri_money",
+});
+
+const PAYMENT_METHOD = Enum({
+  BANK: "bank",
+  MOBILE_MONEY: "mobile_money",
+});
+
 module.exports = {
   USERTYPE,
   STATUS,
   VERIFICATIONSTATUS,
   COMMON_PINS,
   ERROR_CODES,
+  PAYMENT_PROVIDERS,
+  MOMO_PROVIDERS,
+  PAYMENT_METHOD,
 };

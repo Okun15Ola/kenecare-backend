@@ -209,6 +209,7 @@ exports.createMarketerService = async ({
     }
 
     await redisClient.clearCacheByPattern("marketers:*");
+    await redisClient.clearCacheByPattern("marketer_doc:*");
     return Response.CREATED({
       message:
         "Marketer Created Successfully. Please provide further verificaiton instructions to marketer. ",
@@ -333,9 +334,6 @@ exports.updateMarketerByIdService = async ({
     }
 
     // delete old file if a new file is sent with the update request
-    // if (idDocument) {
-    //   console.log("Id document was sent ");
-    // }
     await updateMarketerById({
       marketerId,
       firstName,
@@ -358,6 +356,7 @@ exports.updateMarketerByIdService = async ({
       secondEmergencyContacAddress,
     });
     await redisClient.clearCacheByPattern("marketers:*");
+    await redisClient.delete(`marketer_doc:${marketerId}`);
     return Response.SUCCESS({ message: "Successful" });
   } catch (error) {
     logger.error("updateMarketerByIdService: ", error);
@@ -387,6 +386,7 @@ exports.deleteMarketerByIdService = async (id) => {
       return Response.NOT_MODIFIED({});
     }
     await redisClient.clearCacheByPattern("marketers:*");
+    await redisClient.delete(`marketer_doc:${id}`);
     return Response.SUCCESS({ message: "Marketer Deleted Successfully" });
   } catch (error) {
     logger.error("deleteMarketerByIdService: ", error);

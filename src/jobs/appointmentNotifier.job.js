@@ -22,9 +22,6 @@ const sendSmsNotifications = async (notifications) => {
             appointmentDateTime,
             diffInMinutes,
           });
-          logger.info(
-            `Sent SMS reminder to ${doctorName} (${doctorMobile}) for appointment at ${appointmentDateTime}, ${diffInMinutes} minutes remaining.`,
-          );
         } catch (err) {
           logger.error(`Failed to send SMS to ${doctorMobile}:`, err);
         }
@@ -39,8 +36,7 @@ module.exports = {
 
   async execute() {
     try {
-      logger.info("Running appointment notification job...");
-      console.info("Running appointment notification job...");
+      console.log("Running appointment notification job...");
 
       let appointments = null;
       const cacheKey = "appointments:all";
@@ -108,10 +104,8 @@ module.exports = {
       }
 
       logger.info("Appointment notification job completed");
-      console.info("Appointment notification job completed");
     } catch (error) {
       logger.error("Error in appointment notification job:", error);
-      console.error("Error in appointment notification job:", error);
     }
   },
 };

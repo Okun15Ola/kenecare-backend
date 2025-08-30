@@ -152,6 +152,7 @@ exports.createDoctorCouncilRegistration = async ({
     // });
 
     await Promise.all([
+      redisClient.delete(`doctor_reg_doc:${doctorId}`),
       redisClient.clearCacheByPattern("admin:doctors:council:*"),
       redisClient.clearCacheByPattern(
         `doctor:${doctorId}:council-registration:*`,
@@ -249,6 +250,7 @@ exports.updateDoctorCouncilRegistration = async ({
     // ]);
 
     await Promise.all([
+      redisClient.delete(`doctor_reg_doc:${doctorId}`),
       redisClient.clearCacheByPattern("admin:doctors:council:*"),
       redisClient.clearCacheByPattern(
         `doctor:${doctorId}:council-registration:*`,

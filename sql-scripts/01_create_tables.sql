@@ -855,30 +855,30 @@ CREATE TABLE `users` (
 -- Table structure for table `withdrawal_requests`
 --
 
-DROP TABLE IF EXISTS `withdrawal_requests`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `withdrawal_requests` (
-  `request_id` int NOT NULL AUTO_INCREMENT,
-  `doctor_id` int NOT NULL,
-  `requested_amount` decimal(10,2) NOT NULL,
-  `payment_method` varchar(50) NOT NULL,
-  `mobile_money_number` varchar(30) DEFAULT NULL,
-  `bank_name` varchar(150) DEFAULT NULL,
-  `bank_account_name` varchar(150) DEFAULT NULL,
-  `bank_account_number` varchar(150) DEFAULT NULL,
-  `request_status` enum('pending','approved','declined') NOT NULL DEFAULT 'pending',
-  `processed_by` int DEFAULT NULL,
-  `comments` varchar(1000) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`request_id`),
-  KEY `fk_request_doctor` (`doctor_id`),
-  KEY `fk_request_processor` (`processed_by`),
-  CONSTRAINT `fk_request_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`doctor_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_request_processor` FOREIGN KEY (`processed_by`) REFERENCES `admins` (`admin_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- DROP TABLE IF EXISTS `withdrawal_requests`;
+-- /*!40101 SET @saved_cs_client     = @@character_set_client */;
+-- /*!50503 SET character_set_client = utf8mb4 */;
+-- CREATE TABLE `withdrawal_requests` (
+--   `request_id` int NOT NULL AUTO_INCREMENT,
+--   `doctor_id` int NOT NULL,
+--   `requested_amount` decimal(10,2) NOT NULL,
+--   `payment_method` varchar(50) NOT NULL,
+--   `mobile_money_number` varchar(30) DEFAULT NULL,
+--   `bank_name` varchar(150) DEFAULT NULL,
+--   `bank_account_name` varchar(150) DEFAULT NULL,
+--   `bank_account_number` varchar(150) DEFAULT NULL,
+--   `request_status` enum('pending','approved','declined') NOT NULL DEFAULT 'pending',
+--   `processed_by` int DEFAULT NULL,
+--   `comments` varchar(1000) DEFAULT NULL,
+--   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+--   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--   PRIMARY KEY (`request_id`),
+--   KEY `fk_request_doctor` (`doctor_id`),
+--   KEY `fk_request_processor` (`processed_by`),
+--   CONSTRAINT `fk_request_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`doctor_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+--   CONSTRAINT `fk_request_processor` FOREIGN KEY (`processed_by`) REFERENCES `admins` (`admin_id`) ON DELETE CASCADE ON UPDATE CASCADE
+-- ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `zoom_meetings`
@@ -1205,6 +1205,25 @@ GROUP BY
     TABLE_NAME, INDEX_NAME, NON_UNIQUE, INDEX_TYPE
 ORDER BY
     TABLE_NAME, INDEX_NAME;
+
+CREATE TABLE `withdrawal_requests` (
+  `request_id` INT PRIMARY KEY AUTO_INCREMENT,
+  `doctor_id` INT NOT NULL,
+  `transaction_id` VARCHAR(255) UNIQUE, -- The transaction ID from Monimee
+  `order_id` VARCHAR(255) UNIQUE NOT NULL,
+  `amount` DECIMAL(18, 2) NOT NULL,
+  `currency` VARCHAR(10) NOT NULL DEFAULT 'SLL',
+  `payment_type` ENUM('mobile_money') NOT NULL, 
+  `finance_account_id` VARCHAR(255),
+  `transaction_reference` VARCHAR(255),
+  `mobile_money_provider` ENUM('orange_money', 'afri_money') NOT NULL,
+  `mobile_number` VARCHAR(255),  
+  `status` ENUM('initiated', 'pending', 'success', 'failed') NOT NULL DEFAULT 'initiated', 
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,  
+  FOREIGN KEY (`doctor_id`) REFERENCES `doctors`(`doctor_id`) ON DELETE CASCADE,
+  INDEX `idx_withdrawal_requests_doctor_id` (`doctor_id`)
+);
 
 -- ALTER TABLE `patients`
 -- ADD COLUMN `is_deleted` TINYINT NOT NULL DEFAULT 0,

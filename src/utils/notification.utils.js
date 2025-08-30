@@ -50,7 +50,6 @@ const sendPushNotifications = async ({ tokens, data }) => {
     const processReceipts = async (chunk) => {
       try {
         const receipts = await expo.getPushNotificationReceiptsAsync(chunk);
-        logger.info(receipts);
         receipts
           .filter((receipt) => receipt.status !== "ok")
           .forEach((receipt) => {
@@ -76,7 +75,7 @@ const sendPushNotifications = async ({ tokens, data }) => {
       }
     })();
   } catch (error) {
-    logger.info(error);
+    logger.error(error);
   }
 };
 
@@ -94,7 +93,7 @@ const sendPushNotification = async (notification) => {
 
     return await expo.sendPushNotificationsAsync([message]);
   } catch (error) {
-    logger.info("Error Sending Push Notification: ", error);
+    logger.error("Error Sending Push Notification: ", error);
     logger.error(error);
     throw error;
   }

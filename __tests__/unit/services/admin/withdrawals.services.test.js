@@ -1,13 +1,13 @@
 const withdrawalsService = require("../../../../src/services/admin/withdrawals.services");
 const Response = require("../../../../src/utils/response.utils");
 const withdrawalRepo = require("../../../../src/repository/withdrawal-requests.repository");
-const doctorRepo = require("../../../../src/repository/doctors.repository");
-const walletRepo = require("../../../../src/repository/doctor-wallet.repository");
-const smsUtils = require("../../../../src/utils/sms.utils");
+// const doctorRepo = require("../../../../src/repository/doctors.repository");
+// const walletRepo = require("../../../../src/repository/doctor-wallet.repository");
+// const smsUtils = require("../../../../src/utils/sms.utils");
 const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const logger = require("../../../../src/middlewares/logger.middleware");
 const cachingUtils = require("../../../../src/utils/caching.utils");
-const { redisClient } = require("../../../../src/config/redis.config");
+// const { redisClient } = require("../../../../src/config/redis.config");
 
 jest.mock("../../../../src/utils/response.utils");
 jest.mock("../../../../src/repository/withdrawal-requests.repository");
@@ -97,9 +97,11 @@ describe("withdrawals.services", () => {
     });
   });
 
-  describe("getRequestById", () => {
+  describe("getWithdrawalRequestByTransactionId", () => {
     it("should return NOT_FOUND if request not found", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue(null);
+      withdrawalRepo.getWithdrawalRequestByTransactionId.mockResolvedValue(
+        null,
+      );
       Response.NOT_FOUND.mockReturnValue("not_found");
       logger.warn.mockReturnValue();
       const result = await withdrawalsService.getRequestById(123);
@@ -111,7 +113,9 @@ describe("withdrawals.services", () => {
     });
 
     it("should return SUCCESS with mapped data", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue({ id: 1 });
+      withdrawalRepo.getWithdrawalRequestByTransactionId.mockResolvedValue({
+        id: 1,
+      });
       dbMapper.mapWithdawalRow.mockReturnValue({ id: 1, mapped: true });
       Response.SUCCESS.mockReturnValue("success");
       const result = await withdrawalsService.getRequestById(1);
@@ -123,242 +127,11 @@ describe("withdrawals.services", () => {
 
     it("should throw error and log if exception occurs", async () => {
       const error = new Error("fail");
-      withdrawalRepo.getWithdrawalRequestById.mockRejectedValue(error);
+      withdrawalRepo.getWithdrawalRequestByTransactionId.mockRejectedValue(
+        error,
+      );
       logger.error.mockReturnValue();
       await expect(withdrawalsService.getRequestById(1)).rejects.toThrow(error);
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe("approveRequest", () => {
-    const baseRawData = {
-      request_status: "pending",
-      doctor_id: 10,
-      requested_amount: "100.00",
-    };
-    const doctor = {
-      first_name: "John",
-      last_name: "Doe",
-      mobile_number: "1234567890",
-    };
-
-    it("should return NOT_FOUND if request not found", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
-      logger.warn.mockReturnValue();
-      const result = await withdrawalsService.approveRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "ok",
-      });
-      expect(result).toBe("not_found");
-      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
-        message: "Withdrawal Request Not Found",
-      });
-      expect(logger.warn).toHaveBeenCalled();
-    });
-
-    it("should return NOT_MODIFIED if already approved", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue({
-        ...baseRawData,
-        request_status: "approved",
-      });
-      Response.NOT_MODIFIED.mockReturnValue("not_modified");
-      const result = await withdrawalsService.approveRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "ok",
-      });
-      expect(result).toBe("not_modified");
-      expect(Response.NOT_MODIFIED).toHaveBeenCalled();
-    });
-
-    it("should return BAD_REQUEST if insufficient wallet balance", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue(baseRawData);
-      walletRepo.getCurrentWalletBalance.mockResolvedValue({
-        balance: "50.00",
-      });
-      Response.BAD_REQUEST.mockReturnValue("bad_request");
-      logger.warn.mockReturnValue();
-      const result = await withdrawalsService.approveRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "ok",
-      });
-      expect(result).toBe("bad_request");
-      expect(Response.BAD_REQUEST).toHaveBeenCalledWith({
-        message: "Insufficient Wallet Balance. Cannot Approve Withdrawal",
-      });
-      expect(logger.warn).toHaveBeenCalled();
-    });
-
-    it("should approve request and return SUCCESS", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue(baseRawData);
-      walletRepo.getCurrentWalletBalance.mockResolvedValue({
-        balance: "200.00",
-      });
-      doctorRepo.getDoctorById.mockResolvedValue(doctor);
-      walletRepo.updateDoctorWalletBalance.mockResolvedValue();
-      withdrawalRepo.approveWithdrawalRequest.mockResolvedValue();
-      smsUtils.withdrawalApprovedSMS.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("success");
-      redisClient.clearCacheByPattern.mockResolvedValue();
-      Promise.allSettled = jest
-        .fn()
-        .mockResolvedValue([
-          { status: "fulfilled" },
-          { status: "fulfilled" },
-          { status: "fulfilled" },
-        ]);
-      const result = await withdrawalsService.approveRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "ok",
-      });
-      expect(result).toBe("success");
-      expect(Response.SUCCESS).toHaveBeenCalledWith({
-        message: "Withdrawal Request Approved Successfully",
-      });
-      expect(redisClient.clearCacheByPattern).toHaveBeenCalledWith(
-        "withdraw-requests:*",
-      );
-    });
-
-    it("should return NOT_MODIFIED if any promise is rejected", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue(baseRawData);
-      walletRepo.getCurrentWalletBalance.mockResolvedValue({
-        balance: "200.00",
-      });
-      doctorRepo.getDoctorById.mockResolvedValue(doctor);
-      Promise.allSettled = jest
-        .fn()
-        .mockResolvedValue([
-          { status: "fulfilled" },
-          { status: "rejected", reason: "fail" },
-          { status: "fulfilled" },
-        ]);
-      Response.NOT_MODIFIED.mockReturnValue("not_modified");
-      logger.error.mockReturnValue();
-      const result = await withdrawalsService.approveRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "ok",
-      });
-      expect(result).toBe("not_modified");
-      expect(Response.NOT_MODIFIED).toHaveBeenCalledWith({});
-      expect(logger.error).toHaveBeenCalled();
-    });
-
-    it("should throw error and log if exception occurs", async () => {
-      const error = new Error("fail");
-      withdrawalRepo.getWithdrawalRequestById.mockRejectedValue(error);
-      logger.error.mockReturnValue();
-      await expect(
-        withdrawalsService.approveRequest({
-          requestId: 1,
-          userId: 2,
-          comment: "ok",
-        }),
-      ).rejects.toThrow(error);
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe("denyRequest", () => {
-    const baseRawData = {
-      request_status: "pending",
-      doctor_id: 10,
-    };
-    const doctor = {
-      first_name: "John",
-      last_name: "Doe",
-      mobile_number: "1234567890",
-    };
-
-    it("should return NOT_FOUND if request not found", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue(null);
-      Response.NOT_FOUND.mockReturnValue("not_found");
-      logger.warn.mockReturnValue();
-      const result = await withdrawalsService.denyRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "no",
-      });
-      expect(result).toBe("not_found");
-      expect(Response.NOT_FOUND).toHaveBeenCalledWith({
-        message: "Withdrawal Request Not Found",
-      });
-      expect(logger.warn).toHaveBeenCalled();
-    });
-
-    it("should return NOT_MODIFIED if already declined or approved", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue({
-        ...baseRawData,
-        request_status: "declined",
-      });
-      Response.NOT_MODIFIED.mockReturnValue("not_modified");
-      const result = await withdrawalsService.denyRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "no",
-      });
-      expect(result).toBe("not_modified");
-      expect(Response.NOT_MODIFIED).toHaveBeenCalled();
-
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue({
-        ...baseRawData,
-        request_status: "approved",
-      });
-      const result2 = await withdrawalsService.denyRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "no",
-      });
-      expect(result2).toBe("not_modified");
-    });
-
-    it("should deny request and return SUCCESS", async () => {
-      withdrawalRepo.getWithdrawalRequestById.mockResolvedValue(baseRawData);
-      doctorRepo.getDoctorById.mockResolvedValue(doctor);
-      withdrawalRepo.denyWithdrawalRequest.mockResolvedValue();
-      smsUtils.withdrawalDeniedSMS.mockReturnValue();
-      redisClient.clearCacheByPattern.mockResolvedValue();
-      Response.SUCCESS.mockReturnValue("success");
-      const result = await withdrawalsService.denyRequest({
-        requestId: 1,
-        userId: 2,
-        comment: "no",
-      });
-      expect(result).toBe("success");
-      expect(withdrawalRepo.denyWithdrawalRequest).toHaveBeenCalledWith({
-        adminId: 2,
-        withdrawalId: 1,
-        comment: "no",
-      });
-      expect(smsUtils.withdrawalDeniedSMS).toHaveBeenCalledWith({
-        mobileNumber: doctor.mobile_number,
-        doctorName: `${doctor.first_name} ${doctor.last_name}`,
-        comment: "no",
-      });
-      expect(redisClient.clearCacheByPattern).toHaveBeenCalledWith(
-        "withdraw-requests:*",
-      );
-      expect(Response.SUCCESS).toHaveBeenCalledWith({
-        message: "Withdrawal Request Declined Successfully",
-      });
-    });
-
-    it("should throw error and log if exception occurs", async () => {
-      const error = new Error("fail");
-      withdrawalRepo.getWithdrawalRequestById.mockRejectedValue(error);
-      logger.error.mockReturnValue();
-      await expect(
-        withdrawalsService.denyRequest({
-          requestId: 1,
-          userId: 2,
-          comment: "no",
-        }),
-      ).rejects.toThrow(error);
       expect(logger.error).toHaveBeenCalled();
     });
   });

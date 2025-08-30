@@ -127,6 +127,8 @@ exports.createBlog = async ({
 
     // clear cache
     await redisClient.clearCacheByPattern("blogs:*");
+    await redisClient.clearCacheByPattern("blog_public_img:*");
+    await redisClient.clearCacheByPattern("blog_private_img:*");
     return Response.CREATED({ message: "Blog Created Successfully" });
   } catch (error) {
     logger.error("createBlog: ", error);
@@ -180,6 +182,8 @@ exports.updateBlog = async ({
 
     // clear cache
     await redisClient.clearCacheByPattern("blogs:*");
+    await redisClient.delete(`blog_public_img:${id}`);
+    await redisClient.delete(`blog_private_img:${id}`);
 
     return Response.SUCCESS({ message: "Blog Updated Succcessfully" });
   } catch (error) {
@@ -259,6 +263,8 @@ exports.deleteBlog = async (id) => {
 
     // clear cache
     await redisClient.clearCacheByPattern("blogs:*");
+    await redisClient.delete(`blog_public_img:${id}`);
+    await redisClient.delete(`blog_private_img:${id}`);
     await redisClient.delete(`blogs:${id}`);
     return Response.SUCCESS({ message: "Blog Deleted Successfully" });
   } catch (error) {

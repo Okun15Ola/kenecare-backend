@@ -21,6 +21,9 @@ router.get(
 );
 router.get("/cancel", limiter, paymentController.cancelHandler);
 
-router.post("/monimee/webhook/return", paymentController.webhookHandler);
+router.post(
+  "/monimee/webhook/payment",
+  paymentController.paymentNotificationHandler,
+);
 
 module.exports = router;

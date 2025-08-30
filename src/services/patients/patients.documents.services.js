@@ -167,7 +167,8 @@ exports.createPatientMedicalDocument = async ({
 
     // clear cache
     await redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`);
-
+    await redisClient.clearCacheByPattern("patient_doc:*");
+    await redisClient.delete(`patient_med_doc:${patientId}`);
     // send response to user
     return Response.CREATED({
       message: "Medical Document Saved Successfully",
@@ -247,6 +248,8 @@ exports.updatePatientMedicalDocument = async ({
 
     await redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`);
     await redisClient.delete(`patient:${patientId}:documents:${docId}`);
+    await redisClient.delete(`patient_doc:${docId}`);
+    await redisClient.delete(`patient_med_doc:${patientId}`);
 
     // send response to user
     return Response.CREATED({
@@ -288,6 +291,8 @@ exports.deletePatientMedicalDocument = async ({ userId, documentId }) => {
 
     await redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`);
     await redisClient.delete(`patient:${patientId}:documents:${documentId}`);
+    await redisClient.delete(`patient_doc:${documentId}`);
+    await redisClient.delete(`patient_med_doc:${patientId}`);
 
     return Response.SUCCESS({
       message: "Medical Document Deleted Successfully",
@@ -476,6 +481,8 @@ exports.deletePatientSharedMedicalDocument = async ({ userId, documentId }) => {
       redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`),
       redisClient.clearCacheByPattern("doctor:*:documents:*"),
       redisClient.delete(`patient:${patientId}:documents:${documentId}`),
+      redisClient.delete(`patient_doc:${documentId}`),
+      redisClient.delete(`patient_med_doc:${patientId}`),
     ]);
 
     return Response.SUCCESS({

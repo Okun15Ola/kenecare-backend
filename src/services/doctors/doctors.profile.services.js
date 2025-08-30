@@ -7,6 +7,7 @@ const {
   adminDoctorCouncilRegistrationEmail,
 } = require("../../utils/email.utils");
 const logger = require("../../middlewares/logger.middleware");
+const { redisClient } = require("../../config/redis.config");
 
 exports.getDoctorCouncilRegistration = async (id) => {
   try {
@@ -139,7 +140,7 @@ exports.createDoctorCouncilRegistration = async ({
     }
 
     // send an email with further instructions
-
+    await redisClient.delete(`doctor_reg_doc:${doctorId}`);
     await Promise.all([
       adminDoctorCouncilRegistrationEmail({
         doctorName: `${doctorFirstName} ${doctorLastName}`,
@@ -257,6 +258,7 @@ exports.updateDoctorCouncilRegistration = async ({
       });
     }
 
+    await redisClient.delete(`doctor_reg_doc:${doctorId}`);
     // send an email with further instructions
 
     await Promise.all([

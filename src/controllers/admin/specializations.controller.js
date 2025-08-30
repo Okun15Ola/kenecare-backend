@@ -34,9 +34,6 @@ exports.CreateSpecializationController = async (req, res, next) => {
   try {
     const { name, description } = req.body;
     const imageUrl = "https://example.com/cardiology.jpg";
-    // if (req.file) {
-    //   console.log("File exist");
-    // }
     const response = await createSpecialization({
       name,
       description,
@@ -54,11 +51,7 @@ exports.UpdateSpecializationByIdController = async (req, res, next) => {
     const { name, description } = req.body;
     const { id } = req.params;
     const transformedId = parseInt(id, 10);
-
     const imageUrl = "https://example.com/cardiology.jpg";
-    // if (req.file) {
-    //   console.log("File exist");
-    // }
     const specialization = {
       name,
       description,

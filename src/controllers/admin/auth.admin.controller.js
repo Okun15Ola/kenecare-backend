@@ -56,9 +56,7 @@ exports.AdminRegisterController = async (req, res, next) => {
 
 exports.AdminUpdatePasswordController = (req, res, next) => {
   try {
-    // Update Password Controller
-    // const { otp } = req.params;
-    // console.log()
+    logger.info("Admin update password");
   } catch (error) {
     logger.error(error);
     next(error);
@@ -66,9 +64,7 @@ exports.AdminUpdatePasswordController = (req, res, next) => {
 };
 exports.AdminUpdateAccountStatusController = (req, res, next) => {
   try {
-    // Update Password Controller
-    // console.log(req.params);
-    // console.log(req.query);
+    logger.info("Admin update password");
   } catch (error) {
     logger.error(error);
     next(error);

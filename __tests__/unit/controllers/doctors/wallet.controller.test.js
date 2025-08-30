@@ -80,27 +80,25 @@ describe("Doctor Wallet Controllers", () => {
 
   describe("RequestWithdrawalController", () => {
     it("should request withdrawal", async () => {
-      req.body = {
-        amount: "50",
-        paymentMethod: "bank",
-        mobileMoneyNumber: "",
-        bankName: "Test Bank",
-        accountName: "John Doe",
-        accountNumber: "1234567890",
-      };
       const mockResponse = { statusCode: 201, data: { id: 1 } };
       services.requestWithdrawal.mockResolvedValue(mockResponse);
+
+      req = {
+        body: {
+          amount: 10,
+          paymentMethod: "orange_money",
+          mobileMoneyNumber: "123456789",
+        },
+        user: { id: 1 },
+      };
 
       await RequestWithdrawalController(req, res, next);
 
       expect(services.requestWithdrawal).toHaveBeenCalledWith({
-        userId: 1,
-        amount: 50,
-        paymentMethod: "bank",
-        mobileMoneyNumber: "",
-        bankName: "Test Bank",
-        accountName: "John Doe",
-        accountNumber: "1234567890",
+        userId: req.user.id,
+        amount: req.body.amount,
+        provider: req.body.paymentMethod,
+        mobileMoneyNumber: req.body.mobileMoneyNumber,
       });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(mockResponse);

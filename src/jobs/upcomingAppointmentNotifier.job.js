@@ -15,16 +15,12 @@ const sendSmsNotifications = async (notifications) => {
         doctorName,
       }) => {
         try {
-          console.log("Sending sms to doctor ", doctorMobile, doctorName);
           await smsUtils.sendApproveAppointmentReminderSMS({
             mobileNumber: doctorMobile,
             doctorName,
             appointmentDateTime,
             diffInMinutes,
           });
-          logger.info(
-            `Sent SMS reminder to ${doctorName} (${doctorMobile}) for appointment at ${appointmentDateTime}, ${diffInMinutes} minutes remaining.`,
-          );
         } catch (err) {
           logger.error(`Failed to send SMS to ${doctorMobile}:`, err);
         }
@@ -39,7 +35,6 @@ module.exports = {
 
   async execute() {
     try {
-      logger.info("Running approved appointment notification job...");
       console.info("Running approved appointment notification job...");
 
       const appointments = await getDoctorsApprovedAppointmentsForToday();
@@ -86,8 +81,6 @@ module.exports = {
       if (notifications.length > 0) {
         sendSmsNotifications(notifications);
       }
-
-      logger.info("Appointment approved notification job completed");
       console.info("Appointment approved notification job completed");
     } catch (error) {
       logger.error("Error in approved appointmenta notification job:", error);

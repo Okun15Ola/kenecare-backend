@@ -211,9 +211,8 @@ exports.isFeatureEnabledForUser = async (flagName, userId) => {
 
   // Percentage rollout logic
   const bucket = userId % 100;
-  console.log("user bucket: ", bucket, userId);
+
   if (bucket >= flag.rollout_percentage) {
-    console.log("user not allowed");
     return false;
   }
 

@@ -33,23 +33,13 @@ const UpdateWalletPinController = async (req, res, next) => {
 const RequestWithdrawalController = async (req, res, next) => {
   try {
     const userId = parseInt(req.user.id, 10);
-    const {
-      amount,
-      paymentMethod,
-      mobileMoneyNumber,
-      bankName,
-      accountName,
-      accountNumber,
-    } = req.body;
+    const { amount, paymentMethod, mobileMoneyNumber } = req.body;
 
     const response = await requestWithdrawal({
       userId,
+      provider: paymentMethod,
       amount: parseFloat(amount),
-      paymentMethod,
       mobileMoneyNumber,
-      bankName,
-      accountName,
-      accountNumber,
     });
     return res.status(response.statusCode).json(response);
   } catch (error) {

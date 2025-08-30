@@ -1,14 +1,11 @@
 const moment = require("moment");
 const he = require("he");
-const {
-  getFileUrlFromS3Bucket,
-  getPublicFileUrlFromS3Bucket,
-} = require("./aws-s3.utils");
 const { decryptText } = require("./auth.utils");
 const availableDaysDB = require("../repository/doctorAvailableDays.repository");
 const {
   getApprovedDoctorReviewsByDoctorId,
 } = require("../repository/doctorReviews.repository");
+const { fetchAndCacheUrl, fetchAndCachePublicUrl } = require("./caching.utils");
 
 exports.mapCommonSymptomsRow = async (
   commonSymptoms,
@@ -28,21 +25,27 @@ exports.mapCommonSymptomsRow = async (
 
   let finalImage = null;
 
-  if (imageUrl) {
-    finalImage = includeImageUrl
-      ? await getPublicFileUrlFromS3Bucket(imageUrl)
-      : await getFileUrlFromS3Bucket(imageUrl);
+  if (includeImageUrl) {
+    finalImage = await fetchAndCachePublicUrl(
+      `symptom_public_img:${symptomId}`,
+      imageUrl,
+    );
+  } else {
+    finalImage = await fetchAndCacheUrl(
+      `symptom_private_img:${symptomId}`,
+      imageUrl,
+    );
   }
 
   return {
     symptomId,
     name: name?.toUpperCase() || "",
-    description,
+    description: description || "",
     specialty,
-    imageUrl: finalImage || null,
+    imageUrl: finalImage,
     consultationFee,
-    tags,
-    isActive,
+    tags: tags || "",
+    isActive: Boolean(isActive),
     inputtedBy,
   };
 };
@@ -59,9 +62,9 @@ exports.mapSpecializationRow = (specialization) => {
   return {
     specializationId,
     specializationName,
-    description,
+    description: description || "",
     imageUrl,
-    isActive,
+    isActive: Boolean(isActive),
     inputtedBy,
   };
 };
@@ -79,10 +82,10 @@ exports.mapMedicalCouncilRow = (medicalCouncil) => {
   return {
     councilId,
     councilName,
-    email,
-    address,
+    email: email || "N/A",
+    address: address || "N/A",
     mobileNumber,
-    isActive,
+    isActive: Boolean(isActive),
     inputtedBy,
   };
 };
@@ -115,6 +118,7 @@ exports.mapAdminAppointmentRow = (appointments) => {
     postponed_date: postponeDate,
     postponed_by: postponedBy,
     created_at: createAt,
+    updated_at: updatedAt,
   } = appointments;
   const patientFirstName = decryptText(firstName);
   const patientLastName = decryptText(lastName);
@@ -136,16 +140,17 @@ exports.mapAdminAppointmentRow = (appointments) => {
     specialty,
     timeSlot,
     meetingId,
-    appointmentStartTime,
-    appointmentEndTime,
+    appointmentStartTime: moment(appointmentStartTime).format("HH:mm:ss"),
+    appointmentEndTime: moment(appointmentEndTime).format("HH:mm:ss"),
     appointmentStatus,
-    cancelledReason,
-    cancelledAt,
+    cancelledReason: cancelledReason || "",
+    cancelledAt: moment(cancelledAt).format("YYYY-MM-DD HH:mm"),
     cancelledBy,
-    postponedReason,
-    postponeDate,
+    postponedReason: postponedReason || "",
+    postponeDate: moment(postponeDate).format("YYYY-MM-DD HH:mm"),
     postponedBy,
-    createAt,
+    createAt: moment(createAt).format("YYYY-MM-DD HH:mm"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
@@ -178,24 +183,25 @@ exports.mapBlogRow = async (blog, includeImageUrl) => {
     is_active: isActive,
     created_at: createdAt,
   } = blog;
-  let imageData = null;
-  if (image) {
-    imageData = includeImageUrl
-      ? await getPublicFileUrlFromS3Bucket(image)
-      : await getFileUrlFromS3Bucket(image);
+  let imageUrl = null;
+
+  if (includeImageUrl) {
+    imageUrl = await fetchAndCachePublicUrl(`blog_public_img:${blogId}`, image);
+  } else {
+    imageUrl = await fetchAndCacheUrl(`blog_private_img:${blogId}`, image);
   }
   return {
     blogId,
     blogCategory,
     blogTitle,
     description,
-    image: imageData || null,
+    image: imageUrl || null,
     tags: tags ? JSON.parse(tags) : null,
     disclaimer,
     author,
     featured,
-    isActive,
-    createdAt,
+    isActive: Boolean(isActive),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
   };
 };
 
@@ -213,7 +219,7 @@ exports.mapCityRow = (city) => {
     cityName,
     latitude,
     longitude,
-    isActive,
+    isActive: Boolean(isActive),
     inputtedBy,
   };
 };
@@ -238,12 +244,15 @@ exports.mapCouncilRegistrationRow = async (councilRegistration) => {
     rejection_reason: rejectionReason,
     verified_by: verifiedBy,
   } = councilRegistration;
-  const [documentUrl, profileImageUrl] = await Promise.all([
-    regDocumentUrl
-      ? getFileUrlFromS3Bucket(regDocumentUrl)
-      : Promise.resolve(null),
-    doctorPic ? getFileUrlFromS3Bucket(doctorPic) : Promise.resolve(null),
-  ]);
+  const documentUrl = await fetchAndCacheUrl(
+    `doctor_reg_doc:${doctorId}`,
+    regDocumentUrl,
+  );
+
+  const profileImageUrl = await fetchAndCacheUrl(
+    `doctor_pic:${doctorId}`,
+    doctorPic,
+  );
   return {
     registrationId,
     doctorId,
@@ -256,8 +265,8 @@ exports.mapCouncilRegistrationRow = async (councilRegistration) => {
     regNumber,
     regYear,
     regDocumentUrl: documentUrl,
-    certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
-    certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
+    certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD HH:mm"),
+    certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD HH:mm"),
     regStatus,
     rejectionReason,
     verifiedBy,
@@ -316,8 +325,8 @@ exports.mapMarketersRow = (marketer) => {
     secondEmergencyContactName,
     secondEmergencyContactNumber,
     secondEmergencyContactAddress,
-    createdAt: moment(createdAt).format("YYYY-MM-DD hh:mm"),
-    updatedAt: moment(updatedAt).format("YYYY-MM-DD hh:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
@@ -349,7 +358,10 @@ exports.mapMarketersWithDocumentRow = async (marketer) => {
     created_at: createdAt,
     updated_at: updatedAt,
   } = marketer;
-  const documentUrl = await getFileUrlFromS3Bucket(idDocumentUuuid);
+  const documentUrl = await fetchAndCacheUrl(
+    `marketer_doc:${marketerId}`,
+    idDocumentUuuid,
+  );
   return {
     marketerId,
     marketerUuid,
@@ -366,7 +378,7 @@ exports.mapMarketersWithDocumentRow = async (marketer) => {
     homeAddress,
     idDocumentType,
     idDocumentNumber,
-    idDocumentUrl: idDocumentUuuid ? documentUrl : null,
+    idDocumentUrl: documentUrl,
     nin,
     firstEmergencyContactName,
     firstEmergencyContactNumber,
@@ -374,8 +386,8 @@ exports.mapMarketersWithDocumentRow = async (marketer) => {
     secondEmergencyContactName,
     secondEmergencyContactNumber,
     secondEmergencyContactAddress,
-    createdAt: moment(createdAt).format("YYYY-MM-DD hh:mm"),
-    updatedAt: moment(updatedAt).format("YYYY-MM-DD hh:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm"),
   };
 };
 
@@ -459,6 +471,7 @@ exports.mapDoctorAppointmentRow = (doctorAppointment, title) => {
     postponed_date: postponeDate,
     postponed_by: postponedBy,
     created_at: createdAt,
+    updated_at: updatedAt,
     payment_method: paymentMethod,
     payment_status: paymentStatus,
     transactionId: paymentTransactionId,
@@ -502,7 +515,8 @@ exports.mapDoctorAppointmentRow = (doctorAppointment, title) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt,
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
@@ -547,8 +561,8 @@ exports.mapFollowUpRow = (followUp) => {
     reason,
     followUpStatus,
     followUpType,
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:MM"),
-    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:MM"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
@@ -571,12 +585,15 @@ exports.mapDoctorCouncilRow = async (doctorCouncil) => {
     rejection_reason: rejectionReason,
     verified_by: verifiedBy,
   } = doctorCouncil;
-  const [documentUrl, profileImageUrl] = await Promise.all([
-    regDocumentUrl
-      ? getFileUrlFromS3Bucket(regDocumentUrl)
-      : Promise.resolve(null),
-    doctorPic ? getFileUrlFromS3Bucket(doctorPic) : Promise.resolve(null),
-  ]);
+  const documentUrl = await fetchAndCacheUrl(
+    `registration_doc:${regDocumentUrl}`,
+    regDocumentUrl,
+  );
+
+  const profileImageUrl = await fetchAndCacheUrl(
+    `doctor_pic:${doctorPic}`,
+    doctorPic,
+  );
   return {
     registrationId,
     doctor: `${firstName} ${lastName}`,
@@ -588,8 +605,8 @@ exports.mapDoctorCouncilRow = async (doctorCouncil) => {
     regNumber,
     regYear,
     regDocumentUrl: documentUrl,
-    certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD"),
-    certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD"),
+    certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD HH:mm"),
+    certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD HH:mm"),
     regStatus,
     rejectionReason,
     verifiedBy,
@@ -628,7 +645,10 @@ exports.mapDoctorSharedMedicalDocs = async (
     createdAt,
   };
   if (includeDocumentUrl && documentUUID !== null) {
-    const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
+    const documentUrl = await fetchAndCacheUrl(
+      `shared_doc:${documentUUID}`,
+      documentUUID,
+    );
     mapped.documentUrl = documentUrl;
   }
   return mapped;
@@ -777,10 +797,17 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
   } = doctor;
 
   let profilePicData = null;
-  if (profilePic) {
-    profilePicData = includeProfilePicBytes
-      ? await getPublicFileUrlFromS3Bucket(profilePic)
-      : await getFileUrlFromS3Bucket(profilePic);
+
+  if (includeProfilePicBytes) {
+    profilePicData = await fetchAndCachePublicUrl(
+      `doctor_public_profile_pic:${doctorId}`,
+      profilePic,
+    );
+  } else {
+    profilePicData = await fetchAndCacheUrl(
+      `doctor_private_profile_pic:${doctorId}`,
+      profilePic,
+    );
   }
 
   let mappedReviews = [];
@@ -865,7 +892,10 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
     registration_status: councilRegistrationStatus,
     certificate_expiry_date: certificateExpiryDate,
   } = doctor;
-  const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
+  const imageUrl = await fetchAndCacheUrl(
+    `doctor_private_profile_pic:${doctorId}`,
+    profilePic,
+  );
   const rawAvailableDays =
     await availableDaysDB.getDoctorsAvailableDays(doctorId);
   const doctorAvailableDays =
@@ -873,8 +903,8 @@ exports.mapDoctorUserProfileRow = async (doctor) => {
       ? rawAvailableDays.map((day) => ({
           dayId: day.day_slot_id,
           day: day.day_of_week,
-          startTime: day.day_start_time,
-          endTime: day.day_end_time,
+          startTime: moment(day.day_start_time).format("HH:mm:ss"),
+          endTime: moment(day.day_end_time).format("HH:mm:ss"),
           isAvailable: Boolean(day.is_available),
         }))
       : [];
@@ -952,6 +982,7 @@ exports.mapPatientAppointment = (appointment) => {
     postponed_date: postponeDate,
     postponed_by: postponedBy,
     created_at: createdAt,
+    updated_at: updatedAt,
     payment_method: paymentMethod,
     payment_status: paymentStatus,
     transactionId: paymentTransactionId,
@@ -996,7 +1027,8 @@ exports.mapPatientAppointment = (appointment) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt,
+    createdAt: moment(createdAt).format("HH:mm"),
+    updatedAt: moment(updatedAt).format("HH:mm:ss"),
   };
 };
 
@@ -1010,19 +1042,13 @@ exports.mapTestimonialRow = async (
     first_name: firstName,
     last_name: lastName,
     profile_pic_url: patientPic,
+    patient_id: patientId,
     testimonial_content: content,
     is_active: isActive,
     is_approved: isApproved,
     approved_by: approvedBy,
   } = testimonial;
   let imageData;
-  if (!patientPic) {
-    imageData = null;
-  } else if (includeImageUrl) {
-    imageData = await getPublicFileUrlFromS3Bucket(patientPic);
-  } else {
-    imageData = await getFileUrlFromS3Bucket(patientPic);
-  }
   const patientFirstName = decryptText(firstName);
   const patientLastName = decryptText(lastName);
   const mapped = {
@@ -1033,6 +1059,16 @@ exports.mapTestimonialRow = async (
   };
 
   if (includeImageUrl) {
+    imageData = await fetchAndCachePublicUrl(
+      `patient_public_profile_pic:${patientId}`,
+      patientPic,
+    );
+    mapped.patientPic = imageData;
+  } else {
+    imageData = await fetchAndCacheUrl(
+      `patient_private_profile_pic:${patientId}`,
+      patientPic,
+    );
     mapped.patientPic = imageData;
   }
 
@@ -1060,10 +1096,16 @@ exports.mapSpecialityRow = async (
     inputted_by: inputtedBy,
   } = speciality;
   let imageData = null;
-  if (imageUrl) {
-    imageData = includeImageUrl
-      ? await getPublicFileUrlFromS3Bucket(imageUrl)
-      : await getFileUrlFromS3Bucket(imageUrl);
+  if (includeImageUrl) {
+    imageData = await fetchAndCachePublicUrl(
+      `speciality_public_img:${specialtyId}`,
+      imageUrl,
+    );
+  } else {
+    imageData = await fetchAndCacheUrl(
+      `speciality_private_img:${specialtyId}`,
+      imageUrl,
+    );
   }
   return {
     specialtyId,
@@ -1071,7 +1113,7 @@ exports.mapSpecialityRow = async (
     description: he.decode(description),
     imageUrl: imageData || null,
     tags: includeTags ? JSON.parse(tags) : null,
-    isActive,
+    isActive: Boolean(isActive),
     inputtedBy,
   };
 };
@@ -1149,17 +1191,20 @@ exports.mapPatientMedicalDocumentRow = async (
   const mapped = {
     sharingId,
     documentId,
-    documentUUID,
+    // documentUUID,
     documentTitle,
     patientId,
     patientName: `${decryptedPatientFirstName} ${decryptedPatientLastName}`,
     doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
     note,
-    createdAt,
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
   };
 
   if (includeDocumentUrl) {
-    const documentUrl = await getFileUrlFromS3Bucket(documentUUID);
+    const documentUrl = await fetchAndCacheUrl(
+      `patient_med_doc:${patientId}`,
+      documentUUID,
+    );
     mapped.documentUrl = documentUrl;
   }
 
@@ -1171,18 +1216,21 @@ exports.mapPatientDocumentRow = async (document, includeFileUrl = false) => {
     medical_document_id: documentId,
     document_uuid: documentUUID,
     document_title: documentTitle,
-    mimetype: mimeType,
+    // mimetype: mimeType,
   } = document;
 
   const mapped = {
     documentId,
-    documentUUID,
+    // documentUUID,
     documentTitle,
-    mimeType,
+    // mimeType,
   };
 
   if (includeFileUrl) {
-    const fileUrl = await getFileUrlFromS3Bucket(documentUUID);
+    const fileUrl = await fetchAndCacheUrl(
+      `patient_doc:${documentId}`,
+      documentUUID,
+    );
     mapped.fileUrl = fileUrl;
   }
 
@@ -1206,11 +1254,15 @@ exports.mapPatientRow = async (patient) => {
     is_account_active: isAccountActive,
     is_online: isOnline,
     last_seen_at: lastSeen,
+    created_at: createdAt,
+    updated_at: updatedAt,
   } = patient;
-  const imageUrl = profilePic ? await getFileUrlFromS3Bucket(profilePic) : null;
+  const imageUrl = await fetchAndCacheUrl(
+    `patient_pic:${patientId}`,
+    profilePic,
+  );
   const mapped = {
     patientId,
-    title,
     firstName: decryptText(firstName),
     middleName: decryptText(middleName),
     lastName: decryptText(lastName),
@@ -1218,12 +1270,18 @@ exports.mapPatientRow = async (patient) => {
     profilePic: imageUrl,
     dob: moment(dob).format("YYYY-MM-DD"),
     mobileNumber,
-    email,
+    email: email || null,
     userType,
     userId,
-    isAccountActive,
-    isOnline,
+    isAccountActive: Boolean(isAccountActive),
+    isOnline: Boolean(isOnline),
+    createdAt: moment(createdAt).format("YYYY-MM-DD: HH:mm"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
+
+  if (title) {
+    mapped.title = title;
+  }
 
   if (isOnline === 0) {
     mapped.lastSeen = moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow();
@@ -1279,7 +1337,7 @@ exports.mapPrescriptionRow = (
   const mapped = {
     prescrtiptionId,
     appointmentId,
-    createdAt: moment(dateCreated).format("YYYY-MM-DD HH:mm:ss"),
+    createdAt: moment(dateCreated).format("YYYY-MM-DD HH:mm"),
     updatedAt: moment(dateUpdated).format("YYYY-MM-DD HH:mm:ss"),
   };
 
@@ -1347,14 +1405,14 @@ exports.mapApiKeyRow = (key) => {
     clientName,
     website: website ? he.decode(website) : null,
     name,
-    description,
+    description: description || null,
     environment,
     apiKey,
-    isActive,
-    expiresAt,
-    lastUsed,
-    createdAt,
-    updatedAt,
+    isActive: Boolean(isActive),
+    expiresAt: moment(expiresAt).format("YYYY-MM-DD HH:mm"),
+    lastUsed: moment(lastUsed).format("YYYY-MM-DD HH:mm:ss"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
@@ -1372,13 +1430,14 @@ exports.mapDoctorBlog = async (blog) => {
     updated_at: updatedAt,
   } = blog;
 
-  // Process image URL if needed
   let imageUrl = null;
   if (image) {
-    imageUrl = await getFileUrlFromS3Bucket(image);
+    imageUrl = await fetchAndCachePublicUrl(
+      `doctor_blog_img:${doctorId}`,
+      image,
+    );
   }
 
-  // Process tags - parse from JSON if present
   let parsedTags = null;
   if (tags) {
     try {
@@ -1400,11 +1459,11 @@ exports.mapDoctorBlog = async (blog) => {
     status,
     image: imageUrl,
     tags: parsedTags,
-    createdAt: createdAt ? moment(createdAt).format("YYYY-MM-DD HH:mm") : null,
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
     publishedAt: publishedAt
       ? moment(publishedAt).format("YYYY-MM-DD HH:mm")
       : null,
-    updatedAt: updatedAt ? moment(updatedAt).format("YYYY-MM-DD HH:mm") : null,
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
@@ -1420,7 +1479,7 @@ exports.mapAppointmentFeedback = (feedbacks) => {
     feedbackId,
     appointmentId,
     feedback: feedback ? he.decode(feedback) : null,
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };

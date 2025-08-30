@@ -267,7 +267,7 @@ async function checkDoctorAvailability(
       proposedEndWithBuffer.isAfter(totalBlockedPeriodStart);
 
     if (overlaps) {
-      console.log(
+      logger.info(
         `Conflict for Doctor ${doctorId}: Proposed appointment ${proposedStart.format("HH:mm")} - ${proposedEndWithBuffer.format("HH:mm")} ` +
           `overlaps with existing appointment ${existingApptStart.format("HH:mm")} - ${existingApptEndWithBreak.format("HH:mm")} ` +
           `(pre-buffer starts at ${existingApptStartWithPreBuffer.format("HH:mm")}, actual appt starts at ${existingApptStart.format("HH:mm")}, ` +

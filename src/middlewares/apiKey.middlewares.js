@@ -35,6 +35,7 @@ exports.authenticateClient = async (req, res, next) => {
         await redisClient.set({
           key: cacheKey,
           value: JSON.stringify(client),
+          expiry: 84600,
         });
       }
     }
@@ -68,10 +69,19 @@ exports.authenticateClient = async (req, res, next) => {
         }),
       );
     }
+    const redisKey = `throttle:api_key_last_used:${apiKey}`;
 
-    apiKeyRepository.updateLastUsed(apiKey).catch((error) => {
-      logger.error(`Failed to update last_used_at for key ${apiKey}: ${error}`);
-    });
+    const isThrottled = await redisClient.get(redisKey);
+
+    if (!isThrottled) {
+      apiKeyRepository.updateLastUsed(apiKey).catch((error) => {
+        logger.error(
+          `Failed to update last_used_at for key ${apiKey}: ${error}`,
+        );
+      });
+
+      redisClient.set({ key: redisKey, value: "1", expiry: 3600 });
+    }
 
     req.apiKey = apiKey;
     return next();

@@ -41,7 +41,7 @@ async function sendCertificateExpirySms(
   );
 
   if (!mobileNumber) {
-    logger.warn(
+    logger.error(
       `SMS not sent for doctor ${doctor.doctor_id} (${doctorName}): No mobile number found.`,
     );
     return;
@@ -68,54 +68,48 @@ module.exports = {
     const today = moment().startOf("day");
     try {
       logger.info("Running certificate expiry notification cron job...");
-      console.info("Running certificate expiry notification cron job...");
 
       const doctorsWithCertificates =
         await councilRepository.getAllActiveDoctorRegistrationsWithDoctorDetails();
 
-      if (!doctorsWithCertificates?.length) {
-        logger.info("No expired council registraion found.");
-        console.info("No expired council registraion found.");
-      }
+      if (doctorsWithCertificates?.length) {
+        for (const registration of doctorsWithCertificates) {
+          const expiryDate = moment(
+            registration.certificate_expiry_date,
+          ).startOf("day");
+          const daysUntilExpiry = expiryDate.diff(today, "days");
 
-      for (const registration of doctorsWithCertificates) {
-        const expiryDate = moment(registration.certificate_expiry_date).startOf(
-          "day",
-        );
-        const daysUntilExpiry = expiryDate.diff(today, "days");
+          const expiryDateFormatted = expiryDate.format("YYYY-MM-DD");
 
-        const expiryDateFormatted = expiryDate.format("YYYY-MM-DD");
-
-        // Case 1: 7 days before expiry
-        if (daysUntilExpiry === 7) {
-          await sendCertificateExpirySms(
-            registration,
-            expiryDateFormatted,
-            NOTIFICATION_TYPES.SEVEN_DAYS,
-          );
-        }
-        // Case 2: 2 days before expiry
-        else if (daysUntilExpiry === 2) {
-          await sendCertificateExpirySms(
-            registration,
-            expiryDateFormatted,
-            NOTIFICATION_TYPES.TWO_DAYS,
-          );
-        }
-        // Case 3: On the day of expiry
-        else if (daysUntilExpiry === 0) {
-          await sendCertificateExpirySms(
-            registration,
-            expiryDateFormatted,
-            NOTIFICATION_TYPES.EXPIRED,
-          );
+          // Case 1: 7 days before expiry
+          if (daysUntilExpiry === 7) {
+            await sendCertificateExpirySms(
+              registration,
+              expiryDateFormatted,
+              NOTIFICATION_TYPES.SEVEN_DAYS,
+            );
+          }
+          // Case 2: 2 days before expiry
+          else if (daysUntilExpiry === 2) {
+            await sendCertificateExpirySms(
+              registration,
+              expiryDateFormatted,
+              NOTIFICATION_TYPES.TWO_DAYS,
+            );
+          }
+          // Case 3: On the day of expiry
+          else if (daysUntilExpiry === 0) {
+            await sendCertificateExpirySms(
+              registration,
+              expiryDateFormatted,
+              NOTIFICATION_TYPES.EXPIRED,
+            );
+          }
         }
       }
       logger.info("Certificate expiry notification cron job finished.");
-      console.info("Certificate expiry notification cron job finished.");
     } catch (error) {
       logger.error("Error in certificate expiry notification job:", error);
-      console.error("Error in certificate expiry notification job:", error);
     }
   },
 };

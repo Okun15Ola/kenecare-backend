@@ -473,8 +473,6 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
         buffer,
         mimetype,
       });
-
-      logger.info(`Successfully uploaded new profile picture: ${newImageUrl}`);
     } catch (uploadError) {
       logger.error("Failed to upload profile picture to S3:", uploadError);
       return Response.BAD_REQUEST({
@@ -499,11 +497,8 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
     if (oldProfilePicUrl) {
       try {
         await deleteFileFromS3Bucket(oldProfilePicUrl);
-        logger.info(
-          `Successfully deleted old profile picture: ${oldProfilePicUrl}`,
-        );
       } catch (deleteError) {
-        logger.warn(
+        logger.error(
           `Failed to delete old profile picture ${oldProfilePicUrl}:`,
           deleteError.message,
         );
@@ -516,13 +511,15 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
       redisClient.clearCacheByPattern("doctors:all:*"),
       redisClient.delete("doctors:count:approved"),
       redisClient.clearCacheByPattern("admin:doctors:*"),
+      redisClient.delete(`doctor_pic:${doctorId}`),
+      redisClient.delete(`doctor_public_profile_pic:${doctorId}`),
+      redisClient.delete(`doctor_private_profile_pic:${doctorId}`),
     ]);
     return Response.SUCCESS({
       message: "Doctor's profile picture updated successfully.",
     });
   } catch (error) {
     logger.error("updateDoctorProfilePicture: ", error);
-    console.error(error);
     throw error;
   }
 };

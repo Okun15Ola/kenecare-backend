@@ -29,7 +29,6 @@ const getAuthToken = (req) => {
   const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader?.startsWith("Bearer ")) {
-    logger.info("Authorization header is missing or invalid");
     return null;
   }
 
@@ -50,10 +49,9 @@ const authenticateUser = async (req, res, next) => {
     const token = getAuthToken(req);
 
     if (!token) {
-      logger.warn("[AUTH] No token provided in request");
       return res.status(400).json(
         Response.BAD_REQUEST({
-          message: "Invalid/Missing Authentication Token",
+          message: "Session expired. Please login again to continue.",
         }),
       );
     }
@@ -61,7 +59,6 @@ const authenticateUser = async (req, res, next) => {
     // Check if token is blacklisted
     const isBlacklisted = await isTokenBlacklisted(token);
     if (isBlacklisted) {
-      logger.warn("[AUTH] Token is blacklisted");
       return res.status(401).json({
         message: "Your session has expired. Please log in again to continue.",
       });
@@ -78,10 +75,9 @@ const authenticateUser = async (req, res, next) => {
       decoded.iat,
     );
     if (areInvalidated) {
-      logger.warn(`[AUTH] User tokens invalidated for user: ${decoded.sub}`);
       return res
         .status(401)
-        .json({ message: "Session expired. Please login again" });
+        .json({ message: "Session expired. Please login again to continue." });
     }
 
     let user;
@@ -104,7 +100,7 @@ const authenticateUser = async (req, res, next) => {
       logger.error(`[AUTH] User not found in database for ID: ${decoded.sub}`);
       return res
         .status(401)
-        .json(Response.UNAUTHORIZED({ message: "User not found" }));
+        .json(Response.UNAUTHORIZED({ message: "Unauthorized Action." }));
     }
 
     const {
@@ -115,9 +111,6 @@ const authenticateUser = async (req, res, next) => {
     } = user;
 
     if (isVerified !== VERIFICATIONSTATUS.VERIFIED) {
-      logger.warn(
-        `[AUTH] User account not verified for user: ${userId}, status: ${isVerified}`,
-      );
       return res.status(401).json(
         Response.UNAUTHORIZED({
           errorCode: "USER_ACCOUNT_UNVERIFIED",
@@ -127,9 +120,6 @@ const authenticateUser = async (req, res, next) => {
     }
 
     if (isAccountActive !== STATUS.ACTIVE) {
-      logger.warn(
-        `[AUTH] User account inactive for user: ${userId}, status: ${isAccountActive}`,
-      );
       return res.status(401).json(
         Response.UNAUTHORIZED({
           errorCode: "USER_ACCOUNT_INACTIVE",
@@ -139,10 +129,16 @@ const authenticateUser = async (req, res, next) => {
       );
     }
 
-    updateUserOnlineStatus({ userId, status: STATUS.ACTIVE }).catch((err) =>
-      logger.error("Failed to update online status", { userId, err }),
-    );
+    const redisKey = `throttle:user_last_used:${userId}`;
 
+    const isThrottled = await redisClient.get(redisKey);
+
+    if (!isThrottled) {
+      updateUserOnlineStatus({ userId, status: STATUS.ACTIVE }).catch((err) =>
+        logger.error("Failed to update online status", { userId, err }),
+      );
+      redisClient.set({ key: redisKey, value: "1", expiry: 180 });
+    }
     req.userDetails = user;
     req.user = {
       id: decoded.sub,
@@ -163,7 +159,7 @@ const authenticateUser = async (req, res, next) => {
     });
 
     if (error.message === "jwt expired") {
-      logger.warn("[AUTH] JWT token expired");
+      logger.error("[AUTH] JWT token expired");
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message: "Session Expired Please Login to Continue",
@@ -172,7 +168,7 @@ const authenticateUser = async (req, res, next) => {
     }
 
     if (error.name === "JsonWebTokenError") {
-      logger.warn("[AUTH] Invalid JWT token provided");
+      logger.error("[AUTH] Invalid JWT token provided");
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message: "Invalid authentication token",
@@ -181,7 +177,7 @@ const authenticateUser = async (req, res, next) => {
     }
 
     if (error.name === "TokenExpiredError") {
-      logger.warn("[AUTH] JWT token expired (TokenExpiredError)");
+      logger.error("[AUTH] JWT token expired (TokenExpiredError)");
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message: "Session Expired Please Login to Continue",
@@ -228,7 +224,7 @@ const authorizeDoctor = async (req, res, next) => {
         reason = "unverified_account";
       }
 
-      logger.warn("[DOCTOR_AUTH] Authorization failed - user validation:", {
+      logger.error("[DOCTOR_AUTH] Authorization failed - user validation:", {
         userId,
         userType,
         isAccountActive,
@@ -259,7 +255,9 @@ const authorizeDoctor = async (req, res, next) => {
     }
 
     if (!doctor) {
-      logger.warn(`[DOCTOR_AUTH] Doctor profile not found for user: ${userId}`);
+      logger.error(
+        `[DOCTOR_AUTH] Doctor profile not found for user: ${userId}`,
+      );
       return res.status(404).json(
         Response.NOT_FOUND({
           message:
@@ -272,7 +270,7 @@ const authorizeDoctor = async (req, res, next) => {
     const { is_profile_approved: isProfileApproved } = doctor;
 
     if (isProfileApproved !== VERIFICATIONSTATUS.VERIFIED) {
-      logger.warn(
+      logger.error(
         `[DOCTOR_AUTH] Doctor profile not approved for user: ${userId}, status: ${isProfileApproved}`,
       );
       return res.status(403).json(
@@ -340,7 +338,7 @@ const authorizePatient = async (req, res, next) => {
         reason = "unverified_account";
       }
 
-      logger.warn("[PATIENT_AUTH] Authorization failed - user validation:", {
+      logger.error("[PATIENT_AUTH] Authorization failed - user validation:", {
         userId,
         userType,
         isAccountActive,
@@ -354,9 +352,6 @@ const authorizePatient = async (req, res, next) => {
       );
     }
 
-    logger.info(
-      `[PATIENT_AUTH] Patient authorization successful for user: ${userId}`,
-    );
     return next();
   } catch (error) {
     logger.error("Patient Authorization Error", {
@@ -395,7 +390,7 @@ const authenticateAdmin = async (req, res, next) => {
     const token = getAuthToken(req);
 
     if (!token) {
-      logger.warn("[ADMIN_AUTH] No token provided in request");
+      logger.error("[ADMIN_AUTH] No token provided in request");
       return res.status(400).json(
         Response.BAD_REQUEST({
           message: "Invalid/Missing Authentication Token",
@@ -406,7 +401,7 @@ const authenticateAdmin = async (req, res, next) => {
     // Check if token is blacklisted
     const isBlacklisted = await isTokenBlacklisted(token);
     if (isBlacklisted) {
-      logger.warn("[AUTH] Token is blacklisted");
+      logger.error("[AUTH] Token is blacklisted");
       return res.status(401).json({
         message:
           "Your session has expired or you have logged out. Please log in again to continue.",
@@ -424,7 +419,7 @@ const authenticateAdmin = async (req, res, next) => {
       decoded.iat,
     );
     if (areInvalidated) {
-      logger.warn(`[AUTH] User tokens invalidated for user: ${decoded.sub}`);
+      logger.error(`[AUTH] User tokens invalidated for user: ${decoded.sub}`);
       return res
         .status(401)
         .json({ message: "Session expired. Please login again" });
@@ -433,7 +428,7 @@ const authenticateAdmin = async (req, res, next) => {
     const { sub, actSts } = decoded;
 
     if (actSts !== STATUS.ACTIVE) {
-      logger.warn(
+      logger.error(
         `[ADMIN_AUTH] Admin account disabled for user: ${sub}, status: ${actSts}`,
       );
       return res.status(401).json(
@@ -461,7 +456,7 @@ const authenticateAdmin = async (req, res, next) => {
     });
 
     if (error.message === "jwt expired") {
-      logger.warn("[ADMIN_AUTH] Admin JWT token expired");
+      logger.error("[ADMIN_AUTH] Admin JWT token expired");
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message: "Session Expired. Please Login Again",
@@ -470,7 +465,7 @@ const authenticateAdmin = async (req, res, next) => {
     }
 
     if (error.name === "JsonWebTokenError") {
-      logger.warn("[ADMIN_AUTH] Invalid admin JWT token provided");
+      logger.error("[ADMIN_AUTH] Invalid admin JWT token provided");
       return res.status(400).json(
         Response.BAD_REQUEST({
           message: "Invalid authentication token",
@@ -479,7 +474,7 @@ const authenticateAdmin = async (req, res, next) => {
     }
 
     if (error.name === "TokenExpiredError") {
-      logger.warn("[ADMIN_AUTH] Admin JWT token expired (TokenExpiredError)");
+      logger.error("[ADMIN_AUTH] Admin JWT token expired (TokenExpiredError)");
       return res.status(401).json(
         Response.UNAUTHORIZED({
           message: "Session Expired. Please Login Again",

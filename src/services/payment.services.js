@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const moment = require("moment");
 const {
   deleteAppointmentById,
@@ -17,6 +18,10 @@ const {
   getCurrentWalletBalance,
 } = require("../repository/doctor-wallet.repository");
 const { cancelPaymentUSSD } = require("../utils/payment.utils");
+const {
+  updateWithdrawalRequest,
+  getWithdrawalRequestByTransactionId,
+} = require("../repository/withdrawal-requests.repository");
 const logger = require("../middlewares/logger.middleware");
 const { redisClient } = require("../config/redis.config");
 const {
@@ -32,6 +37,8 @@ const CONFIG = {
   PAYMENT_STATUS: {
     SUCCESS: "success",
     EXPIRED: "expired",
+    COMPLETED: "completed",
+    FAILED: "failed",
   },
 };
 
@@ -64,9 +71,6 @@ const handleExpiredPayment = async (appointmentId) => {
       deleteAppointmentById({ appointmentId }),
     ]);
 
-    logger.info(
-      `Successfully cleaned up expired payment for appointmentId: ${appointmentId}`,
-    );
     return Response.SUCCESS({});
   } catch (error) {
     logger.error(
@@ -103,9 +107,6 @@ const validatePaymentRecord = (appointmentPaymentRecord, appointmentId) => {
     transactionID === null &&
     paymentStatus === CONFIG.PAYMENT_STATUS.SUCCESS
   ) {
-    logger.info(
-      `Payment already processed for appointmentId: ${appointmentId}`,
-    );
     return {
       isValid: false,
       response: Response.SUCCESS({}),
@@ -141,8 +142,6 @@ const processSuccessfulPayment = async ({
       amount: newAccountBalance,
     }),
   ]);
-
-  logger.info("Payment processed successfully");
 };
 
 /**
@@ -448,20 +447,102 @@ exports.getPaymentStatusByConsultationId = async (consultationId) => {
       });
     }
 
+    // initiated, success, failed
     const {
-      payment_status: status,
+      payment_status,
       amount_paid: amountPaid,
       updated_at: lastUpdated,
     } = payment;
+    const status = payment_status ? payment_status.trim().toLowerCase() : "";
+
+    const paymentData = {
+      status,
+      lastUpdated,
+    };
+
+    if (status === "success") {
+      paymentData.amountPaid = amountPaid;
+    }
     return Response.SUCCESS({
-      data: {
-        status,
-        amountPaid,
-        lastUpdated,
-      },
+      data: paymentData,
     });
   } catch (error) {
     logger.error("getPaymentStatusByConsultationId: ", error);
+    throw error;
+  }
+};
+
+exports.processDoctorWithdrawalService = async ({
+  transactionId,
+  transactionReference,
+  paymentEventStatus,
+}) => {
+  try {
+    const withdrawalRequest =
+      await getWithdrawalRequestByTransactionId(transactionId);
+    if (!withdrawalRequest) {
+      logger.error(
+        `Withdrawal request not found for transaction ID: ${transactionId}`,
+      );
+      return Response.NOT_FOUND({ message: "Request Not Found" });
+    }
+
+    const {
+      status,
+      doctor_id: doctorId,
+      request_id: requestId,
+    } = withdrawalRequest;
+
+    if (
+      status === CONFIG.PAYMENT_STATUS.COMPLETED ||
+      status === CONFIG.PAYMENT_STATUS.FAILED
+    ) {
+      return Response.CONFLICT({
+        message: `Status already ${status}`,
+      });
+    }
+
+    if (paymentEventStatus === CONFIG.PAYMENT_STATUS.COMPLETED) {
+      await updateWithdrawalRequest({
+        transactionId,
+        status: paymentEventStatus,
+        transactionReference,
+      });
+    } else if (paymentEventStatus === CONFIG.PAYMENT_STATUS.FAILED) {
+      const { balance: currentBalance } = await getCurrentWalletBalance(
+        withdrawalRequest.doctorId,
+      );
+      const amountToRefund = parseFloat(withdrawalRequest.amount);
+      const newBalance = currentBalance + amountToRefund;
+
+      await Promise.all([
+        updateWithdrawalRequest({
+          transactionId,
+          status: paymentEventStatus,
+          transactionReference,
+        }),
+        updateDoctorWalletBalance({
+          doctorId,
+          amount: newBalance,
+        }),
+      ]);
+
+      logger.warn(
+        `Withdrawal request ${requestId} failed. Amount of ${amountToRefund} refunded to doctor's wallet.`,
+      );
+    }
+    const { affectedRows } = await updateWithdrawalRequest({
+      transactionId,
+      status: paymentEventStatus,
+      transactionReference,
+    });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error("Fail to update payment status");
+    }
+    return Response.SUCCESS({ message: "Withdrawal Successful" });
+  } catch (error) {
+    logger.error("processDoctorWithdrawalService: ", error);
     throw error;
   }
 };
