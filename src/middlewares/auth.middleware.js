@@ -129,10 +129,16 @@ const authenticateUser = async (req, res, next) => {
       );
     }
 
-    updateUserOnlineStatus({ userId, status: STATUS.ACTIVE }).catch((err) =>
-      logger.error("Failed to update online status", { userId, err }),
-    );
+    const redisKey = `throttle:user_last_used:${userId}`;
 
+    const isThrottled = await redisClient.get(redisKey);
+
+    if (!isThrottled) {
+      updateUserOnlineStatus({ userId, status: STATUS.ACTIVE }).catch((err) =>
+        logger.error("Failed to update online status", { userId, err }),
+      );
+      redisClient.set({ key: redisKey, value: "1", expiry: 180 });
+    }
     req.userDetails = user;
     req.user = {
       id: decoded.sub,
