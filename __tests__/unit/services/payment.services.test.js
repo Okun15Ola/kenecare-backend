@@ -278,12 +278,11 @@ describe("payment.services", () => {
       it("should throw error if payment deletion fails", async () => {
         getAppointmentByUUID.mockResolvedValue(mockAppointment);
         getAppointmentPaymentByAppointmentId.mockResolvedValue(mockPayment);
-        deleteAppointmentPaymentByAppointmentId.mockResolvedValue({
+        deleteAppointmentPaymentByAppointmentId.mockRejectedValue({
           status: "rejected",
-          reason: "fail",
         });
         deleteAppointmentById.mockResolvedValue({ status: "fulfilled" });
-        cancelPaymentUSSD.mockResolvedValue({ status: "fulfilled" });
+        cancelPaymentUSSD.mockRejectedValue({ status: "fulfilled" });
 
         await expect(
           paymentServices.cancelAppointmentPayment({
@@ -299,9 +298,8 @@ describe("payment.services", () => {
         deleteAppointmentPaymentByAppointmentId.mockResolvedValue({
           status: "fulfilled",
         });
-        deleteAppointmentById.mockResolvedValue({
+        deleteAppointmentById.mockRejectedValue({
           status: "rejected",
-          reason: "fail",
         });
         cancelPaymentUSSD.mockResolvedValue({ status: "fulfilled" });
 
