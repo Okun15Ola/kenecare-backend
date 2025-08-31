@@ -84,32 +84,24 @@ const getPaymentUSSD = async ({ orderId, amount }) => {
 
 const cancelPaymentUSSD = async (paymentId) => {
   try {
-    const idempotencyKey = uuidV4();
     const options = {
       headers: {
-        // eslint-disable-next-line prefer-template
         Authorization: `Bearer ${monimeeApiKey}`,
         "Monime-Space-Id": monimeeSpaceId,
-        "Idempotency-Key": idempotencyKey,
         "Content-Type": "application/json",
       },
     };
-    // const body = {
-    //   name: "Consultation Fee",
-    //   isActive: false,
-    //   status: "cancelled",
-    //   expireTime: moment(),
-    //   allowedProviders: null,
-    //   metadata: {
-    //     idempotencyKey,
-    //   },
-    // };
-    await axios
-      .delete(`${monimeeApiUrl}/v1/payment-codes/${paymentId}`, options)
+    const body = {
+      enable: false,
+    };
+    const response = await axios
+      .patch(`${monimeeApiUrl}/v1/payment-codes/${paymentId}`, body, options)
       .catch((error) => {
         logger.error("Error cancelling payment code: ", error);
         throw error;
       });
+
+    return response;
   } catch (error) {
     logger.error("Error: ", error.response.data.error);
     throw error.response.data.error;

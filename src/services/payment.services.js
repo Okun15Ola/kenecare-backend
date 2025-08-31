@@ -390,7 +390,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
     }
 
     // Delete the apppointment and appointment payment from the database if payment was not successful
-    const results = await Promise.all([
+    const results = await Promise.allSettled([
       deleteAppointmentPaymentByAppointmentId({ appointmentId }),
       deleteAppointmentById({ appointmentId }),
       cancelPaymentUSSD(transactionID),

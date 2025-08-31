@@ -46,6 +46,7 @@ exports.getAppointmentByUUID = async (appointmentUUID) => {
   const result = await query(queries.GET_APPOINTMENT_BY_UUID, [
     appointmentUUID,
   ]);
+
   return result[0];
 };
 
