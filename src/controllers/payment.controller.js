@@ -84,7 +84,6 @@ exports.paymentNotificationHandler = async (req, res, next) => {
     const { data } = req.body || {};
     const {
       status,
-      progress: { isCompleted },
       id: transactionId,
       metadata: { orderId },
     } = data;
@@ -98,10 +97,7 @@ exports.paymentNotificationHandler = async (req, res, next) => {
       paymentEventStatus: status === STATUS_COMPLETED ? STATUS_SUCCESS : status,
     };
 
-    if (
-      (!isCompleted && status === STATUS_EXPIRED) ||
-      (isCompleted && status === STATUS_COMPLETED)
-    ) {
+    if (status === STATUS_EXPIRED || status === STATUS_COMPLETED) {
       response = await processAppointmentPayment(baseParams);
     }
 
