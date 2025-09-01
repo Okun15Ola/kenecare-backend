@@ -25,6 +25,7 @@ describe("Patient Medical Record Controllers", () => {
   beforeEach(() => {
     req = {
       user: { id: "1" },
+      query: { page: 1, limit: 10 },
       params: { id: "2" },
       body: { id: 1, password: "1234" },
       file: undefined,
@@ -46,7 +47,11 @@ describe("Patient Medical Record Controllers", () => {
 
       await GetAllMedicalRecordsController(req, res, next);
 
-      expect(services.getPatientMedicalDocuments).toHaveBeenCalledWith(1);
+      expect(services.getPatientMedicalDocuments).toHaveBeenCalledWith(
+        1,
+        1,
+        10,
+      );
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(mockResponse);
     });

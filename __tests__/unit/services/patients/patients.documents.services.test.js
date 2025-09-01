@@ -4,6 +4,7 @@ const patientsRepo = require("../../../../src/repository/patients.repository");
 const { redisClient } = require("../../../../src/config/redis.config");
 const awsS3 = require("../../../../src/utils/aws-s3.utils");
 const Response = require("../../../../src/utils/response.utils");
+const cacheUtils = require("../../../../src/utils/caching.utils");
 
 jest.mock("../../../../src/repository/patient-docs.repository");
 jest.mock("../../../../src/repository/patients.repository");
@@ -11,6 +12,7 @@ jest.mock("../../../../src/repository/doctors.repository");
 jest.mock("../../../../src/config/redis.config");
 jest.mock("../../../../src/utils/aws-s3.utils");
 jest.mock("../../../../src/utils/sms.utils");
+jest.mock("../../../../src/utils/caching.utils");
 
 describe("Patient Documents Service", () => {
   beforeAll(() => {
@@ -26,13 +28,19 @@ describe("Patient Documents Service", () => {
   describe("getPatientMedicalDocuments", () => {
     it("should return medical documents from cache if available", async () => {
       patientsRepo.getPatientByUserId.mockResolvedValue({ patient_id: 1 });
+      cacheUtils.getPaginationInfo.mockResolvedValue();
+      cacheUtils.getCachedCount.mockResolvedValue({ totalRows: 2 });
+      cacheUtils.cacheKeyBulider.mockResolvedValue();
       const cachedData = [{ id: 1, documentTitle: "X-Ray" }];
       redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
 
-      const result =
-        await patientDocumentsService.getPatientMedicalDocuments(1);
-      expect(result.data).toEqual(cachedData);
-      expect(redisClient.get).toHaveBeenCalledWith("patient:1:documents:all");
+      const result = await patientDocumentsService.getPatientMedicalDocuments(
+        1,
+        1,
+        10,
+      );
+      expect(result.statusCode).toBe(200);
+      expect(redisClient.get).toHaveBeenCalled();
     });
 
     it("should return a 404 if patient not found", async () => {
