@@ -17,10 +17,13 @@ const {
   authenticateUser,
   authorizePatient,
 } = require("../../../middlewares/auth.middleware");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
 
-router.use(authenticateUser, limiter, authorizePatient); // Authentication middleware & Rate limiting middleware applied to all routes in this router
+router.use(authenticateUser, limiter, authorizePatient);
 
-router.get("/", GetAllMedicalRecordsController);
+router.get("/", paginationValidation, Validate, GetAllMedicalRecordsController);
 
 router.post(
   "/verify-medical-document",

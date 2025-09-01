@@ -13,8 +13,9 @@ const {
 
 exports.GetAllMedicalRecordsController = async (req, res, next) => {
   try {
+    const { page, limit } = req.query;
     const userId = parseInt(req.user.id, 10);
-    const response = await getPatientMedicalDocuments(userId);
+    const response = await getPatientMedicalDocuments(userId, page, limit);
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error(error);

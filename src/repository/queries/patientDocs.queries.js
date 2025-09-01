@@ -29,7 +29,13 @@ module.exports = {
     SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype, access_token
     FROM patient_medical_documents
     INNER JOIN patients ON patient_medical_documents.patient_id = patients.patient_id
-    WHERE patient_medical_documents.patient_id = ? ORDER BY medical_document_id DESC;
+    WHERE patient_medical_documents.patient_id = ? ORDER BY medical_document_id DESC
+  `,
+  COUNT_DOCS_BY_PATIENT_ID: `
+    SELECT Count(*) AS totalRows
+    FROM patient_medical_documents
+    INNER JOIN patients ON patient_medical_documents.patient_id = patients.patient_id
+    WHERE patient_medical_documents.patient_id = ? ORDER BY medical_document_id DESC
   `,
   CREATE_PATIENT_DOC: `
     INSERT INTO patient_medical_documents (document_uuid, patient_id, document_title, mimetype) VALUES (?,?,?,?)

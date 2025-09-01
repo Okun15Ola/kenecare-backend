@@ -22,8 +22,14 @@ exports.getPatientMedicalDocumentByDocumentId = async ({
   return result[0];
 };
 
-exports.getMedicalDocumentsByPatientId = async (patientId) => {
-  return query(queries.GET_DOCS_BY_PATIENT_ID, [patientId]);
+exports.getMedicalDocumentsByPatientId = async (patientId, limit, offset) => {
+  const optimizedQuery = `${queries.GET_DOCS_BY_PATIENT_ID} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery, [patientId]);
+};
+
+exports.countMedicalDocumentByPatientId = async (patientId) => {
+  const result = await query(queries.COUNT_DOCS_BY_PATIENT_ID, [patientId]);
+  return result[0];
 };
 
 exports.createPatientMedicalDocument = async ({

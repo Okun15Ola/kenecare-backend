@@ -10,6 +10,7 @@ const {
   getPatientSharedMedicalDocuments,
   getPatientSharedMedicalDocument,
   deletePatientSharedMedicalDocument,
+  countMedicalDocumentByPatientId,
 } = require("../../repository/patient-docs.repository");
 const { getPatientByUserId } = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
@@ -29,8 +30,13 @@ const {
   generateVerificationToken,
   decryptText,
 } = require("../../utils/auth.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 
-exports.getPatientMedicalDocuments = async (userId) => {
+exports.getPatientMedicalDocuments = async (userId, page, limit) => {
   try {
     const patient = await getPatientByUserId(userId);
     if (!patient) {
@@ -38,12 +44,38 @@ exports.getPatientMedicalDocuments = async (userId) => {
       return Response.NOT_FOUND({ message: "Patient Record Not Found" });
     }
     const { patient_id: patientId } = patient;
-    const cacheKey = `patient:${patientId}:documents:all`;
+    const offset = (page - 1) * limit;
+    const countCacheKey = `patient:${patientId}:documents:count`;
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () => countMedicalDocumentByPatientId(patientId),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No patient appointments found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+    const cacheKey = cacheKeyBulider(
+      `patient:${patientId}:documents:all`,
+      limit,
+      offset,
+    );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
-    const rawData = await getMedicalDocumentsByPatientId(patientId);
+    const rawData = await getMedicalDocumentsByPatientId(
+      patientId,
+      limit,
+      offset,
+    );
     if (!rawData?.length) {
       return Response.SUCCESS({
         message: "No patient medical documents found",
@@ -59,7 +91,7 @@ exports.getPatientMedicalDocuments = async (userId) => {
       key: cacheKey,
       value: JSON.stringify(documents),
     });
-    return Response.SUCCESS({ data: documents });
+    return Response.SUCCESS({ data: documents, pagination: paginationInfo });
   } catch (error) {
     logger.error("getPatientMedicalDocuments: ", error);
     throw error;
