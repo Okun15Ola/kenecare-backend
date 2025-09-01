@@ -352,9 +352,6 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
       );
       return Response.BAD_REQUEST({ message: ERROR_MESSAGES.INVALID_REQUEST });
     }
-
-    //  Check if the user canelling the payment is the authorized user that booked the appointment
-
     // Get appointment by UUID
     const rawData = await getAppointmentByUUID(consultationId);
 

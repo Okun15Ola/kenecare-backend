@@ -1027,8 +1027,8 @@ exports.mapPatientAppointment = (appointment) => {
     postponedReason,
     postponeDate,
     postponedBy,
-    createdAt: moment(createdAt).format("HH:mm"),
-    updatedAt: moment(updatedAt).format("HH:mm:ss"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
