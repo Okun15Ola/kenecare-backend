@@ -114,6 +114,8 @@ exports.requestWithdrawal = async ({
     const requestedWithdrawalAmount = parseFloat(amount);
     const currentBalance = parseFloat(balance);
 
+    console.log("Current Balance: ", currentBalance);
+
     if (requestedWithdrawalAmount > currentBalance) {
       logger.error(
         `Insufficient balance for doctorId: ${doctorId}. Requested: ${requestedWithdrawalAmount}, Available: ${currentBalance}`,
@@ -167,10 +169,11 @@ exports.requestWithdrawal = async ({
           amount: requestedWithdrawalAmount,
           currency: "SLE",
           paymentType: "mobile_money",
+          financialAccountId: null,
           mobileMoneyProvider: provider,
           mobileNumber: mobileMoneyNumber,
-          status: "failed",
-          reason: failureDetails.message,
+          status,
+          failureDetails: failureDetails.message,
         });
 
         return Response.INTERNAL_SERVER_ERROR({
@@ -189,10 +192,10 @@ exports.requestWithdrawal = async ({
       });
     }
 
-    const { id, source, payoutAmount } = result;
+    const { id, source, status, payoutAmount } = result;
 
     const newBalance = currentBalance - requestedWithdrawalAmount;
-    Promise.all([
+    const results = await Promise.allSettled([
       createWithdrawalRequest({
         doctorId,
         transactionId: id,
@@ -202,11 +205,14 @@ exports.requestWithdrawal = async ({
         paymentType: PAYMENT_METHOD.MOBILE_MONEY,
         financialAccountId: source.financialAccountId,
         mobileMoneyProvider: provider,
+        status,
         mobileNumber: mobileMoneyNumber,
       }),
-      updateDoctorWalletBalance({ doctorId, newBalance }),
+      updateDoctorWalletBalance({ doctorId, amount: newBalance }),
       // TODO: send email alert to admin
     ]);
+
+    console.log("Results: ", results);
 
     return Response.CREATED({
       message: "Withdrawal Requested Successfully, Funds are being disbursed.",

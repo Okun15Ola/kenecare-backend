@@ -29,6 +29,7 @@ const {
   appointmentBookedSms,
 } = require("../utils/sms.utils");
 const { decryptText } = require("../utils/auth.utils");
+const { withdrawalSuccessSMS } = require("../utils/sms.utils");
 // const { sendPushNotification } = require("../utils/notification.utils");
 
 const CONFIG = {
@@ -329,9 +330,12 @@ exports.processAppointmentPayment = async ({
       });
     }
 
-    await Promise.all([
+    await Promise.allSettled([
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
+      redisClient.clearCacheByPattern(
+        `patient:${patientId}:appointments:all:*`,
+      ),
       redisClient.clearCacheByPattern("admin:appointments:*"),
     ]);
 
@@ -418,7 +422,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
       );
     }
 
-    await Promise.all([
+    await Promise.allSettled([
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
@@ -481,13 +485,18 @@ exports.processDoctorWithdrawalService = async ({
       logger.error(
         `Withdrawal request not found for transaction ID: ${transactionId}`,
       );
-      return Response.NOT_FOUND({ message: "Request Not Found" });
+      return Response.NOT_FOUND({ message: "Withdrawal Request Not Found" });
     }
 
     const {
       status,
       doctor_id: doctorId,
       request_id: requestId,
+      amount,
+      mobile_number: destinationNumber,
+      doctor_mobile_number: doctorMobileNumber,
+      first_name: doctorFirstName,
+      last_name: doctorLastName,
     } = withdrawalRequest;
 
     if (
@@ -495,27 +504,46 @@ exports.processDoctorWithdrawalService = async ({
       status === CONFIG.PAYMENT_STATUS.FAILED
     ) {
       return Response.CONFLICT({
-        message: `Status already ${status}`,
+        message: `Withdrawal Request Status is already ${status}`,
       });
     }
 
     if (paymentEventStatus === CONFIG.PAYMENT_STATUS.COMPLETED) {
-      await updateWithdrawalRequest({
+      const { affectedRows } = await updateWithdrawalRequest({
         transactionId,
-        status: paymentEventStatus,
+        status: paymentEventStatus.toLowerCase(),
         transactionReference,
       });
-    } else if (paymentEventStatus === CONFIG.PAYMENT_STATUS.FAILED) {
+
+      if (!affectedRows || affectedRows < 1) {
+        logger.error(
+          "Withdrawal Request failed  for transaction ID: ",
+          transactionId,
+        );
+        return Response.INTERNAL_SERVER_ERROR({
+          message: "Failed to update withdrawal request status",
+        });
+      }
+      await withdrawalSuccessSMS({
+        mobileNumber: doctorMobileNumber,
+        destinationNumber,
+        amount,
+        doctorName: `Dr. ${doctorFirstName} ${doctorLastName}`,
+        transactionReference,
+      });
+      return Response.SUCCESS({ message: "Withdrawal Successful" });
+    }
+    if (paymentEventStatus === CONFIG.PAYMENT_STATUS.FAILED) {
       const { balance: currentBalance } = await getCurrentWalletBalance(
         withdrawalRequest.doctorId,
       );
       const amountToRefund = parseFloat(withdrawalRequest.amount);
       const newBalance = currentBalance + amountToRefund;
 
-      await Promise.all([
+      const results = await Promise.allSettled([
         updateWithdrawalRequest({
           transactionId,
-          status: paymentEventStatus,
+          status: paymentEventStatus.toLowerCase(),
           transactionReference,
         }),
         updateDoctorWalletBalance({
@@ -524,20 +552,33 @@ exports.processDoctorWithdrawalService = async ({
         }),
       ]);
 
+      const { withdrawalUpdateResult, walletUpdateResult } = results;
+
+      if (
+        withdrawalUpdateResult.status === "rejected" ||
+        walletUpdateResult.status === "rejected"
+      ) {
+        logger.error(
+          "Withdrawal request failed and refund failed for request ID:",
+          requestId,
+          "Reason:",
+          walletUpdateResult.reason || withdrawalUpdateResult.reason,
+        );
+        return Response.INTERNAL_SERVER_ERROR({
+          message: "Withdrawal failed, and the refund could not be processed.",
+        });
+      }
+
       logger.warn(
         `Withdrawal request ${requestId} failed. Amount of ${amountToRefund} refunded to doctor's wallet.`,
       );
+      return Response.SUCCESS({
+        message: "Withdrawal failed, but the refund was successful.",
+      });
     }
-    const { affectedRows } = await updateWithdrawalRequest({
-      transactionId,
-      status: paymentEventStatus,
-      transactionReference,
+    return Response.INTERNAL_SERVER_ERROR({
+      message: "An unknown payment status was received.",
     });
-
-    if (!affectedRows || affectedRows < 1) {
-      logger.error("Fail to update payment status");
-    }
-    return Response.SUCCESS({ message: "Withdrawal Successful" });
   } catch (error) {
     logger.error("processDoctorWithdrawalService: ", error);
     throw error;
