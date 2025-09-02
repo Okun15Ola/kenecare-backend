@@ -272,3 +272,10 @@ CREATE TABLE IF NOT EXISTS `family_members` (
 --     TABLE_NAME, INDEX_NAME, NON_UNIQUE, INDEX_TYPE
 -- ORDER BY
 -- TABLE_NAME, INDEX_NAME;
+
+ALTER TABLE `family_members`
+  MODIFY COLUMN `relationship` ENUM('spouse', 'child', 'parent', 'sibling', 'grandparent', 'other') NOT NULL;
+
+ALTER TABLE `withdrawal_requests`
+  MODIFY COLUMN `status` ENUM('pending', 'completed', 'failed', 'processing') NOT NULL DEFAULT 'pending',
+  ADD COLUMN `failure_details` TEXT DEFAULT NULL AFTER `status`;
