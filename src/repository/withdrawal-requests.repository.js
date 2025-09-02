@@ -11,6 +11,8 @@ exports.createWithdrawalRequest = async ({
   financialAccountId,
   mobileMoneyProvider,
   mobileNumber,
+  status,
+  failureDetails = null,
 }) => {
   return query(queries.CREATE_WITHDRAWAL_REQUEST, [
     doctorId,
@@ -22,6 +24,8 @@ exports.createWithdrawalRequest = async ({
     financialAccountId,
     mobileMoneyProvider,
     mobileNumber,
+    status,
+    failureDetails,
   ]);
 };
 

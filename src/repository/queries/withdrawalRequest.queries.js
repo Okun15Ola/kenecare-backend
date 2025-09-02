@@ -1,7 +1,7 @@
 module.exports = {
   CREATE_WITHDRAWAL_REQUEST: `
-    INSERT INTO withdrawal_requests (doctor_id, transaction_id, order_id, amount, currency, payment_type, finance_account_id, mobile_money_provider, mobile_number, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending');
+    INSERT INTO withdrawal_requests (doctor_id, transaction_id, order_id, amount, currency, payment_type, finance_account_id, mobile_money_provider, mobile_number, status, failure_detials)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   `,
   GET_ALL_WITHDRAWAL_REQUESTS: `
     SELECT 
@@ -43,9 +43,11 @@ module.exports = {
       requests.mobile_number,  
       requests.status, 
       requests.created_at, 
-      requests.updated_at
+      requests.updated_at,
+      users.mobile_number AS doctor_mobile_number
     FROM withdrawal_requests as requests
     INNER JOIN doctors on requests.doctor_id = doctors.doctor_id
+    INNER JOIN users ON doctors.user_id = users.user_id
     WHERE requests.transaction_id = ?;
   `,
   GET_WITHDRAWAL_REQUEST_BY_DOCTOR_ID: `
