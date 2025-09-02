@@ -98,7 +98,7 @@ exports.getDoctorsPatientsHasMet = async (userId) => {
 
     const doctors = rawData.map((doctor) => ({
       doctorId: doctor.doctor_id,
-      doctor: `${doctor.title} ${doctor.last_name}`,
+      doctor: `Dr. ${doctor.first_name} ${doctor.last_name}`,
     }));
     await redisClient.set({
       key: cacheKey,

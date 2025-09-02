@@ -601,6 +601,38 @@ const sendCertificateExpirySms = async ({ mobileNumber, message }) => {
   }
 };
 
+const withdrawalSuccessSMS = async ({
+  mobileNumber,
+  destinationNumber,
+  amount,
+  doctorName,
+  transactionReference,
+}) => {
+  try {
+    const content = `Dear Dr. ${doctorName}, your withdrawal request of SLE ${amount} has been successfully processed. The funds are on their way to ${destinationNumber}. Transaction Ref: ${transactionReference}\n\nKENECARE`;
+
+    const data = JSON.stringify({
+      from: "KENECARE",
+      reference: "KENECARE",
+      to: mobileNumber,
+      content,
+    });
+
+    config.data = data;
+    await axios.request(config).catch((error) => {
+      throw error;
+    });
+    // if (nodeEnv === "development") {
+    //   logger.info("SIMULATION SEND SMS", data);
+    // } else {
+
+    // }
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+};
+
 module.exports = {
   sendAuthTokenSMS,
   sendVerificationTokenSMS,
@@ -626,4 +658,5 @@ module.exports = {
   sendPendingAppointmentReminderSMS,
   sendApproveAppointmentReminderSMS,
   sendCertificateExpirySms,
+  withdrawalSuccessSMS,
 };

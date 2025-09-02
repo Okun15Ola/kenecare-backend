@@ -143,7 +143,7 @@ exports.getPatientAppointments = async (userId, limit, page) => {
 
     if (!rawData?.length) {
       return Response.SUCCESS({
-        message: "No patient appointments found",
+        message: "No Appointments Found for this Patient",
         data: [],
       });
     }

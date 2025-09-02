@@ -40,7 +40,7 @@ exports.walletWithdrawalValidations = [
     .custom(async (value, { req }) => {
       const { wallet_pin: walletPin } = req.wallet;
 
-      if (value === 1234) {
+      if (value === 1234 || value === "1234") {
         throw new Error(
           "Cannot Request Withdrawal with default wallet pin. Please update wallet PIN before proceeding.",
         );
@@ -63,7 +63,7 @@ exports.walletWithdrawalValidations = [
     .isNumeric({ no_symbols: true })
     .withMessage("Withdrawal amount must be a number")
     .bail()
-    .isInt({ gt: 0, lt: 51000 }) // TODO: change gt should be 100
+    .isInt({ gt: 100, lt: 51000 })
     .withMessage("Withdrawal Amount Must be between NLE 100 and NLE 50,000")
     .bail()
     .custom(async (value, { req }) => {
@@ -117,7 +117,7 @@ exports.walletWithdrawalValidations = [
     .withMessage("Mobile Number is required")
     .bail()
     .trim()
-    .matches(/^(07\d|088|099|0\d{2})\d{6}$/)
+    .matches(/^(07\d|088|099|0\d{2})\d{6}$/) // TODO: enhance check to accept only africell or orange  number
     .withMessage("Invalid Sierra Leonean mobile number format.")
     .custom((value, { req }) => {
       // Cross-validation: check if the number matches the selected provider.
