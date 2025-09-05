@@ -392,7 +392,7 @@ exports.createPatientSharedMedicalDocument = async ({
       documentId,
       patientId,
       doctorId,
-      otp: docOtp, // changed from 123455 to generated otp
+      otp: docOtp,
       note,
     });
 
@@ -412,6 +412,7 @@ exports.createPatientSharedMedicalDocument = async ({
 
     await Promise.all([
       redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`),
+      redisClient.delete(`doctor:${doctorId}:documents`),
       redisClient.clearCacheByPattern(`doctor:${doctorId}:documents:*`),
       redisClient.delete(`patient:${patientId}:documents:${documentId}`),
     ]);
@@ -496,6 +497,19 @@ exports.deletePatientSharedMedicalDocument = async ({ userId, documentId }) => {
 
     const { patient_id: patientId } = patient;
 
+    const sharedDoc = await getPatientSharedMedicalDocument({
+      patientId,
+      documentId,
+    });
+
+    if (!sharedDoc) {
+      return Response.NOT_FOUND({
+        message: "Shared Medical Document Not Found",
+      });
+    }
+
+    const { doctor_id: doctorId } = sharedDoc;
+
     const { affectedRows } = await deletePatientSharedMedicalDocument({
       patientId,
       documentId,
@@ -509,9 +523,11 @@ exports.deletePatientSharedMedicalDocument = async ({ userId, documentId }) => {
         message: "Shared Medical Document Not Found",
       });
     }
-    await Promise.all([
+
+    await Promise.allSettled([
       redisClient.clearCacheByPattern(`patient:${patientId}:documents:*`),
-      redisClient.clearCacheByPattern("doctor:*:documents:*"),
+      redisClient.delete(`doctor:${doctorId}:documents`),
+      redisClient.clearCacheByPattern(`doctor:${doctorId}:documents:*`),
       redisClient.delete(`patient:${patientId}:documents:${documentId}`),
       redisClient.delete(`patient_doc:${documentId}`),
       redisClient.delete(`patient_med_doc:${patientId}`),
