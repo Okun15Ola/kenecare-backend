@@ -291,20 +291,16 @@ exports.createPatientAppointment = async ({
 }) => {
   try {
     // Step 1: Validate entities
-    const {
-      patient,
-      doctor,
-      error: validationError,
-    } = await validateEntities({
+    const { patient, doctor, error } = await validateEntities({
       userId,
       doctorId,
       appointmentDate,
       appointmentTime,
     });
-    if (validationError) return validationError;
+    if (error) return error;
 
     // Step 2: Prevent duplicate request
-    const { error: idempotencyError } = await checkIdempotency({
+    const { idempotencyError } = await checkIdempotency({
       userId,
       doctorId,
       appointmentDate,
