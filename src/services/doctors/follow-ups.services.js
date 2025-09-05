@@ -1,5 +1,4 @@
 const {
-  getDoctorAppointByDateAndTime,
   getDoctorAppointmentById,
 } = require("../../repository/doctorAppointments.repository");
 const { getDoctorByUserId } = require("../../repository/doctors.repository");
@@ -11,6 +10,7 @@ const { redisClient } = require("../../config/redis.config");
 const { mapFollowUpRow } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
 const { decryptText } = require("../../utils/auth.utils");
+const { checkDoctorAvailability } = require("../../utils/time.utils");
 
 exports.getDoctorFollowUpMetrics = async (userId) => {
   try {
@@ -70,22 +70,15 @@ exports.createFollowUp = async ({
       last_name: doctorLastName,
     } = doctor;
 
-    // Check if an appointment has not been booked on the selected followup date
-    const appointmentBookedOnFollowUpDateAndTime =
-      await getDoctorAppointByDateAndTime({
-        doctorId,
-        date: followUpDate,
-        time: followUpTime,
-      });
+    const proposedFollowupStartDateTime = `${followUpDate} ${followUpTime}`;
 
-    if (appointmentBookedOnFollowUpDateAndTime) {
-      logger.error(
-        `Appointment already booked for doctorId: ${doctorId} on date: ${followUpDate} at time: ${followUpTime}`,
-      );
-      return Response.BAD_REQUEST({
-        message:
-          "An Appointment Has Already Been Booked for the Specified Date/Time slot. Please Select Another Date or Time",
-      });
+    const doctorAvailability = await checkDoctorAvailability(
+      doctorId,
+      proposedFollowupStartDateTime,
+    );
+
+    if (!doctorAvailability.isAvailable) {
+      return Response.BAD_REQUEST({ message: doctorAvailability.message });
     }
 
     const followUpDateAndTimeSlotBooked =
@@ -198,22 +191,15 @@ exports.updateAppointmentFollowUpService = async ({
       });
     }
 
-    // Check if an appointment has not been booked on the selected followup date
-    const appointmentBookedOnFollowUpDateAndTime =
-      await getDoctorAppointByDateAndTime({
-        doctorId,
-        date: followUpDate,
-        time: followUpTime,
-      });
+    const proposedFollowupStartDateTime = `${followUpDate} ${followUpTime}`;
 
-    if (appointmentBookedOnFollowUpDateAndTime) {
-      logger.error(
-        `Appointment already booked for doctorId: ${doctorId} on date: ${followUpDate} at time: ${followUpTime}`,
-      );
-      return Response.BAD_REQUEST({
-        message:
-          "An Appointment Has Already Been Booked for the Specified Date/Time slot. Please Select Another Date or Time",
-      });
+    const doctorAvailability = await checkDoctorAvailability(
+      doctorId,
+      proposedFollowupStartDateTime,
+    );
+
+    if (!doctorAvailability.isAvailable) {
+      return Response.BAD_REQUEST({ message: doctorAvailability.message });
     }
 
     const followUpDateAndTimeSlotBooked =
@@ -418,6 +404,8 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
       redisClient.delete(`doctor:${doctorId}:follow-up`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
     ]);
+
+    // TODO: send sms to patient informing them about their cancel follow-up
 
     return Response.SUCCESS({
       message: "Appointment Follow-up Deleted Successfully",
