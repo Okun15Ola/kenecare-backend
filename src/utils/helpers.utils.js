@@ -160,6 +160,14 @@ async function validateEntities({
     };
   }
 
+  if (!patient.value) {
+    return {
+      error: Response.BAD_REQUEST({
+        message: "Patient profile not found. Please create one before booking",
+      }),
+    };
+  }
+
   if (doctor.status === "rejected") {
     return {
       error: Response.BAD_REQUEST({
@@ -177,13 +185,19 @@ async function validateEntities({
     };
   }
 
-  if (doctorAvailability.status === "rejected" || !doctorAvailability.value) {
+  if (doctorAvailability.status === "rejected") {
     return {
-      error: Response.BAD_REQUEST({
+      error: Response.INTERNAL_SERVER_ERROR({
         message:
-          "Doctor is not available at the specified time. Please choose another time",
+          "Could not verify doctor availability. Please try again later.",
       }),
     };
+  }
+
+  const availability = doctorAvailability.value;
+  if (!availability.isAvailable) {
+    // Use the specific message from the availability check!
+    return { error: Response.BAD_REQUEST({ message: availability.message }) };
   }
 
   return { patient: patient.value, doctor: doctor.value };
@@ -208,7 +222,7 @@ async function checkIdempotency({
 
   if (existing) {
     return {
-      error: Response.BAD_REQUEST({
+      idempotencyError: Response.BAD_REQUEST({
         message:
           "It appears you've already submitted this appointment request. Please check your appointments",
       }),
