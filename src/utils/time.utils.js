@@ -200,7 +200,11 @@ async function checkDoctorAvailability(
 
   let isInGeneralAvailability = false;
   if (!availableDays || availableDays.is_available === 0) {
-    return false;
+    return {
+      isAvailable: false,
+      reasonCode: "OUTSIDE_WORKING_DAY",
+      message: `The doctor is not available on ${proposedDayOfWeekString}.`,
+    };
   }
 
   const slotStartTime = moment(availableDays.day_start_time, "HH:mm:ss");
@@ -223,7 +227,11 @@ async function checkDoctorAvailability(
     proposedEndWithBuffer.isSameOrBefore(slotEndDateTimeOnProposedDate);
 
   if (!isInGeneralAvailability) {
-    return false; // Proposed time is outside the doctor's standard working hours for that day
+    return {
+      isAvailable: false,
+      reasonCode: "OUTSIDE_WORKING_HOURS",
+      message: `The selected time is outside the doctor's working hours for ${proposedDayOfWeekString}.`,
+    }; // Proposed time is outside the doctor's standard working hours for that day
   }
 
   const formattedApptDate = proposedAppointmentStartDateTime.split(" ")[0];
@@ -277,7 +285,19 @@ async function checkDoctorAvailability(
     return overlaps;
   });
 
-  return !conflictFound; // Returns true if no conflict, false otherwise
+  if (conflictFound) {
+    return {
+      isAvailable: false,
+      reasonCode: "CONFLICTS_WITH_EXISTING_APPOINTMENT",
+      message: "This time slot conflicts with an existing appointment.",
+    };
+  }
+
+  return {
+    isAvailable: true,
+    reasonCode: "AVAILABLE",
+    message: "This time slot is available.",
+  };
 }
 
 /**
