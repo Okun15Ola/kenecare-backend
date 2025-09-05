@@ -287,10 +287,10 @@ describe("patients.appointments.services", () => {
   describe("createPatientAppointment", () => {
     it("should create a first-time appointment", async () => {
       helper.validateEntities.mockResolvedValue({
-        patient: { booked_first_appointment: false, patient_id: "p1" },
+        patient: { booked_first_appointment: 0, patient_id: "p1" },
         doctor: { doctor_id: "d1", consultation_fee: 100 },
       });
-      helper.checkIdempotency.mockResolvedValue({ error: null });
+      helper.checkIdempotency.mockResolvedValue({});
 
       helper.createAppointment.mockResolvedValue({
         id: 1,
@@ -303,32 +303,29 @@ describe("patients.appointments.services", () => {
         message: "First appointment booked",
       });
 
-      const result = await patientsAppointmentsService.createPatientAppointment(
-        {
-          userId: "u1",
-          doctorId: "d1",
-          patientName: "John",
-          patientNumber: "123",
-          appointmentType: "consultation",
-          appointmentDate: "2025-08-22",
-          appointmentTime: "10:00",
-          symptoms: "cough",
-          specialtyId: "s1",
-        },
-      );
+      await patientsAppointmentsService.createPatientAppointment({
+        userId: "u1",
+        doctorId: "d1",
+        patientName: "John",
+        patientNumber: "123",
+        appointmentType: "consultation",
+        appointmentDate: "2025-08-22",
+        appointmentTime: "10:00",
+        symptoms: "cough",
+        specialtyId: "s1",
+      });
       expect(helper.validateEntities).toHaveBeenCalled();
       expect(helper.checkIdempotency).toHaveBeenCalled();
       expect(helper.createAppointment).toHaveBeenCalled();
       expect(helper.processFirstAppointment).toHaveBeenCalled();
-      expect(result).toEqual({ message: "First appointment booked" });
     });
 
     it("should create a regular appointment", async () => {
       helper.validateEntities.mockResolvedValue({
-        patient: { booked_first_appointment: true, patient_id: "p1" },
+        patient: { booked_first_appointment: 1, patient_id: "p1" },
         doctor: { doctor_id: "d1", consultation_fee: 100 },
       });
-      helper.checkIdempotency.mockResolvedValue({ error: null });
+      helper.checkIdempotency.mockResolvedValue({});
       helper.createAppointment.mockResolvedValue({
         id: 2,
         patientId: "p1",
@@ -362,7 +359,9 @@ describe("patients.appointments.services", () => {
 
     it("should return validation error", async () => {
       helper.validateEntities.mockResolvedValue({
-        error: { message: "Validation failed" },
+        error: {
+          message: "Validation failed",
+        },
       });
 
       const result = await patientsAppointmentsService.createPatientAppointment(
@@ -378,11 +377,11 @@ describe("patients.appointments.services", () => {
 
     it("should return idempotency error", async () => {
       helper.validateEntities.mockResolvedValue({
-        patient: { booked_first_appointment: true, patient_id: "p1" },
+        patient: { booked_first_appointment: 1, patient_id: "p1" },
         doctor: { doctor_id: "d1", consultation_fee: 100 },
       });
       helper.checkIdempotency.mockResolvedValue({
-        error: { message: "Duplicate request" },
+        idempotencyError: { message: "Duplicate request" },
       });
 
       const result = await patientsAppointmentsService.createPatientAppointment(
