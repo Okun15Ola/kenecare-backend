@@ -49,10 +49,38 @@ exports.CreateFollowUpValidation = [
         );
       }
 
-      const { appointment_status: appointmentStatus } = appointment;
-      if (appointmentStatus === "pending") {
+      const {
+        appointment_status: appointmentStatus,
+        appointment_date: appointmentDate,
+      } = appointment;
+      if (appointmentStatus !== "completed") {
         throw new Error(
-          "Appointment must be approved before setting up a follow-up",
+          "Appointment must be completed before setting up a follow-up",
+        );
+      }
+
+      const appointmentDateCheck = moment(appointmentDate).startOf("day");
+      const followUpDateCheck = moment(
+        req.body.followUpDate,
+        "YYYY-MM-DD",
+        true,
+      ).startOf("day");
+
+      if (!followUpDateCheck.isValid()) {
+        throw new Error("Follow up date must be a valid date (yyyy-mm-dd)");
+      }
+
+      // if same date
+      if (followUpDateCheck.isSame(appointmentDateCheck, "day")) {
+        throw new Error(
+          "Follow up date must not be the same as the appointment date",
+        );
+      }
+
+      // if before the appointment date
+      if (followUpDateCheck.isBefore(appointmentDateCheck, "day")) {
+        throw new Error(
+          "Follow up date must not be earlier than the appointment date",
         );
       }
 
@@ -139,10 +167,38 @@ exports.UpdateFollowUpValidation = [
         );
       }
 
-      const { appointment_status: appointmentStatus } = appointment;
-      if (appointmentStatus === "pending") {
+      const {
+        appointment_status: appointmentStatus,
+        appointment_date: appointmentDate,
+      } = appointment;
+      if (appointmentStatus !== "completed") {
         throw new Error(
-          "Appointment must be approved before setting up a follow-up",
+          "Appointment must be completed before setting up a follow-up",
+        );
+      }
+
+      const appointmentDateCheck = moment(appointmentDate).startOf("day");
+      const followUpDateCheck = moment(
+        req.body.followUpDate,
+        "YYYY-MM-DD",
+        true,
+      ).startOf("day");
+
+      if (!followUpDateCheck.isValid()) {
+        throw new Error("Follow up date must be a valid date (yyyy-mm-dd)");
+      }
+
+      // if same date
+      if (followUpDateCheck.isSame(appointmentDateCheck, "day")) {
+        throw new Error(
+          "Follow up date must not be the same as the appointment date",
+        );
+      }
+
+      // if before the appointment date
+      if (followUpDateCheck.isBefore(appointmentDateCheck, "day")) {
+        throw new Error(
+          "Follow up date must not be earlier than the appointment date",
         );
       }
 
