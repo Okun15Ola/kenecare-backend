@@ -16,7 +16,7 @@ const {
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
 
-router.use(authenticateUser, limiter, authorizeDoctor);
+router.use(authenticateUser, limiter);
 
 router.post(
   "/",
@@ -25,8 +25,12 @@ router.post(
   Validate,
   CreateDoctorCouncilRegistration,
 );
-router.get("/doc/", GetDoctorCouncilRegistrationDocumentController);
-router.get("/", GetDoctorCouncilRegistrationController);
+router.get(
+  "/doc/",
+  authorizeDoctor,
+  GetDoctorCouncilRegistrationDocumentController,
+);
+router.get("/", authorizeDoctor, GetDoctorCouncilRegistrationController);
 router.put(
   "/",
   AWSUploader.single("regCertificate"),
