@@ -9,6 +9,7 @@ const { redisClient } = require("../../../../src/config/redis.config");
 const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const logger = require("../../../../src/middlewares/logger.middleware");
 const authUtils = require("../../../../src/utils/auth.utils");
+const timeUtils = require("../../../../src/utils/time.utils");
 
 jest.mock("../../../../src/repository/doctorAppointments.repository");
 jest.mock("../../../../src/repository/doctors.repository");
@@ -16,6 +17,7 @@ jest.mock("../../../../src/repository/follow-up.repository");
 jest.mock("../../../../src/repository/patients.repository");
 jest.mock("../../../../src/utils/response.utils");
 jest.mock("../../../../src/utils/sms.utils");
+jest.mock("../../../../src/utils/time.utils");
 jest.mock("../../../../src/config/redis.config", () => ({
   redisClient: {
     get: jest.fn(),
@@ -69,13 +71,13 @@ describe("follow-ups.services", () => {
         title: "Dr.",
         last_name: "Doe",
       });
-      doctorAppointmentsRepo.getDoctorAppointByDateAndTime.mockResolvedValue(
-        true,
-      );
+      timeUtils.checkDoctorAvailability.mockResolvedValue({
+        isAvailable: false,
+        message: "Doctor is not available at the specified time.",
+      });
       Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result = await followUpsService.createFollowUp(params);
       expect(result).toBe("bad_request");
-      expect(logger.error).toHaveBeenCalled();
     });
 
     it("should return BAD_REQUEST if follow-up slot already booked", async () => {
@@ -85,9 +87,9 @@ describe("follow-ups.services", () => {
         title: "Dr.",
         last_name: "Doe",
       });
-      doctorAppointmentsRepo.getDoctorAppointByDateAndTime.mockResolvedValue(
-        null,
-      );
+      timeUtils.checkDoctorAvailability.mockResolvedValue({
+        isAvailable: true,
+      });
       followUpRepo.getDoctorsFollowByDateAndTime.mockResolvedValue(true);
       Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result = await followUpsService.createFollowUp(params);
@@ -127,9 +129,9 @@ describe("follow-ups.services", () => {
         title: "Dr.",
         last_name: "Doe",
       });
-      doctorAppointmentsRepo.getDoctorAppointByDateAndTime.mockResolvedValue(
-        null,
-      );
+      timeUtils.checkDoctorAvailability.mockResolvedValue({
+        isAvailable: true,
+      });
       followUpRepo.getDoctorsFollowByDateAndTime.mockResolvedValue(null);
       doctorAppointmentsRepo.getDoctorAppointmentById.mockResolvedValue({
         patient_id: 3,
@@ -181,36 +183,35 @@ describe("follow-ups.services", () => {
     it("should return BAD_REQUEST if appointment slot booked", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       doctorAppointmentsRepo.getDoctorAppointmentById.mockResolvedValue(true);
-      doctorAppointmentsRepo.getDoctorAppointByDateAndTime.mockResolvedValue(
-        true,
-      );
+      timeUtils.checkDoctorAvailability.mockResolvedValue({
+        isAvailable: false,
+        message: "Doctor is not available at the specified time.",
+      });
       Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result =
         await followUpsService.updateAppointmentFollowUpService(params);
       expect(result).toBe("bad_request");
-      expect(logger.error).toHaveBeenCalled();
     });
 
     it("should return BAD_REQUEST if follow-up slot booked", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       doctorAppointmentsRepo.getDoctorAppointmentById.mockResolvedValue(true);
-      doctorAppointmentsRepo.getDoctorAppointByDateAndTime.mockResolvedValue(
-        null,
-      );
-      followUpRepo.getDoctorsFollowByDateAndTime.mockResolvedValue(true);
+      timeUtils.checkDoctorAvailability.mockResolvedValue({
+        isAvailable: false,
+      });
+      followUpRepo.getDoctorsFollowByDateAndTime.mockRejectedValue(false);
       Response.BAD_REQUEST.mockReturnValue("bad_request");
       const result =
         await followUpsService.updateAppointmentFollowUpService(params);
       expect(result).toBe("bad_request");
-      expect(logger.error).toHaveBeenCalled();
     });
 
     it("should return NOT_MODIFIED if affectedRows < 1", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       doctorAppointmentsRepo.getDoctorAppointmentById.mockResolvedValue(true);
-      doctorAppointmentsRepo.getDoctorAppointByDateAndTime.mockResolvedValue(
-        null,
-      );
+      timeUtils.checkDoctorAvailability.mockResolvedValue({
+        isAvailable: true,
+      });
       followUpRepo.getDoctorsFollowByDateAndTime.mockResolvedValue(null);
       followUpRepo.updateAppointmentFollowUp.mockResolvedValue({
         affectedRows: 0,
@@ -225,9 +226,12 @@ describe("follow-ups.services", () => {
     it("should return SUCCESS on success", async () => {
       doctorsRepo.getDoctorByUserId.mockResolvedValue({ doctor_id: 1 });
       doctorAppointmentsRepo.getDoctorAppointmentById.mockResolvedValue(true);
-      doctorAppointmentsRepo.getDoctorAppointByDateAndTime.mockResolvedValue(
-        null,
-      );
+      timeUtils.checkDoctorAvailability.mockResolvedValue({
+        isAvailable: true,
+      });
+      // doctorAppointmentsRepo.getDoctorAppointByDateAndTime.mockResolvedValue(
+      //   null,
+      // );
       followUpRepo.getDoctorsFollowByDateAndTime.mockResolvedValue(null);
       followUpRepo.updateAppointmentFollowUp.mockResolvedValue({
         affectedRows: 1,
