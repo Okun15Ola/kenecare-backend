@@ -1515,3 +1515,70 @@ exports.mapDoctorReview = (reviews, includeApproval = false) => {
   }
   return mapped;
 };
+
+exports.mapVerifiedDoctorProfileRow = async (doctor) => {
+  const {
+    doctor_id: doctorId,
+    title,
+    first_name: firstName,
+    middle_name: middleName,
+    last_name: lastName,
+    gender,
+    // professional_summary: professionalSummary,
+    profile_pic_url: profilePic,
+    specialization_id: specialtyId,
+    speciality_name: specialization,
+    qualifications,
+    // consultation_fee: consultationFees,
+    city_name: city,
+    years_of_experience: yearOfExperience,
+    is_profile_approved: isProfileApproved,
+    mobile_number: mobileNumber,
+    email,
+    is_online: isOnline,
+    last_seen_at: lastSeen,
+    user_id: userId,
+    user_type: userType,
+    registration_status: councilRegistrationStatus,
+    certificate_expiry_date: certificateExpiryDate,
+  } = doctor;
+  const imageUrl = await fetchAndCacheUrl(
+    `doctor_private_profile_pic:${doctorId}`,
+    profilePic,
+  );
+  const mapped = {
+    doctorId,
+    userId,
+    userType,
+    title,
+    firstName,
+    middleName,
+    lastName,
+    gender,
+    mobileNumber,
+    email,
+    profilePic: imageUrl,
+    specialtyId,
+    specialization,
+    qualifications: he.decode(qualifications),
+    city,
+    yearOfExperience,
+    isProfileApproved: Boolean(isProfileApproved),
+    // isOnline: Boolean(isOnline),
+    councilRegistrationStatus,
+  };
+
+  if (isOnline === 0) {
+    mapped.lastSeen = moment(lastSeen, "YYYY-MM-DD HH:mm:ss").fromNow();
+  }
+
+  const expiryMoment = moment(certificateExpiryDate);
+  const now = moment();
+  if (expiryMoment.isSameOrBefore(now, "day")) {
+    mapped.certificateExpiryDate = moment(certificateExpiryDate).format(
+      "YYYY-MM-DD",
+    );
+  }
+
+  return mapped;
+};

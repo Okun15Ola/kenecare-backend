@@ -8,6 +8,7 @@ const {
 } = require("../../utils/email.utils");
 const logger = require("../../middlewares/logger.middleware");
 const { redisClient } = require("../../config/redis.config");
+const { mapVerifiedDoctorProfileRow } = require("../../utils/db-mapper.utils");
 
 exports.getDoctorCouncilRegistration = async (id) => {
   try {
@@ -277,6 +278,23 @@ exports.updateDoctorCouncilRegistration = async ({
     });
   } catch (error) {
     logger.error("updateDoctorCouncilRegistration: ", error);
+    throw error;
+  }
+};
+
+exports.verifyDoctorService = async (doctorId) => {
+  try {
+    const data = await dbObject.verifyDoctorCredentials(doctorId);
+
+    if (!data) {
+      return Response.NOT_FOUND({ message: "Doctor Not Found" });
+    }
+
+    const doctor = await mapVerifiedDoctorProfileRow(data);
+
+    return Response.SUCCESS({ data: doctor });
+  } catch (error) {
+    logger.error("verifyDoctorService: ", error);
     throw error;
   }
 };
