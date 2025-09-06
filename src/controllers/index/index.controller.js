@@ -1,6 +1,7 @@
 const logger = require("../../middlewares/logger.middleware");
 const service = require("../../services/index.services");
 const featureService = require("../../services/admin/featureFlag.services");
+const doctorService = require("../../services/doctors/doctors.profile.services");
 
 exports.GetDoctorBlogsController = async (req, res, next) => {
   try {
@@ -315,6 +316,17 @@ exports.CheckUserFeatureController = async (req, res, next) => {
     return res.status(200).json({ feature: name, available: allowed });
   } catch (error) {
     logger.error("CheckUserFeatureController: ", error);
+    return next(error);
+  }
+};
+
+exports.verifyDoctorController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const response = await doctorService.verifyDoctorService(id);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("verifyDoctorController: ", error);
     return next(error);
   }
 };
