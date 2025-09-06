@@ -90,6 +90,15 @@ router.get(
   Validate,
   IndexController.GetDoctorByIDController,
 );
+
+router.get(
+  "/doctor/:id/verify-credentials",
+  limiter,
+  doctorIdValidation,
+  Validate,
+  IndexController.verifyDoctorController,
+);
+
 router.get(
   "/faqs",
   limiter,
