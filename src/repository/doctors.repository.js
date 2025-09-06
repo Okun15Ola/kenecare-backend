@@ -225,24 +225,7 @@ exports.approveDoctorProfileByDoctorId = async ({ doctorId, approvedBy }) => {
   return query(queries.APPROVE_DOCTOR_PROFILE, [approvedBy, doctorId]);
 };
 
-// exports.approveDoctorMedicalCouncilRegistrationById = async ({
-//   registrationId,
-//   approvedBy,
-// }) => {
-//   return query(queries.APPROVE_DOCTOR_COUNCIL_REGISTRATION, [
-//     approvedBy,
-//     registrationId,
-//   ]);
-// };
-
-// exports.rejectDoctorMedicalCouncilRegistrationById = async ({
-//   registrationId,
-//   rejectionReason,
-//   approvedBy,
-// }) => {
-//   return query(queries.REJECT_DOCTOR_COUNCIL_REGISTRATION, [
-//     rejectionReason,
-//     approvedBy,
-//     registrationId,
-//   ]);
-// };
+exports.verifyDoctorCredentials = async (doctorId) => {
+  const row = await query(queries.VERIFY_DOCTOR, [doctorId]);
+  return row[0];
+};

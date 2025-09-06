@@ -34,6 +34,22 @@ module.exports = {
     ${DOCTOR_JOINS}
     ${APPROVED_DOCTOR_CONDITIONS}
   `,
+  VERIFY_DOCTOR: `
+    SELECT d.doctor_id, d.title, d.first_name, d.middle_name, d.last_name, 
+    d.gender, d.profile_pic_url, ms.speciality_name, d.qualifications, 
+    c.city_name, d.is_profile_approved, d.user_id, 
+    u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online, u.last_seen_at,
+    dcr.registration_status, dcr.certificate_expiry_date 
+    FROM doctors d
+    INNER JOIN users u ON d.user_id = u.user_id
+    INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
+    INNER JOIN cities c ON d.city_id = c.city_id
+    INNER JOIN doctors_council_registration dcr ON d.doctor_id = dcr.doctor_id  
+    WHERE d.doctor_id = ? 
+    AND d.is_profile_approved = 1
+    AND dcr.registration_status = 'approved'
+    AND dcr.certificate_expiry_date >= CURDATE()
+  `,
   SEARCH_DOCTOR_BY_QUERY: `
     SELECT ${DOCTOR_COLUMNS}
     ${DOCTOR_JOINS}
