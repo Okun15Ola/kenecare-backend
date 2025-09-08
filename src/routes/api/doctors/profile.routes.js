@@ -5,6 +5,7 @@ const {
   CreateDoctorProfileController,
   UpdateDoctorProfileByIdController,
   UpdateDoctorProfilePictureController,
+  UpdateDoctorSignatureController,
 } = require("../../../controllers/doctors/profile.controller");
 const {
   createDoctorProfileValidations,
@@ -36,6 +37,11 @@ router.patch(
   "/profile/",
   AWSUploader.single("profilepic"),
   UpdateDoctorProfilePictureController,
+);
+router.patch(
+  "/profile/signature",
+  AWSUploader.single("signature"),
+  UpdateDoctorSignatureController,
 );
 
 module.exports = router;

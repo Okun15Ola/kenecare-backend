@@ -467,7 +467,6 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
       const { buffer, mimetype } = file;
       newImageUrl = `profile_pic_${generateFileName(file)}`;
 
-      // TODO Add a check for the nodeEnv, if it is in development, let us save files locally, if it is in staging or prod then we can upload to S3
       await uploadFileToS3Bucket({
         fileName: newImageUrl,
         buffer,
@@ -520,6 +519,78 @@ exports.updateDoctorProfilePicture = async ({ userId, file }) => {
     });
   } catch (error) {
     logger.error("updateDoctorProfilePicture: ", error);
+    throw error;
+  }
+};
+
+exports.updateDoctorSignature = async (userId, file) => {
+  try {
+    if (!file) {
+      return Response.BAD_REQUEST({
+        message: "No file provided for upload",
+      });
+    }
+
+    const doctor = await dbObject.getDoctorByUserId(userId);
+    if (!doctor) {
+      logger.error(`Doctor profile not found for userId: ${userId}`);
+      return Response.NOT_FOUND({ message: "Doctor Profile Not Found" });
+    }
+    const { doctor_id: doctorId, signature_url: oldSignatureUrl } = doctor;
+
+    let newImageUrl = null;
+
+    try {
+      const { buffer, mimetype } = file;
+      newImageUrl = `signature_${generateFileName(file)}`;
+
+      await uploadFileToS3Bucket({
+        fileName: newImageUrl,
+        buffer,
+        mimetype,
+      });
+    } catch (uploadError) {
+      logger.error("Failed to upload signature to S3:", uploadError);
+      return Response.BAD_REQUEST({
+        message: "Failed to upload signature. Please try again.",
+      });
+    }
+
+    const { affectedRows } = await dbObject.updateDoctorSignature(
+      newImageUrl,
+      doctorId,
+    );
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.error(`Failed to update signature for doctorId: ${doctorId}`);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Error Uploading Signature. Please Try again!",
+      });
+    }
+
+    if (oldSignatureUrl) {
+      try {
+        await deleteFileFromS3Bucket(oldSignatureUrl);
+      } catch (deleteError) {
+        logger.error(
+          `Failed to delete old signature from s3 ${oldSignatureUrl}:`,
+          deleteError.message,
+        );
+      }
+    }
+
+    await Promise.all([
+      redisClient.delete(`doctor:user:${userId}`),
+      redisClient.delete(`doctor:${doctorId}`),
+      redisClient.clearCacheByPattern("doctors:all:*"),
+      redisClient.delete("doctors:count:approved"),
+      redisClient.clearCacheByPattern("admin:doctors:*"),
+    ]);
+    return Response.SUCCESS({
+      message: "Doctor's signature updated successfully.",
+    });
+  } catch (error) {
+    logger.error("updateDoctorSignature: ", error);
     throw error;
   }
 };

@@ -201,4 +201,6 @@ module.exports = {
   `,
   UPDATE_DOCTOR_PROFILE_PICTURE:
     "UPDATE doctors SET profile_pic_url = ? WHERE doctor_id = ? LIMIT 1",
+  UPDATE_DOCTOR_SIGNATURE:
+    "UPDATE doctors SET signature_url = ? WHERE doctor_id = ? LIMIT 1",
 };

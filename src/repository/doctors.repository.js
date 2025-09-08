@@ -229,3 +229,7 @@ exports.verifyDoctorCredentials = async (doctorId) => {
   const row = await query(queries.VERIFY_DOCTOR, [doctorId]);
   return row[0];
 };
+
+exports.updateDoctorSignature = async (signatureUrl, doctorId) => {
+  return query(queries.UPDATE_DOCTOR_SIGNATURE, [signatureUrl, doctorId]);
+};

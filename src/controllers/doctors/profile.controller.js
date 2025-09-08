@@ -6,6 +6,7 @@ const {
   createDoctorCouncilRegistration,
   updateDoctorProfile,
   updateDoctorProfilePicture,
+  updateDoctorSignature,
 } = require("../../services/doctors/doctors.services");
 
 const GetDoctorProfileController = async (req, res, next) => {
@@ -167,6 +168,20 @@ const UpdateDoctorProfilePictureController = async (req, res, next) => {
     return next(error);
   }
 };
+const UpdateDoctorSignatureController = async (req, res, next) => {
+  try {
+    const { id: userId } = req.user;
+    const { file } = req;
+    if (!file) {
+      return res.status(400).json({ message: "No file provided for upload" });
+    }
+    const response = await updateDoctorSignature(userId, file);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
 module.exports = {
   GetDoctorProfileController,
   GetDoctorCouncilRegistrationController,
@@ -175,4 +190,5 @@ module.exports = {
   CreateDoctorCouncilRegistration,
   UpdateDoctorProfileByIdController,
   UpdateDoctorProfilePictureController,
+  UpdateDoctorSignatureController,
 };
