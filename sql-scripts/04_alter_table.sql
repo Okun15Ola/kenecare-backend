@@ -279,3 +279,6 @@ ALTER TABLE `family_members`
 ALTER TABLE `withdrawal_requests`
   MODIFY COLUMN `status` ENUM('pending', 'completed', 'failed', 'processing') NOT NULL DEFAULT 'pending',
   ADD COLUMN `failure_details` TEXT DEFAULT NULL AFTER `status`;
+
+ALTER TABLE `doctors`
+ADD COLUMN `signature_url` VARCHAR(255) DEFAULT NULL AFTER `profile_pic_url`;
