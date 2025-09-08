@@ -14,8 +14,20 @@ exports.getDoctorReviewsByPatientId = async (patientId) => {
   return query(queries.GET_DOCTOR_REVIEW_BY_PATIENT_ID, [patientId]);
 };
 
-exports.getApprovedDoctorReviewsByDoctorId = async (doctorId) => {
-  return query(queries.GET_APPROVED_DOCTOR_REVIEW_BY_DOCTOR_ID, [doctorId]);
+exports.getApprovedDoctorReviewsByDoctorId = async (
+  doctorId,
+  limit,
+  offset,
+) => {
+  const optimizedQuery = `${queries.GET_APPROVED_DOCTOR_REVIEW_BY_DOCTOR_ID} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery, [doctorId]);
+};
+
+exports.countDoctorApprovedReviews = async (doctorId) => {
+  const row = await query(queries.COUNT_APPROVED_DOCTOR_REVIEW_BY_DOCTOR_ID, [
+    doctorId,
+  ]);
+  return row[0];
 };
 
 exports.updateReviewApprovalStatus = async (reviewId, isApproved) => {
