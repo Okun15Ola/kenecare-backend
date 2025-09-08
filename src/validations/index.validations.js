@@ -4,6 +4,9 @@ const { getDoctorById } = require("../repository/doctors.repository");
 const { getSpecialtiyById } = require("../repository/specialities.repository");
 const { getCityById } = require("../repository/cities.repository");
 const { maxLimit } = require("../config/default.config");
+const {
+  getAppointmentPrescriptionById,
+} = require("../repository/prescriptions.repository");
 
 exports.doctorIdValidation = [
   param("id")
@@ -102,5 +105,22 @@ exports.patientTestimonialValidation = [
     .escape()
     .customSanitizer((value) => {
       return he.encode(value);
+    }),
+];
+
+exports.prescriptionIdValidation = [
+  param("prescriptionId")
+    .notEmpty()
+    .withMessage("Prescription ID is required")
+    .bail()
+    .isInt({ gt: 0 })
+    .trim()
+    .escape()
+    .custom(async (value) => {
+      const prescription = await getAppointmentPrescriptionById(value);
+      if (!prescription) {
+        throw new Error("Prescription not found");
+      }
+      return true;
     }),
 ];

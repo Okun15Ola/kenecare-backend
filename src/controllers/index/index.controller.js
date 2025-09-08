@@ -2,6 +2,8 @@ const logger = require("../../middlewares/logger.middleware");
 const service = require("../../services/index.services");
 const featureService = require("../../services/admin/featureFlag.services");
 const doctorService = require("../../services/doctors/doctors.profile.services");
+const prescriptionService = require("../../services/prescriptions.services");
+const reviewService = require("../../services/doctors/reviews.services");
 
 exports.GetDoctorBlogsController = async (req, res, next) => {
   try {
@@ -11,6 +13,22 @@ exports.GetDoctorBlogsController = async (req, res, next) => {
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("GetDoctorBlogsController: ", error);
+    return next(error);
+  }
+};
+
+exports.GetDoctorReviewsController = async (req, res, next) => {
+  try {
+    const { page, limit } = req.query;
+    const doctorId = parseInt(req.params.id, 10);
+    const response = await reviewService.getApprovedDoctorReviewsIndexService(
+      doctorId,
+      limit,
+      page,
+    );
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("GetDoctorReviewsController: ", error);
     return next(error);
   }
 };
@@ -327,6 +345,20 @@ exports.verifyDoctorController = async (req, res, next) => {
     return res.status(response.statusCode).json(response);
   } catch (error) {
     logger.error("verifyDoctorController: ", error);
+    return next(error);
+  }
+};
+
+exports.verifyDoctorPrescriptionController = async (req, res, next) => {
+  try {
+    const { id: doctorId, prescriptionId } = req.params;
+    const response = await prescriptionService.verifyDoctorPrescriptionService(
+      doctorId,
+      prescriptionId,
+    );
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error("verifyDoctorPrescriptionController: ", error);
     return next(error);
   }
 };

@@ -4,6 +4,7 @@ const { Validate } = require("../../validations/validate");
 const {
   doctorIdValidation,
   doctorPaginationValidation,
+  prescriptionIdValidation,
 } = require("../../validations/index.validations");
 const { limiter } = require("../../utils/rate-limit.utils");
 const {
@@ -126,6 +127,22 @@ router.get(
   authenticateUser,
   limiter,
   IndexController.CheckUserFeatureController,
+);
+
+router.get(
+  "/verify-prescription/:prescriptionId/doctor/:id",
+  [...doctorIdValidation, ...prescriptionIdValidation],
+  Validate,
+  limiter,
+  IndexController.verifyDoctorPrescriptionController,
+);
+
+router.get(
+  "/doctor-reviews/:id",
+  limiter,
+  [...doctorIdValidation, ...paginationValidation],
+  Validate,
+  IndexController.GetDoctorReviewsController,
 );
 
 module.exports = router;

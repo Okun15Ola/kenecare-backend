@@ -4,6 +4,11 @@ const { redisClient } = require("../../config/redis.config");
 const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const { mapDoctorReview } = require("../../utils/db-mapper.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
 
 exports.getApprovedDoctorReviewsService = async (userId) => {
   try {
@@ -49,16 +54,48 @@ exports.getApprovedDoctorReviewsService = async (userId) => {
   }
 };
 
-exports.getApprovedDoctorReviewsIndexService = async (doctorId) => {
+exports.getApprovedDoctorReviewsIndexService = async (
+  doctorId,
+  limit,
+  page,
+) => {
   try {
-    const cacheKey = `doctor:${doctorId}:reviews`;
+    const offset = (page - 1) * limit;
+    const countCacheKey = `doctor:${doctorId}:reviews:count`;
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: () =>
+        doctorReviewRepository.countDoctorApprovedReviews(doctorId),
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No reviews found for this doctor.",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const cacheKey = cacheKeyBulider(
+      `doctor:${doctorId}:reviews`,
+      limit,
+      offset,
+    );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
     }
 
     const reviews =
-      await doctorReviewRepository.getApprovedDoctorReviewsByDoctorId(doctorId);
+      await doctorReviewRepository.getApprovedDoctorReviewsByDoctorId(
+        doctorId,
+        limit,
+        offset,
+      );
 
     if (!reviews?.length) {
       return Response.SUCCESS({
@@ -76,6 +113,7 @@ exports.getApprovedDoctorReviewsIndexService = async (doctorId) => {
 
     return Response.SUCCESS({
       data,
+      pagination: paginationInfo,
     });
   } catch (error) {
     logger.error("getApprovedDoctorReviewsIndexService", error);
