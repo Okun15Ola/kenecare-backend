@@ -2,9 +2,6 @@ const moment = require("moment");
 const he = require("he");
 const { decryptText } = require("./auth.utils");
 const availableDaysDB = require("../repository/doctorAvailableDays.repository");
-const {
-  getApprovedDoctorReviewsByDoctorId,
-} = require("../repository/doctorReviews.repository");
 const { fetchAndCacheUrl, fetchAndCachePublicUrl } = require("./caching.utils");
 
 exports.mapCommonSymptomsRow = async (
@@ -810,28 +807,6 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     );
   }
 
-  let mappedReviews = [];
-  const fetchedReviews = await getApprovedDoctorReviewsByDoctorId(doctorId);
-  if (fetchedReviews && fetchedReviews.length) {
-    mappedReviews = fetchedReviews.map((review) => {
-      const {
-        feedback_id: reviewId,
-        first_name: patientFirstName,
-        last_name: patientLastName,
-        feedback_content: reviewContent,
-      } = review;
-
-      const decryptedPatientFirstName = decryptText(patientFirstName);
-      const decryptedPatientLastName = decryptText(patientLastName);
-
-      return {
-        reviewId,
-        patient: `${decryptedPatientFirstName} ${decryptedPatientLastName}`,
-        review: reviewContent,
-      };
-    });
-  }
-
   const mapped = {
     doctorId,
     title,
@@ -856,7 +831,6 @@ exports.mapDoctorRow = async (doctor, includeProfilePicBytes = false) => {
     isAccountActive: Boolean(isAccountActive),
     isOnline: Boolean(isOnline),
     councilRegistrationStatus,
-    reviews: mappedReviews,
   };
 
   if (isOnline === 0) {
@@ -1304,19 +1278,33 @@ exports.mapMedicalRecordRow = (medicalRecord) => {
     caffine_use: caffineIntake,
     caffine_use_frequency: caffineIntakeFreq,
   } = medicalRecord;
-  return {
+  const mapped = {
     height,
     weight,
     allergies,
-    isDisabled: isDisabled !== 0,
-    disabilityDesc,
-    tobaccoIntake: tobaccoIntake !== null,
-    tobaccoIntakeFreq,
-    alcoholIntake: alcoholIntake !== 0,
-    alcoholIntakeFreq,
-    caffineIntake: caffineIntake !== null,
-    caffineIntakeFreq,
+    isDisabled: Boolean(isDisabled),
+    tobaccoIntake: Boolean(tobaccoIntake),
+    alcoholIntake: Boolean(alcoholIntake),
+    caffineIntake: Boolean(caffineIntake),
   };
+
+  if (isDisabled) {
+    mapped.disabilityDesc = disabilityDesc || null;
+  }
+
+  if (tobaccoIntake) {
+    mapped.tobaccoIntakeFreq = tobaccoIntakeFreq || null;
+  }
+
+  if (alcoholIntake) {
+    mapped.alcoholIntakeFreq = alcoholIntakeFreq || null;
+  }
+
+  if (caffineIntake) {
+    mapped.caffineIntakeFreq = caffineIntakeFreq || null;
+  }
+
+  return mapped;
 };
 
 exports.mapPrescriptionRow = (
@@ -1579,6 +1567,83 @@ exports.mapVerifiedDoctorProfileRow = async (doctor) => {
       "YYYY-MM-DD",
     );
   }
+
+  return mapped;
+};
+
+exports.mapDoctorPrescriptionRow = async (prescription) => {
+  const {
+    doctor_id: doctorId,
+    title,
+    first_name: firstName,
+    middle_name: middleName,
+    last_name: lastName,
+    gender,
+    professional_summary: professionalSummary,
+    profile_pic_url: profilePic,
+    specialization_id: specialtyId,
+    speciality_name: specialization,
+    qualifications,
+    city_name: location,
+    years_of_experience: yearOfExperience,
+    is_profile_approved: isProfileApproved,
+    mobile_number: mobileNumber,
+    signature_url: signatureUrl,
+    email,
+    registration_status: councilRegistrationStatus,
+    prescription_id: prescriptionId,
+    appointment_id: appointmentId,
+    diagnosis,
+    medicines,
+    doctors_comment: doctorComment,
+    created_at: dateCreated,
+    updated_at: dateUpdated,
+  } = prescription;
+
+  const [profilePhotoRes, signatureRes] = await Promise.allSettled([
+    fetchAndCachePublicUrl(`doctor_public_profile_pic:${doctorId}`, profilePic),
+    fetchAndCachePublicUrl(`doctor_signature_url:${doctorId}`, signatureUrl),
+  ]);
+
+  const profilePhotoUrl =
+    profilePhotoRes.status === "fulfilled" ? profilePhotoRes.value : null;
+  const signatureImgUrl =
+    signatureRes.status === "fulfilled" ? signatureRes.value : null;
+
+  const mapped = {
+    doctorId,
+    title,
+    firstName,
+    middleName,
+    lastName,
+    gender,
+    professionalSummary: he.decode(professionalSummary),
+    profilePic: profilePhotoUrl,
+    doctorSignature: signatureImgUrl,
+    specialtyId,
+    specialization,
+    qualifications: he.decode(qualifications),
+    location,
+    yearOfExperience,
+    isProfileApproved: Boolean(isProfileApproved),
+    mobileNumber,
+    email,
+    councilRegistrationStatus,
+    prescriptionId,
+    appointmentId,
+  };
+
+  const decryptedDiagnosis = decryptText(diagnosis);
+  mapped.diagnosis = decryptedDiagnosis || null;
+
+  const decryptedMedicines = decryptText(medicines);
+  mapped.medicines = decryptedMedicines ? JSON.parse(decryptedMedicines) : null;
+
+  const decryptedComment = decryptText(doctorComment);
+  mapped.comment = decryptedComment || null;
+
+  mapped.createdAt = moment(dateCreated).format("YYYY-MM-DD HH:mm:ss");
+  mapped.updatedAt = moment(dateUpdated).format("YYYY-MM-DD HH:mm:ss");
 
   return mapped;
 };
