@@ -57,3 +57,11 @@ exports.updateAppointmentPrescriptions = async ({
     appointmentId,
   ]);
 };
+
+exports.verifyDoctorPrescription = async (doctorId, prescriptionId) => {
+  const row = await query(queries.VERIFY_DOCTOR_PRESCRIPTION, [
+    prescriptionId,
+    doctorId,
+  ]);
+  return row[0];
+};

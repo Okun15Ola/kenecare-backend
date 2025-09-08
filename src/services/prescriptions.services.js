@@ -3,12 +3,14 @@ const {
   createAppointmentPrescriptions,
   updateAppointmentPrescriptions,
   getAppointmentPrescriptionById,
+  verifyDoctorPrescription,
 } = require("../repository/prescriptions.repository");
 const Response = require("../utils/response.utils");
 const { redisClient } = require("../config/redis.config");
 const { mapPrescriptionRow } = require("../utils/db-mapper.utils");
 const logger = require("../middlewares/logger.middleware");
 const { encryptText } = require("../utils/auth.utils");
+const { mapDoctorPrescriptionRow } = require("../utils/db-mapper.utils");
 
 exports.getAppointmentPrescriptions = async (id) => {
   try {
@@ -155,5 +157,33 @@ exports.updatePrescriptions = async ({
   } catch (error) {
     logger.error("updatePrescriptions: ", error);
     throw error;
+  }
+};
+
+exports.verifyDoctorPrescriptionService = async (doctorId, prescriptionId) => {
+  try {
+    const prescription = await verifyDoctorPrescription(
+      doctorId,
+      prescriptionId,
+    );
+
+    if (!prescription) {
+      return Response.NOT_FOUND({
+        message:
+          "Prescription not found or you do not have permission to view it.",
+      });
+    }
+
+    const data = await mapDoctorPrescriptionRow(prescription);
+
+    return Response.SUCCESS({
+      data,
+      message: "Prescription verified successfully",
+    });
+  } catch (error) {
+    logger.error("verifyDoctorPrescriptionService: ", error);
+    return Response.INTERNAL_SERVER_ERROR({
+      message: "An unexpected error occurred while verifying the prescription.",
+    });
   }
 };
