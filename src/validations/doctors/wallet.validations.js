@@ -5,7 +5,13 @@ const {
   getWalletByDoctorId,
   getWithdrawalRequestByDoctorIdAndDate,
 } = require("../../repository/doctor-wallet.repository");
-const { comparePassword } = require("../../utils/auth.utils");
+const {
+  comparePassword,
+  getMNC,
+  AFRICELL_MNC,
+  ORANGE_MNC,
+  isWeakPin,
+} = require("../../utils/auth.utils");
 const { MOMO_PROVIDERS } = require("../../utils/enum.utils");
 
 exports.walletWithdrawalValidations = [
@@ -30,108 +36,81 @@ exports.walletWithdrawalValidations = [
   body("pin")
     .notEmpty()
     .withMessage("Wallet PIN is required")
-    .bail()
     .isLength({ min: 4, max: 4 })
-    .withMessage("PIN must be exactly 4 digits")
-    .bail()
-    .matches(/^\d+$/)
-    .withMessage("PIN must be a number")
-    .bail()
+    .withMessage("PIN must be 4 digits")
+    .matches(/^[0-9]{4}$/)
+    .withMessage("PIN must be numeric")
     .custom(async (value, { req }) => {
-      const { wallet_pin: walletPin } = req.wallet;
-
-      if (value === 1234 || value === "1234") {
-        throw new Error(
-          "Cannot Request Withdrawal with default wallet pin. Please update wallet PIN before proceeding.",
-        );
+      if (value === "1234") {
+        throw new Error("Default PIN not allowed. Please update it.");
       }
-
       const isMatch = await comparePassword({
         plainPassword: value,
-        hashedPassword: walletPin,
+        hashedPassword: req.wallet.wallet_pin,
       });
-
-      if (!isMatch) {
-        throw new Error("Incorrect Wallet PIN. Please try again.");
-      }
+      if (!isMatch) throw new Error("Incorrect PIN.");
       return true;
     }),
   body("amount")
     .notEmpty()
-    .withMessage("Withdrawal amount is required")
-    .bail()
-    .isNumeric({ no_symbols: true })
-    .withMessage("Withdrawal amount must be a number")
-    .bail()
-    .isInt({ gt: 100, lt: 51000 })
-    .withMessage("Withdrawal Amount Must be between NLE 100 and NLE 50,000")
-    .bail()
+    .withMessage("Amount is required")
+    .isInt({ gt: 99, lt: 5001 })
+    .withMessage("Withdrawal amount must be between NLE 100 and NLE 5,000")
     .custom(async (value, { req }) => {
-      const requestedAmount = parseFloat(value);
-      const currentBalance = parseFloat(req.wallet.balance);
+      const amount = parseInt(value, 10);
+      const balance = parseInt(req.wallet.balance, 10);
 
-      if (requestedAmount > currentBalance) {
-        throw new Error("Insufficient Balance to request withdrawal");
+      if (amount > balance - 10) {
+        throw new Error("Insufficient balance. Leave at least NLE 10.");
       }
 
+      // Daily + monthly limits
       const today = moment().format("YYYY-MM-DD");
-      const requestsForToday = await getWithdrawalRequestByDoctorIdAndDate({
+      const requestsToday = await getWithdrawalRequestByDoctorIdAndDate({
         doctorId: req.doctor.doctor_id,
         date: today,
       });
-
-      const totalToday = requestsForToday.reduce(
-        (sum, req) => sum + req.amount,
-        0,
-      );
-      const totalRequested = totalToday + requestedAmount;
-      const dailyLimit = 50000;
-
-      if (totalRequested > dailyLimit) {
-        throw new Error("Exceeded daily withdrawal limit.");
+      const totalToday = requestsToday.reduce((sum, r) => sum + r.amount, 0);
+      if (totalToday + amount > 5000) {
+        throw new Error("Exceeded daily limit of NLE 5,000");
       }
 
       return true;
     }),
   body("paymentMethod")
-    .notEmpty({ ignore_whitespace: false })
+    .notEmpty()
     .withMessage("Payment Method is required")
-    .bail()
-    .trim()
     .toLowerCase()
     .isIn([MOMO_PROVIDERS.ORANGE_MONEY, MOMO_PROVIDERS.AFRI_MONEY])
-    .withMessage(
-      `Payment method must be one of: ${MOMO_PROVIDERS.ORANGE_MONEY} or ${MOMO_PROVIDERS.AFRI_MONEY}`,
-    )
-    .bail()
-    .custom((value, { req }) => {
-      if (!req.body.mobileMoneyNumber) {
-        throw new Error(
-          "Mobile Money Number is required for this payment method.",
-        );
-      }
-      return true;
-    }),
+    .withMessage("Invalid Mobile Money Provider"),
   body("mobileMoneyNumber")
     .notEmpty()
     .withMessage("Mobile Number is required")
     .bail()
     .trim()
-    .matches(/^(07\d|088|099|0\d{2})\d{6}$/) // TODO: enhance check to accept only africell or orange  number
+    .matches(/^(\+232|232|0)\d{8}$/)
     .withMessage("Invalid Sierra Leonean mobile number format.")
+    .bail()
     .custom((value, { req }) => {
-      // Cross-validation: check if the number matches the selected provider.
       const provider = req.body.paymentMethod;
-      if (
-        provider === MOMO_PROVIDERS.ORANGE_MONEY &&
-        !value.startsWith("07") &&
-        !value.startsWith("088")
-      ) {
-        throw new Error("Orange Money numbers must start with 07 or 088.");
+      const mnc = getMNC(value);
+
+      if (provider === MOMO_PROVIDERS.ORANGE_MONEY) {
+        if (!ORANGE_MNC.includes(mnc)) {
+          throw new Error(
+            `Orange Money numbers must belong to MNCs: ${ORANGE_MNC.join(", ")}`,
+          );
+        }
       }
-      if (provider === MOMO_PROVIDERS.AFRI_MONEY && !value.startsWith("099")) {
-        throw new Error("Afri Money numbers must start with 099.");
+
+      if (provider === MOMO_PROVIDERS.AFRI_MONEY) {
+        if (!AFRICELL_MNC.includes(mnc)) {
+          throw new Error(
+            `Afri Money numbers must belong to MNCs: ${AFRICELL_MNC.join(", ")}`,
+          );
+        }
       }
+
       return true;
     }),
 ];
@@ -169,12 +148,24 @@ exports.walletPinValidation = [
     }),
   body("newPin")
     .notEmpty()
-    .withMessage("New Pin is required")
+    .withMessage("New PIN is required")
     .bail()
     .trim()
     .escape()
     .isLength({ min: 4, max: 4 })
-    .withMessage("PIN must be 4-digits long"),
+    .withMessage("PIN must be 4 digits long")
+    .bail()
+    .matches(/^\d+$/)
+    .withMessage("PIN must contain only numbers")
+    .bail()
+    .custom((value) => {
+      if (isWeakPin(value)) {
+        throw new Error(
+          "This PIN is too weak. Please choose a more secure PIN.",
+        );
+      }
+      return true;
+    }),
   body("confirmNewPin")
     .notEmpty()
     .withMessage("Confirm Pin is required")
