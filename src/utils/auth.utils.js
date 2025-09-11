@@ -44,6 +44,37 @@ const MOBILE_NETWORK_CODES = [
   "80",
 ];
 
+const AFRICELL_MNC = ["30", "33", "77", "88", "90", "99", "81", "80"];
+const ORANGE_MNC = ["72", "73", "74", "75", "76", "78", "79"];
+
+const isWeakPin = (pin) => {
+  // 1. All digits the same eg. 0000, 1111
+  if (/^(.)\1{3}$/.test(pin)) {
+    return true;
+  }
+
+  // 2. Sequential ascending
+  const asc = "0123456789";
+  // 3. Sequential descending
+  const desc = "9876543210";
+  if (asc.includes(pin) || desc.includes(pin)) {
+    return true;
+  }
+
+  // // 4. Common repeating patterns
+  // const repeatingPatterns = ["1212", "1122", "1221", "6969", "9090"];
+  // if (repeatingPatterns.includes(pin)) {
+  //   return true;
+  // }
+
+  return false;
+};
+
+const getMNC = (mobileNumber) => {
+  const normalized = mobileNumber.replace(/^\+232/, "0");
+  return normalized.substring(1, 3);
+};
+
 /**
  * Hashes a user's password using bcryptjs.
  * @async
@@ -440,4 +471,8 @@ module.exports = {
   generateApiKeyAndSecret,
   generateApiClientJwtAccessToken,
   generateRefreshToken,
+  AFRICELL_MNC,
+  ORANGE_MNC,
+  getMNC,
+  isWeakPin,
 };
