@@ -95,7 +95,7 @@ exports.CreateAppointmentValidation = [
     .withMessage("Appointment Type is required")
     .bail()
     .toLowerCase()
-    .isIn(["online_consultation", "online consultation"]) //  "doctor_visit", "patient_visit"
+    .isIn(["online_consultation"]) //  "doctor_visit", "patient_visit"
     .withMessage("Invalid Appointment Type")
     .bail()
     .escape(),
