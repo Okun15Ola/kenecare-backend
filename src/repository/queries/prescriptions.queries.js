@@ -1,9 +1,29 @@
 module.exports = {
   GET_PRESCRIPTIONS_BY_APPOINTMENT_ID: `
-    SELECT * FROM appointment_prescriptions WHERE appointment_id = ? LIMIT 1;
-  `,
+  SELECT 
+    ap.*,
+    d.doctor_id,
+    d.first_name,
+    d.last_name,
+    d.signature_url
+  FROM appointment_prescriptions ap
+  INNER JOIN medical_appointments a ON a.appointment_id = ap.appointment_id
+  INNER JOIN doctors d ON d.doctor_id = a.doctor_id
+  WHERE ap.appointment_id = ?
+  ORDER BY ap.created_at DESC
+`,
   GET_PRESCRIPTION_BY_ID: `
-    SELECT * FROM appointment_prescriptions WHERE prescription_id = ? LIMIT 1;
+  SELECT 
+    ap.*,
+    d.doctor_id,
+    d.first_name,
+    d.last_name,
+    d.signature_url
+  FROM appointment_prescriptions ap
+  INNER JOIN medical_appointments a ON a.appointment_id = ap.appointment_id
+  INNER JOIN doctors d ON d.doctor_id = a.doctor_id
+  WHERE ap.prescription_id = ?
+  LIMIT 1;
   `,
   GET_SIMILAR_PRESCRIPTION: `
     SELECT * FROM appointment_prescriptions WHERE appointment_id = ? AND diagnosis = ? AND medicines = ? AND doctors_comment = ? LIMIT 1;

@@ -1307,7 +1307,7 @@ exports.mapMedicalRecordRow = (medicalRecord) => {
   return mapped;
 };
 
-exports.mapPrescriptionRow = (
+exports.mapPrescriptionRow = async (
   prescription,
   includeDiagnosis = false,
   includeMedicines = false,
@@ -1319,15 +1319,29 @@ exports.mapPrescriptionRow = (
     diagnosis,
     medicines,
     doctors_comment: doctorComment,
+    doctor_id: doctorId,
+    first_name: doctorFirstName,
+    last_name: doctorLastName,
+    signature_url: signatureUrl,
     created_at: dateCreated,
     updated_at: dateUpdated,
   } = prescription;
   const mapped = {
     prescrtiptionId,
     appointmentId,
+    doctorFirstName,
+    doctorLastName,
     createdAt: moment(dateCreated).format("YYYY-MM-DD HH:mm"),
     updatedAt: moment(dateUpdated).format("YYYY-MM-DD HH:mm:ss"),
   };
+
+  const doctorSignature = await fetchAndCachePublicUrl(
+    `doctor_signature_url:${doctorId}`,
+    signatureUrl,
+  );
+
+  mapped.doctorSignature =
+    doctorSignature || `Dr. ${doctorFirstName} ${doctorLastName}`;
 
   if (includeDiagnosis) {
     const decryptedDiagnosis = decryptText(diagnosis);
@@ -1646,4 +1660,27 @@ exports.mapDoctorPrescriptionRow = async (prescription) => {
   mapped.updatedAt = moment(dateUpdated).format("YYYY-MM-DD HH:mm:ss");
 
   return mapped;
+};
+
+exports.mapDoctorWithdrawalHistoryRow = (withdrawal) => {
+  const {
+    order_id: orderId,
+    amount,
+    currency,
+    mobile_money_provider: paymentType,
+    mobile_number: paymentMobileNumber,
+    status,
+    created_at: requestedOn,
+    updated_at: updatedOn,
+  } = withdrawal;
+  return {
+    orderId,
+    amount,
+    currency,
+    paymentType,
+    paymentMobileNumber,
+    status,
+    requestedOn: moment(requestedOn).format("YYYY-MM-DD HH:mm:ss"),
+    updatedOn: moment(updatedOn).format("YYYY-MM-DD HH:mm:ss"),
+  };
 };

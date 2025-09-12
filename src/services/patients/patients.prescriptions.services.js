@@ -24,15 +24,17 @@ exports.getAppointmentPrescriptions = async (id) => {
       });
     }
 
-    const prescription = mapPrescriptionRow(rawData, true, true, true);
+    const prescriptions = await Promise.all(
+      rawData.map((row) => mapPrescriptionRow(row, true, true, true)),
+    );
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(prescription),
+      value: JSON.stringify(prescriptions),
     });
 
     return Response.SUCCESS({
-      data: prescription,
+      data: prescriptions,
     });
   } catch (error) {
     logger.error("getAppointmentPrescriptions: ", error);
@@ -56,7 +58,7 @@ exports.getAppointmentPrescriptionById = async (presId) => {
       });
     }
 
-    const prescription = mapPrescriptionRow(rawData, true, true, true);
+    const prescription = await mapPrescriptionRow(rawData, true, true, true);
 
     await redisClient.set({
       key: cacheKey,

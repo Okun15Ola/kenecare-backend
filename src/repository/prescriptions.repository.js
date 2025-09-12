@@ -2,10 +2,7 @@ const { query } = require("./db.connection");
 const queries = require("./queries/prescriptions.queries");
 
 exports.getAppointmentPrescriptions = async (appointmentId) => {
-  const row = await query(queries.GET_PRESCRIPTIONS_BY_APPOINTMENT_ID, [
-    appointmentId,
-  ]);
-  return row[0];
+  return query(queries.GET_PRESCRIPTIONS_BY_APPOINTMENT_ID, [appointmentId]);
 };
 
 exports.getAppointmentPrescriptionById = async (prescriptionId) => {
