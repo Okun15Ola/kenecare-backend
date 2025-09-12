@@ -3,6 +3,7 @@ const {
   GetDoctorWalletController,
   UpdateWalletPinController,
   RequestWithdrawalController,
+  GetDoctorWithdrawalHistoryController,
 } = require("../../../controllers/doctors/wallet.controller");
 const paymentController = require("../../../controllers/payment.controller");
 const { Validate } = require("../../../validations/validate");
@@ -15,6 +16,9 @@ const {
   authenticateUser,
   authorizeDoctor,
 } = require("../../../middlewares/auth.middleware");
+const {
+  paginationValidation,
+} = require("../../../validations/pagination.validations");
 
 router.get(
   "/",
@@ -22,6 +26,16 @@ router.get(
   limiter,
   authorizeDoctor,
   GetDoctorWalletController,
+);
+
+router.get(
+  "/withdrawal-history",
+  authenticateUser,
+  limiter,
+  authorizeDoctor,
+  paginationValidation,
+  Validate,
+  GetDoctorWithdrawalHistoryController,
 );
 
 router.post(

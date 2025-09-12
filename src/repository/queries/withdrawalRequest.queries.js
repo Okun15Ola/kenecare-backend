@@ -77,4 +77,29 @@ module.exports = {
     SET status = ?, transaction_reference = ?
     WHERE request_id = ?;
   `,
+  GET_DOCTOR_WITHDRAWAL_HISTORY: `
+  SELECT 
+    order_id,
+    amount,
+    currency,
+    mobile_money_provider,
+    mobile_number,
+    status,
+    created_at,
+    updated_at
+  FROM 
+    withdrawal_requests
+  WHERE 
+    doctor_id = ?
+  ORDER BY 
+    created_at DESC
+  `,
+  COUNT_DOCTOR_WITHDRAWAL_HISTORY: `
+  SELECT 
+    COUNT(*) AS totalRows
+  FROM 
+    withdrawal_requests
+  WHERE 
+    doctor_id = ?
+  `,
 };

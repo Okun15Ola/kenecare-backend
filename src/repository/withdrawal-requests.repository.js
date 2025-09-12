@@ -55,3 +55,13 @@ exports.updateWithdrawalRequest = async ({
     transactionId,
   ]);
 };
+
+exports.getDoctorWithdrawalHistory = async (doctorId, limit, offset) => {
+  const optimizedQuery = `${queries.GET_DOCTOR_WITHDRAWAL_HISTORY} LIMIT ${limit} OFFSET ${offset}`;
+  return query(optimizedQuery, [doctorId]);
+};
+
+exports.countDoctorWithdrawalHistory = async (doctorId) => {
+  const row = await query(queries.COUNT_DOCTOR_WITHDRAWAL_HISTORY, [doctorId]);
+  return row[0];
+};

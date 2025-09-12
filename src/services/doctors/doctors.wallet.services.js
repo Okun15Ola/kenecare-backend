@@ -14,8 +14,9 @@ const {
 const { hashUsersPassword } = require("../../utils/auth.utils");
 const {
   createWithdrawalRequest,
+  getDoctorWithdrawalHistory,
+  countDoctorWithdrawalHistory,
 } = require("../../repository/withdrawal-requests.repository");
-// const { adminWithdrawalRequestEmail } = require("../../utils/email.utils");
 const { processPayout } = require("../../utils/payment.utils");
 const {
   PAYMENT_PROVIDERS,
@@ -23,6 +24,11 @@ const {
   PAYMENT_METHOD,
 } = require("../../utils/enum.utils");
 const logger = require("../../middlewares/logger.middleware");
+const { getPaginationInfo } = require("../../utils/caching.utils");
+const { fetchLoggedInDoctor } = require("../../utils/helpers.utils");
+const {
+  mapDoctorWithdrawalHistoryRow,
+} = require("../../utils/db-mapper.utils");
 
 exports.getDoctorsWallet = async (userId) => {
   try {
@@ -219,6 +225,50 @@ exports.requestWithdrawal = async ({
     });
   } catch (error) {
     logger.error("requestWithdrawal: ", error);
+    throw error;
+  }
+};
+
+exports.getWithdrawalHistoryService = async (userId, page, limit) => {
+  try {
+    const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
+
+    if (!doctorId) {
+      return Response.UNAUTHORIZED({
+        message:
+          "UnAuthorized Action. Please login as a doctor before proceeding",
+      });
+    }
+
+    const offset = (page - 1) * limit;
+    const { totalRows } = await countDoctorWithdrawalHistory(doctorId);
+
+    if (!totalRows) {
+      return Response.SUCCESS({
+        message: "No doctor withdrawal history found",
+        data: [],
+      });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const data = await getDoctorWithdrawalHistory(doctorId, limit, offset);
+
+    if (!data?.length) {
+      return Response.SUCCESS({
+        message: "No doctor withdrawal history found",
+        data: [],
+      });
+    }
+
+    const history = data.map(mapDoctorWithdrawalHistoryRow);
+
+    return Response.SUCCESS({
+      data: history,
+      pagination: paginationInfo,
+    });
+  } catch (error) {
+    logger.error("getWithdrawalHistoryService: ", error);
     throw error;
   }
 };
