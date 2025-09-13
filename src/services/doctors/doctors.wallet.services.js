@@ -138,7 +138,7 @@ exports.requestWithdrawal = async ({
     //   );
     //   return Response.BAD_REQUEST({
     //     message:
-    //       "Cannot Request Withdrawal at this moment, you have a pending request that needs approval before you can request another withdrawal",
+    //       "Cannot request withdrawal: pending request must be completed to proceed.",
     //   });
     // }
 
