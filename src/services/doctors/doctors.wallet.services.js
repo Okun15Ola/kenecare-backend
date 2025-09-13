@@ -9,7 +9,7 @@ const {
   updateWalletPin,
   updateDoctorWalletBalance,
   // createWithDrawalRequest,
-  getWithdrawalRequestByDoctorId,
+  // getWithdrawalRequestByDoctorId,
 } = require("../../repository/doctor-wallet.repository");
 const { hashUsersPassword } = require("../../utils/auth.utils");
 const {
@@ -120,8 +120,6 @@ exports.requestWithdrawal = async ({
     const requestedWithdrawalAmount = parseFloat(amount);
     const currentBalance = parseFloat(balance);
 
-    console.log("Current Balance: ", currentBalance);
-
     if (requestedWithdrawalAmount > currentBalance) {
       logger.error(
         `Insufficient balance for doctorId: ${doctorId}. Requested: ${requestedWithdrawalAmount}, Available: ${currentBalance}`,
@@ -132,17 +130,17 @@ exports.requestWithdrawal = async ({
     }
 
     //  check if the doctor has any request pending
-    const pendingRequest = await getWithdrawalRequestByDoctorId(doctorId);
+    // const pendingRequest = await getWithdrawalRequestByDoctorId(doctorId);
 
-    if (pendingRequest) {
-      logger.error(
-        `Pending withdrawal request found for doctorId: ${doctorId}. Cannot request another withdrawal.`,
-      );
-      return Response.BAD_REQUEST({
-        message:
-          "Cannot Request Withdrawal at this moment, you have a pending request that needs approval before you can request another withdrawal",
-      });
-    }
+    // if (pendingRequest) {
+    //   logger.error(
+    //     `Pending withdrawal request found for doctorId: ${doctorId}. Cannot request another withdrawal.`,
+    //   );
+    //   return Response.BAD_REQUEST({
+    //     message:
+    //       "Cannot Request Withdrawal at this moment, you have a pending request that needs approval before you can request another withdrawal",
+    //   });
+    // }
 
     let momoType;
     if (provider === MOMO_PROVIDERS.ORANGE_MONEY) {
@@ -158,6 +156,12 @@ exports.requestWithdrawal = async ({
         provider: momoType,
         phoneNumber: mobileMoneyNumber,
       });
+
+      if (!result) {
+        return Response.INTERNAL_SERVER_ERROR({
+          message: "Withdrawal Failed",
+        });
+      }
 
       const { id, status, failureDetails } = result;
 
@@ -200,7 +204,19 @@ exports.requestWithdrawal = async ({
 
     const { id, source, status, payoutAmount } = result;
 
+    if (!result) {
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Withdrawal Failed",
+      });
+    }
+
     const newBalance = currentBalance - requestedWithdrawalAmount;
+
+    if (newBalance < 1) {
+      return Response.BAD_REQUEST({
+        message: "Insufficient balance for withdrawal request.",
+      });
+    }
     const results = await Promise.allSettled([
       createWithdrawalRequest({
         doctorId,
@@ -218,7 +234,15 @@ exports.requestWithdrawal = async ({
       // TODO: send email alert to admin
     ]);
 
-    console.log("Results: ", results);
+    // Check if any promises failed
+    const failures = results.filter((r) => r.status === "rejected");
+    if (failures.length) {
+      logger.error("Withdrawal operations failed:", failures);
+      console.error("Withdrawal operations failed:", failures);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "Withdrawal request failed, please try again.",
+      });
+    }
 
     return Response.CREATED({
       message: "Withdrawal Requested Successfully, Funds are being disbursed.",
