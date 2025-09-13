@@ -5,7 +5,7 @@ const {
   RequestWithdrawalController,
   GetDoctorWithdrawalHistoryController,
 } = require("../../../controllers/doctors/wallet.controller");
-const paymentController = require("../../../controllers/payment.controller");
+// const paymentController = require("../../../controllers/payment.controller");
 const { Validate } = require("../../../validations/validate");
 const {
   walletWithdrawalValidations,
@@ -57,6 +57,6 @@ router.patch(
   UpdateWalletPinController,
 );
 
-router.post("/monimee/webhook/payout", paymentController.payoutOutHandler);
+// router.post("/monimee/webhook/payout", paymentController.payoutOutHandler);
 
 module.exports = router;
