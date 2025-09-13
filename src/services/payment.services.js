@@ -426,6 +426,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
+      redisClient.clearCacheByPattern("appointment:idempotency:*"),
     ]);
 
     return Response.SUCCESS({
@@ -458,7 +459,7 @@ exports.getPaymentStatusByConsultationId = async (consultationId) => {
 
     const paymentData = {
       status,
-      lastUpdated,
+      lastUpdated: moment(lastUpdated).format("YYYY-MM-DD HH:mm:ss"),
     };
 
     if (status === "success") {
