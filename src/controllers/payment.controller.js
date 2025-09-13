@@ -88,7 +88,6 @@ exports.paymentNotificationHandler = async (req, res, next) => {
       metadata: { orderId },
     } = data;
 
-    console.log("WEBHOOK DATA: ", data);
     let response = {};
 
     const baseParams = {
@@ -100,7 +99,6 @@ exports.paymentNotificationHandler = async (req, res, next) => {
 
     if (status === STATUS_EXPIRED || status === STATUS_COMPLETED) {
       response = await processAppointmentPayment(baseParams);
-      console.log("Response: ", response);
     }
 
     logger.info(response);
@@ -119,8 +117,6 @@ exports.payoutOutHandler = async (req, res, next) => {
       id: transactionId,
       source: { transactionReference },
     } = data;
-
-    res.sendStatus(200);
 
     let response = {};
 
