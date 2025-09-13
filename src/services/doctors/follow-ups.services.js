@@ -140,7 +140,9 @@ exports.createFollowUp = async ({
 
     await Promise.all([
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
-      redisClient.delete(`doctor:${doctorId}:follow-up`),
+      redisClient.delete(
+        `doctor:${doctorId}:appointments:follow-up:${appointmentId}`,
+      ),
       redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
     ]);
@@ -237,7 +239,9 @@ exports.updateAppointmentFollowUpService = async ({
 
     await Promise.all([
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
-      redisClient.delete(`doctor:${doctorId}:follow-up`),
+      redisClient.delete(
+        `doctor:${doctorId}:appointments:follow-up:${appointmentId}`,
+      ),
       // redisClient.clearCacheByPattern(`patient:${patientId}:appointments:*`),
       redisClient.clearCacheByPattern("admin:appointments:*"),
     ]);
@@ -267,7 +271,7 @@ exports.getAllAppointmentFollowupService = async ({
     }
     const { doctor_id: doctorId } = doctor;
 
-    const cacheKey = `doctor:${doctorId}:follow-up`;
+    const cacheKey = `doctor:${doctorId}:appointments:follow-up:${appointmentId}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       return Response.SUCCESS({ data: JSON.parse(cachedData) });
@@ -401,7 +405,9 @@ exports.deleteAppointmentFollowUpService = async ({ followUpId, userId }) => {
 
     await Promise.all([
       redisClient.clearCacheByPattern(`doctor:${doctorId}:appointments:*`),
-      redisClient.delete(`doctor:${doctorId}:follow-up`),
+      redisClient.delete(
+        `doctor:${doctorId}:appointments:follow-up:${appointmentId}`,
+      ),
       redisClient.clearCacheByPattern("admin:appointments:*"),
     ]);
 
