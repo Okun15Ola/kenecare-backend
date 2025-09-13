@@ -82,6 +82,9 @@ const adminDoctorReviewsRouter = require("./routes/api/admin/doctors.reviews.rou
 const adminFeatureFlagRouter = require("./routes/api/admin/featureFlags.routes");
 const adminCacheRouter = require("./routes/api/cache.routes");
 
+// WEBHOOK ROUTES
+const monimeeWebhookRouter = require("./routes/api/monimee-webhook.routes");
+
 // Replace your current CORS setup with this more secure configuration
 const corsOptions = {
   origin(origin, callback) {
@@ -124,6 +127,11 @@ app.use(
   }),
 );
 
+// app.use((req, res, next) => {
+//   console.log("Incoming:", req.method, req.originalUrl);
+//   next();
+// });
+
 app.set("etag", true);
 
 app.use("/api/v1/health-check", (req, res) =>
@@ -147,6 +155,9 @@ app.use("/api/v1", indexRouter);
 // AUTH ROUTES
 app.use("/api/v1/auth", authRouter);
 
+// WEBHOOK ROUTES
+app.use("/api/v1/payments/monimee", monimeeWebhookRouter);
+
 // DOCTORS ROUTES
 app.use("/api/v1/doctors", doctorsProfileRouter);
 app.use("/api/v1/doctors/prescriptions", doctorsPrescriptionsRouter);
@@ -159,7 +170,6 @@ app.use(
 );
 app.use("/api/v1/doctors/appointments", doctorsAppointmentRouter);
 app.use("/api/v1/doctors/follow-ups", doctorsFollowUpRouter);
-// app.use("/api/v1/doctors/slots", doctorsTimeSlotRouter);
 app.use("/api/v1/doctors/faqs", doctorFaqRouter);
 app.use("/api/v1/doctors/blogs", doctorBlogRouter);
 app.use("/api/v1/doctors/reviews", doctorReviews);

@@ -61,7 +61,9 @@ exports.walletWithdrawalValidations = [
       const balance = parseInt(req.wallet.balance, 10);
 
       if (amount > balance - 10) {
-        throw new Error("Insufficient balance. Leave at least NLE 10.");
+        throw new Error(
+          "Transaction failed. Minimum balance of NLE 10 must remain in your account.",
+        );
       }
 
       // Daily + monthly limits
@@ -98,7 +100,7 @@ exports.walletWithdrawalValidations = [
       if (provider === MOMO_PROVIDERS.ORANGE_MONEY) {
         if (!ORANGE_MNC.includes(mnc)) {
           throw new Error(
-            `Orange Money numbers must belong to MNCs: ${ORANGE_MNC.join(", ")}`,
+            `Orange Money numbers must be one of: ${ORANGE_MNC.join(", ")}`,
           );
         }
       }
@@ -106,7 +108,7 @@ exports.walletWithdrawalValidations = [
       if (provider === MOMO_PROVIDERS.AFRI_MONEY) {
         if (!AFRICELL_MNC.includes(mnc)) {
           throw new Error(
-            `Afri Money numbers must belong to MNCs: ${AFRICELL_MNC.join(", ")}`,
+            `Afri Money numbers must be one of: ${AFRICELL_MNC.join(", ")}`,
           );
         }
       }
