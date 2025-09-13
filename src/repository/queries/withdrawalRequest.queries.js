@@ -1,6 +1,6 @@
 module.exports = {
   CREATE_WITHDRAWAL_REQUEST: `
-    INSERT INTO withdrawal_requests (doctor_id, transaction_id, order_id, amount, currency, payment_type, finance_account_id, mobile_money_provider, mobile_number, status, failure_detials)
+    INSERT INTO withdrawal_requests (doctor_id, transaction_id, order_id, amount, currency, payment_type, finance_account_id, mobile_money_provider, mobile_number, status, failure_details)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   `,
   GET_ALL_WITHDRAWAL_REQUESTS: `
@@ -75,7 +75,7 @@ module.exports = {
   UPDATE_WITHDRAWAL_REQUEST: `
     UPDATE withdrawal_requests 
     SET status = ?, transaction_reference = ?
-    WHERE request_id = ?;
+    WHERE transaction_id = ?;
   `,
   GET_DOCTOR_WITHDRAWAL_HISTORY: `
   SELECT 
