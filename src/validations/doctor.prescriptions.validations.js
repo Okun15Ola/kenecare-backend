@@ -12,6 +12,7 @@ exports.CreatePrescriptionValidation = [
     .withMessage("Appointment ID is required")
     .bail()
     .isInt({ gt: 0 })
+    .withMessage("Invalid Appointment ID")
     .bail()
     .custom(async (value) => {
       const appointment = await getAppointmentById(value);
@@ -64,6 +65,8 @@ exports.UpadatePrescriptionValidation = [
     .withMessage("Prescription ID is required")
     .bail()
     .isInt({ gt: 0 })
+    .withMessage("Invalid Prescription ID")
+    .bail()
     .trim()
     .escape()
     .custom(async (value) => {
@@ -79,6 +82,8 @@ exports.UpadatePrescriptionValidation = [
     .withMessage("Appointment ID is required")
     .bail()
     .isInt({ gt: 0 })
+    .withMessage("Invalid Appointment ID")
+    .bail()
     .custom(async (value) => {
       const appointment = await getAppointmentById(value);
       if (!appointment) {
@@ -129,6 +134,8 @@ exports.GetPrescriptionsByAppointmentValidation = [
     .withMessage("Appointment ID is required")
     .bail()
     .isInt({ gt: 0 })
+    .withMessage("Invalid Appointment ID")
+    .bail()
     .trim()
     .escape()
     .custom(async (value) => {
@@ -146,12 +153,14 @@ exports.GetPrescriptionByIdValidation = [
     .withMessage("Prescription ID is required")
     .bail()
     .isInt({ gt: 0 })
+    .withMessage("Invalid Prescription ID")
+    .bail()
     .trim()
     .escape()
     .custom(async (value) => {
       const prescription = await getAppointmentPrescriptionById(value);
       if (!prescription) {
-        throw new Error("Prescription not found");
+        throw new Error("Prescription Not Found");
       }
       return true;
     }),

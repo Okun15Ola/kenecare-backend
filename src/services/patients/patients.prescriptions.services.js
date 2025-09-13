@@ -19,8 +19,9 @@ exports.getAppointmentPrescriptions = async (id) => {
     const rawData = await getAppointmentPrescriptions(id);
 
     if (!rawData) {
-      return Response.NOT_FOUND({
-        message: "No prescriptions found",
+      return Response.SUCCESS({
+        message: "Appointment Prescription yet available",
+        data: [],
       });
     }
 
@@ -52,9 +53,8 @@ exports.getAppointmentPrescriptionById = async (presId) => {
     const rawData = await getAppointmentPrescriptionById(presId);
 
     if (!rawData) {
-      logger.warn(`Prescription Not Found for ID ${presId} `);
       return Response.NOT_FOUND({
-        message: "Prescription Not Found. Try again",
+        message: "Prescription Not Found. Please check back later",
       });
     }
 

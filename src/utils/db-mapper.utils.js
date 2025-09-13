@@ -1331,7 +1331,7 @@ exports.mapPrescriptionRow = async (
     appointmentId,
     doctorFirstName,
     doctorLastName,
-    createdAt: moment(dateCreated).format("YYYY-MM-DD HH:mm"),
+    createdAt: moment(dateCreated).format("YYYY-MM-DD HH:mm:ss"),
     updatedAt: moment(dateUpdated).format("YYYY-MM-DD HH:mm:ss"),
   };
 
@@ -1357,7 +1357,7 @@ exports.mapPrescriptionRow = async (
 
   if (includeComments) {
     const decryptedComment = decryptText(doctorComment);
-    mapped.comment = decryptedComment || null;
+    mapped.comment = he.decode(decryptedComment) || null;
   }
 
   return mapped;
@@ -1622,7 +1622,9 @@ exports.mapDoctorPrescriptionRow = async (prescription) => {
   const profilePhotoUrl =
     profilePhotoRes.status === "fulfilled" ? profilePhotoRes.value : null;
   const signatureImgUrl =
-    signatureRes.status === "fulfilled" ? signatureRes.value : null;
+    signatureRes.status === "fulfilled"
+      ? signatureRes.value
+      : `Dr. ${firstName} ${lastName}`;
 
   const mapped = {
     doctorId,
