@@ -43,9 +43,9 @@ env:
   HEALTH_CHECK_URL: http://localhost:9500/api/v1/health-check
   PRODUCTION_HEALTH_CHECK_URL: https://api.kenecare.com/api/v1/health-check
 
-concurrency:
-  group: "kenecare-api-${{github.workflow}}-${{ github.ref }}"
-  cancel-in-progress: true
+# concurrency:
+#   group: "kenecare-api-${{github.workflow}}-${{ github.ref }}"
+#   cancel-in-progress: true
 
 permissions:
   contents: read
