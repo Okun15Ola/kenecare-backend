@@ -61,17 +61,15 @@ describe("prescriptions.services", () => {
       expect(result).toBe("success");
     });
 
-    it("should return NOT_FOUND if prescription does not exist", async () => {
+    it("should return SUCCESS if prescription does not exist", async () => {
       redisConfig.redisClient.get.mockResolvedValue(null);
-      prescriptionsRepo.getAppointmentPrescriptions.mockResolvedValue(
-        undefined,
-      );
-      Response.NOT_FOUND.mockReturnValue();
+      prescriptionsRepo.getAppointmentPrescriptions.mockResolvedValue([]);
+      Response.SUCCESS.mockReturnValue("success");
 
       const result = await prescriptionsService.getAppointmentPrescriptions(1);
 
-      expect(Response.NOT_FOUND).toHaveBeenCalled();
-      expect(result).toBe(undefined);
+      expect(Response.SUCCESS).toHaveBeenCalled();
+      expect(result).toBe("success");
     });
 
     it("should log and throw error on failure", async () => {

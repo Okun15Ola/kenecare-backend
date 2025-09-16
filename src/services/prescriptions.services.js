@@ -23,20 +23,23 @@ exports.getAppointmentPrescriptions = async (id) => {
     }
     const rawData = await getAppointmentPrescriptions(id);
 
-    if (!rawData) {
-      return Response.NOT_FOUND({
-        message: "Prescription Not Found.",
+    if (!rawData?.length) {
+      return Response.SUCCESS({
+        message: "No Prescriptions Found.",
+        data: [],
       });
     }
 
-    const prescription = mapPrescriptionRow(rawData, true, true, true);
+    const prescriptions = await Promise.all(
+      rawData.map((row) => mapPrescriptionRow(row, true, true, true)),
+    );
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(prescription),
+      value: JSON.stringify(prescriptions),
     });
     return Response.SUCCESS({
-      data: prescription,
+      data: prescriptions,
     });
   } catch (error) {
     logger.error("getAppointmentPrescriptions: ", error);
@@ -60,7 +63,7 @@ exports.getAppointmentPrescriptionById = async (id) => {
       });
     }
 
-    const prescription = mapPrescriptionRow(
+    const prescription = await mapPrescriptionRow(
       prescriptionExist,
       true,
       true,
@@ -101,9 +104,6 @@ exports.createPrescription = async ({
     });
 
     if (!insertId) {
-      logger.warn(
-        `Failed to create prescription for Appointment ID ${appointmentId}`,
-      );
       return Response.INTERNAL_SERVER_ERROR({
         message: "Something Went Wrong. Please Try Again.",
       });
@@ -143,13 +143,11 @@ exports.updatePrescriptions = async ({
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(
-        `Failed to update prescription for Appointment ID ${appointmentId}`,
-      );
       return Response.NOT_MODIFIED({});
     }
 
     await redisClient.delete(`appointment:${appointmentId}:prescriptions`);
+    await redisClient.delete(`prescriptions:${prescriptionId}`);
 
     return Response.SUCCESS({
       message: "Prescription Updated Successfully",

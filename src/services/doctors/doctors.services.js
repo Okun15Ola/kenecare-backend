@@ -1,4 +1,3 @@
-const he = require("he");
 const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 const {
@@ -297,9 +296,6 @@ exports.createDoctorProfile = async ({
       });
     }
 
-    const encodedProfessionalSummary = he.encode(professionalSummary);
-    const encodedQualification = he.encode(qualifications);
-
     const { insertId } = await dbObject.createDoctor({
       userId,
       title,
@@ -307,9 +303,9 @@ exports.createDoctorProfile = async ({
       middleName,
       lastName,
       gender,
-      professionalSummary: encodedProfessionalSummary,
+      professionalSummary,
       specializationId,
-      qualifications: encodedQualification,
+      qualifications,
       consultationFee,
       cityId,
       yearOfExperience,
@@ -416,9 +412,9 @@ exports.updateDoctorProfile = async ({
       middleName,
       lastName,
       gender,
-      professionalSummary: he.encode(professionalSummary),
+      professionalSummary,
       specializationId,
-      qualifications: he.encode(qualifications),
+      qualifications,
       consultationFee,
       cityId,
       yearOfExperience,
