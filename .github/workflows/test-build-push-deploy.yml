@@ -163,22 +163,9 @@ jobs:
           COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
           DIGEST: ${{steps.build-and-push.outputs.digest}}
 
-      # - name: Copy Production Environment Variables
-      #   run: |
-      #     if [ -f ~/.env.kenecare.api-prod ]; then
-      #       echo "Copying production environment variables..."
-      #       cp ~/.env.kenecare.api-prod ./.env.production
-      #       echo "Production environment variables copied successfully."
-      #     else
-      #       echo "Production environment variables file not found, skipping copy."
-      #     fi
-
-      # - name: Check env variables
-      #   run: node check-env.js prodution
-
   deploy-to-prod:
     needs: build-and-scan-image
-    runs-on: ["self-hosted", "kenecare-apps"]
+    runs-on: ["self-hosted", "imotechsl-apps"]
     timeout-minutes: 30
     if: |
       always() &&
