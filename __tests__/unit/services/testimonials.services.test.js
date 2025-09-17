@@ -1,0 +1,140 @@
+/* eslint-disable no-unused-vars */
+const testimonialService = require("../../../src/services/testimonials.services");
+const testimonialRepo = require("../../../src/repository/testimonials.repository");
+const { redisClient } = require("../../../src/config/redis.config");
+const caching = require("../../../src/utils/caching.utils");
+const Response = require("../../../src/utils/response.utils");
+
+jest.mock("../../../src/repository/testimonials.repository");
+jest.mock("../../../src/config/redis.config");
+jest.mock("../../../src/utils/db-mapper.utils");
+jest.mock("../../../src/utils/caching.utils");
+
+jest.mock("../../../src/utils/caching.utils", () => ({
+  getCachedCount: jest.fn((_) => Promise.resolve(1)),
+  getPaginationInfo: jest.fn((_) => ({})),
+  cacheKeyBulider: jest.fn((key) => key),
+}));
+
+describe("Testimonials Service", () => {
+  beforeAll(() => {
+    jest.spyOn(Response, "SUCCESS").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_FOUND").mockImplementation((data) => data);
+    jest.spyOn(Response, "BAD_REQUEST").mockImplementation((data) => data);
+    jest.spyOn(Response, "CREATED").mockImplementation((data) => data);
+    jest.spyOn(Response, "NOT_MODIFIED").mockImplementation((data) => data);
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("getTestimonials", () => {
+    it("should return testimonials from cache if available", async () => {
+      const cachedData = [{ id: 1, content: "Great service!" }];
+      caching.cacheKeyBulider.mockReturnValue("testimonials:limit:10:offset:0");
+      redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
+
+      const result = await testimonialService.getTestimonials(10, 0);
+      expect(result.data).toEqual(cachedData);
+      expect(redisClient.get).toHaveBeenCalledWith(
+        "testimonials:limit:10:offset:0",
+      );
+    });
+
+    it("should return a 200 if no testimonials are found", async () => {
+      redisClient.get.mockResolvedValue(null);
+      testimonialRepo.getAllTestimonials.mockResolvedValue(null);
+      const result = await testimonialService.getTestimonials(10, 0);
+      expect(result.statusCode).toBe(200);
+    });
+  });
+
+  describe("getTestimonialById", () => {
+    it("should return a testimonial by id from cache if available", async () => {
+      const cachedData = { id: 1, content: "Great service!" };
+      redisClient.get.mockResolvedValue(JSON.stringify(cachedData));
+
+      const result = await testimonialService.getTestimonialById(1);
+      expect(result.data).toEqual(cachedData);
+      expect(redisClient.get).toHaveBeenCalledWith("testimonials:1");
+    });
+
+    it("should return a 404 if testimonial not found", async () => {
+      redisClient.get.mockResolvedValue(null);
+      testimonialRepo.getTestimonialById.mockResolvedValue(null);
+
+      const result = await testimonialService.getTestimonialById(1);
+      expect(result.statusCode).toBe(404);
+    });
+  });
+
+  // describe("createTestimonial", () => {
+  //   it("should create a new testimonial", async () => {
+  //     testimonialRepo.createNewTestimonial.mockResolvedValue({ insertId: 1 });
+
+  //     const result = await testimonialService.createTestimonial({
+  //       userId: 1,
+  //       patientId: 1,
+  //       content: "Amazing!",
+  //     });
+  //     expect(result.statusCode).toBe(201);
+  //   });
+
+  //   it("should throw an error if repo fails", async () => {
+  //     testimonialRepo.createNewTestimonial.mockRejectedValue(
+  //       new Error("DB Error"),
+  //     );
+  //     await expect(testimonialService.createTestimonial({})).rejects.toThrow(
+  //       "DB Error",
+  //     );
+  //   });
+  // });
+
+  describe("approveTestimonialById", () => {
+    it("should approve a testimonial", async () => {
+      testimonialRepo.getTestimonialById.mockResolvedValue({ id: 1 });
+      testimonialRepo.approveTestimonialById.mockResolvedValue({
+        affectedRows: 1,
+      });
+
+      const result = await testimonialService.approveTestimonialById({
+        testimonialId: 1,
+        approvedBy: 1,
+      });
+      expect(result.statusCode).toBe(200);
+    });
+
+    it("should return a 404 if testimonial not found", async () => {
+      testimonialRepo.getTestimonialById.mockResolvedValue(null);
+
+      const result = await testimonialService.approveTestimonialById({
+        testimonialId: 1,
+      });
+      expect(result.statusCode).toBe(404);
+    });
+  });
+
+  describe("denyTestimonialById", () => {
+    it("should deny a testimonial", async () => {
+      testimonialRepo.getTestimonialById.mockResolvedValue({ id: 1 });
+      testimonialRepo.denyTestimonialById.mockResolvedValue({
+        affectedRows: 1,
+      });
+
+      const result = await testimonialService.denyTestimonialById({
+        testimonialId: 1,
+        approvedBy: 1,
+      });
+      expect(result.statusCode).toBe(200);
+    });
+
+    it("should return a 404 if testimonial not found", async () => {
+      testimonialRepo.getTestimonialById.mockResolvedValue(null);
+
+      const result = await testimonialService.denyTestimonialById({
+        testimonialId: 1,
+      });
+      expect(result.statusCode).toBe(404);
+    });
+  });
+});

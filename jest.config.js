@@ -1,0 +1,30 @@
+module.exports = {
+  testEnvironment: "node",
+  setupFilesAfterEnv: ["<rootDir>/test/jest.setup.js"],
+  testMatch: ["**/__tests__/**/*.test.js", "**/?(*.)+(spec|test).js"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/.history/",
+    "/coverage/",
+    "/dist/",
+  ],
+  forceExit: true,
+  detectOpenHandles: true,
+  collectCoverageFrom: [
+    "src/**/*.js",
+    "!src/**/*.test.js",
+    "!src/**/*.spec.js",
+    "!src/**/index.js",
+    "!src/config/**",
+  ],
+  moduleNameMapper: {
+    "^@controllers/(.*)$": "<rootDir>/src/controllers/$1",
+    "^@services/(.*)$": "<rootDir>/src/services/$1",
+    "^@utils/(.*)$": "<rootDir>/src/utils/$1",
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "lcov", "html"],
+  clearMocks: true,
+  restoreMocks: true,
+};

@@ -1,0 +1,18 @@
+module.exports = {
+  getAllUsers: jest.fn(),
+  getUserByUsersType: jest.fn(),
+  getUserById: jest.fn(),
+  getUserByMobileNumber: jest.fn(),
+  getUserByEmail: jest.fn(),
+  getUserByVerificationToken: jest.fn(),
+  createNewUser: jest.fn(),
+  updateUserEmailById: jest.fn(),
+  updateUserVerificationTokenById: jest.fn(),
+  updateUserNotificationToken: jest.fn(),
+  updateUserMobileNumberById: jest.fn(),
+  updateUserAccountStatusById: jest.fn(),
+  updateUserVerificationStatusByToken: jest.fn(),
+  updateUserPasswordById: jest.fn(),
+  updateUserOnlineStatus: jest.fn(),
+  deleteUserById: jest.fn(),
+};

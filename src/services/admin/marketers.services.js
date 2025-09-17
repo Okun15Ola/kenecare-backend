@@ -1,0 +1,395 @@
+const { v4: uuidV4 } = require("uuid");
+const moment = require("moment/moment");
+const {
+  getAllMarketers,
+  createNewMarketer,
+  getMarketerById,
+  getMarketerByVerficationToken,
+  verifyMarketerPhoneById,
+  verifyMarketerEmailById,
+  deleteMarketerById,
+  updateMarketerById,
+  getMarketerByEmailVerficationToken,
+  countMarketers,
+} = require("../../repository/marketers.repository");
+const Response = require("../../utils/response.utils");
+const {
+  generateVerificationToken,
+  generateMarketerVerificaitonJwt,
+  verifyMarketerEmailJwt,
+} = require("../../utils/auth.utils");
+const { generateFileName } = require("../../utils/file-upload.utils");
+const {
+  uploadFileToS3Bucket,
+  deleteFileFromS3Bucket,
+} = require("../../utils/aws-s3.utils");
+const {
+  sendMarketerVerificationTokenSMS,
+  sendMarketerPhoneVerifiedSMS,
+} = require("../../utils/sms.utils");
+const { marketerEmailVerificationToken } = require("../../utils/email.utils");
+const { redisClient } = require("../../config/redis.config");
+const {
+  mapMarketersRow,
+  mapMarketersWithDocumentRow,
+} = require("../../utils/db-mapper.utils");
+const {
+  cacheKeyBulider,
+  getCachedCount,
+  getPaginationInfo,
+} = require("../../utils/caching.utils");
+const logger = require("../../middlewares/logger.middleware");
+
+const generateReferralCode = ({ firstName, lastName }) => {
+  const randomNumbers = Math.floor(100 + Math.random() * 900); // Generate 3 random numbers
+  const firstPart = firstName.slice(0, 3).toUpperCase(); // Take the first 3 characters of the first name
+  const lastPart = lastName.slice(0, 3).toUpperCase(); // Take the first 3 characters of the last name
+
+  return `KC-${firstPart}${lastPart}${randomNumbers}`;
+};
+
+exports.getAllMarketersService = async (limit, page) => {
+  try {
+    const offset = (page - 1) * limit;
+    const countCacheKey = "marketers:count";
+    const totalRows = await getCachedCount({
+      cacheKey: countCacheKey,
+      countQueryFn: countMarketers,
+    });
+
+    if (!totalRows) {
+      return Response.SUCCESS({ message: "No marketers found", data: [] });
+    }
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+    const cacheKey = cacheKeyBulider("marketers:all", limit, offset);
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({
+        data: JSON.parse(cachedData),
+        pagination: paginationInfo,
+      });
+    }
+    const rawData = await getAllMarketers(limit, offset);
+    if (!rawData?.length) {
+      return Response.SUCCESS({ message: "No marketers found", data: [] });
+    }
+    const marketers = rawData.map(mapMarketersRow);
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(marketers),
+    });
+    return Response.SUCCESS({ data: marketers, pagination: paginationInfo });
+  } catch (error) {
+    logger.error("getAllMarketersService: ", error);
+    throw error;
+  }
+};
+
+exports.getMarketerByIdService = async (id) => {
+  try {
+    const cacheKey = `marketers:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    }
+    const rawData = await getMarketerById(id);
+    if (!rawData) {
+      logger.warn(`Marketer Not Found for ID ${id}`);
+      return Response.NOT_FOUND({ message: "Marketer Not Found" });
+    }
+    const marketer = await mapMarketersWithDocumentRow(rawData);
+
+    await redisClient.set({
+      key: cacheKey,
+      value: JSON.stringify(marketer),
+    });
+    return Response.SUCCESS({ data: marketer });
+  } catch (error) {
+    logger.error("getMarketerByIdService: ", error);
+    throw error;
+  }
+};
+
+exports.createMarketerService = async ({
+  firstName,
+  middleName,
+  lastName,
+  gender,
+  dateOfBirth,
+  phoneNumber,
+  email,
+  homeAddress,
+  idDocumentType,
+  idDocumentNumber,
+  idDocumentFile,
+  nin,
+  firstEmergencyContactName,
+  firstEmergencyContactNumber,
+  firstEmergencyContactAddress,
+  secondEmergencyContactName,
+  secondEmergencyContactNumber,
+  secondEmergencyContactAddress,
+}) => {
+  try {
+    // Check if ID document file was uploaded
+    if (!idDocumentFile) {
+      logger.warn("ID Document File Not Provided");
+      return Response.BAD_REQUEST({
+        message:
+          "Please Upload Identification Document File. Expected Document Format (*.pdf, *.jpg, *.jpeg, *.png)",
+      });
+    }
+
+    // Generate a UUID
+    const uuid = uuidV4();
+
+    // Generate Unique ReferralCode
+    const referralCode = generateReferralCode({ firstName, lastName });
+
+    // generate phone number verification token
+    const verificationToken = generateVerificationToken();
+
+    // generate id document uuid
+    const fileName = `marketer_id_${generateFileName(idDocumentFile)}`;
+
+    // generate email verificaiton token
+    const emailToken = generateMarketerVerificaitonJwt({ sub: referralCode });
+
+    const results = await Promise.allSettled([
+      // upload id document to cloud storage
+      uploadFileToS3Bucket({
+        fileName,
+        buffer: idDocumentFile?.buffer,
+        mimetype: idDocumentFile?.mimetype,
+      }),
+      // create record in database
+      createNewMarketer({
+        uuid,
+        referralCode,
+        firstName,
+        middleName,
+        lastName,
+        gender,
+        dateOfBirth: moment(dateOfBirth).format("YYYY-MM-DD"),
+        phoneNumber,
+        verificationToken,
+        email,
+        emailToken,
+        homeAddress,
+        idDocumentType,
+        idDocumentUuid: fileName,
+        idDocumentNumber,
+        nin,
+        firstEmergencyContactName,
+        firstEmergencyContactNumber,
+        firstEmergencyContactAddress,
+        secondEmergencyContactName,
+        secondEmergencyContactNumber,
+        secondEmergencyContactAddress,
+      }),
+      // Send SMS with verification token
+      sendMarketerVerificationTokenSMS({
+        firstName,
+        token: verificationToken,
+        mobileNumber: phoneNumber,
+      }),
+
+      // Send Email with verification token
+      marketerEmailVerificationToken({
+        firstName,
+        email,
+        emailToken,
+      }),
+    ]);
+
+    if (results.some((result) => result.status === "rejected")) {
+      logger.error("Error creating marketer: ", results);
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.clearCacheByPattern("marketers:*");
+    await redisClient.clearCacheByPattern("marketer_doc:*");
+    return Response.CREATED({
+      message:
+        "Marketer Created Successfully. Please provide further verificaiton instructions to marketer. ",
+    });
+  } catch (error) {
+    logger.error("createMarketerService: ", error);
+    throw error;
+  }
+};
+
+exports.verifyMarketerPhoneNumberService = async (token) => {
+  try {
+    const marketer = await getMarketerByVerficationToken(token);
+
+    if (!marketer) {
+      logger.warn("Marketer Not Found");
+      return Response.NOT_FOUND({ message: "Marketer Not Found" });
+    }
+    const {
+      marketer_id: marketerId,
+      referral_code: referralCode,
+      first_name: firstName,
+      phone_number: mobileNumber,
+    } = marketer;
+    const verifiedAt = new Date();
+    const results = await Promise.allSettled([
+      verifyMarketerPhoneById({
+        marketerId,
+        phoneNumber: mobileNumber,
+        verifiedAt,
+      }),
+      sendMarketerPhoneVerifiedSMS({
+        firstName,
+        mobileNumber,
+        referralCode,
+      }),
+    ]);
+
+    if (results.some((result) => result.status === "rejected")) {
+      logger.error("Error Verifying Marketer Phone Number: ", results);
+      return Response.NOT_MODIFIED({});
+    }
+
+    await redisClient.clearCacheByPattern("marketers:*");
+    return Response.SUCCESS({
+      message: "Marketer's Phone Number Verified Successfully",
+    });
+  } catch (error) {
+    logger.error("verifyMarketerPhoneNumberService: ", error);
+    throw error;
+  }
+};
+
+exports.verifyMarketerEmailService = async (token) => {
+  try {
+    const marketer = await getMarketerByEmailVerficationToken(token);
+
+    const { marketer_id: marketerId, email } = marketer;
+    const { sub } = verifyMarketerEmailJwt(token);
+
+    if (!sub) {
+      logger.warn("Invalid token");
+      return Response.BAD_REQUEST({
+        message: "Corrupted Email Verification Token",
+      });
+    }
+
+    const verifiedAt = new Date();
+    const { affectedRows } = await verifyMarketerEmailById({
+      marketerId,
+      verifiedAt,
+      email,
+    });
+
+    if (!affectedRows || affectedRows < 1) {
+      logger.warn("Fail to verify marketer email");
+      return Response.NOT_MODIFIED({});
+    }
+
+    //  TODO Send Email to marketer
+
+    await redisClient.clearCacheByPattern("marketers:*");
+    // Send Success response
+    return Response.SUCCESS({
+      message: "Email Verified Successfully",
+    });
+  } catch (error) {
+    logger.error("verifyMarketerEmailService: ", error);
+    if (error.message === "jwt expired") {
+      throw new Error("Email Verification Token Expired");
+    }
+    throw error;
+  }
+};
+
+exports.updateMarketerByIdService = async ({
+  marketerId,
+  firstName,
+  middleName,
+  lastName,
+  gender,
+  dateOfBirth,
+  phoneNumber,
+  email,
+  homeAddress,
+  idDocumentType,
+  idDocument,
+  idDocumentNumber,
+  nin,
+  firstEmergencyContactName,
+  firstEmergencyContactNumber,
+  firstEmergencyContactAddress,
+  secondEmergencyContactName,
+  secondEmergencyContactNumber,
+  secondEmergencyContacAddress,
+}) => {
+  try {
+    const marketer = await getMarketerById(marketerId);
+    if (!marketer) {
+      logger.warn("Marketer Not Found");
+      return Response.NOT_FOUND({ message: "Marketer Not Found" });
+    }
+
+    // delete old file if a new file is sent with the update request
+    await updateMarketerById({
+      marketerId,
+      firstName,
+      middleName,
+      lastName,
+      gender,
+      dateOfBirth,
+      phoneNumber,
+      email,
+      homeAddress,
+      idDocumentType,
+      idDocument,
+      idDocumentNumber,
+      nin,
+      firstEmergencyContactName,
+      firstEmergencyContactNumber,
+      firstEmergencyContactAddress,
+      secondEmergencyContactName,
+      secondEmergencyContactNumber,
+      secondEmergencyContacAddress,
+    });
+    await redisClient.clearCacheByPattern("marketers:*");
+    await redisClient.delete(`marketer_doc:${marketerId}`);
+    return Response.SUCCESS({ message: "Successful" });
+  } catch (error) {
+    logger.error("updateMarketerByIdService: ", error);
+    throw error;
+  }
+};
+
+exports.deleteMarketerByIdService = async (id) => {
+  try {
+    const marketer = await getMarketerById(id);
+    if (!marketer) {
+      logger.warn("Marketer Not Found");
+      return Response.NOT_FOUND({ message: "Marketer Not Found" });
+    }
+    const { id_document_uuid: idDocumentUuid } = marketer;
+
+    const results = await Promise.allSettled([
+      deleteFileFromS3Bucket(idDocumentUuid),
+      deleteMarketerById(id),
+    ]);
+
+    if (results.some((result) => result.status === "rejected")) {
+      logger.error(
+        "Failed to delete marketer:",
+        results.filter((r) => r.status === "rejected"),
+      );
+      return Response.NOT_MODIFIED({});
+    }
+    await redisClient.clearCacheByPattern("marketers:*");
+    await redisClient.delete(`marketer_doc:${id}`);
+    return Response.SUCCESS({ message: "Marketer Deleted Successfully" });
+  } catch (error) {
+    logger.error("deleteMarketerByIdService: ", error);
+    throw error;
+  }
+};

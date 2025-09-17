@@ -1,0 +1,115 @@
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const logger = require("../middlewares/logger.middleware");
+
+const {
+  awsAccessSecretKey,
+  awsAccessKeyId,
+  awsRegion,
+  awsBucketName,
+} = require("../config/default.config");
+
+const s3Client = new S3Client({
+  credentials: {
+    secretAccessKey: awsAccessSecretKey,
+    accessKeyId: awsAccessKeyId,
+  },
+  region: awsRegion,
+});
+
+const uploadFileToS3Bucket = async ({ fileName, buffer, mimetype }) => {
+  try {
+    if (fileName && buffer && mimetype) {
+      const params = {
+        Bucket: awsBucketName,
+        Key: fileName,
+        Body: buffer,
+        ContentType: mimetype,
+      };
+
+      const command = new PutObjectCommand(params);
+      return await s3Client.send(command);
+    }
+    return null;
+  } catch (error) {
+    logger.error("Upload File TO S3 Error: ", error);
+    throw error;
+  }
+};
+
+const getFileUrlFromS3Bucket = async (fileName) => {
+  try {
+    if (!fileName) return null;
+    const params = {
+      Bucket: awsBucketName,
+      Key: fileName,
+    };
+    const command = new GetObjectCommand(params);
+    // 1 day = 24 * 60 * 60 = 86400 seconds
+    return await getSignedUrl(s3Client, command, {
+      expiresIn: 86400,
+    });
+  } catch (error) {
+    logger.error("Get File URL From S3 Error: ", error);
+    throw error;
+  }
+};
+const getPublicFileUrlFromS3Bucket = async (fileName) => {
+  try {
+    if (!fileName) return null;
+    const params = {
+      Bucket: awsBucketName,
+      Key: fileName,
+    };
+    const command = new GetObjectCommand(params);
+    // 3 days = 3 * 24 * 60 * 60 = 259200 seconds
+    return await getSignedUrl(s3Client, command, {
+      expiresIn: 259200,
+    });
+  } catch (error) {
+    logger.error("Get Public File From S3 Error: ", error);
+    throw error;
+  }
+};
+const getObjectFromS3Bucket = async (fileName) => {
+  try {
+    if (!fileName) return null;
+    const params = {
+      Bucket: awsBucketName,
+      Key: fileName,
+    };
+    const command = new GetObjectCommand(params);
+    const response = await s3Client.send(command);
+
+    return await response.Body.transformToByteArray();
+  } catch (error) {
+    logger.error("Get Object From S3 Error: ", error);
+    throw error;
+  }
+};
+const deleteFileFromS3Bucket = async (fileName) => {
+  try {
+    const params = {
+      Bucket: awsBucketName,
+      Key: fileName,
+    };
+    const command = new DeleteObjectCommand(params);
+    return await s3Client.send(command);
+  } catch (error) {
+    logger.error("Delete File From S3 Error: ", error);
+    throw error;
+  }
+};
+
+module.exports = {
+  uploadFileToS3Bucket,
+  getFileUrlFromS3Bucket,
+  getPublicFileUrlFromS3Bucket,
+  getObjectFromS3Bucket,
+  deleteFileFromS3Bucket,
+};

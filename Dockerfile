@@ -1,0 +1,26 @@
+FROM node:23.11.1-alpine 
+
+LABEL Author="imotechsl"
+
+ENV NEW_RELIC_NO_CONFIG_FILE=true
+ENV NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=true
+ENV NEW_RELIC_LOG=stdout
+ENV NEW_RELIC_AI_MONITORING_ENABLED=true
+ENV NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_SAMPLES_STORED=100k
+ENV NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED=10k
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+
+RUN npm install
+
+
+COPY . .
+
+RUN npm install -g nodemon
+
+EXPOSE 8000
+
+CMD ["npm", "run", "start:dev"]

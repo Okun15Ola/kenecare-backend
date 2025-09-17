@@ -1,0 +1,161 @@
+const logger = require("../../middlewares/logger.middleware");
+const {
+  getDoctorAppointments,
+  getDoctorAppointment,
+  postponeDoctorAppointment,
+  approveDoctorAppointment,
+  cancelDoctorAppointment,
+  startDoctorAppointment,
+  getDoctorAppointmentByDateRange,
+  endDoctorAppointment,
+  getDoctorAppointmentMetrics,
+} = require("../../services/doctors/doctor.appointments.services");
+const {
+  getAppointmentFeedbackService,
+} = require("../../services/patients/appointment-feedback.services");
+
+exports.GetDoctorAppointmentMetricsController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const response = await getDoctorAppointmentMetrics(userId);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.GetDoctorAppointmentsController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const startDate = req.query.startDate ? req.query.startDate : null;
+    const endDate = req.query.endDate ? req.query.endDate : null;
+    const { page, limit } = req.query;
+
+    if (startDate && endDate) {
+      const response = await getDoctorAppointmentByDateRange({
+        userId,
+        startDate,
+        endDate,
+        limit,
+        page,
+      });
+      return res.status(response.statusCode).json(response);
+    }
+
+    const response = await getDoctorAppointments({
+      userId,
+      limit,
+      page,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.GetDoctorAppointmentsByIDController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const appointmentId = parseInt(req.params.id, 10);
+    const response = await getDoctorAppointment({ userId, id: appointmentId });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.ApproveDoctorAppointmentController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const appointmentId = parseInt(req.params.id, 10);
+    const response = await approveDoctorAppointment({ userId, appointmentId });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.CancelDoctorAppointmentController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const appointmentId = parseInt(req.params.id, 10);
+    const { cancelationReason: cancelReason } = req.body;
+
+    const response = await cancelDoctorAppointment({
+      userId,
+      appointmentId,
+      cancelReason,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.PostponeDoctorAppointmentController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const appointmentId = parseInt(req.params.id, 10);
+    const { reason: postponedReason, postponedDate, postponedTime } = req.body;
+
+    const response = await postponeDoctorAppointment({
+      userId,
+      appointmentId,
+      postponedDate,
+      postponedTime,
+      postponedReason,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.StartDoctorAppointmentController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const appointmentId = parseInt(req.params.id, 10);
+
+    const response = await startDoctorAppointment({
+      userId,
+      appointmentId,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.EndDoctorAppointmentController = async (req, res, next) => {
+  try {
+    const userId = parseInt(req.user.id, 10);
+    const appointmentUuid = req.params.id;
+
+    const response = await endDoctorAppointment({
+      userId,
+      appointmentUuid,
+    });
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};
+
+exports.GetApppointmentFeedbackController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const response = await getAppointmentFeedbackService(id);
+    return res.status(response.statusCode).json(response);
+  } catch (error) {
+    logger.error(error);
+    return next(error);
+  }
+};

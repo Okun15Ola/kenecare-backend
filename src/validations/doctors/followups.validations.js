@@ -1,0 +1,383 @@
+const { body, param } = require("express-validator");
+const moment = require("moment");
+const {
+  getSpecialtiyById,
+} = require("../../repository/specialities.repository");
+const { getDoctorByUserId } = require("../../repository/doctors.repository");
+const {
+  getDoctorAppointmentById,
+} = require("../../repository/doctorAppointments.repository");
+const Response = require("../../utils/response.utils");
+
+const today = moment().format("YYYY-MM-DD");
+
+exports.followUpIdValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Appointment ID is required")
+    .bail()
+    .isInt({ allow_leading_zeroes: false, gt: 0 })
+    .withMessage("Provide a valid Appointment ID")
+    .bail()
+    .escape(),
+];
+
+exports.CreateFollowUpValidation = [
+  body("appointmentId")
+    .notEmpty()
+    .withMessage("Appointment Id is required")
+    .bail()
+    .trim()
+    .escape()
+    .isNumeric({ no_symbols: true, locale: "en-US" })
+    .withMessage("Appointment ID must be a valid ID")
+    .bail()
+    .custom(async (value, { req }) => {
+      const appointmentId = parseInt(value, 10);
+      const doctor = await getDoctorByUserId(parseInt(req.user.id, 10));
+      if (!doctor) {
+        throw new Error("Error Creating Follow up. ");
+      }
+      const { doctor_id: doctorId } = doctor;
+      const appointment = await getDoctorAppointmentById({
+        doctorId,
+        appointmentId,
+      });
+      if (!appointment) {
+        throw new Error(
+          "Appointment Not Found. Please select a valid appointment",
+        );
+      }
+
+      const {
+        appointment_status: appointmentStatus,
+        appointment_date: appointmentDate,
+      } = appointment;
+      if (appointmentStatus !== "completed") {
+        throw new Error(
+          "Appointment must be completed before setting up a follow-up",
+        );
+      }
+
+      const appointmentDateCheck = moment(appointmentDate).startOf("day");
+      const followUpDateCheck = moment(
+        req.body.followUpDate,
+        "YYYY-MM-DD",
+        true,
+      ).startOf("day");
+
+      if (!followUpDateCheck.isValid()) {
+        throw new Error("Follow up date must be a valid date (yyyy-mm-dd)");
+      }
+
+      // if same date
+      if (followUpDateCheck.isSame(appointmentDateCheck, "day")) {
+        throw new Error(
+          "Follow up date must not be the same as the appointment date",
+        );
+      }
+
+      // if before the appointment date
+      if (followUpDateCheck.isBefore(appointmentDateCheck, "day")) {
+        throw new Error(
+          "Follow up date must not be earlier than the appointment date",
+        );
+      }
+
+      return true;
+    }),
+
+  body("followUpReason")
+    .notEmpty()
+    .withMessage("Follow up reason is required")
+    .bail()
+    .trim()
+    .escape(),
+  body("followUpType")
+    .notEmpty()
+    .withMessage("Follow Up Type is required")
+    .bail()
+    .isIn(["online_consultation", "patient_visit"])
+    .withMessage("Invalid follow-up type")
+    .bail()
+    .toLowerCase()
+    .trim(),
+  body("followUpDate")
+    .notEmpty()
+    .withMessage("Follow Up Date is required")
+    .bail()
+    .toLowerCase()
+    .trim()
+    .escape()
+    .custom(async (date) => {
+      const userDate = moment(date, "YYYY-MM-DD", true);
+      const isValidDate = moment(userDate).isValid();
+
+      if (!isValidDate) {
+        throw new Error("Follow up date must be a valid date (yyyy-mm-dd)");
+      }
+      if (userDate.isSameOrBefore(today)) {
+        throw new Error(
+          "Follow up date must not be today's date or an older date,. Please choose an earlier date",
+        );
+      }
+    })
+    .bail(),
+
+  body("followUpTime")
+    .notEmpty()
+    .withMessage("Follow up Time is required")
+    .bail()
+    .trim()
+    .escape(),
+];
+exports.UpdateFollowUpValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Followup ID is required")
+    .bail()
+    .isInt({ allow_leading_zeroes: false, gt: 0 })
+    .withMessage("Provide a valid Followup ID")
+    .bail()
+    .escape(),
+  body("appointmentId")
+    .notEmpty()
+    .withMessage("Appointment Id is required")
+    .bail()
+    .trim()
+    .escape()
+    .isNumeric({ no_symbols: true, locale: "en-US" })
+    .withMessage("Appointment ID must be a valid ID")
+    .bail()
+    .custom(async (value, { req }) => {
+      const appointmentId = parseInt(value, 10);
+      const doctor = await getDoctorByUserId(parseInt(req.user.id, 10));
+      if (!doctor) {
+        throw new Error("Error Creating Follow up. ");
+      }
+      const { doctor_id: doctorId } = doctor;
+      const appointment = await getDoctorAppointmentById({
+        doctorId,
+        appointmentId,
+      });
+
+      if (!appointment) {
+        throw new Error(
+          "Appointment Not Found. Please select a valid appointment",
+        );
+      }
+
+      const {
+        appointment_status: appointmentStatus,
+        appointment_date: appointmentDate,
+      } = appointment;
+      if (appointmentStatus !== "completed") {
+        throw new Error(
+          "Appointment must be completed before setting up a follow-up",
+        );
+      }
+
+      const appointmentDateCheck = moment(appointmentDate).startOf("day");
+      const followUpDateCheck = moment(
+        req.body.followUpDate,
+        "YYYY-MM-DD",
+        true,
+      ).startOf("day");
+
+      if (!followUpDateCheck.isValid()) {
+        throw new Error("Follow up date must be a valid date (yyyy-mm-dd)");
+      }
+
+      // if same date
+      if (followUpDateCheck.isSame(appointmentDateCheck, "day")) {
+        throw new Error(
+          "Follow up date must not be the same as the appointment date",
+        );
+      }
+
+      // if before the appointment date
+      if (followUpDateCheck.isBefore(appointmentDateCheck, "day")) {
+        throw new Error(
+          "Follow up date must not be earlier than the appointment date",
+        );
+      }
+
+      return true;
+    }),
+
+  body("followUpReason")
+    .notEmpty()
+    .withMessage("Follow up reason is required")
+    .bail()
+    .trim()
+    .escape(),
+  body("followUpType")
+    .notEmpty()
+    .withMessage("Follow Up Type is required")
+    .bail()
+    .isIn(["online_consultation", "patient_visit"])
+    .withMessage("Invalid follow-up type")
+    .bail()
+    .toLowerCase()
+    .trim(),
+  body("followUpDate")
+    .notEmpty()
+    .withMessage("Follow Up Date is required")
+    .bail()
+    .isDate({ format: "YYYY-MM-DD" })
+    .withMessage("Please provide a valid follow-up date format (YYYY-MM-DD)")
+    .bail()
+    .trim()
+    .escape()
+    .custom(async (date) => {
+      const userDate = moment(date, "YYYY-MM-DD", true);
+      const isValidDate = moment(userDate).isValid();
+
+      if (!isValidDate) {
+        throw new Error("Follow up date must be a valid date (yyyy-mm-dd)");
+      }
+      if (userDate.isSameOrBefore(today)) {
+        throw new Error(
+          "Follow up date must not be today's date or an older date,. Please choose an earlier date",
+        );
+      }
+      return true;
+    }),
+
+  body("followUpTime")
+    .notEmpty()
+    .withMessage("Follow up Time is required")
+    .bail()
+    .trim()
+    .escape(),
+];
+
+exports.StartAppointmentValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Appointment ID is required")
+    .bail()
+    .escape()
+    .trim()
+    .custom(async (value, { req }) => {
+      const userId = parseInt(req.user.id, 10);
+      const doctor = await getDoctorByUserId(userId);
+      if (!doctor) {
+        throw new Error(
+          "UnAuthorized Action. Action can only be performed by a doctor",
+        );
+      }
+      const { doctor_id: doctorId } = doctor;
+      const appointment = await getDoctorAppointmentById({
+        doctorId,
+        appointmentId: value,
+      });
+      if (!appointment) {
+        throw new Error("Appointment Not Found. Please Try Again");
+      }
+      // Extract patient id from appointment to get patient email
+      const {
+        appointment_date: appointmentDate,
+        // appointment_time: appointmentTime,
+        appointment_status: appointmentStatus,
+      } = appointment;
+
+      if (appointmentStatus === "pending") {
+        throw new Error(
+          "Appointment must be approved before starting consultation.",
+        );
+      }
+
+      if (appointmentStatus === "completed") {
+        throw new Error(
+          "Cannot start an appointment that has already been completed",
+        );
+      }
+
+      // Check if the date is not an old date
+      const today = moment().format("YYYY-MM-DD");
+      const appointmentMoment = moment(appointmentDate, "YYYY-MM-DD", true);
+
+      if (appointmentMoment.isBefore(today)) {
+        throw new Error(
+          "Appointment Date is overdue. Please postpone to an earlier date before starting",
+        );
+      }
+
+      // if (appointmentMoment.isAfter(today)) {
+      //   throw new Error(
+      //     "Cannot Start an appointment before the scheduled date",
+      //   );
+      // }
+
+      return true;
+    }),
+];
+exports.ApproveAppointmentValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Appointment ID is required")
+    .bail()
+    .escape()
+    .trim()
+    .custom(async (value, { req }) => {
+      const userId = parseInt(req.user.id, 10);
+      const doctor = await getDoctorByUserId(userId);
+      if (!doctor) {
+        throw new Error(
+          "UnAuthorized Action. Action can only be performed by a doctor",
+        );
+      }
+      const { doctor_id: doctorId } = doctor;
+      const appointment = await getDoctorAppointmentById({
+        doctorId,
+        appointmentId: value,
+      });
+
+      if (!appointment) {
+        throw new Error("Appointment Not Found. Please Try Again");
+      }
+      // Extract patient id from appointment to get patient email
+      const {
+        appointment_date: appointmentDate,
+        appointment_status: appointmentStatus,
+      } = appointment;
+
+      if (appointmentStatus === "started") {
+        throw Response.NOT_MODIFIED();
+      }
+      if (appointmentStatus === "completed") {
+        throw new Error(
+          "Cannot start an appointment that has already been completed",
+        );
+      }
+
+      // Check if the date is not an old date
+      const today = moment().format("YYYY-MM-DD");
+      const appointmentMoment = moment(appointmentDate, "YYYY-MM-DD", true);
+
+      if (appointmentMoment.isBefore(today)) {
+        throw new Error(
+          "Appointment Date is overdue. Please postpone to an earlier date before starting",
+        );
+      }
+
+      return true;
+    }),
+];
+
+exports.SpecialtyIDValidation = [
+  param("id")
+    .notEmpty()
+    .withMessage("Specialty ID is required")
+    .bail()
+    .trim()
+    .escape()
+    .custom(async (id) => {
+      const data = await getSpecialtiyById(id);
+      if (!data) {
+        throw new Error("Specialty Not Found");
+      }
+      return true;
+    }),
+];

@@ -1,0 +1,48 @@
+services:
+  api:
+    # depends_on:
+    #   - db
+    build:
+      context: .
+    container_name: kenecare-api-${ENV}
+    image: imotechsl/kenecare-api:${ENV}
+    ports:
+      - "${APP_HOST_PORT:-8500}:${APP_PORT:-8000}"
+    networks:
+      - kenecare-net
+      - mysql-net
+      - redis-net
+    restart: always
+    env_file: ./.env.${ENV:-development}
+    volumes:
+      - .:/usr/src/app
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:${APP_PORT}/api/v1/health-check",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  kenecare-api-db-data:
+    name: kenecare-api-db-data
+
+networks:
+  kenecare-net:
+    attachable: true
+    name: kenecare-net
+    driver: bridge
+  redis-net:
+    external: true
+    labels:
+      - "com.docker.compose.network.optional=true"
+  mysql-net:
+    external: true
+    labels:
+      - "com.docker.compose.network.optional=true"

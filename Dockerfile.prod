@@ -1,0 +1,45 @@
+FROM node:23.11.1-alpine AS builder
+
+LABEL Author="imotechsl"
+LABEL Stage="production"
+
+ENV NEW_RELIC_NO_CONFIG_FILE=true
+ENV NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=true
+ENV NEW_RELIC_LOG=stdout
+ENV NEW_RELIC_AI_MONITORING_ENABLED=true
+ENV NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_SAMPLES_STORED=100k
+ENV NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED=10k
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+
+RUN npm install
+
+
+COPY . .
+
+# Build the application
+RUN npm run build
+
+
+# Stage 2: Production
+FROM node:23.11.1-alpine AS production
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy the built files from the builder stage
+COPY --from=builder /usr/src/app/dist /usr/src/app/dist
+
+COPY --from=builder /usr/src/app/package*.json /usr/src/app/
+# COPY --from=builder /usr/src/app/node_modules /usr/src/app/node_modules
+
+ENV NODE_ENV=production
+
+RUN npm install --only=production 
+
+EXPOSE 8000
+
+CMD ["npm", "start"]
