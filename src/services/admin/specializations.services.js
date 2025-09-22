@@ -4,7 +4,6 @@ const { redisClient } = require("../../config/redis.config");
 const { mapSpecializationRow } = require("../../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
@@ -12,23 +11,14 @@ const logger = require("../../middlewares/logger.middleware");
 exports.getSpecializations = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "specializations:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: dbObject.countSpecialization,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No specialization found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("specializations:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await dbObject.getAllSpecialization(limit, offset);
@@ -37,12 +27,22 @@ exports.getSpecializations = async (limit, page) => {
       return Response.SUCCESS({ message: "No specialization found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const specializations = rawData.map(mapSpecializationRow);
+
+    const valueToCache = {
+      data: specializations,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(specializations),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
+
     return Response.SUCCESS({
       data: specializations,
       pagination: paginationInfo,

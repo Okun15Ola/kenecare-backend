@@ -5,46 +5,39 @@ const { mapAdminAppointmentRow } = require("../../utils/db-mapper.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 
 exports.getAdminAppointments = async ({ limit, page }) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "admin:appointments:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: dbObject.countAppointments,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No appointments found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("admin:appointments:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
-      });
+      const { data, pagination } = JSON.parse(cachedData);
+      return Response.SUCCESS({ data, pagination });
     }
+
     const rawData = await dbObject.getAllAppointments(limit, offset);
 
     if (!rawData?.length) {
       return Response.SUCCESS({ message: "No appointments found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const appointments = rawData.map(mapAdminAppointmentRow);
+
+    const valueToCache = {
+      data: appointments,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(appointments),
+      value: JSON.stringify(valueToCache),
     });
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
@@ -56,47 +49,45 @@ exports.getAdminAppointments = async ({ limit, page }) => {
 exports.getAdminAppointmentsByDoctorId = async (doctorId, limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = `admin:appointments:count:doctor:${doctorId}`;
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => dbObject.countDoctorAppointments(doctorId),
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No appointments found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
       `admin:appointments:doctor:${doctorId}`,
       limit,
       offset,
     );
+
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
-      });
+      const { data, pagination } = JSON.parse(cachedData);
+      return Response.SUCCESS({ data, pagination });
     }
+
     const rawData = await dbObject.getAppointmentsByDoctorId(
       limit,
       offset,
       doctorId,
     );
 
+    if (!rawData?.length) {
+      return Response.SUCCESS({
+        message: "No appointments found for this doctor",
+        data: [],
+      });
+    }
+
     const appointments = rawData.map(mapAdminAppointmentRow);
 
-    if (!rawData?.length) {
-      return Response.SUCCESS({ message: "No appointments found", data: [] });
-    }
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const valueToCache = {
+      data: appointments,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(appointments),
+      value: JSON.stringify(valueToCache),
     });
 
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });

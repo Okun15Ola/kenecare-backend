@@ -8,7 +8,6 @@ const { generateFileName } = require("../utils/file-upload.utils");
 const { redisClient } = require("../config/redis.config");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../utils/caching.utils");
 const { mapSpecialityRow } = require("../utils/db-mapper.utils");
@@ -17,23 +16,12 @@ const logger = require("../middlewares/logger.middleware");
 exports.getSpecialties = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "specialties:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: repo.getSpecialtiyCount,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No specialties found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
-
     const cacheKey = cacheKeyBulider("specialties:all", limit, offset);
 
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData), paginationInfo });
+      const { data, pagination } = JSON.parse(cachedData);
+      return Response.SUCCESS({ data, pagination });
     }
 
     const rawData = await repo.getAllSpecialties(limit, offset);
@@ -41,11 +29,20 @@ exports.getSpecialties = async (limit, page) => {
       return Response.SUCCESS({ message: "No specialties found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const specialties = await Promise.all(rawData.map(mapSpecialityRow));
+
+    const valueToCache = {
+      data: specialties,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(specialties),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({ data: specialties, pagination: paginationInfo });

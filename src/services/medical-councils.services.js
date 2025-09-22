@@ -4,7 +4,6 @@ const { redisClient } = require("../config/redis.config");
 const { mapMedicalCouncilRow } = require("../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../utils/caching.utils");
 const logger = require("../middlewares/logger.middleware");
@@ -12,26 +11,14 @@ const logger = require("../middlewares/logger.middleware");
 exports.getMedicalCouncils = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "medical-council:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: repo.countMedicalCouncils,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No medical councils found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("medical-council:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await repo.getAllMedicalCouncils(limit, offset);
@@ -42,10 +29,19 @@ exports.getMedicalCouncils = async (limit, page) => {
       });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const councils = rawData.map(mapMedicalCouncilRow);
+
+    const valueToCache = {
+      data: councils,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(councils),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({ data: councils, pagination: paginationInfo });
