@@ -50,7 +50,8 @@ const createOrUpdateStreamUser = async ({
 
 const createStreamCall = async (call) => {
   try {
-    if (!call || !call.callType || !call.callID || !call.userId) {
+    if (!call?.callType || !call?.callID || !call?.userId || !call?.members) {
+      logger.error("ERROR CREATING STREAM CALL: ", call);
       throw new Error("Invalid call parameters");
     }
     const { callType, callID, userId, appointmentId, members } = call;
