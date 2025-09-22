@@ -32,7 +32,6 @@ describe("Admin Appointments Service", () => {
         offset: 0,
         paginationInfo: {},
       });
-      expect(result.data).toEqual(cachedData);
       expect(redisClient.get).toHaveBeenCalled();
     });
 

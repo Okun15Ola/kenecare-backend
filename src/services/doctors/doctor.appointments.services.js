@@ -1,6 +1,6 @@
 const moment = require("moment");
 const dbObject = require("../../repository/doctorAppointments.repository");
-const { USERTYPE, VERIFICATIONSTATUS } = require("../../utils/enum.utils");
+const { VERIFICATIONSTATUS } = require("../../utils/enum.utils");
 const Response = require("../../utils/response.utils");
 const { getPatientById } = require("../../repository/patients.repository");
 const {
@@ -167,12 +167,7 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       });
     }
 
-    const { user_type: userType, doctor_id: doctorId, title } = doctor;
-
-    if (userType !== USERTYPE.DOCTOR) {
-      logger.error("Unauthorized access attempt by userId:", userId);
-      return Response.UNAUTHORIZED({ message: "Unauthorized access" });
-    }
+    const { doctor_id: doctorId, title } = doctor;
 
     const cacheKey = `doctor:${doctorId}:appointments:${id}`;
     const cachedData = await redisClient.get(cacheKey);
@@ -401,7 +396,7 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
     });
     if (!appointment) {
       logger.warn("Appointment not found:", { appointmentId, doctorId });
-      return Response.BAD_REQUEST({
+      return Response.NOT_FOUND({
         message: "Appointment not found. Please try again.",
       });
     }

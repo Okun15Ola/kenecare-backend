@@ -31,11 +31,6 @@ jest.mock(
     getDoctorAppointmentsDateRange: jest.fn(),
   }),
 );
-jest.mock("../../../../src/repository/doctorTimeSlot.repository.js", () => ({
-  bulkMarkDayUnavailable: jest.fn(),
-  deleteSlotsForDoctor: jest.fn(),
-  deleteSlotsForDay: jest.fn(),
-}));
 
 describe("days-available.services", () => {
   const userId = 1;
