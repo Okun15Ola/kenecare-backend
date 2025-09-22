@@ -5,7 +5,7 @@ const logger = require("../middlewares/logger.middleware");
 const { nodeEnv } = require("../config/default.config");
 
 const Validate = (req, res, next) => {
-  let errors = validationResult(req).array();
+  const errors = validationResult(req).array({ onlyFirstError: true });
 
   if (errors.length) {
     if (req.file) {
@@ -18,9 +18,11 @@ const Validate = (req, res, next) => {
     }));
 
     // Prepare errors for client response (only message)
-    errors = errors.map((error) => ({
-      msg: error.msg,
-    }));
+    // errors = errors.map((error) => ({
+    //   msg: error.msg,
+    // }));
+    // The errors array now only contains the first error for each field
+    const firstErrorMessage = errors[0].msg;
     logger.error("Validation Error: ", errorsForLog);
 
     if (nodeEnv === "development") {
@@ -28,7 +30,9 @@ const Validate = (req, res, next) => {
     }
     return res
       .status(400)
-      .json(BAD_REQUEST({ message: "Validation Error", error: errors }));
+      .json(
+        BAD_REQUEST({ message: "Validation Error", error: firstErrorMessage }),
+      );
   }
   return next();
 };
