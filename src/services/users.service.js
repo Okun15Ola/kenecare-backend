@@ -335,9 +335,6 @@ exports.loginUser = async ({
       return generateAndSendVerificationOTP({ userId, mobileNumber });
     }
 
-    // Sesay_@2002
-    // +23273613787
-
     const [accessToken, streamToken, createStreamProfile] = await Promise.all([
       generateUsersJwtAccessToken({ sub: userId }),
       generateStreamUserToken(userId.toString()),
