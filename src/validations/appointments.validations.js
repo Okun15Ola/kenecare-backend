@@ -159,11 +159,11 @@ exports.StartAppointmentValidation = [
         );
       }
 
-      if (appointmentStatus === "completed") {
-        throw new Error(
-          "Cannot start an appointment that has already been completed",
-        );
-      }
+      // if (appointmentStatus === "completed") {
+      //   throw new Error(
+      //     "Cannot start an appointment that has already been completed",
+      //   );
+      // }
 
       // Check if the date is not an old date
       const today = moment().format("YYYY-MM-DD");
@@ -175,11 +175,11 @@ exports.StartAppointmentValidation = [
         );
       }
 
-      if (appointmentMoment.isAfter(today)) {
-        throw new Error(
-          "Cannot Start an appointment before the scheduled date",
-        );
-      }
+      // if (appointmentMoment.isAfter(today)) {
+      //   throw new Error(
+      //     "Cannot Start an appointment before the scheduled date",
+      //   );
+      // }
 
       return true;
     }),

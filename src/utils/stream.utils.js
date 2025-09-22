@@ -72,6 +72,7 @@ const createStreamCall = async (call) => {
         },
       },
     });
+    console.log("STREAM_CALL_RESPONSE: ", response);
     return response;
   } catch (error) {
     logger.error("CREATE_STREAM_CALL_ERROR: ", error);

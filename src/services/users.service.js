@@ -341,6 +341,7 @@ exports.loginUser = async ({
       createStreamUserProfile(userType, userId), // profile creation
     ]);
 
+    console.log("STREAM_TOKEN_AT_LOGIN: ", streamToken);
     redisClient.clearCacheByPattern("doctors:all:*");
 
     return Response.SUCCESS({
