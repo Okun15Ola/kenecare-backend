@@ -19,8 +19,11 @@ exports.getApprovedDoctorReviewsByDoctorId = async (
   limit,
   offset,
 ) => {
-  const optimizedQuery = `${queries.GET_APPROVED_DOCTOR_REVIEW_BY_DOCTOR_ID} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery, [doctorId]);
+  return query(queries.GET_APPROVED_DOCTOR_REVIEW_BY_DOCTOR_ID, [
+    doctorId,
+    offset,
+    limit,
+  ]);
 };
 
 exports.countDoctorApprovedReviews = async (doctorId) => {

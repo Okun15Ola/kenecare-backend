@@ -1,9 +1,8 @@
 const { query } = require("./db.connection");
 const queries = require("./queries/admins.queries");
 
-exports.getAllAdmins = async (limit = 20, offset = 0) => {
-  const optimizedQuery = `${queries.GET_ALL_ADMINS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+exports.getAllAdmins = async (limit = 10, offset = 0) => {
+  return query(queries.GET_ALL_ADMINS, [offset, limit]);
 };
 
 exports.getAdminById = async (adminId) => {

@@ -2,13 +2,11 @@ const { query } = require("./db.connection");
 const queries = require("./queries/doctorFaqs.queries");
 
 exports.getAllActiveDoctorFaqByDoctorId = async (doctorId, limit, offset) => {
-  const optimizedQuery = `${queries.GET_ACTIVE_DOCTOR_FAQS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery, [doctorId]);
+  return query(queries.GET_ACTIVE_DOCTOR_FAQS, [doctorId, offset, limit]);
 };
 
 exports.getAllDoctorFaqByDoctorId = async (doctorId, limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_FAQS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery, [doctorId]);
+  return query(queries.GET_DOCTOR_FAQS, [doctorId, offset, limit]);
 };
 
 exports.getDoctorFaqById = async (id, doctorId) => {
