@@ -4,49 +4,33 @@ const {
   getDoctorById,
   getDoctorByQuery,
   getDoctorsBySpecializationId,
-  getDoctorsCount,
-  getDoctorsQueryCount,
-  getDoctorsSpecializationCount,
 } = require("../repository/doctors.repository");
 const {
   getAllCommonSymptoms,
   getCommonSymptomById,
-  countCommonSymptom,
 } = require("../repository/common-symptoms.repository");
 const {
   getAllBlogCategories,
   getBlogCategoryById,
-  countBlogCategory,
 } = require("../repository/blog-categories.repository");
-const {
-  getAllBlogs,
-  getBlogById,
-  countBlog,
-} = require("../repository/blogs.repository");
+const { getAllBlogs, getBlogById } = require("../repository/blogs.repository");
 const {
   getAllCities,
-  countCity,
   getCityById,
 } = require("../repository/cities.repository");
 const {
   getAllMedicalCouncils,
   getMedicalCouncilById,
-  countMedicalCouncils,
 } = require("../repository/medical-councils.repository");
 const {
-  countSpecialization,
   getAllSpecialization,
   getSpecializationById,
 } = require("../repository/specializations.repository");
 const {
   getAllSpecialties,
   getSpecialtiyById,
-  getSpecialtiyCount,
 } = require("../repository/specialities.repository");
-const {
-  countTestimonial,
-  getAllTestimonials,
-} = require("../repository/testimonials.repository");
+const { getAllTestimonials } = require("../repository/testimonials.repository");
 const Response = require("../utils/response.utils");
 const {
   mapDoctorRow,
@@ -66,7 +50,6 @@ const doctorFaqRepository = require("../repository/doctorFaqs.repository");
 const { redisClient } = require("../config/redis.config");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../utils/caching.utils");
 const logger = require("../middlewares/logger.middleware");
@@ -75,24 +58,14 @@ const faqRepository = require("../repository/faqs.repository");
 exports.getAllDoctorIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "doctors:count:approved";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: getDoctorsCount,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No doctors found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider("doctors:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -102,13 +75,21 @@ exports.getAllDoctorIndexService = async (limit, page) => {
       return Response.SUCCESS({ message: "No doctors found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const doctors = await Promise.all(
       rawData.map((doctor) => mapDoctorRow(doctor, true)),
     );
 
+    const valueToCache = {
+      data: doctors,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(doctors),
+      value: JSON.stringify(valueToCache),
       expiry: 60,
     });
 
@@ -127,18 +108,6 @@ exports.getDoctorByQueryIndexService = async (
 ) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "doctors:search:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => getDoctorsQueryCount({ locationId, query }),
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No doctors found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
-
     const cacheKey = cacheKeyBulider(
       `doctors:${locationId ? `:location=${locationId}` : ""}
       ${query ? `:query=${query}` : ""}`,
@@ -147,9 +116,10 @@ exports.getDoctorByQueryIndexService = async (
     );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getDoctorByQuery({
@@ -163,13 +133,21 @@ exports.getDoctorByQueryIndexService = async (
       return Response.SUCCESS({ message: "No doctors found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const doctors = await Promise.all(
       rawData.map((doctor) => mapDoctorRow(doctor, true)),
     );
 
+    const valueToCache = {
+      data: doctors,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(doctors),
+      value: JSON.stringify(valueToCache),
       expiry: 60,
     });
 
@@ -187,20 +165,7 @@ exports.getDoctorBySpecialtyIdIndexService = async (
 ) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "doctors:specialty:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => getDoctorsSpecializationCount(specialityId),
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No doctors available for this specialty",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
       `doctors:speciality:${specialityId}`,
       limit,
@@ -208,9 +173,10 @@ exports.getDoctorBySpecialtyIdIndexService = async (
     );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getDoctorsBySpecializationId(
@@ -226,13 +192,21 @@ exports.getDoctorBySpecialtyIdIndexService = async (
       });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const doctors = await Promise.all(
       rawData.map((doctor) => mapDoctorRow(doctor, true)),
     );
 
+    const valueToCache = {
+      data: doctors,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(doctors),
+      value: JSON.stringify(valueToCache),
       expiry: 60,
     });
 
@@ -277,26 +251,14 @@ exports.getDoctorByIdIndexService = async (id) => {
 exports.getCommonSymptomsIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "common-symptoms:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countCommonSymptom,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No common symptoms found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("common-symptoms:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -309,13 +271,21 @@ exports.getCommonSymptomsIndexService = async (limit, page) => {
       });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const symptoms = await Promise.all(
       rawData.map((symptom) => mapCommonSymptomsRow(symptom, true)),
     );
 
+    const valueToCache = {
+      data: symptoms,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(symptoms),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
 
@@ -356,26 +326,13 @@ exports.getCommonSymptomIndexService = async (id) => {
 exports.getBlogCategoriesIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "blog-categories:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countBlogCategory,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No blog categories found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("blog-categories:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getAllBlogCategories(limit, offset);
@@ -387,11 +344,19 @@ exports.getBlogCategoriesIndexService = async (limit, page) => {
       });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const categories = rawData.map(mapBlogCategoryRow);
+
+    const valueToCache = {
+      data: categories,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(categories),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
 
@@ -435,24 +400,14 @@ exports.getBlogCategoryIndexService = async (id) => {
 exports.getBlogsIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "blogs:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countBlog,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No blogs found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider("blogs:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getAllBlogs(limit, offset);
@@ -461,13 +416,21 @@ exports.getBlogsIndexService = async (limit, page) => {
       return Response.SUCCESS({ message: "No blogs found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const blogs = await Promise.all(
       rawData.map((blog) => mapBlogRow(blog, true)),
     );
 
+    const valueToCache = {
+      data: blogs,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(blogs),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
 
@@ -513,20 +476,6 @@ exports.getPublishedBlogsByDoctorIndexService = async (doctorId) => {
 exports.getDoctorActiveFaqsIndexService = async (doctorId, limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = `doctor:${doctorId}:faq:active:count`;
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => doctorFaqRepository.countDoctorActiveFaq(doctorId),
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No doctor active faq found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider(
       `doctor:${doctorId}:faq:active:all`,
@@ -536,9 +485,10 @@ exports.getDoctorActiveFaqsIndexService = async (doctorId, limit, page) => {
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -555,9 +505,17 @@ exports.getDoctorActiveFaqsIndexService = async (doctorId, limit, page) => {
       });
     }
 
+    const { totalRows } = data[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const valueToCache = {
+      data,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(valueToCache),
     });
 
     return Response.SUCCESS({
@@ -599,23 +557,13 @@ exports.getBlogIndexService = async (id) => {
 exports.getCitiesIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "cities:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countCity,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No cities found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("cities:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const [rawData] = await getAllCities(limit, offset);
@@ -623,11 +571,19 @@ exports.getCitiesIndexService = async (limit, page) => {
       return Response.SUCCESS({ message: "No cities found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const cities = rawData.map(mapCityRow);
+
+    const valueToCache = {
+      data: cities,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(cities),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({ data: cities, pagination: paginationInfo });
@@ -666,26 +622,13 @@ exports.getCityIndexService = async (id) => {
 exports.getMedicalCouncilsIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "medical-council:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countMedicalCouncils,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No medical councils found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("medical-council:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getAllMedicalCouncils(limit, offset);
@@ -696,10 +639,18 @@ exports.getMedicalCouncilsIndexService = async (limit, page) => {
       });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const councils = rawData.map(mapMedicalCouncilRow);
+    const valueToCache = {
+      data: councils,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(councils),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({ data: councils, pagination: paginationInfo });
@@ -738,23 +689,13 @@ exports.getMedicalCouncilIndexService = async (id) => {
 exports.getSpecializationsIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "specializations:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countSpecialization,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No specialization found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("specializations:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getAllSpecialization(limit, offset);
@@ -763,10 +704,18 @@ exports.getSpecializationsIndexService = async (limit, page) => {
       return Response.SUCCESS({ message: "No specialization found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const specializations = rawData.map(mapSpecializationRow);
+    const valueToCache = {
+      data: specializations,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(specializations),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({
@@ -809,23 +758,16 @@ exports.getSpecializationByIdIndexService = async (id) => {
 exports.getSpecialtiesIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "specialties:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: getSpecialtiyCount,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No specialties found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider("specialties:all", limit, offset);
 
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData), paginationInfo });
+      const { data, pagination } = JSON.parse(cachedData);
+      return Response.SUCCESS({
+        data,
+        pagination,
+      });
     }
 
     const rawData = await getAllSpecialties(limit, offset);
@@ -833,13 +775,21 @@ exports.getSpecialtiesIndexService = async (limit, page) => {
       return Response.SUCCESS({ message: "No specialties found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const specialties = await Promise.all(
       rawData.map((specialty) => mapSpecialityRow(specialty, true, true)),
     );
 
+    const valueToCache = {
+      data: specialties,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(specialties),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({ data: specialties, pagination: paginationInfo });
@@ -879,24 +829,13 @@ exports.getSpecialtyByIdIndexService = async (id) => {
 exports.getTestimonialsIndexService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "testimonials:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countTestimonial,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No testimonials found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
-
     const cacheKey = cacheKeyBulider("testimonials:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getAllTestimonials(limit, offset);
@@ -904,12 +843,21 @@ exports.getTestimonialsIndexService = async (limit, page) => {
       return Response.SUCCESS({ message: "No testimonials found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const testimonials = await Promise.all(
       rawData.map((testimonial) => mapTestimonialRow(testimonial, true, true)),
     );
+
+    const valueToCache = {
+      data: testimonials,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(testimonials),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({ data: testimonials, pagination: paginationInfo });
@@ -922,29 +870,23 @@ exports.getTestimonialsIndexService = async (limit, page) => {
 exports.getIndexFaqService = async (page, limit) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "faqs:published:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: faqRepository.countPublishFaq,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No faq found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("faqs:published", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await faqRepository.getPublishedFaqs(limit, offset);
     if (!rawData?.length) {
       return Response.SUCCESS({ message: "No faq found", data: [] });
     }
+
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const faqs = rawData.map((faq) => ({
       id: faq.faq_uuid,
@@ -953,9 +895,14 @@ exports.getIndexFaqService = async (page, limit) => {
       category: faq.category || "Uncategorized",
     }));
 
+    const valueToCache = {
+      data: faqs,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(faqs),
+      value: JSON.stringify(valueToCache),
       expiry: 86400,
     });
     return Response.SUCCESS({ data: faqs, pagination: paginationInfo });
