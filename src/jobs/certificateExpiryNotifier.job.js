@@ -99,6 +99,12 @@ module.exports = {
           }
           // Case 3: On the day of expiry
           else if (daysUntilExpiry === 0) {
+            const regId = doctorsWithCertificates.council_registration_id;
+            if (regId) {
+              await councilRepository.updateDoctorCouncilRegistrationExpiredStatus(
+                regId,
+              );
+            }
             await sendCertificateExpirySms(
               registration,
               expiryDateFormatted,

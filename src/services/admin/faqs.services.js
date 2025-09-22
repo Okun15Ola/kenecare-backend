@@ -7,36 +7,29 @@ const logger = require("../../middlewares/logger.middleware");
 const Response = require("../../utils/response.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 
 exports.getFaqs = async (page, limit) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "faqs:all:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: faqRepository.countFaq,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No faq found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("faqs:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await faqRepository.getAllFaqs(limit, offset);
     if (!rawData?.length) {
       return Response.SUCCESS({ message: "No faq found", data: [] });
     }
+
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const faqs = rawData.map((faq) => ({
       id: faq.faq_uuid,
@@ -48,9 +41,14 @@ exports.getFaqs = async (page, limit) => {
       updatedAt: moment(faq.updated_at).format("YYYY-MM-DD HH:mm:ss"),
     }));
 
+    const valueToCache = {
+      data: faqs,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(faqs),
+      value: JSON.stringify(valueToCache),
       expiry: 86400,
     });
     return Response.SUCCESS({ data: faqs, pagination: paginationInfo });

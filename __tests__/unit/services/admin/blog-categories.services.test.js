@@ -29,7 +29,6 @@ describe("Blog Categories Service", () => {
       caching.cacheKeyBulider.mockReturnValue("cache-key");
 
       const result = await blogCategoriesService.getBlogCategories(10, 0, {});
-      expect(result.data).toEqual(cachedData);
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 

@@ -15,7 +15,6 @@ const {
 } = require("../../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const {
@@ -109,20 +108,7 @@ exports.getPatientAppointments = async (userId, limit, page) => {
     }
 
     const offset = (page - 1) * limit;
-    const countCacheKey = `patient:${patientId}:appointments:count`;
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => repo.countPatientAppointments({ patientId }),
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No patient appointments found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
       `patient:${patientId}:appointments:all`,
       limit,
@@ -130,10 +116,8 @@ exports.getPatientAppointments = async (userId, limit, page) => {
     );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
-      });
+      const { data, pagination } = JSON.parse(cachedData);
+      return Response.SUCCESS({ data, pagination });
     }
     const rawData = await repo.getAllPatientAppointments({
       patientId,
@@ -150,9 +134,18 @@ exports.getPatientAppointments = async (userId, limit, page) => {
 
     const appointments = rawData.map(mapPatientAppointment);
 
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const valueToCache = {
+      data: appointments,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(appointments),
+      value: JSON.stringify(valueToCache),
       expiry: 60,
     });
 

@@ -34,7 +34,7 @@ exports.doctorIdValidation = [
 
 exports.doctorPaginationValidation = [
   query("specialty_id")
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
     .escape()
     .isInt({ gt: 0, allow_leading_zeroes: false })
@@ -49,7 +49,7 @@ exports.doctorPaginationValidation = [
     }),
 
   query("locationId")
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
     .escape()
     .isInt({ gt: 0, allow_leading_zeroes: false })
@@ -64,7 +64,7 @@ exports.doctorPaginationValidation = [
     }),
 
   query("q")
-    .optional()
+    .optional({ checkFalsy: true })
     .isLength({ min: 2, max: 100 })
     .withMessage("Search query must be between 2 and 100 characters")
     .bail()

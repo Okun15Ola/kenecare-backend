@@ -9,14 +9,20 @@ This is the backend API for the Kenecare platform. It provides the necessary end
   - [Project Overview](#project-overview)
   - [Features](#features)
   - [Technologies Used](#technologies-used)
+  - [Dependencies and Scripts](#dependencies-and-scripts)
+    - [Key Dependencies](#key-dependencies)
+    - [Available Scripts](#available-scripts)
+  - [Project Structure](#project-structure)
   - [Prerequisites](#prerequisites)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
     - [Running the Application](#running-the-application)
-  - [API Documentation](#api-documentation)
+      - [Using Docker (Recommended)](#using-docker-recommended)
+      - [Locally with Node.js](#locally-with-nodejs)
   - [Testing](#testing)
   - [Linting and Formatting](#linting-and-formatting)
   - [Deployment](#deployment)
+  - [Makefile Commands](#makefile-commands)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -26,24 +32,101 @@ The Kenecare API is a robust and scalable backend service that powers the Keneca
 
 ## Features
 
-- User authentication and authorization
-- Appointment scheduling and management
-- Patient medical records management
-- Doctor and patient profiles
-- Secure payment processing
-- Real-time notifications
+- **User & Profile Management**
+  - User authentication and authorization
+  - Doctor and patient profiles
+  - Doctor review management
+- **Appointment & Scheduling**
+  - Appointment scheduling and management
+  - Doctor appointment follow-up management
+  - Doctor availability management
+- **Medical Records & Prescriptions**
+  - Patient medical records management
+  - Medical prescription and management
+  - Secured medical records sharing
+- **Content & Communication**
+  - Doctor health blog management
+  - Doctor FAQ management
+  - Push notifications
+- **Financial & Payments**
+  - Secure payment processing
+  - Doctor wallet management
 
 ## Technologies Used
 
 - **Backend:** Node.js, Express.js
 - **Database:** MySQL
 - **Caching:** Redis
-- **Authentication:** JWT, Passport.js
+- **Authentication:** JWT
 - **File Storage:** AWS S3
 - **Containerization:** Docker
 - **Testing:** Jest, Supertest
 - **Linting:** ESLint
 - **Formatting:** Prettier
+
+## Dependencies and Scripts
+
+This project uses a variety of packages to provide functionality and streamline development.
+
+### Key Dependencies
+
+- **Core Framework:** **`express`** is the main web framework.
+- **Database & Caching:** **`mysql2`** is used for database interaction. **`ioredis`** is the client for Redis.
+- **Authentication & Security:** **`bcryptjs`** for password hashing, **`jsonwebtoken`** for authentication with JWTs **`helmet`** provides essential security headers.
+- **Cloud Services:** The **`@aws-sdk`** packages handle interactions with AWS services like S3 and Secrets Manager. **`twilio`** is used for SMS communication.
+- **Utilities:** **`moment`** for date & time handling, **`cron`** for scheduling jobs, **`dotenv`** for environment variables, and **`winston`** for logging.
+
+### Available Scripts
+
+The following scripts are defined in `package.json` for development, testing, and deployment.
+
+| Script | Description |
+| :--- | :--- |
+| `npm run start` | Starts the application in production mode using the pre-built bundle. |
+| `npm run start:prod` | Starts the application in production mode directly from source files. |
+| `npm run start:dev` | Starts the application in development mode with **`nodemon`** for automatic restarts on file changes. |
+| `npm test` | Runs all tests using **`jest`**, clearing the cache and detecting potential memory leaks. |
+| `npm run lint` | Lints the codebase to check for style and quality issues. |
+| `npm run lint:fix` | Automatically fixes all fixable linting errors. |
+| `npm run prepare` | A hook that runs **`husky`** installation, setting up Git hooks for pre-commit checks. |
+| `npm run build` | Builds the production-ready code bundle using **`webpack`**. |
+| `npm run format` | Formats all code files using **`prettier`** to ensure consistent style. |
+
+## Project Structure
+
+Project structure is as follows:
+
+- `src/`: Contains all of the application's source code.
+  - `config/`: Configuration files for various services.
+  - `constants/`: Application-wide constant values.
+  - `controllers/`: Request handlers for API endpoints.
+  - `jobs/`: Background tasks and cron jobs.
+  - `logs/`: Log files for the application.
+  - `middlewares/`: Express middleware functions.
+  - `public/`: Static assets and public-facing files.
+  - `repository/`: Database interaction logic and data access objects.
+  - `routes/`: API endpoint definitions and routing.
+  - `services/`: Business logic and core application services.
+  - `utils/`: Helper functions and utilities.
+  - `validations/`: Data validation schemas and logic.
+  - `app.js`: Main application entry point.
+  - `check-env.js`: Script to validate environment variables.
+  - `server.js`: Server setup and startup script.
+- `sql-scripts/`: SQL scripts for database setup and migrations.
+- `tests/`: Test files for unit and integration testing.
+- `node_modules/`: Project dependencies.
+- `.env.*`: Environment configuration files for different environments (development, staging, production).
+- `docker-compose.*.yml`: Docker Compose files for running the application stack.
+- `sample.env`: Environment Variables required for running the application
+- `sample.env.db`: Environment Variables required for running MYSQL database
+- `sample.env.redis`: Environment Variables required for running REDIS
+- `Dockerfile`: Dockerfile for building the application image.
+- `jest.config.js`: Jest testing framework configuration.
+- `Makefile`: Commands to automate common development and deployment tasks.
+- `package.json`: Project metadata and dependencies.
+- `README.md`: Project's main documentation.
+
+---
 
 ## Prerequisites
 
@@ -59,43 +142,43 @@ Before you begin, ensure you have the following installed on your local machine:
 
 ### Installation
 
-1.  Clone the repository:
+1. Clone the repository:
 
     ```bash
     git clone https://github.com/imotech/kenecare-api.git
     ```
 
-2.  Navigate to the project directory:
+2. Navigate to the project directory:
 
     ```bash
     cd kenecare-api
     ```
 
-3.  Install the dependencies:
+3. Install the dependencies:
 
     ```bash
     npm install
     ```
 
-4.  Create a `.env.dev` file in the root of the project and add the necessary environment variables. You can use the `sample-env.txt` file as a template.
+4. Create a `.env.development` file in the root of the project and add the necessary environment variables. You can use the `sample.env.txt` file as a template. Repeat the same for `.env.db.devlopment` use `sample.env.db` and `.env.redis.development` use `sample.env.redis`
 
 ### Running the Application
 
 You can run the application using Docker or locally with Node.js.
 
-**Using Docker (Recommended)**
+#### Using Docker (Recommended)
 
-1.  Start the application using Docker Compose:
+1. Start the application using Docker Compose:
 
     ```bash
-    docker-compose -f docker-compose.api-dev.yml up --build
+    make run-dev
     ```
 
 The API will be accessible at `http://localhost:8500`.
 
-**Locally with Node.js**
+#### Locally with Node.js
 
-1.  Start the application in development mode:
+1. Start the application in development mode:
 
     ```bash
     npm run start:dev
@@ -103,9 +186,9 @@ The API will be accessible at `http://localhost:8500`.
 
 The API will be accessible at `http://localhost:8000`.
 
-## API Documentation
+<!-- ## API Documentation
 
-The API is documented using Swagger. Once the application is running, you can access the Swagger UI at `http://localhost:8500/api-docs`.
+The API is documented using Swagger. Once the application is running, you can access the Swagger UI at `http://localhost:8500/api-docs`. -->
 
 ## Testing
 

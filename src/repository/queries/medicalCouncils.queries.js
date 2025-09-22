@@ -1,5 +1,6 @@
 module.exports = {
-  GET_ALL_MEDICAL_COUNCILS: "SELECT * FROM medical_councils",
+  GET_ALL_MEDICAL_COUNCILS:
+    "SELECT mc.*, COUNT(*) OVER() AS totalRows FROM medical_councils mc LIMIT ?,?",
   COUNT_MEDICAL_COUNCILS: "SELECT COUNT(*) AS totalRows FROM medical_councils",
   GET_MEDICAL_COUNCIL_BY_ID:
     "SELECT * FROM medical_councils WHERE council_id = ? LIMIT 1",
@@ -30,4 +31,7 @@ module.exports = {
         WHERE
             dcr.registration_status = 'approved' AND d.is_profile_approved = 1
     `,
+  UPDATE_DOCTOR_REGISTRATIONS_COUNCIL_EXPIRED_STATUS: `
+    UPDATE doctors_council_registration SET registration_status = 'expired WHERE council_registration_id = ?';
+  `,
 };

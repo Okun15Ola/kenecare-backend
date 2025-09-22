@@ -37,7 +37,7 @@ module.exports = {
   ORDER BY df.created_at DESC
   `,
   GET_APPROVED_DOCTOR_REVIEW_BY_DOCTOR_ID:
-    "SELECT df.feedback_id, df.patient_id, p.first_name, p.last_name, df.doctor_id, d.last_name AS doctorName, df.feedback_content, df.is_feedback_approved, df.created_at, df.updated_at FROM doctor_feedbacks df INNER JOIN patients p ON p.patient_id = df.patient_id INNER JOIN doctors d ON d.doctor_id = df.doctor_id WHERE df.doctor_id = ? AND is_feedback_approved = 1 ORDER BY created_at DESC",
+    "SELECT df.feedback_id, df.patient_id, p.first_name, p.last_name, p.profile_pic_url, df.doctor_id, d.last_name AS doctorName, df.feedback_content, df.is_feedback_approved, df.created_at, df.updated_at, COUNT(*) OVER() AS totalRows FROM doctor_feedbacks df INNER JOIN patients p ON p.patient_id = df.patient_id INNER JOIN doctors d ON d.doctor_id = df.doctor_id WHERE df.doctor_id = ? AND is_feedback_approved = 1 ORDER BY created_at DESC LIMIT ?,?",
   COUNT_APPROVED_DOCTOR_REVIEW_BY_DOCTOR_ID:
     "SELECT  COUNT(*) as totalRows FROM doctor_feedbacks WHERE doctor_id = ? AND is_feedback_approved = 1",
   UPDATE_REVIEW_APPROVAL_STATUS:

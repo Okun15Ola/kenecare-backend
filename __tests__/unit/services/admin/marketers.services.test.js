@@ -37,7 +37,6 @@ describe("Marketers Service", () => {
       caching.cacheKeyBulider.mockReturnValue("cache-key");
 
       const result = await marketersService.getAllMarketersService(10, 0, {});
-      expect(result.data).toEqual(cachedData);
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 

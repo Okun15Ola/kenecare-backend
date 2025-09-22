@@ -5,9 +5,10 @@ module.exports = {
   `,
 
   GET_ALL_FAQS: `
-    SELECT faq_id, faq_uuid, question, answer, category, is_published, created_at, updated_at
+    SELECT faq_id, faq_uuid, question, answer, category, is_published, created_at, updated_at, COUNT(*) OVER() AS totalRows
     FROM faqs
     ORDER BY created_at DESC
+    LIMIT ?,?
   `,
 
   COUNT_FAQ: `
@@ -15,10 +16,11 @@ module.exports = {
   `,
 
   GET_PUBLISHED_FAQS: `
-    SELECT faq_id, faq_uuid, question, answer, category, is_published, created_at, updated_at
+    SELECT faq_id, faq_uuid, question, answer, category, is_published, created_at, updated_at, COUNT(*) OVER() AS totalRows
     FROM faqs
     WHERE is_published = 1
     ORDER BY created_at DESC
+    LIMIT ?,?
   `,
 
   COUNT_PUBLISHED_FAQ: `

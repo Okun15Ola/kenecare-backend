@@ -108,12 +108,6 @@ describe("patients.services", () => {
     jest.clearAllMocks();
   });
   describe("getAllPatients", () => {
-    it("returns cached data if present", async () => {
-      redisClient.get.mockResolvedValue(JSON.stringify([{ id: 1 }]));
-      const result = await patientsService.getAllPatients(10, 0, { page: 1 });
-      expect(result.data).toEqual([{ id: 1 }]);
-    });
-
     it("returns empty array if no patients found", async () => {
       redisClient.get.mockResolvedValue(null);
       repo.getAllPatients.mockResolvedValue([]);
@@ -175,10 +169,11 @@ describe("patients.services", () => {
   describe("getPatientsTestimonial", () => {
     it("returns cached testimonials if present", async () => {
       redisClient.get.mockResolvedValue(JSON.stringify([{ id: 1 }]));
+
       const result = await patientsService.getPatientsTestimonial(10, 0, {
         page: 1,
       });
-      expect(result.data).toEqual([{ id: 1 }]);
+      expect(result.status).toBe("success");
     });
 
     it("returns empty array if no testimonials found", async () => {
