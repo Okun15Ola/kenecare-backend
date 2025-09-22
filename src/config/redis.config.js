@@ -93,7 +93,7 @@ class RedisClient {
 
   async deleteAll() {
     try {
-      return await this.client.flushall();
+      return await this.client.flushall("ASYNC");
     } catch (error) {
       console.error("❌ Redis DELETE ALL Error:", error);
       logger.error("❌ Redis DELETE ALL Error:", error);
