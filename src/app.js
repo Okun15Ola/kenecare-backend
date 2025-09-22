@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 require("dotenv").config();
-require("newrelic");
+// require("newrelic");
 require("module-alias/register");
 const compression = require("compression");
 const express = require("express");
@@ -14,6 +14,7 @@ const logger = require("./middlewares/logger.middleware");
 const { allowHeaders, allowOrigins } = require("./config/default.config");
 const { authenticateClient } = require("./middlewares/apiKey.middlewares");
 const { apiClientLimiter } = require("./utils/rate-limit.utils");
+// const errorHandler = require("./middlewares/errorHandler.middlewares");
 // const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
 // const { encryptionKey } = require("./config/default.config");
 
@@ -40,7 +41,6 @@ const doctorsWalletRouter = require("./routes/api/doctors/wallet.routes");
 const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.routes");
 const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.routes");
 const doctorsFollowUpRouter = require("./routes/api/doctors/followups.routes");
-// const doctorsTimeSlotRouter = require("./routes/api/doctors/time-slot.routes");
 const doctorFaqRouter = require("./routes/api/doctors/doctor-faqs.routes");
 const doctorBlogRouter = require("./routes/api/doctors/doctor-blogs.routes");
 const doctorReviews = require("./routes/api/doctors/reviews.routes");
@@ -126,11 +126,6 @@ app.use(
     },
   }),
 );
-
-// app.use((req, res, next) => {
-//   console.log("Incoming:", req.method, req.originalUrl);
-//   next();
-// });
 
 app.set("etag", true);
 
