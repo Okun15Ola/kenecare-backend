@@ -335,13 +335,12 @@ exports.loginUser = async ({
       return generateAndSendVerificationOTP({ userId, mobileNumber });
     }
 
-    const [accessToken, streamToken] = await Promise.all([
+    const [accessToken, , streamToken] = await Promise.all([
       generateUsersJwtAccessToken({ sub: userId }),
-      generateStreamUserToken(userId.toString()),
       createStreamUserProfile(userType, userId), // profile creation
+      generateStreamUserToken(userId.toString()),
     ]);
 
-    console.log("STREAM_TOKEN_AT_LOGIN: ", streamToken);
     redisClient.clearCacheByPattern("doctors:all:*");
 
     return Response.SUCCESS({

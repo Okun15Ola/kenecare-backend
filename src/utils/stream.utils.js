@@ -40,7 +40,8 @@ const createOrUpdateStreamUser = async ({
       name: username,
       image,
     };
-    await client.upsertUsers([user]);
+    const response = await client.upsertUsers([user]);
+    return response;
   } catch (error) {
     logger.error("Stream Error: ", error);
     throw error;
