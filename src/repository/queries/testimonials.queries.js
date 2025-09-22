@@ -1,10 +1,12 @@
 module.exports = {
   GET_ALL_TESTIMONIALS: `
-    SELECT testimonial_id, first_name, last_name, patients_testimonial.patient_id, profile_pic_url, testimonial_content, is_approved, is_active, fullname as 'approved_by'
+    SELECT testimonial_id, first_name, last_name, patients_testimonial.patient_id, profile_pic_url, testimonial_content, is_approved, is_active, fullname as 'approved_by', COUNT(*) OVER() AS totalRows
     FROM patients_testimonial
     INNER JOIN patients ON patients_testimonial.patient_id = patients.patient_id
     LEFT JOIN admins ON patients_testimonial.approved_by = admins.admin_id
     WHERE is_approved = 1 AND is_active = 1
+    ORDER BY created_at DESC
+    LIMIT ?,?
   `,
   COUNT_TESTIMONIALS:
     "SELECT COUNT(*) AS totalRows FROM patients_testimonial WHERE is_approved = 1 AND is_active = 1;",

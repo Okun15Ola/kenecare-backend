@@ -6,7 +6,7 @@ const COMMON_SELECT = `
   medical_appointments.meeting_id, join_url, start_url, start_time, end_time, appointment_status,
   cancelled_reason, cancelled_at, canceled_by, postponed_by, postponed_date, postponed_reason,
   medical_appointments.created_at, medical_appointments.updated_at, amount_paid, currency, payment_method,
-  order_id, transaction_id, payment_status 
+  order_id, transaction_id, payment_status, COUNT(*) OVER() AS totalRows 
   FROM medical_appointments
   INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
   INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
@@ -20,6 +20,7 @@ module.exports = {
     ${COMMON_SELECT}
     WHERE medical_appointments.doctor_id = ? AND payment_status = 'success'
     ORDER BY medical_appointments.appointment_id DESC 
+    LIMIT ?,?
   `,
 
   GET_ALL_DOCTORS_PENDING_APPOINTMENTS_TODAY: `
@@ -41,7 +42,7 @@ module.exports = {
   WHERE appointment_status = 'pending'
       AND appointment_date = CURDATE()
       AND payment_status = 'success'
-    ORDER BY d.doctor_id, medical_appointments.appointment_time ASC
+    ORDER BY medical_appointments.created_at, d.doctor_id, medical_appointments.appointment_time DESC
   `,
 
   GET_ALL_DOCTORS_APPROVED_APPOINTMENTS_TODAY: `
@@ -63,7 +64,7 @@ module.exports = {
   WHERE appointment_status = 'approved'
       AND appointment_date = CURDATE()
       AND payment_status = 'success'
-    ORDER BY d.doctor_id, medical_appointments.appointment_time ASC
+    ORDER BY medical_appointments.created_at, d.doctor_id, medical_appointments.appointment_time ASC
   `,
 
   GET_ALL_DOCTORS_APPOINTMENTS_TODAY: `
@@ -85,7 +86,7 @@ module.exports = {
   WHERE d.doctor_id = ? AND appointment_status IN('approved', 'pending', 'postponed')
       AND appointment_date = CURDATE()
       AND payment_status = 'success'
-    ORDER BY d.doctor_id, medical_appointments.appointment_time ASC
+    ORDER BY medical_appointments.created_at, d.doctor_id, medical_appointments.appointment_time ASC
   `,
 
   GET_DOCTOR_APPOINTMENTS_DATE_RANGE: `
@@ -276,6 +277,8 @@ module.exports = {
     ${COMMON_SELECT}
     WHERE medical_appointments.created_at BETWEEN ? AND ?
       AND medical_appointments.doctor_id = ? AND payment_status = 'success'
+    ORDER BY medical_appointments.created_at DESC
+    LIMIT ?,?
   `,
   COUNT_APPOINTMENTS_BY_DATE: `
   SELECT COUNT(*) AS totalRows
