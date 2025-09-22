@@ -92,4 +92,5 @@ exports.createDoctorProfileValidations = [
     .bail()
     .trim()
     .escape(),
+  body("profileSummary").trim().escape(),
 ];

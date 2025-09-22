@@ -11,8 +11,7 @@ const {
 } = require("../../../validations/admin/admin-appointments.validations");
 const { Validate } = require("../../../validations/validate");
 
-router.use(authenticateAdmin, adminLimiter); // Authentication middleware & Rate limiting middleware applied to all routes in this router
-
+router.use(authenticateAdmin, adminLimiter);
 router.get(
   "/",
   adminAppointmentPaginationValidation,
@@ -21,8 +20,8 @@ router.get(
 );
 
 router.get("/:id", GetAdminAppointmentByIdController);
-router.get("/:id", GetAdminAppointmentByIdController);
-router.get("/:id", GetAdminAppointmentByIdController);
+// router.get("/:id", GetAdminAppointmentByIdController);
+// router.get("/:id", GetAdminAppointmentByIdController);
 router.get("/doctor/:id", GetAdminAppointmentsByDoctorIdController);
 
 module.exports = router;

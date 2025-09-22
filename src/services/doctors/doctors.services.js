@@ -1,4 +1,3 @@
-const he = require("he");
 const dbObject = require("../../repository/doctors.repository");
 const Response = require("../../utils/response.utils");
 const {
@@ -22,7 +21,6 @@ const {
 const { redisClient } = require("../../config/redis.config");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
@@ -36,24 +34,14 @@ const { generateFileName } = require("../../utils/file-upload.utils");
 exports.getAllDoctors = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "doctors:count:approved";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: dbObject.getDoctorsCount,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No doctors found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider("doctors:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -63,11 +51,19 @@ exports.getAllDoctors = async (limit, page) => {
       return Response.SUCCESS({ message: "No doctors found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const doctors = await Promise.all(rawData.map(mapDoctorRow));
+
+    const valueToCache = {
+      data: doctors,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(doctors),
+      value: JSON.stringify(valueToCache),
     });
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
@@ -79,17 +75,6 @@ exports.getAllDoctors = async (limit, page) => {
 exports.getDoctorByQuery = async (locationId, query, limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "doctors:search:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => dbObject.getDoctorsQueryCount({ locationId, query }),
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No doctors found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider(
       `doctors:${locationId ? `:location=${locationId}` : ""}
@@ -99,9 +84,10 @@ exports.getDoctorByQuery = async (locationId, query, limit, page) => {
     );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await dbObject.getDoctorByQuery({
@@ -115,11 +101,19 @@ exports.getDoctorByQuery = async (locationId, query, limit, page) => {
       return Response.SUCCESS({ message: "No doctors found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const doctors = await Promise.all(rawData.map(mapDoctorRow));
+
+    const valueToCache = {
+      data: doctors,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(doctors),
+      value: JSON.stringify(valueToCache),
     });
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
@@ -132,20 +126,7 @@ exports.getDoctorByQuery = async (locationId, query, limit, page) => {
 exports.getDoctorBySpecialtyId = async (specialityId, limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "doctors:specialty:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => dbObject.getDoctorsSpecializationCount(specialityId),
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No doctors available for this specialty",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
       `doctors:speciality:${specialityId}`,
       limit,
@@ -153,9 +134,10 @@ exports.getDoctorBySpecialtyId = async (specialityId, limit, page) => {
     );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await dbObject.getDoctorsBySpecializationId(
@@ -171,11 +153,19 @@ exports.getDoctorBySpecialtyId = async (specialityId, limit, page) => {
       });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const doctors = await Promise.all(rawData.map(mapDoctorRow));
+
+    const valueToCache = {
+      data: doctors,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(doctors),
+      value: JSON.stringify(valueToCache),
     });
 
     return Response.SUCCESS({ data: doctors, pagination: paginationInfo });
@@ -297,9 +287,6 @@ exports.createDoctorProfile = async ({
       });
     }
 
-    const encodedProfessionalSummary = he.encode(professionalSummary);
-    const encodedQualification = he.encode(qualifications);
-
     const { insertId } = await dbObject.createDoctor({
       userId,
       title,
@@ -307,9 +294,9 @@ exports.createDoctorProfile = async ({
       middleName,
       lastName,
       gender,
-      professionalSummary: encodedProfessionalSummary,
+      professionalSummary,
       specializationId,
-      qualifications: encodedQualification,
+      qualifications,
       consultationFee,
       cityId,
       yearOfExperience,
@@ -416,9 +403,9 @@ exports.updateDoctorProfile = async ({
       middleName,
       lastName,
       gender,
-      professionalSummary: he.encode(professionalSummary),
+      professionalSummary,
       specializationId,
-      qualifications: he.encode(qualifications),
+      qualifications,
       consultationFee,
       cityId,
       yearOfExperience,

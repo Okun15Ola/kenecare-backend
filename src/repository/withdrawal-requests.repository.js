@@ -30,8 +30,7 @@ exports.createWithdrawalRequest = async ({
 };
 
 exports.getAllWithdrawalRequests = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_WITHDRAWAL_REQUESTS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_WITHDRAWAL_REQUESTS, [offset, limit]);
 };
 
 exports.countWithdrawalRequests = async () => {
@@ -57,8 +56,11 @@ exports.updateWithdrawalRequest = async ({
 };
 
 exports.getDoctorWithdrawalHistory = async (doctorId, limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_WITHDRAWAL_HISTORY} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery, [doctorId]);
+  return query(queries.GET_DOCTOR_WITHDRAWAL_HISTORY, [
+    doctorId,
+    offset,
+    limit,
+  ]);
 };
 
 exports.countDoctorWithdrawalHistory = async (doctorId) => {

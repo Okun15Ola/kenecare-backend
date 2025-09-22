@@ -2,8 +2,7 @@ const { query } = require("./db.connection");
 const queries = require("./queries/blogs.queries");
 
 exports.getAllBlogs = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_BLOG} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_BLOG, [offset, limit]);
 };
 
 exports.countBlog = async () => {

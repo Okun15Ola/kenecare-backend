@@ -6,7 +6,6 @@ const { redisClient } = require("../../config/redis.config");
 const { mapBlogRow } = require("../../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
@@ -14,24 +13,14 @@ const logger = require("../../middlewares/logger.middleware");
 exports.getBlogs = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "blogs:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: dbObject.countBlog,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No blogs found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider("blogs:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await dbObject.getAllBlogs(limit, offset);
@@ -40,11 +29,19 @@ exports.getBlogs = async (limit, page) => {
       return Response.SUCCESS({ message: "No blogs found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const blogs = await Promise.all(rawData.map(mapBlogRow));
+
+    const valueToCache = {
+      data: blogs,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(blogs),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
 

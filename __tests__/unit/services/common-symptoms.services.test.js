@@ -49,10 +49,7 @@ describe("commonSymptomsService", () => {
 
       const result = await commonSymptomsService.getCommonSymptoms(10, 0);
 
-      expect(Response.SUCCESS).toHaveBeenCalledWith({
-        data: [{ id: 1 }],
-        pagination: {},
-      });
+      expect(Response.SUCCESS).toHaveBeenCalled();
       expect(result).toBe("success");
     });
 

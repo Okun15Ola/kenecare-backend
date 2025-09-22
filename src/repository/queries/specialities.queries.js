@@ -1,6 +1,6 @@
 module.exports = {
   GET_ALL_SPECIALTIES: `
-    SELECT * FROM medical_specialities
+    SELECT ms.*, COUNT(*) OVER() AS totalRows FROM medical_specialities ms LIMIT ?, ?
   `,
   COUNT_SPECIALITY: "SELECT COUNT(*) AS totalRows FROM medical_specialities;",
   GET_SPECIALTY_BY_ID: `

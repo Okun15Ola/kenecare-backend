@@ -13,6 +13,8 @@ exports.GetPrescriptionsByAppointmentValidation = [
     .bail()
     .trim()
     .isInt({ gt: 0 })
+    .withMessage("Invalid Appointment ID")
+    .bail()
     .escape()
     .custom(async (value) => {
       const appointment = await getAppointmentByID(value);
@@ -29,6 +31,8 @@ exports.GetPrescriptionByIdValidation = [
     .withMessage("Prescription ID is required")
     .bail()
     .isInt({ gt: 0 })
+    .withMessage("Invalid Prescription ID")
+    .bail()
     .trim()
     .escape()
     .custom(async (value) => {

@@ -2,11 +2,7 @@ const { query } = require("./db.connection");
 const queries = require("./queries/adminDoctors.queries");
 
 exports.getAllDoctors = async (limit, offset) => {
-  const optimizedQuery =
-    limit && offset
-      ? `${queries.GET_ALL_DOCTORS} LIMIT ${limit} OFFSET ${offset};`
-      : queries.GET_ALL_DOCTORS;
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_DOCTORS, [offset, limit]);
 };
 
 exports.getAllMedicalCouncilRegistrationCount = async () => {
@@ -25,14 +21,15 @@ exports.getDoctorByQuery = async ({
   limit,
   offset,
 }) => {
-  const optimizedQuery = `${queries.SEARCH_DOCTOR_BY_QUERY} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery, [
+  return query(queries.SEARCH_DOCTOR_BY_QUERY, [
     locationId,
     `%${search}%`,
     `%${search}%`,
     `%${search}%`,
     `%${search}%`,
     `%${search}%`,
+    offset,
+    limit,
   ]);
 };
 
@@ -50,8 +47,7 @@ exports.getCouncilRegistrationByDoctorId = async (doctorId) => {
 };
 
 exports.getAllMedicalCouncilRegistration = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_ALL_COUNCIL_REGISTRATIONS} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery);
+  return query(queries.GET_DOCTOR_ALL_COUNCIL_REGISTRATIONS, [offset, limit]);
 };
 
 exports.getCouncilRegistrationById = async (registrationId) => {

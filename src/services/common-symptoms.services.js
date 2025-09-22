@@ -6,7 +6,6 @@ const { generateFileName } = require("../utils/file-upload.utils");
 const { mapCommonSymptomsRow } = require("../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../utils/caching.utils");
 const logger = require("../middlewares/logger.middleware");
@@ -14,26 +13,13 @@ const logger = require("../middlewares/logger.middleware");
 exports.getCommonSymptoms = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "common-symptoms:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: repo.countCommonSymptom,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No common symptoms found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("common-symptoms:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -46,11 +32,20 @@ exports.getCommonSymptoms = async (limit, page) => {
       });
     }
 
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const symptoms = await Promise.all(rawData.map(mapCommonSymptomsRow));
+
+    const valueToCache = {
+      data: symptoms,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(symptoms),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
 

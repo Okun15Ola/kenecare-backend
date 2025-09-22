@@ -20,9 +20,11 @@ module.exports = {
       requests.mobile_number,  
       requests.status, 
       requests.created_at, 
-      requests.updated_at
+      requests.updated_at,
+      COUNT(*) OVER() AS totalRows
     FROM withdrawal_requests as requests
     INNER JOIN doctors on requests.doctor_id = doctors.doctor_id
+    LIMIT ?,?
   `,
   COUNT_WITHDRAWAL_REQUEST:
     "SELECT COUNT(*) As totalRows FROM withdrawal_requests;",
@@ -86,13 +88,15 @@ module.exports = {
     mobile_number,
     status,
     created_at,
-    updated_at
+    updated_at,
+    COUNT(*) OVER() AS totalRows
   FROM 
     withdrawal_requests
   WHERE 
     doctor_id = ?
   ORDER BY 
     created_at DESC
+  LIMIT ?,?
   `,
   COUNT_DOCTOR_WITHDRAWAL_HISTORY: `
   SELECT 
