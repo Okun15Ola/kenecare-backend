@@ -53,7 +53,7 @@ const createStreamCall = async (call) => {
     if (!call || !call.callType || !call.callID || !call.userId) {
       throw new Error("Invalid call parameters");
     }
-    const { callType, callID, appointmentId, members } = call;
+    const { callType, callID, userId, appointmentId, members } = call;
     const streamCall = client.video.call(callType, callID);
     const response = await streamCall.getOrCreate({
       members_limit: members?.length,
@@ -61,7 +61,7 @@ const createStreamCall = async (call) => {
       video: true,
       data: {
         members,
-        // created_by_id: userId.toString(),
+        created_by_id: userId.toString(),
         custom: {
           appointmentId,
         },
