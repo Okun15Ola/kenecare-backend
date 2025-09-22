@@ -3,7 +3,7 @@ module.exports = {
     SELECT symptom_id, symptom_name, symptom_descriptions, common_symptoms.image_url, general_consultation_fee, common_symptoms.tags, common_symptoms.is_active, common_symptoms.inputted_by, speciality_name, COUNT(*) OVER() AS totalRows
     FROM common_symptoms
     INNER JOIN medical_specialities ON common_symptoms.speciality_id = medical_specialities.speciality_id
-    ORDER BY created_at DESC
+    ORDER BY common_symptoms.created_at DESC
     LIMIT ?,?
   `,
   COUNT_COMMON_SYMPTOMS: "SELECT COUNT(*) AS totalRows FROM common_symptoms;",

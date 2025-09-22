@@ -21,7 +21,7 @@ const {
   mapFollowUpsRow,
 } = require("../../utils/db-mapper.utils");
 const {
-  cacheKeyBulider,
+  // cacheKeyBulider,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const { decryptText } = require("../../utils/auth.utils");
@@ -109,16 +109,16 @@ exports.getDoctorAppointments = async ({ userId, limit, page }) => {
 
     const offset = (page - 1) * limit;
 
-    const cacheKey = cacheKeyBulider(
-      `doctor:${doctorId}:appointments:all`,
-      limit,
-      offset,
-    );
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      const { data, pagination } = JSON.parse(cachedData);
-      return Response.SUCCESS({ data, pagination });
-    }
+    // const cacheKey = cacheKeyBulider(
+    //   `doctor:${doctorId}:appointments:all`,
+    //   limit,
+    //   offset,
+    // );
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   const { data, pagination } = JSON.parse(cachedData);
+    //   return Response.SUCCESS({ data, pagination });
+    // }
 
     // Get doctor's appointments
     const rawData = await dbObject.getAppointmentsByDoctorId({
@@ -139,16 +139,16 @@ exports.getDoctorAppointments = async ({ userId, limit, page }) => {
       mapDoctorAppointmentRow(row, title),
     );
 
-    const valueToCache = {
-      data: appointments,
-      pagination: paginationInfo,
-    };
+    // const valueToCache = {
+    //   data: appointments,
+    //   pagination: paginationInfo,
+    // };
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(valueToCache),
-      expiry: 300,
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(valueToCache),
+    //   expiry: 300,
+    // });
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
     logger.error("getDoctorAppointments: ", error);
@@ -169,11 +169,11 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
 
     const { doctor_id: doctorId, title } = doctor;
 
-    const cacheKey = `doctor:${doctorId}:appointments:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
+    // const cacheKey = `doctor:${doctorId}:appointments:${id}`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    // }
 
     const rawData = await dbObject.getDoctorAppointmentById({
       doctorId,
@@ -196,11 +196,11 @@ exports.getDoctorAppointment = async ({ userId, id }) => {
       followUps,
     };
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(mapDoctorAppointment),
-      expiry: 60,
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(mapDoctorAppointment),
+    //   expiry: 60,
+    // });
     return Response.SUCCESS({ data: mapDoctorAppointment });
   } catch (error) {
     logger.error("getDoctorAppointment: ", error);
@@ -401,8 +401,20 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       });
     }
 
-    const { appointment_uuid: appointmentUUID, patient_id: patientId } =
-      appointment;
+    const {
+      appointment_uuid: appointmentUUID,
+      patient_id: patientId,
+      appointment_status: appointmentStatus,
+    } = appointment;
+
+    if (appointmentStatus === "started") {
+      return Response.SUCCESS({
+        message: "Appointment Already Started. Please Join the call",
+        data: {
+          callID: appointmentUUID,
+        },
+      });
+    }
 
     const patient = await getPatientById(patientId);
     if (!patient) {
@@ -424,13 +436,23 @@ exports.startDoctorAppointment = async ({ userId, appointmentId }) => {
       appointmentId,
     };
 
-    await Promise.all([
+    const [streamCallResult, updateResult] = await Promise.all([
       createStreamCall(call),
       dbObject.updateDoctorAppointmentStartTime({
         appointmentId,
         startTime: moment().format("HH:mm:ss"),
       }),
     ]);
+
+    if (!streamCallResult) {
+      logger.error("ERROR_STARTING_CALL: ", streamCallResult);
+      throw new Error("Unable to start appointment. Please try again later");
+    }
+
+    if (!updateResult || updateResult.affectedRows === 0) {
+      logger.error("ERROR_UPDATING_CALL_STATUS: ", updateResult);
+      throw new Error("Unable to start appointment. Please try again later");
+    }
 
     // Centralized cache clearing
     const cachePatterns = getAppointmentCacheKeys(doctorId, patientId);

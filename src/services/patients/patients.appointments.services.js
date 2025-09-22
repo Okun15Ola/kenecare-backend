@@ -14,7 +14,7 @@ const {
   mapFollowUpsRow,
 } = require("../../utils/db-mapper.utils");
 const {
-  cacheKeyBulider,
+  // cacheKeyBulider,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const {
@@ -109,16 +109,16 @@ exports.getPatientAppointments = async (userId, limit, page) => {
 
     const offset = (page - 1) * limit;
 
-    const cacheKey = cacheKeyBulider(
-      `patient:${patientId}:appointments:all`,
-      limit,
-      offset,
-    );
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      const { data, pagination } = JSON.parse(cachedData);
-      return Response.SUCCESS({ data, pagination });
-    }
+    // const cacheKey = cacheKeyBulider(
+    //   `patient:${patientId}:appointments:all`,
+    //   limit,
+    //   offset,
+    // );
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   const { data, pagination } = JSON.parse(cachedData);
+    //   return Response.SUCCESS({ data, pagination });
+    // }
     const rawData = await repo.getAllPatientAppointments({
       patientId,
       offset,
@@ -138,16 +138,16 @@ exports.getPatientAppointments = async (userId, limit, page) => {
 
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
-    const valueToCache = {
-      data: appointments,
-      pagination: paginationInfo,
-    };
+    // const valueToCache = {
+    //   data: appointments,
+    //   pagination: paginationInfo,
+    // };
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(valueToCache),
-      expiry: 60,
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(valueToCache),
+    //   expiry: 60,
+    // });
 
     return Response.SUCCESS({ data: appointments, pagination: paginationInfo });
   } catch (error) {
@@ -168,11 +168,11 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       });
     }
     const { patient_id: patientId } = patient;
-    const cacheKey = `patient:${patientId}:appointments:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
+    // const cacheKey = `patient:${patientId}:appointments:${id}`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    // }
 
     const rawData = await repo.getPatientAppointmentById({
       patientId,
@@ -196,11 +196,11 @@ exports.getPatientAppointment = async ({ userId, id }) => {
       followUps,
     };
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(appointmentWithFollowUp),
-      expiry: 60,
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(appointmentWithFollowUp),
+    //   expiry: 60,
+    // });
 
     return Response.SUCCESS({ data: appointmentWithFollowUp });
   } catch (error) {
