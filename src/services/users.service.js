@@ -330,23 +330,11 @@ exports.loginUser = async ({
       return generateAndSendVerificationOTP({ userId, mobileNumber });
     }
 
-    const [accessToken, streamToken, createStreamProfile] = await Promise.all([
+    const [accessToken, , streamToken] = await Promise.all([
       generateUsersJwtAccessToken({ sub: userId }),
-      generateStreamUserToken(userId.toString()),
       createStreamUserProfile(userType, userId), // profile creation
+      generateStreamUserToken(userId.toString()),
     ]);
-
-    if (!accessToken) {
-      logger.error("ERROR GENERATING USER JWT TOKEN: ", accessToken);
-    }
-
-    if (!streamToken) {
-      logger.warn("ERROR GENERATING STREAM USER TOKEN: ", streamToken);
-    }
-
-    if (!createStreamProfile) {
-      logger.warn("ERROR CREATING STREAM PROFILE: ", createStreamProfile);
-    }
 
     redisClient.clearCacheByPattern("doctors:all:*");
 

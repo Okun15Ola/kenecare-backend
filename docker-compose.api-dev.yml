@@ -1,11 +1,9 @@
 services:
   api:
-    # depends_on:
-    #   - db
     build:
       context: .
-    container_name: kenecare-api-${ENV}
-    image: imotechsl/kenecare-api:${ENV}
+    container_name: kenecare-api-${ENV:-development}
+    image: ${IMAGE_NAME}:${ENV:-development}
     ports:
       - "${APP_HOST_PORT:-8500}:${APP_PORT:-8000}"
     networks:

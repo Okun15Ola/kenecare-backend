@@ -38,7 +38,7 @@ const logger = require("../middlewares/logger.middleware");
  * @function createStreamUserProfile
  * @param {string} userType - The type of user (e.g., USERTYPE.PATIENT or USERTYPE.DOCTOR).
  * @param {number} userId - The unique identifier of the user.
- * @returns {Promise<void>} Resolves when the operation is complete.
+ * @returns {Promise<user>} Resolves when the operation is complete.
  */
 const createStreamUserProfile = async (userType, userId) => {
   if (![USERTYPE.PATIENT, USERTYPE.DOCTOR].includes(userType)) return;
@@ -56,14 +56,17 @@ const createStreamUserProfile = async (userType, userId) => {
     const imageUrl = profilePicUrl
       ? await getFileUrlFromS3Bucket(profilePicUrl)
       : null;
-    await createOrUpdateStreamUser({
+    const response = await createOrUpdateStreamUser({
       userId: String(userId),
       mobileNumber,
       userType,
       username: `${firstName ?? ""} ${lastName ?? ""}`.trim(),
       image: imageUrl,
     });
+    // eslint-disable-next-line consistent-return
+    return response;
   } catch (err) {
+    console.log(err);
     logger.error("createStreamUserProfile:", err);
     throw err;
   }
