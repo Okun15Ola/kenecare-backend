@@ -282,3 +282,9 @@ ALTER TABLE `withdrawal_requests`
 
 ALTER TABLE `doctors`
 ADD COLUMN `signature_url` VARCHAR(255) DEFAULT NULL AFTER `profile_pic_url`;
+
+-- NEW DB CHANGES
+
+ALTER TABLE `appointment_followup`
+MODIFY COLUMN `followup_status` ENUM('pending', 'completed', 'canceled', 'approved') NOT NULL DEFAULT 'pending',
+ADD COLUMN `followup_count` TINYINT;
