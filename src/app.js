@@ -1,12 +1,12 @@
 /* eslint-disable import/no-extraneous-dependencies */
 require("dotenv").config();
-// require("newrelic");
+require("newrelic");
 require("module-alias/register");
 const compression = require("compression");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const bodyParser = require("body-parser");
+// const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
@@ -114,9 +114,8 @@ app.use(
   }),
 );
 
-app.use(express.json());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(
   compression({
     level: 6,
@@ -216,7 +215,6 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error("An unexpected error occured: ", err);
   logger.error("An unexpected error occured: ", err);
 
   let statusCode = 500;
