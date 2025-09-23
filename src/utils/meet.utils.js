@@ -87,7 +87,6 @@ async function createSpace(authClient) {
 
   // Run request
   const response = await meetClient.createSpace({ name: "space/kenecare" });
-  logger.info(response);
   logger.info(`Meet URL: ${response[0].meetingUri}`);
 }
 

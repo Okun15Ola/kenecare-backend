@@ -65,6 +65,7 @@ const createStreamUserProfile = async (userType, userId) => {
     });
   } catch (err) {
     logger.error("createStreamUserProfile:", err);
+    throw err;
   }
 };
 

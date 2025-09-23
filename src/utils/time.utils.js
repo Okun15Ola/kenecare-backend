@@ -142,17 +142,17 @@ const validateDateTime = ({ date, time }) => {
     const minAppointmentTime = now.clone().add(1, "hour"); // Use clone to avoid modifying 'now'
     if (userDateTime.isBefore(minAppointmentTime)) {
       throw new Error(
-        "Appointments for today must be at least 1 hour from the current time.",
+        "Appointments must be scheduled at least 1 hour in advance.",
       );
     }
   }
 };
 
 const DEFAULT_APPOINTMENT_DURATION_MINUTES = 30;
-const DOCTOR_BREAK_MINUTES = 10;
+const DOCTOR_BREAK_MINUTES = 5;
 const TOTAL_APPOINTMENT_BLOCK_MINUTES =
   DEFAULT_APPOINTMENT_DURATION_MINUTES + DOCTOR_BREAK_MINUTES;
-const PRE_APPOINTMENT_BUFFER_MINUTES = 10;
+const PRE_APPOINTMENT_BUFFER_MINUTES = 5;
 
 const dayOfWeekMap = {
   0: "Sunday",
@@ -166,8 +166,8 @@ const dayOfWeekMap = {
 
 /**
  * Checks if a doctor is available for a new appointment at a specific time,
- * considering general availability, existing appointments (with duration + 10 min break),
- * and a 10-minute pre-appointment buffer before existing appointments.
+ * considering general availability, existing appointments (with duration + 5 min break),
+ * and a 5-minute pre-appointment buffer before existing appointments.
  *
  * @param {number} doctorId The ID of the doctor.
  * @param {string} proposedAppointmentStartDateTime String representing proposed start (e.g., 'YYYY-MM-DD HH:mm:ss').
@@ -192,6 +192,9 @@ async function checkDoctorAvailability(
 
   let isInGeneralAvailability = false;
   if (!availableDays || availableDays.is_available === 0) {
+    logger.warn(
+      `[OUTSIDE_WORKING_DAY]: The doctor is not available on ${proposedDayOfWeekString}.`,
+    );
     return {
       isAvailable: false,
       reasonCode: "OUTSIDE_WORKING_DAY",
@@ -219,6 +222,9 @@ async function checkDoctorAvailability(
     proposedEndWithBuffer.isSameOrBefore(slotEndDateTimeOnProposedDate);
 
   if (!isInGeneralAvailability) {
+    logger.warn(
+      `[OUTSIDE_WORKING_HOURS]: The selected time is outside the doctor's working hours for ${proposedDayOfWeekString}.`,
+    );
     return {
       isAvailable: false,
       reasonCode: "OUTSIDE_WORKING_HOURS",
@@ -267,7 +273,7 @@ async function checkDoctorAvailability(
       proposedEndWithBuffer.isAfter(totalBlockedPeriodStart);
 
     if (overlaps) {
-      logger.info(
+      logger.warn(
         `Conflict for Doctor ${doctorId}: Proposed appointment ${proposedStart.format("HH:mm")} - ${proposedEndWithBuffer.format("HH:mm")} ` +
           `overlaps with existing appointment ${existingApptStart.format("HH:mm")} - ${existingApptEndWithBreak.format("HH:mm")} ` +
           `(pre-buffer starts at ${existingApptStartWithPreBuffer.format("HH:mm")}, actual appt starts at ${existingApptStart.format("HH:mm")}, ` +
