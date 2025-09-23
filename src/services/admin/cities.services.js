@@ -68,7 +68,6 @@ exports.createCity = async ({ name, latitude, longitude, inputtedBy }) => {
     });
 
     if (!insertId) {
-      logger.warn("Failed to create city");
       return Response.INTERNAL_SERVER_ERROR({
         message: "An error occured while creating city.",
       });

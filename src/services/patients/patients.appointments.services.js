@@ -54,6 +54,7 @@ exports.getPatientAppointmentMetrics = async (userId) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(data),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data });

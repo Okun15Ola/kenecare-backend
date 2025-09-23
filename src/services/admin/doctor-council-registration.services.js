@@ -48,7 +48,6 @@ exports.getCouncilRegistration = async (id) => {
     const rawData = await dbObject.getCouncilRegistrationById(id);
 
     if (!rawData) {
-      logger.warn(`Medical Council Registration Not Found for ID ${id}`);
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
       });
@@ -66,7 +65,6 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
   try {
     const rawData = await dbObject.getCouncilRegistrationById(regId);
     if (!rawData) {
-      logger.warn(`Medical Council Registration Not Found for ID ${regId}`);
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found for this Doctor",
       });
@@ -149,7 +147,6 @@ exports.rejectCouncilRegistration = async ({
   try {
     const rawData = await dbObject.getCouncilRegistrationById(regId);
     if (!rawData) {
-      logger.warn(`Medical Council Registration Not Found for ID ${regId}`);
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found for this Doctor",
       });
@@ -163,7 +160,6 @@ exports.rejectCouncilRegistration = async ({
     } = rawData;
 
     if (registrationStatus === "rejected") {
-      logger.warn("Medical Council Registration Already Rejected");
       return Response.NOT_MODIFIED({});
     }
 

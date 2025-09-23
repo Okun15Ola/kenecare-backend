@@ -61,7 +61,6 @@ exports.getBlog = async (id) => {
     }
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
-      logger.warn(`Blog Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     const blog = await mapBlogRow(rawData);
@@ -118,7 +117,6 @@ exports.createBlog = async ({
     });
 
     if (!insertId) {
-      logger.warn("Failed to create blog");
       return Response.NOT_MODIFIED({ message: "Blog Not Created" });
     }
 
@@ -145,7 +143,6 @@ exports.updateBlog = async ({
   try {
     const blog = await dbObject.getBlogById(id);
     if (!blog) {
-      logger.warn(`Blog Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
 
@@ -173,7 +170,6 @@ exports.updateBlog = async ({
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update blog for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -193,7 +189,6 @@ exports.updateBlogStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
-      logger.warn("Blog Not Found");
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     const { affectedRows } = await dbObject.updateBlogStatusById({
@@ -202,7 +197,6 @@ exports.updateBlogStatus = async ({ id, status }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update blog status for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -220,7 +214,6 @@ exports.updateBlogFeaturedStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
-      logger.warn("Blog Not Found");
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     const { affectedRows } = await dbObject.updateBlogFeaturedById({
@@ -229,7 +222,6 @@ exports.updateBlogFeaturedStatus = async ({ id, status }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update blog featured status for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -248,13 +240,11 @@ exports.deleteBlog = async (id) => {
   try {
     const rawData = await dbObject.getBlogById(id);
     if (!rawData) {
-      logger.warn(`Blog Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     const { affectedRows } = await dbObject.deleteBlogById(id);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete blog for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 

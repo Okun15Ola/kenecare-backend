@@ -62,7 +62,6 @@ exports.getSpecialtyByName = async (name) => {
     const rawData = await repo.getSpecialtyByName(name);
 
     if (!rawData) {
-      logger.warn(`Specialty Not Found for Name ${name}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
@@ -89,7 +88,6 @@ exports.getSpecialtyById = async (id) => {
     const rawData = await repo.getSpecialtiyById(id);
 
     if (!rawData) {
-      logger.warn(`Specialty Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
@@ -127,7 +125,6 @@ exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
     });
 
     if (!insertId) {
-      logger.warn("Failed to create specialty");
       return Response.BAD_REQUEST({ message: "Failed to create specialty" });
     }
 
@@ -145,7 +142,6 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
   try {
     const rawData = await repo.getSpecialtiyById(id);
     if (!rawData) {
-      logger.warn(`Specialty Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
@@ -170,7 +166,6 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update specialty for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -187,7 +182,6 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
 exports.updateSpecialtyStatus = async ({ id, status }) => {
   try {
     if (!Number.isInteger(status) || status < 0 || status > 1) {
-      logger.warn(`Invalid Status Code: ${status}`);
       return Response.BAD_REQUEST({ message: "Invalid Status Code" });
     }
 
@@ -197,7 +191,6 @@ exports.updateSpecialtyStatus = async ({ id, status }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update specialty status for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -223,7 +216,6 @@ exports.deleteSpecialty = async (id) => {
     const { affectedRows } = await repo.deleteSpecialtieById(id);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete specialty for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 

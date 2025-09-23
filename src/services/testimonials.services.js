@@ -58,7 +58,6 @@ exports.getTestimonialById = async (id) => {
     const rawData = await repo.getTestimonialById(id);
 
     if (!rawData) {
-      logger.warn(`Testimonial Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
 
@@ -83,7 +82,6 @@ exports.getTestimonialById = async (id) => {
 //     });
 
 //     if (!insertId) {
-//       logger.warn("Failed to create testimonial");
 //       return Response.NOT_MODIFIED({ message: "Testimonial Not Created" });
 //     }
 
@@ -112,7 +110,6 @@ exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
     const rawData = await repo.getTestimonialById(testimonialId);
 
     if (!rawData) {
-      logger.warn(`Testimonial Not Found for ID ${testimonialId}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
     const { affectedRows } = await repo.approveTestimonialById({
@@ -121,7 +118,6 @@ exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to approve testimonial for ID ${testimonialId}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -137,7 +133,6 @@ exports.denyTestimonialById = async ({ testimonialId, approvedBy }) => {
     const rawData = await repo.getTestimonialById(testimonialId);
 
     if (!rawData) {
-      logger.warn(`Testimonial Not Found for ID ${testimonialId}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
     const { affectedRows } = await repo.denyTestimonialById({
@@ -146,7 +141,6 @@ exports.denyTestimonialById = async ({ testimonialId, approvedBy }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to deny testimonial for ID ${testimonialId}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -162,7 +156,6 @@ exports.deleteSpecialization = async (specializationId) => {
     const rawData = await repo.getSpecializationById(specializationId);
 
     if (!rawData) {
-      logger.warn(`Specialization Not Found for ID ${specializationId}`);
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
@@ -170,7 +163,6 @@ exports.deleteSpecialization = async (specializationId) => {
       await repo.deleteSpecializationById(specializationId);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete Specialization for ID ${specializationId}`);
       return Response.NOT_MODIFIED({});
     }
 

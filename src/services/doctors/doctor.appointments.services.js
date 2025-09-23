@@ -36,7 +36,6 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
     const { doctor_id: doctorId } = await fetchLoggedInDoctor(userId);
 
     if (!doctorId) {
-      logger.warn(`Doctor Profile Not Found for user ${userId}`);
       return Response.NOT_FOUND({
         message:
           "Doctor profile not found please, create profile before proceeding",
@@ -50,7 +49,6 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
     if (cachedData) {
       return Response.SUCCESS({
         data: JSON.parse(cachedData),
-        expiry: 60,
       });
     }
 
@@ -58,6 +56,22 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
       dbObject.getDoctorAppointmentsDashboardMetrics({ doctorId }),
       dbObject.getDoctorAppointmentsDashboardMonthlyMetrics({ doctorId }),
     ]);
+
+    if (!dashboardMetrics) {
+      logger.error(
+        "Error processing appointment dashboard metrices",
+        dashboardMetrics,
+      );
+      return Response.NO_CONTENT();
+    }
+
+    if (!monthlyMetrics) {
+      logger.error(
+        "Error processing appointment monthly metrices",
+        monthlyMetrics,
+      );
+      return Response.NO_CONTENT();
+    }
 
     const responseData = {
       todayAppointments: {
@@ -84,6 +98,7 @@ exports.getDoctorAppointmentMetrics = async (userId) => {
     redisClient.set({
       key: dashboardCacheKey,
       value: JSON.stringify(responseData),
+      expiry: 60,
     });
 
     return Response.SUCCESS({ data: responseData });

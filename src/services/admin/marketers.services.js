@@ -95,7 +95,6 @@ exports.getMarketerByIdService = async (id) => {
     }
     const rawData = await getMarketerById(id);
     if (!rawData) {
-      logger.warn(`Marketer Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const marketer = await mapMarketersWithDocumentRow(rawData);
@@ -134,7 +133,6 @@ exports.createMarketerService = async ({
   try {
     // Check if ID document file was uploaded
     if (!idDocumentFile) {
-      logger.warn("ID Document File Not Provided");
       return Response.BAD_REQUEST({
         message:
           "Please Upload Identification Document File. Expected Document Format (*.pdf, *.jpg, *.jpeg, *.png)",
@@ -225,7 +223,6 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
     const marketer = await getMarketerByVerficationToken(token);
 
     if (!marketer) {
-      logger.warn("Marketer Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const {
@@ -271,7 +268,6 @@ exports.verifyMarketerEmailService = async (token) => {
     const { sub } = verifyMarketerEmailJwt(token);
 
     if (!sub) {
-      logger.warn("Invalid token");
       return Response.BAD_REQUEST({
         message: "Corrupted Email Verification Token",
       });
@@ -329,7 +325,6 @@ exports.updateMarketerByIdService = async ({
   try {
     const marketer = await getMarketerById(marketerId);
     if (!marketer) {
-      logger.warn("Marketer Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
 
@@ -368,7 +363,6 @@ exports.deleteMarketerByIdService = async (id) => {
   try {
     const marketer = await getMarketerById(id);
     if (!marketer) {
-      logger.warn("Marketer Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const { id_document_uuid: idDocumentUuid } = marketer;

@@ -63,7 +63,6 @@ exports.getSpecializationByName = async (name) => {
     const rawData = await dbObject.getSpecializationByName(name);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
@@ -91,7 +90,6 @@ exports.getSpecializationById = async (id) => {
     const rawData = await dbObject.getSpecializationById(id);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
     const specialization = mapSpecializationRow(rawData);
@@ -112,7 +110,6 @@ exports.createSpecialization = async ({ name, description, imageUrl }) => {
   try {
     const rawData = await dbObject.getSpecializationByName(name);
     if (rawData) {
-      logger.warn("Specialization Name already exists");
       return Response.BAD_REQUEST({
         message: "Specialization Name already exists",
       });
@@ -129,7 +126,6 @@ exports.createSpecialization = async ({ name, description, imageUrl }) => {
     const { insertId } = await dbObject.createNewSpecialization(specialization);
 
     if (!insertId) {
-      logger.warn("Fail to create specialization");
       return Response.NO_CONTENT({});
     }
 
@@ -146,7 +142,6 @@ exports.updateSpecialization = async ({ specializationId, specialization }) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
     const { affectedRows } = await dbObject.updateSpecializationById({
@@ -172,7 +167,6 @@ exports.updateSpecializationStatus = async ({ specializationId, status }) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
@@ -205,7 +199,6 @@ exports.deleteSpecialization = async (specializationId) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 

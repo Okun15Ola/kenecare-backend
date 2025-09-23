@@ -61,7 +61,6 @@ exports.getMedicalCouncilByEmail = async (councilEmail) => {
     const rawData = await repo.getMedicalCouncilById(councilEmail);
 
     if (!rawData) {
-      logger.warn(`Medical Council Not Found for Email ${councilEmail}`);
       return Response.NOT_FOUND({
         message: "Medical Council Not Found ",
       });
@@ -89,7 +88,6 @@ exports.getMedicalCouncilByMobileNumber = async (number) => {
     const rawData = await repo.getMedicalCouncilByMobileNumber(number);
 
     if (!rawData) {
-      logger.warn(`Medical Council Not Found for Mobile Number ${number}`);
       return Response.NOT_FOUND({
         message: "Medical Council Not Found ",
       });
@@ -117,7 +115,6 @@ exports.getMedicalCouncil = async (id) => {
     const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
-      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
     const council = mapMedicalCouncilRow(rawData);
@@ -150,7 +147,6 @@ exports.createMedicalCouncil = async ({
     });
 
     if (!insertId) {
-      logger.warn("Failed to create medical council");
       return Response.BAD_REQUEST({
         message: "Failed to create medical council",
       });
@@ -178,7 +174,6 @@ exports.updateMedicalCouncil = async ({
     const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
-      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical council not found" });
     }
     const { affectedRows } = await repo.updateMedicalCouncilById({
@@ -190,7 +185,6 @@ exports.updateMedicalCouncil = async ({
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update Medical Council for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -212,7 +206,6 @@ exports.updateMedicalCouncilStatus = async ({ id, status }) => {
     const rawData = await repo.getMedicalCouncilById(id);
 
     if (!rawData) {
-      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
 
@@ -226,7 +219,6 @@ exports.updateMedicalCouncilStatus = async ({ id, status }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update Medical Council Status for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -247,14 +239,12 @@ exports.deleteMedicalCouncil = async (id) => {
   try {
     const rawData = await repo.getMedicalCouncilById(id);
     if (!rawData) {
-      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
 
     const { affectedRows } = await repo.deleteMedicalCouncilById(id);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete Medical Council for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 

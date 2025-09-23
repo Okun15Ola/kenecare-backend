@@ -32,7 +32,6 @@ exports.getRequestById = async (id) => {
   try {
     const rawData = await getWithdrawalRequestByTransactionId(id);
     if (!rawData) {
-      logger.warn(`Withdrawal Request Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Withdrawal request not found" });
     }
     const data = mapWithdawalRow(rawData);

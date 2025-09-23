@@ -65,7 +65,6 @@ exports.getCommonSymptom = async (id) => {
     }
     const rawData = await repo.getCommonSymptomById(id);
     if (!rawData) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
 
@@ -94,7 +93,6 @@ exports.createCommonSymptom = async ({
 }) => {
   try {
     if (!file) {
-      logger.warn("Symptom image is required");
       return Response.BAD_REQUEST({ message: "Please upload symptom image" });
     }
     const fileName = `symptom_${generateFileName(file)}`;
@@ -156,7 +154,6 @@ exports.updateCommonSymptom = async ({
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
@@ -181,7 +178,6 @@ exports.updateCommonSymptom = async ({
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update Common Symptom for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -203,7 +199,6 @@ exports.updateCommonSymptomStatus = async ({ id }) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
@@ -220,14 +215,12 @@ exports.deleteCommonSymptom = async (id) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
     const { affectedRows } = await repo.deleteCommonSymptomById(id);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete Common Symptom for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 

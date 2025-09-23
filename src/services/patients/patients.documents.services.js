@@ -85,6 +85,7 @@ exports.getPatientMedicalDocuments = async (userId, page, limit) => {
     await redisClient.set({
       key: cacheKey,
       value: JSON.stringify(valueToCache),
+      expiry: 60,
     });
     return Response.SUCCESS({ data: documents, pagination: paginationInfo });
   } catch (error) {

@@ -305,7 +305,6 @@ exports.getCommonSymptomIndexService = async (id) => {
     }
     const rawData = await getCommonSymptomById(id);
     if (!rawData) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
 
@@ -380,7 +379,6 @@ exports.getBlogCategoryIndexService = async (id) => {
     const rawData = await getBlogCategoryById(id);
 
     if (!rawData) {
-      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Categrory Not Found" });
     }
     const category = mapBlogCategoryRow(rawData);
@@ -452,7 +450,6 @@ exports.getPublishedBlogsByDoctorIndexService = async (doctorId) => {
     const data = await doctorBlogRepository.getPublishedBlogsByDoctor(doctorId);
 
     if (!data?.length) {
-      logger.warn("No published blog found for doctor with ID : ", doctorId);
       return Response.SUCCESS({
         message: "No published blog found for doctor",
         data: [],
@@ -537,7 +534,6 @@ exports.getBlogIndexService = async (id) => {
     }
     const rawData = await getBlogById(id);
     if (!rawData) {
-      logger.warn(`Blog Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Not Found" });
     }
     const blog = await mapBlogRow(rawData, true);
@@ -602,7 +598,6 @@ exports.getCityIndexService = async (id) => {
     }
     const [rawData] = await getCityById(id);
     if (!rawData) {
-      logger.warn(`City Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "City Not Found" });
     }
     const city = mapCityRow(rawData);
@@ -670,7 +665,6 @@ exports.getMedicalCouncilIndexService = async (id) => {
     const rawData = await getMedicalCouncilById(id);
 
     if (!rawData) {
-      logger.warn(`Medical Council Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Medical Council Not Found" });
     }
     const council = mapMedicalCouncilRow(rawData);
@@ -738,7 +732,6 @@ exports.getSpecializationByIdIndexService = async (id) => {
     const rawData = await getSpecializationById(id);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
     const specialization = mapSpecializationRow(rawData);
@@ -809,7 +802,6 @@ exports.getSpecialtyByIdIndexService = async (id) => {
     const rawData = await getSpecialtiyById(id);
 
     if (!rawData) {
-      logger.warn(`Specialty Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 

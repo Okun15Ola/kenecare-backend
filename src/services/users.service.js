@@ -99,7 +99,6 @@ exports.getUserById = async (id) => {
     const rawData = await repo.getUserById(id);
 
     if (!rawData) {
-      logger.warn("User not found for ID");
       return null;
     }
 
@@ -131,7 +130,6 @@ exports.getUserByMobileNumber = async (number) => {
     }
     const rawData = await repo.getUserByMobileNumber(number);
     if (!rawData) {
-      logger.warn("User not found for mobile number");
       return null;
     }
 
@@ -164,7 +162,6 @@ exports.getUserByEmail = async (userEmail) => {
     const rawData = await repo.getUserByEmail(userEmail);
 
     if (!rawData) {
-      logger.warn("User not found for email");
       return null;
     }
 
@@ -191,7 +188,6 @@ exports.getUserByToken = async (token) => {
   try {
     const rawData = await repo.getUserByVerificationToken(token);
     if (!rawData) {
-      logger.warn("User not found for token");
       return null;
     }
     const user = mapUserRow(rawData, false, true, true, true);
@@ -275,7 +271,6 @@ exports.verifyRegistrationOTP = async ({ token, user }) => {
     }
 
     if (verifyTokenExpiry(verificationExpiry)) {
-      logger.warn("verifyRegistrationOTP: Verification code expired");
       return Response.BAD_REQUEST({
         message:
           "Verification Code Expired. Please Request a New Verification Code",

@@ -111,11 +111,11 @@ exports.getDoctorsPatientsHasMet = async (userId) => {
 
 exports.getPatientById = async (id) => {
   try {
-    const cacheKey = `patient:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
+    // const cacheKey = `patient:${id}`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    // }
     const rawData = await repo.getPatientById(id);
     if (!rawData) {
       logger.warn(`Patient Profile Not Found for ID: ${id}`);
@@ -140,10 +140,10 @@ exports.getPatientById = async (id) => {
       medicalInfo: medicalInfo || null,
     };
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(patientWithMedicalRecord),
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(patientWithMedicalRecord),
+    // });
 
     return Response.SUCCESS({ data: patientWithMedicalRecord });
   } catch (error) {
@@ -212,11 +212,11 @@ exports.getPatientByUser = async (id) => {
       return Response.FORBIDDEN({ message: "Unauthorized account access." });
     }
 
-    const cacheKey = `patient:${patient.patientId}:user:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
+    // const cacheKey = `patient:${patient.patientId}:user:${id}`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    // }
 
     const medicalRecord = await repo.getPatientMedicalInfoByPatientId(
       patient.patientId,
@@ -231,10 +231,10 @@ exports.getPatientByUser = async (id) => {
       medicalInfo: medicalInfo || null,
     };
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(patientWithMedicalRecord),
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(patientWithMedicalRecord),
+    // });
     return Response.SUCCESS({ data: patientWithMedicalRecord });
   } catch (error) {
     logger.error("getPatientByUser: ", error);
