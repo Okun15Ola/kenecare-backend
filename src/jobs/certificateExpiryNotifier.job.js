@@ -48,6 +48,9 @@ async function sendCertificateExpirySms(
   }
 
   try {
+    logger.warn(
+      `[${notificationType}]: Dr. ${doctor.first_name} ${doctor.last_name} Medical Council Certificate Expires on ${expiryDateFormatted}`,
+    );
     await smsUtils.sendCertificateExpirySms({
       mobileNumber,
       message,
@@ -67,8 +70,6 @@ module.exports = {
   async execute() {
     const today = moment().startOf("day");
     try {
-      logger.info("Running certificate expiry notification cron job...");
-
       const doctorsWithCertificates =
         await councilRepository.getAllActiveDoctorRegistrationsWithDoctorDetails();
 
@@ -113,7 +114,6 @@ module.exports = {
           }
         }
       }
-      logger.info("Certificate expiry notification cron job finished.");
     } catch (error) {
       logger.error("Error in certificate expiry notification job:", error);
     }
