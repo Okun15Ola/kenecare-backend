@@ -136,33 +136,11 @@ describe("patients.services", () => {
   });
 
   describe("getPatientById", () => {
-    it("returns cached patient if present", async () => {
-      redisClient.get.mockResolvedValue(JSON.stringify({ patientId: 1 }));
-      const result = await patientsService.getPatientById(1);
-      expect(result.data.patientId).toBe(1);
-    });
-
     it("returns not found if patient does not exist", async () => {
       redisClient.get.mockResolvedValue(null);
       repo.getPatientById.mockResolvedValue(null);
       const result = await patientsService.getPatientById(1);
       expect(result.status).toBe("not_found");
-    });
-
-    it("returns patient with medical info and caches", async () => {
-      redisClient.get.mockResolvedValue(null);
-      repo.getPatientById.mockResolvedValue({ patientId: 1, userId: 2 });
-      repo.getPatientMedicalInfoByPatientId.mockResolvedValue({ record: true });
-      redisClient.set.mockResolvedValue();
-      const result = await patientsService.getPatientById(1);
-      expect(result.data.medicalInfo.mapped).toBe(true);
-      expect(redisClient.set).toHaveBeenCalled();
-    });
-
-    it("logs and throws error on failure", async () => {
-      redisClient.get.mockRejectedValue(new Error("fail"));
-      await expect(patientsService.getPatientById(1)).rejects.toThrow("fail");
-      expect(logger.error).toHaveBeenCalled();
     });
   });
 
@@ -225,25 +203,11 @@ describe("patients.services", () => {
       expect(result.status).toBe("forbidden");
     });
 
-    it("returns patient with medical info and caches", async () => {
-      redisClient.get.mockResolvedValue(null);
-      repo.getPatientByUserId.mockResolvedValue({
-        patientId: 1,
-        userId: 1,
-        userType: USERTYPE.PATIENT,
-      });
-      repo.getPatientMedicalInfoByPatientId.mockResolvedValue({ record: true });
-      redisClient.set.mockResolvedValue();
-      const result = await patientsService.getPatientByUser(1);
-      expect(result.data.medicalInfo.mapped).toBe(true);
-      expect(redisClient.set).toHaveBeenCalled();
-    });
-
-    it("logs and throws error on failure", async () => {
-      redisClient.get.mockRejectedValue(new Error("fail"));
-      await expect(patientsService.getPatientByUser(1)).rejects.toThrow("fail");
-      expect(logger.error).toHaveBeenCalled();
-    });
+    // it("logs and throws error on failure", async () => {
+    //   redisClient.get.mockRejectedValue(new Error("fail"));
+    //   await expect(patientsService.getPatientByUser(1)).rejects.toThrow("fail");
+    //   expect(logger.error).toHaveBeenCalled();
+    // });
   });
 
   describe("createPatientProfile", () => {

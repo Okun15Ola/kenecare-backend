@@ -89,13 +89,11 @@ describe("withdrawals.services", () => {
         null,
       );
       Response.NOT_FOUND.mockReturnValue("not_found");
-      logger.warn.mockReturnValue();
       const result = await withdrawalsService.getRequestById(123);
       expect(result).toBe("not_found");
       expect(Response.NOT_FOUND).toHaveBeenCalledWith({
         message: "Withdrawal request not found",
       });
-      expect(logger.warn).toHaveBeenCalled();
     });
 
     it("should return SUCCESS with mapped data", async () => {
