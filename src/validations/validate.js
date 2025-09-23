@@ -28,11 +28,13 @@ const Validate = (req, res, next) => {
     if (nodeEnv === "development") {
       console.error("Validation Error: ", { errorsForLog });
     }
-    return res
-      .status(400)
-      .json(
-        BAD_REQUEST({ message: "Validation Error", error: firstErrorMessage }),
-      );
+    return res.status(400).json(
+      BAD_REQUEST({
+        message: firstErrorMessage,
+        error: firstErrorMessage,
+        errorCode: "ERROR_400",
+      }),
+    );
   }
   return next();
 };
