@@ -6,6 +6,9 @@ exports.getAllAppointments = async (limit, offset) => {
 };
 
 exports.getAppointments = async (limit, offset) => {
+  if (!limit || !offset) {
+    return query(queries.GET_ALL_APPOINTMENTS, [0, 100]);
+  }
   return query(queries.GET_APPOINTMENTS, [offset, limit]);
 };
 

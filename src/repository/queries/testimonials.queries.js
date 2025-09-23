@@ -5,7 +5,7 @@ module.exports = {
     INNER JOIN patients ON patients_testimonial.patient_id = patients.patient_id
     LEFT JOIN admins ON patients_testimonial.approved_by = admins.admin_id
     WHERE is_approved = 1 AND is_active = 1
-    ORDER BY created_at DESC
+    ORDER BY patients_testimonial.created_at DESC
     LIMIT ?,?
   `,
   COUNT_TESTIMONIALS:
