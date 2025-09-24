@@ -12,11 +12,13 @@ module.exports = {
     df.feedback_content,
     df.is_feedback_approved,
     df.created_at,
-    df.updated_at
+    df.updated_at,
+    COUNT(*) OVER() AS totalRows
   FROM doctor_feedbacks df
   INNER JOIN patients p ON p.patient_id = df.patient_id
   INNER JOIN doctors d ON d.doctor_id = df.doctor_id
   ORDER BY df.created_at DESC
+  LIMIT ?,?
   `,
   GET_DOCTOR_REVIEW_BY_PATIENT_ID: `
   SELECT 

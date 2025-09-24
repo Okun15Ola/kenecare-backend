@@ -90,7 +90,9 @@ exports.getApprovedDoctorReviewsIndexService = async (
 
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
-    const data = await Promise.all(reviews.map(mapDoctorReview));
+    const data = await Promise.all(
+      reviews.map((review) => mapDoctorReview(review, false, true)),
+    );
 
     const valueToCache = {
       data,

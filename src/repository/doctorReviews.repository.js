@@ -6,8 +6,7 @@ exports.addDoctorReview = async (patientId, doctorId, review) => {
 };
 
 exports.getDoctorReviews = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCTOR_REVIEWS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(queries.GET_DOCTOR_REVIEWS, [offset, limit]);
 };
 
 exports.getDoctorReviewsByPatientId = async (patientId) => {

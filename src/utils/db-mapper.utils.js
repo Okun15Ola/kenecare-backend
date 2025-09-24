@@ -1500,7 +1500,7 @@ exports.mapDoctorReview = async (
     first_name: patientFirstName,
     last_name: patientLastName,
     patient_id: patientId,
-    profile_pic_url: profilePic,
+    profile_pic_url: patientProfilePic,
     feedback_content: review,
     is_feedback_approved: isApproved,
     created_at: createdAt,
@@ -1526,9 +1526,9 @@ exports.mapDoctorReview = async (
   if (includePatientPhoto) {
     const imageUrl = await fetchAndCacheUrl(
       `patient_pic:${patientId}`,
-      profilePic,
+      patientProfilePic,
     );
-    mapped.profilePic = imageUrl;
+    mapped.patientProfilePic = imageUrl;
   }
   return mapped;
 };
