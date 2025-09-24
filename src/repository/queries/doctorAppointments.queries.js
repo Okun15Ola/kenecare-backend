@@ -257,6 +257,14 @@ module.exports = {
   AND appointment_date < CURDATE();
       `,
 
+  AUTO_UPDATE_END_TIME: `
+  UPDATE medical_appointments
+  SET end_time = CURTIME(), appointment_status = 'completed'
+  WHERE appointment_status = 'started'
+  AND start_time IS NOT NULL
+  AND CONCAT(appointment_date, ' ', start_time) < NOW() - INTERVAL 30 MINUTE;
+  `,
+
   CANCEL_APPOINTMENT: `
     UPDATE medical_appointments
     SET appointment_status = 'canceled',

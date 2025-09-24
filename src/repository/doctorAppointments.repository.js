@@ -78,6 +78,10 @@ exports.updateDoctorAppointmentStartTime = async ({
   return query(queries.UPDATE_START_TIME, [startTime, appointmentId]);
 };
 
+exports.autoUpdateAppointmentEndtime = async () => {
+  return query(queries.AUTO_UPDATE_END_TIME);
+};
+
 exports.updateDoctorAppointmentEndTime = async ({ appointmentId, endTime }) => {
   return query(queries.UPDATE_END_TIME, [endTime, appointmentId]);
 };
