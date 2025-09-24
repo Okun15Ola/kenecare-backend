@@ -10,14 +10,8 @@ module.exports = {
 
   async execute() {
     try {
-      // Format current time for end_time
       const currentTime = moment().format("HH:mm:ss");
-      const result = await batchUpdateEndTimeForOpenAppointments(currentTime);
-
-      // Check if the query was successful
-      if (!result.affectedRows > 0) {
-        logger.error(`Fail to auto-closed open appointments ${result}`);
-      }
+      await batchUpdateEndTimeForOpenAppointments(currentTime);
     } catch (error) {
       logger.error("Error in auto-end appointment job:", error);
     }
