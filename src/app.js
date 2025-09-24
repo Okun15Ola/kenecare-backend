@@ -6,7 +6,6 @@ const compression = require("compression");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-// const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
@@ -14,9 +13,6 @@ const logger = require("./middlewares/logger.middleware");
 const { allowHeaders, allowOrigins } = require("./config/default.config");
 const { authenticateClient } = require("./middlewares/apiKey.middlewares");
 const { apiClientLimiter } = require("./utils/rate-limit.utils");
-// const errorHandler = require("./middlewares/errorHandler.middlewares");
-// const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
-// const { encryptionKey } = require("./config/default.config");
 
 const {
   NOT_FOUND,
