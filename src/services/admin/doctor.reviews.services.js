@@ -35,7 +35,9 @@ exports.getAllDoctorReviewsService = async (page, limit) => {
     const { totalRows } = reviews[0];
     const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
-    const data = reviews.map((review) => mapDoctorReview(review, true));
+    const data = await Promise.all(
+      reviews.map((review) => mapDoctorReview(review, true)),
+    );
 
     const valueToCache = {
       data,
@@ -121,7 +123,7 @@ exports.getReviewByIdService = async (reviewId) => {
       });
     }
 
-    const data = mapDoctorReview(review, true);
+    const data = await mapDoctorReview(review, true);
 
     await redisClient.set({
       key: cacheKey,
