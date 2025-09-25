@@ -34,7 +34,7 @@
     "express-ejs-layouts": "^2.5.1",
     "express-mysql-session": "^3.0.0",
     "express-openapi-validator": "^5.0.6",
-    "express-rate-limit": "^7.1.5",
+    "express-rate-limit": "^8.1.0",
     "express-session": "^1.17.2",
     "express-validator": "^7.2.1",
     "geoip-lite": "^1.4.10",
