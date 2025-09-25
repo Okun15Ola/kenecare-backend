@@ -145,13 +145,13 @@ Before you begin, ensure you have the following installed on your local machine:
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/imotech/kenecare-api.git
+    git clone https://github.com/kenecare/kenecare-backend.git
     ```
 
 2. Navigate to the project directory:
 
     ```bash
-    cd kenecare-api
+    cd kenecare-backend
     ```
 
 3. Install the dependencies:
