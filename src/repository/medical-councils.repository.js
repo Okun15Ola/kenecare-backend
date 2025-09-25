@@ -2,8 +2,7 @@ const { query } = require("./db.connection");
 const queries = require("./queries/medicalCouncils.queries");
 
 exports.getAllMedicalCouncils = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_MEDICAL_COUNCILS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_MEDICAL_COUNCILS, [offset, limit]);
 };
 
 exports.countMedicalCouncils = async () => {
@@ -65,4 +64,10 @@ exports.deleteMedicalCouncilById = async (id) => {
 
 exports.getAllActiveDoctorRegistrationsWithDoctorDetails = async () => {
   return query(queries.SELECT_ACTIVE_DOCTOR_REGISTRATIONS_WITH_DETAILS);
+};
+
+exports.updateDoctorCouncilRegistrationExpiredStatus = async (regId) => {
+  return query(queries.UPDATE_DOCTOR_REGISTRATIONS_COUNCIL_EXPIRED_STATUS, [
+    regId,
+  ]);
 };

@@ -28,7 +28,7 @@ const sendVerificationTokenSMS = async ({ token, mobileNumber }) => {
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Your KENECARE Verification Code is: ${token}. \n Do not share this with anyone. It expires in 15 minutes.`,
+      content: `Your KENECARE Verification Code is: ${token}. \n Do not share this with anyone. Expires in 15 minutes.`,
     });
 
     config.data = data;
@@ -53,7 +53,7 @@ const sendAuthTokenSMS = async ({ token, mobileNumber }) => {
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Your KENECARE AUTHToken is: ${token}. \n Do not share this with anyone. It expires in 15 minutes.`,
+      content: `Your KENECARE AUTH Token is: ${token}. \n Do not share this with anyone. Expires in 15 minutes.`,
     });
 
     config.data = data;
@@ -284,7 +284,7 @@ const appointmentStartedSms = async ({
       from: "KENECARE",
       reference: "KENECARE",
       to: mobileNumber,
-      content: `Dear ${patientName}, your medical appointment with Dr. ${doctorName} has started.\n\nUse the link below to join the conversation\n\n${meetingJoinUrl}\n\nKENECARE`,
+      content: `Dear ${patientName}, your medical appointment with Dr. ${doctorName} has started.\n\nUse the link below to join the appointment\n\n${meetingJoinUrl}\n\nKENECARE`,
     });
 
     config.data = data;
@@ -441,7 +441,7 @@ const doctorProfileApprovalSms = async ({ mobileNumber, doctorName }) => {
         from: "KENECARE",
         reference: "KENECARE",
         to: mobileNumber,
-        content: `Good news Dr. ${doctorName}. Your KENECARE doctor profile has been approved.\n\nYou can now start receiving medical appointments from patients. Welcome aboard\n\nKENECARE TEAM`,
+        content: `Dear Dr. ${doctorName}, Your KENECARE doctor profile has been approved.\n\nPatients can now book a medical appointment with you. Welcome Onboard\n\nKENECARE TEAM`,
       });
 
       config.data = data;

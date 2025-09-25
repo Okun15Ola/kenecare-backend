@@ -3,7 +3,6 @@ const Response = require("../utils/response.utils");
 const { redisClient } = require("../config/redis.config");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../utils/caching.utils");
 const { mapTestimonialRow } = require("../utils/db-mapper.utils");
@@ -12,24 +11,14 @@ const logger = require("../middlewares/logger.middleware");
 exports.getTestimonials = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "testimonials:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: repo.countTestimonial,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No testimonials found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider("testimonials:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await repo.getAllTestimonials(limit, offset);
@@ -37,10 +26,19 @@ exports.getTestimonials = async (limit, page) => {
       return Response.SUCCESS({ message: "No testimonials found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const testimonials = await Promise.all(rawData.map(mapTestimonialRow));
+
+    const valueToCache = {
+      data: testimonials,
+      pagination: paginationInfo,
+    };
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(testimonials),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({ data: testimonials, pagination: paginationInfo });
@@ -60,7 +58,6 @@ exports.getTestimonialById = async (id) => {
     const rawData = await repo.getTestimonialById(id);
 
     if (!rawData) {
-      logger.warn(`Testimonial Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
 
@@ -85,7 +82,6 @@ exports.getTestimonialById = async (id) => {
 //     });
 
 //     if (!insertId) {
-//       logger.warn("Failed to create testimonial");
 //       return Response.NOT_MODIFIED({ message: "Testimonial Not Created" });
 //     }
 
@@ -114,7 +110,6 @@ exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
     const rawData = await repo.getTestimonialById(testimonialId);
 
     if (!rawData) {
-      logger.warn(`Testimonial Not Found for ID ${testimonialId}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
     const { affectedRows } = await repo.approveTestimonialById({
@@ -123,7 +118,6 @@ exports.approveTestimonialById = async ({ testimonialId, approvedBy }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to approve testimonial for ID ${testimonialId}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -139,7 +133,6 @@ exports.denyTestimonialById = async ({ testimonialId, approvedBy }) => {
     const rawData = await repo.getTestimonialById(testimonialId);
 
     if (!rawData) {
-      logger.warn(`Testimonial Not Found for ID ${testimonialId}`);
       return Response.NOT_FOUND({ message: "Testimonial Not Found" });
     }
     const { affectedRows } = await repo.denyTestimonialById({
@@ -148,7 +141,6 @@ exports.denyTestimonialById = async ({ testimonialId, approvedBy }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to deny testimonial for ID ${testimonialId}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -164,7 +156,6 @@ exports.deleteSpecialization = async (specializationId) => {
     const rawData = await repo.getSpecializationById(specializationId);
 
     if (!rawData) {
-      logger.warn(`Specialization Not Found for ID ${specializationId}`);
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
@@ -172,7 +163,6 @@ exports.deleteSpecialization = async (specializationId) => {
       await repo.deleteSpecializationById(specializationId);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete Specialization for ID ${specializationId}`);
       return Response.NOT_MODIFIED({});
     }
 

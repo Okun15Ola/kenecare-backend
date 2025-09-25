@@ -6,7 +6,6 @@ const compression = require("compression");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./utils/swagger.utils");
 const logUserInteraction = require("./middlewares/audit-log.middlewares");
@@ -14,8 +13,6 @@ const logger = require("./middlewares/logger.middleware");
 const { allowHeaders, allowOrigins } = require("./config/default.config");
 const { authenticateClient } = require("./middlewares/apiKey.middlewares");
 const { apiClientLimiter } = require("./utils/rate-limit.utils");
-// const { fetchEncryptionKey } = require("./utils/aws-sm.utils");
-// const { encryptionKey } = require("./config/default.config");
 
 const {
   NOT_FOUND,
@@ -40,7 +37,6 @@ const doctorsWalletRouter = require("./routes/api/doctors/wallet.routes");
 const doctorsAvailableDaysRouter = require("./routes/api/doctors/available-days.routes");
 const doctorsPrescriptionsRouter = require("./routes/api/doctors/prescriptions.routes");
 const doctorsFollowUpRouter = require("./routes/api/doctors/followups.routes");
-// const doctorsTimeSlotRouter = require("./routes/api/doctors/time-slot.routes");
 const doctorFaqRouter = require("./routes/api/doctors/doctor-faqs.routes");
 const doctorBlogRouter = require("./routes/api/doctors/doctor-blogs.routes");
 const doctorReviews = require("./routes/api/doctors/reviews.routes");
@@ -114,9 +110,8 @@ app.use(
   }),
 );
 
-app.use(express.json());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(
   compression({
     level: 6,
@@ -126,11 +121,6 @@ app.use(
     },
   }),
 );
-
-// app.use((req, res, next) => {
-//   console.log("Incoming:", req.method, req.originalUrl);
-//   next();
-// });
 
 app.set("etag", true);
 
@@ -221,7 +211,6 @@ app.use((req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error("An unexpected error occured: ", err);
   logger.error("An unexpected error occured: ", err);
 
   let statusCode = 500;

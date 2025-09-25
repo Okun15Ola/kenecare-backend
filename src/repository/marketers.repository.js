@@ -21,8 +21,7 @@ const {
 } = require("./queries/marketers.queries");
 
 exports.getAllMarketers = async (limit, offset) => {
-  const optimizedQuery = `${GET_ALL_MARKETERS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(GET_ALL_MARKETERS, [offset, limit]);
 };
 exports.countMarketers = async () => {
   const row = await query(COUNT_MARKETERS);

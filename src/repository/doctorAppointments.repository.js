@@ -2,8 +2,11 @@ const { query } = require("./db.connection");
 const queries = require("./queries/doctorAppointments.queries");
 
 exports.getAppointmentsByDoctorId = async ({ doctorId, offset, limit }) => {
-  const optimizedQuery = `${queries.GET_APPOINTMENTS_BY_DOCTOR_ID} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery, [doctorId]);
+  return query(queries.GET_APPOINTMENTS_BY_DOCTOR_ID, [
+    doctorId,
+    offset,
+    limit,
+  ]);
 };
 
 exports.getDoctorsPendingAppointmentsForToday = async () => {
@@ -75,6 +78,10 @@ exports.updateDoctorAppointmentStartTime = async ({
   return query(queries.UPDATE_START_TIME, [startTime, appointmentId]);
 };
 
+exports.autoUpdateAppointmentEndtime = async () => {
+  return query(queries.AUTO_UPDATE_END_TIME);
+};
+
 exports.updateDoctorAppointmentEndTime = async ({ appointmentId, endTime }) => {
   return query(queries.UPDATE_END_TIME, [endTime, appointmentId]);
 };
@@ -120,8 +127,13 @@ exports.getDoctorAppointByDate = async ({
   limit,
   offset,
 }) => {
-  const optimizedQuery = `${queries.GET_APPOINTMENTS_BY_DATE} LIMIT ${limit} OFFSET ${offset};`;
-  return query(optimizedQuery, [startDate, endDate, doctorId]);
+  return query(queries.GET_APPOINTMENTS_BY_DATE, [
+    startDate,
+    endDate,
+    doctorId,
+    offset,
+    limit,
+  ]);
 };
 
 exports.countDoctorAppointmentsByDate = async ({

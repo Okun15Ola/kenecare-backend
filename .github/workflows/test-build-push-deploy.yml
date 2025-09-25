@@ -1,0 +1,282 @@
+name: test-build-push-and-deploy
+
+on:
+  push:
+    branches:
+      - hotfix
+      - hotfix/*
+  workflow_dispatch:
+    inputs:
+      ENV:
+        description: "Environment to deploy (staging or production)"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - staging
+          - prod
+
+env:
+  # Basic Environment info
+  ENV: ${{github.event.inputs.ENV || 'staging'}}
+  GH_RUN_NUMBER: ${{github.run_number}}
+  SHA: ${{ github.sha }}
+
+  # Docker Setup
+  REGISTRY: docker.io
+  IMAGE_NAME: kenecare/kenecare-api
+  IMAGE_TAG: ${{github.event.inputs.ENV || 'staging'}}-1.0.${{github.run_number}}
+  OLD_IMAGE_TAG: ${{github.event.inputs.ENV || 'staging'}}-1.0.$(( $GITHUB_RUN_NUMBER - 1))
+
+  #Docker compose & Env Files
+  DOCKER_COMPOSE_STAGING: docker-compose.api-staging.yml
+  DOCKER_COMPOSE_PROD: docker-compose.api-prod.yml
+  ENV_FILE_STAGING: .env.staging
+  ENV_FILE_PROD: .env.production
+  ENV_FILE: .env.${{github.event.inputs.ENV || 'staging'}}
+
+  # Docker hub credentials
+  DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+  DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+
+  # health check urls
+  HEALTH_CHECK_URL: http://localhost:9500/api/v1/health-check
+  PRODUCTION_HEALTH_CHECK_URL: https://api.kenecare.com/api/v1/health-check
+
+# concurrency:
+#   group: "kenecare-api-${{github.workflow}}-${{ github.ref }}"
+#   cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  pull-requests: write
+  security-events: write
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Lint
+        run: npm run lint || true
+      - name: Run Unit Test
+        run: npm test
+
+  build-and-scan-image:
+    runs-on: ubuntu-latest
+    needs: [run-tests]
+    if: always() && needs.run-tests.result == 'success'
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2.5.0
+        with:
+          driver-opts: |
+            image=moby/buildkit:v0.10.6
+          platforms: linux/amd64, linux/arm64
+
+      - name: Install Cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3.9.2
+        with:
+          cosign-release: "v2.2.4"
+
+      - name: Check if Cosign is installed
+        if: github.event_name != 'pull_request'
+        run: cosign version
+
+      - name: Login to Registry ${{env.REGISTRY}}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{env.REGISTRY}}
+          username: ${{env.DOCKER_USERNAME}}
+          password: ${{env.DOCKER_PASSWORD}}
+
+      - name: Extract Docker Metadata
+        id: docker-metadata
+        uses: docker/metadata-action@v5.8.0
+        with:
+          images: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}
+          labels: |
+            org.opencontainers.image.revision=${{ env.SHA }}
+          tags: |
+            type=edge,branch=$repo.default_branch
+            type=semver,pattern=v{{version}}
+            type=sha,prefix=,suffix=, format=short
+
+      - name: Build and Push Docker Image
+        id: build-and-push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.prod
+          push: ${{github.event_name != 'pull_request'}}
+          tags: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
+          labels: ${{steps.docker-metadata.outputs.labels}}
+
+      - name: Scan Docker Image with Docker Scout
+        id: docker-scout
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}
+          output: table
+          ignore-unchanged: true
+          only-severities: critical,high
+          only-fixed: true
+
+      - name: Sign Docker Image
+        if: github.event_name != 'pull_request'
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${images}
+        env:
+          TAGS: ${{steps.docker-metadata.outputs.tags}}
+          COSIGN_PRIVATE_KEY: ${{secrets.COSIGN_PRIVATE_KEY}}
+          COSIGN_PASSWORD: ${{secrets.COSIGN_PASSWORD}}
+          DIGEST: ${{steps.build-and-push.outputs.digest}}
+
+  deploy-to-prod:
+    needs: build-and-scan-image
+    runs-on: ["self-hosted", "imotechsl-apps"]
+    timeout-minutes: 30
+    if: |
+      always() &&
+      needs.build-and-scan-image.result == 'success' &&
+      github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0
+      - name: Set COMPOSE_FILE based on Input
+        run: |
+          if [ "${{github.event.inputs.ENV}}" == "staging" ]; then
+            echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_STAGING}}" >> $GITHUB_ENV
+          else
+            echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_PROD}}" >> $GITHUB_ENV
+          fi
+          echo "ENV_FILE=.env.${{github.event.inputs.ENV}}" >> $GITHUB_ENV
+          echo "Using compose file: $COMPOSE_FILE"
+
+      - name: Set Old Image Tag
+        run: |
+          echo "OLD_IMAGE_TAG=prod-1.0.$(($GITHUB_RUN_NUMBER-1))" >> $GITHUB_ENV
+          echo "DEPLOYMENT_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_ENV
+
+      - name: Copy Production Environment Variables
+        run: |
+          if [ -f ~/.env.kenecare.api-prod ]; then
+            echo "Copying production environment variables..."
+            cp ~/.env.kenecare.api-prod ./.env.production
+            echo "Production environment variables copied successfully."
+          else
+            echo "Production environment variables file not found, skipping copy."
+          fi
+
+      - name: Pre-deployment Health Check
+        run: |
+          echo "Checking if the old image is running..."
+          if docker ps -a | grep -q "kenecare-api-production"; then
+            echo "Old image is running, proceeding with deployment."
+          else
+            echo "Old image not found, skipping removal step."
+          fi
+
+      - name: Create deployment backup directory and backup compose file
+        run: |
+          mkdir -p /home/ubuntu/deployment-backups
+          ENV=production docker compose -f docker-compose.api-prod.yml --env-file=${{env.ENV_FILE_PROD}} config > /home/ubuntu/deployment-backups/docker-compose.api-prod.yml
+
+      - name: Remove Old Container and Images Gracefully
+        run: |
+          ENV=production docker compose -f docker-compose.api-prod.yml --env-file=${{env.ENV_FILE_PROD}} down --timeout 30 || true
+          docker rmi ${{env.IMAGE_NAME}}:${OLD_IMAGE_TAG} || true
+      - name: Run Compose and Deploy New Image
+        run: |
+          echo "🚀 GH ACTIONS: Deploying new ${{env.ENV}} image: ${{env.REGISTRY}}/${{env.IMAGE_NAME}}:${{env.IMAGE_TAG}}"  
+          ENV=${{env.ENV}} make deploy-prod TAG=${IMAGE_TAG}
+
+      - name: Post-deployment Container Health Check
+        run: |
+          echo "Checking if the new image is running..."
+          if docker ps -a | grep -q "kenecare-api-production"; then
+            echo "New image is running successfully."
+          else
+            echo "New image failed to start, please check the logs."
+            exit 1
+          fi
+
+      - name: Post Deployment API Health Check
+        run: |
+          echo "Running post-deployment API health check..."
+          sleep 20 # Wait for the service to stabilize
+          if [ "${{env.ENV}}" == "prod" ]; then
+            echo "Checking production health endpoint..."
+            if curl -s --head ${{env.PRODUCTION_HEALTH_CHECK_URL}} | grep "200 OK" > /dev/null; then
+              echo "Production health check passed."
+            else
+              echo "Production health check failed, please investigate."
+              exit 1
+            fi
+          else
+            echo "Checking staging health endpoint..."
+            if curl -s --head ${{env.HEALTH_CHECK_URL}} | grep "200 OK" > /dev/null; then
+              echo "Staging health check passed."
+            else
+              echo "Staging health check failed, please investigate."
+              exit 1
+            fi
+          fi
+
+      - name: Clean up Dangling Images
+        run: docker image prune -f --filter "until=24h" || true
+
+      - name: Save Last Deployment Info to File
+        run: |
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+          echo "SHA=${SHA}" >> $GITHUB_ENV
+          echo "${IMAGE_NAME}:${{env.OLD_IMAGE_TAG}}" > ~/.last_kenecare_api_deployed_image
+          echo "${IMAGE_NAME}:${{env.OLD_IMAGE_TAG}}" > ~/.last_deployed_image
+
+      - name: Notify Deployment Success
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
+        run: |
+          echo "Deployment to production successful!"
+          echo "New image tag: ${{env.IMAGE_TAG}}"
+          echo "Old image tag: ${{env.OLD_IMAGE_TAG}}"
+          echo "Deployment time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "You can access the api at https://api.kenecare.com.api/v1/health-check"

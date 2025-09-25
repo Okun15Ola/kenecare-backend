@@ -2,8 +2,7 @@ const { query } = require("./db.connection");
 const queries = require("./queries/patients.queries");
 
 exports.getAllPatients = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_PATIENTS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_PATIENTS, [offset, limit]);
 };
 
 exports.countPatients = async () => {

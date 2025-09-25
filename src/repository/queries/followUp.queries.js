@@ -1,7 +1,7 @@
 module.exports = {
   CREATE_APPOINTMENT_FOLLOW_UP: `
-    INSERT INTO appointment_followup (appointment_id, followup_date, followup_time, reason, followup_type, doctor_id)
-    VALUES (?, ?, ?, ?, ?, ?);
+    INSERT INTO appointment_followup (appointment_id, followup_date, followup_time, reason, followup_type, doctor_id, followup_count, followup_status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'approved');
   `,
   GET_ALL_APPOINTMENT_FOLLOW_UP_BY_APPOINTMENT_ID: `
     SELECT * FROM appointment_followup WHERE appointment_id = ?
@@ -17,6 +17,8 @@ module.exports = {
   FROM appointment_followup
   WHERE doctor_id = ?;
   `,
+  MAX_FOLLOW_UP_COUNT:
+    "SELECT MAX(followup_count) AS max_count FROM appointment_followup WHERE appointment_id = ?",
   COUNT_PATIENT_FOLLOW_UPS: `
   SELECT
   COUNT(*) AS totalFollowupCount,

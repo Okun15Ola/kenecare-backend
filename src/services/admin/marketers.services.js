@@ -10,7 +10,6 @@ const {
   deleteMarketerById,
   updateMarketerById,
   getMarketerByEmailVerficationToken,
-  countMarketers,
 } = require("../../repository/marketers.repository");
 const Response = require("../../utils/response.utils");
 const {
@@ -35,7 +34,6 @@ const {
 } = require("../../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
@@ -51,33 +49,35 @@ const generateReferralCode = ({ firstName, lastName }) => {
 exports.getAllMarketersService = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "marketers:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countMarketers,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No marketers found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("marketers:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getAllMarketers(limit, offset);
     if (!rawData?.length) {
       return Response.SUCCESS({ message: "No marketers found", data: [] });
     }
+
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const marketers = rawData.map(mapMarketersRow);
+
+    const valueToCache = {
+      data: marketers,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(marketers),
+      value: JSON.stringify(valueToCache),
+      expiry: 3600,
     });
     return Response.SUCCESS({ data: marketers, pagination: paginationInfo });
   } catch (error) {
@@ -95,7 +95,6 @@ exports.getMarketerByIdService = async (id) => {
     }
     const rawData = await getMarketerById(id);
     if (!rawData) {
-      logger.warn(`Marketer Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const marketer = await mapMarketersWithDocumentRow(rawData);
@@ -134,7 +133,6 @@ exports.createMarketerService = async ({
   try {
     // Check if ID document file was uploaded
     if (!idDocumentFile) {
-      logger.warn("ID Document File Not Provided");
       return Response.BAD_REQUEST({
         message:
           "Please Upload Identification Document File. Expected Document Format (*.pdf, *.jpg, *.jpeg, *.png)",
@@ -225,7 +223,6 @@ exports.verifyMarketerPhoneNumberService = async (token) => {
     const marketer = await getMarketerByVerficationToken(token);
 
     if (!marketer) {
-      logger.warn("Marketer Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const {
@@ -271,7 +268,6 @@ exports.verifyMarketerEmailService = async (token) => {
     const { sub } = verifyMarketerEmailJwt(token);
 
     if (!sub) {
-      logger.warn("Invalid token");
       return Response.BAD_REQUEST({
         message: "Corrupted Email Verification Token",
       });
@@ -329,7 +325,6 @@ exports.updateMarketerByIdService = async ({
   try {
     const marketer = await getMarketerById(marketerId);
     if (!marketer) {
-      logger.warn("Marketer Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
 
@@ -368,7 +363,6 @@ exports.deleteMarketerByIdService = async (id) => {
   try {
     const marketer = await getMarketerById(id);
     if (!marketer) {
-      logger.warn("Marketer Not Found");
       return Response.NOT_FOUND({ message: "Marketer Not Found" });
     }
     const { id_document_uuid: idDocumentUuid } = marketer;

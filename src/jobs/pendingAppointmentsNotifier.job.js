@@ -10,9 +10,6 @@ module.exports = {
 
   async execute() {
     try {
-      logger.info("Running pending appointments notifier job...");
-      console.info("Running pending appointments notifier job...");
-
       // Fetch all pending appointments for today
       const appointments = await getDoctorsPendingAppointmentsForToday();
 
@@ -38,18 +35,11 @@ module.exports = {
         await Promise.all(
           Object.values(doctorMap).map(async ({ doctor, count }) => {
             await smsUtils.sendDoctorPendingAppointmentSMS({ doctor, count });
-            logger.info(
-              `Sent pending appointments SMS to Dr. ${doctor.firstName} ${doctor.lastName} (${doctor.mobile}): ${count} appointments`,
-            );
           }),
         );
-      } else {
-        logger.info("No pending appointments found for today");
-        console.info("No pending appointments found for today");
       }
     } catch (error) {
       logger.error("Error in pending appointments notifier job:", error);
-      console.error("Error in pending appointments notifier job:", error);
     }
   },
 };

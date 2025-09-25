@@ -23,8 +23,7 @@ exports.getPatientMedicalDocumentByDocumentId = async ({
 };
 
 exports.getMedicalDocumentsByPatientId = async (patientId, limit, offset) => {
-  const optimizedQuery = `${queries.GET_DOCS_BY_PATIENT_ID} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery, [patientId]);
+  return query(queries.GET_DOCS_BY_PATIENT_ID, [patientId, offset, limit]);
 };
 
 exports.countMedicalDocumentByPatientId = async (patientId) => {

@@ -432,7 +432,9 @@ exports.deleteDoctorSpecificDayAvailability = async (userId, dayOfWeek) => {
     const appointments = await getDoctorTodayAppointments(doctorId);
 
     if (appointments?.length > 0) {
-      logger.warn("Cannot delete doctor availability because yo appointments");
+      logger.warn(
+        "Cannot delete doctor availability because you have appointments",
+      );
       return Response.CONFLICT({
         message:
           "Cannot delete doctor availability because you still have unattended appointments for this period",

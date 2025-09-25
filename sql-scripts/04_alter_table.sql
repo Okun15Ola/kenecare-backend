@@ -285,3 +285,40 @@ ALTER TABLE `withdrawal_requests`
 
 ALTER TABLE `doctors`
 ADD COLUMN `signature_url` VARCHAR(255) DEFAULT NULL AFTER `profile_pic_url`;
+
+
+ALTER TABLE `appointment_followup`
+MODIFY COLUMN `followup_status` ENUM('pending', 'completed', 'canceled', 'approved') NOT NULL DEFAULT 'pending',
+ADD COLUMN `followup_count` TINYINT;
+
+-- NEW DB CHANGES
+
+ALTER TABLE `medical_appointments`
+MODIFY COLUMN `appointment_status` enum('approved','pending','started','completed','canceled','postponed','referred','missed') DEFAULT 'pending';
+
+INSERT INTO doctor_available_days (
+        doctor_id,
+        day_of_week,
+        day_start_time,
+        day_end_time,
+        is_available
+    )
+    SELECT
+        d.doctor_id,
+        days.day,
+        '09:00:00',
+        '17:00:00',
+        1
+    FROM
+        doctors d
+    CROSS JOIN
+        (SELECT 'monday' AS day UNION ALL
+         SELECT 'tuesday' UNION ALL
+         SELECT 'wednesday' UNION ALL
+         SELECT 'thursday' UNION ALL
+         SELECT 'friday') AS days
+    WHERE
+        d.doctor_id NOT IN (
+            SELECT DISTINCT doctor_id
+            FROM doctor_available_days
+        );

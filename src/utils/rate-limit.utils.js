@@ -69,8 +69,6 @@ const createLimiter = (
     config.store = new RedisStore({
       sendCommand: (...args) => redisClient.client.call(...args),
     });
-  } else {
-    logger.warn("Redis unavailable — using memory store for rate limiting");
   }
 
   return rateLimit(config);

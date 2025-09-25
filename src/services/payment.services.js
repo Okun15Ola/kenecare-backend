@@ -54,7 +54,7 @@ const ERROR_MESSAGES = {
  */
 const validateInput = ({ consultationId, referrer }) => {
   if (!consultationId || referrer !== CONFIG.VALID_REFERRER) {
-    logger.warn(
+    logger.error(
       `Invalid consultationId: ${consultationId} or referrer: ${referrer}`,
     );
     return false;
@@ -89,7 +89,7 @@ const handleExpiredPayment = async (appointmentId) => {
  */
 const validatePaymentRecord = (appointmentPaymentRecord, appointmentId) => {
   if (!appointmentPaymentRecord) {
-    logger.warn(
+    logger.error(
       `Appointment payment record not found for appointmentId: ${appointmentId}`,
     );
     return {
@@ -239,7 +239,7 @@ exports.processAppointmentPayment = async ({
 
     const appointment = await getAppointmentByUUID(consultationId);
     if (!appointment) {
-      logger.warn(`Appointment not found for UUID: ${consultationId}`);
+      logger.error(`Appointment not found for UUID: ${consultationId}`);
       return Response.NOT_FOUND({
         message: ERROR_MESSAGES.APPOINTMENT_NOT_FOUND,
       });
@@ -351,7 +351,7 @@ exports.processAppointmentPayment = async ({
 exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
   try {
     if (!validateInput({ consultationId, referrer })) {
-      logger.warn(
+      logger.error(
         `Invalid consultationId: ${consultationId} or referrer: ${referrer}`,
       );
       return Response.BAD_REQUEST({ message: ERROR_MESSAGES.INVALID_REQUEST });
@@ -361,7 +361,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
 
     // Check if the appointment exists
     if (!rawData) {
-      logger.warn(`Appointment not found for UUID: ${consultationId}`);
+      logger.error(`Appointment not found for UUID: ${consultationId}`);
       return Response.NOT_FOUND({
         message: "Medical Appointment Not Found.",
       });
@@ -376,7 +376,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
     const payment = await getAppointmentPaymentByAppointmentId(appointmentId);
 
     if (!payment) {
-      logger.warn(`Payment not found for appointmentId: ${appointmentId}`);
+      logger.error(`Payment not found for appointmentId: ${appointmentId}`);
       await deleteAppointmentById({ appointmentId });
       return Response.BAD_REQUEST({
         message: "Error processing payment. Please try again",
@@ -416,7 +416,7 @@ exports.cancelAppointmentPayment = async ({ consultationId, referrer }) => {
     }
 
     if (ussdCancellation && ussdCancellation.status === "rejected") {
-      logger.warn(
+      logger.error(
         `Failed to cancel USSD payment for transactionID: ${transactionID}`,
         ussdCancellation.reason,
       );
@@ -443,7 +443,9 @@ exports.getPaymentStatusByConsultationId = async (consultationId) => {
     const payment = await getPaymentStatusByAppointmentId(consultationId);
 
     if (!payment) {
-      logger.warn(`Payment not found for consultation UUID: ${consultationId}`);
+      logger.error(
+        `Payment not found for consultation UUID: ${consultationId}`,
+      );
       return Response.NOT_FOUND({
         message: "Payment record not found.",
       });
@@ -570,7 +572,7 @@ exports.processDoctorWithdrawalService = async ({
         });
       }
 
-      logger.warn(
+      logger.error(
         `Withdrawal request ${requestId} failed. Amount of ${amountToRefund} refunded to doctor's wallet.`,
       );
       return Response.SUCCESS({

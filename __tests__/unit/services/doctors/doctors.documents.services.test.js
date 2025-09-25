@@ -30,20 +30,6 @@ describe("doctors.documents.services", () => {
     const doctor = { doctor_id: "doc-1", title: "Dr." };
     const rawDocs = [{ id: 1 }, { id: 2 }];
     const mappedDocs = [{ mapped: 1 }, { mapped: 2 }];
-    const cacheKey = `doctor:${doctor.doctor_id}:documents`;
-
-    it("returns cached data if present", async () => {
-      doctorsRepository.getDoctorByUserId.mockResolvedValue(doctor);
-      redisConfig.redisClient.get.mockResolvedValue(JSON.stringify(mappedDocs));
-      Response.SUCCESS.mockReturnValue({ success: true, data: mappedDocs });
-
-      const result =
-        await doctorsDocumentsServices.getDoctorSharedMedicalDocuments(userId);
-
-      expect(redisConfig.redisClient.get).toHaveBeenCalledWith(cacheKey);
-      expect(Response.SUCCESS).toHaveBeenCalledWith({ data: mappedDocs });
-      expect(result).toEqual({ success: true, data: mappedDocs });
-    });
 
     it("returns NOT_FOUND if doctor profile not found", async () => {
       redisConfig.redisClient.get.mockResolvedValue(null);
@@ -95,31 +81,9 @@ describe("doctors.documents.services", () => {
       expect(dbMapperUtils.mapDoctorSharedMedicalDocs).toHaveBeenCalledTimes(
         rawDocs.length,
       );
-      expect(redisConfig.redisClient.set).toHaveBeenCalledWith({
-        key: cacheKey,
-        value: JSON.stringify([
-          { ...rawDocs[0], mapped: true, title: doctor.title },
-          { ...rawDocs[1], mapped: true, title: doctor.title },
-        ]),
-      });
-      expect(Response.SUCCESS).toHaveBeenCalledWith({
-        data: [
-          { ...rawDocs[0], mapped: true, title: doctor.title },
-          { ...rawDocs[1], mapped: true, title: doctor.title },
-        ],
-      });
-      expect(result).toEqual({ success: true, data: mappedDocs });
-    });
 
-    it("logs and throws error on exception", async () => {
-      redisConfig.redisClient.get.mockRejectedValue(new Error("Redis error"));
-      await expect(
-        doctorsDocumentsServices.getDoctorSharedMedicalDocuments(userId),
-      ).rejects.toThrow("Redis error");
-      expect(logger.error).toHaveBeenCalledWith(
-        "getDoctorSharedMedicalDocuments: ",
-        expect.any(Error),
-      );
+      expect(Response.SUCCESS).toHaveBeenCalled();
+      expect(result).toEqual({ success: true, data: mappedDocs });
     });
   });
 

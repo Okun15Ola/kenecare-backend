@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    target-branch: "development"
+    labels:
+      - "dependencies"
+      - "autoupdate"
+
+    # # 👇 Ignore specific dependencies (e.g., lodash & react)
+    # ignore:
+    #   - dependency-name: "lodash"
+    #     versions: ["*"]            # ignore all versions
+    #   - dependency-name: "react"
+    #     versions: [">=18.0.0"]     # ignore react 18 and above
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "development"
+    labels:
+      - "actions"
+      - "dependencies"

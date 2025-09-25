@@ -1,4 +1,6 @@
+const moment = require("moment");
 const dbObject = require("../../repository/admin-doctors.repository");
+const councilRegRepo = require("../../repository/medical-councils.repository");
 const Response = require("../../utils/response.utils");
 const {
   doctorCouncilRegistrationApprovedEmail,
@@ -6,46 +8,17 @@ const {
 } = require("../../utils/email.utils");
 const { redisClient } = require("../../config/redis.config");
 const { mapCouncilRegistrationRow } = require("../../utils/db-mapper.utils");
-const {
-  cacheKeyBulider,
-  getCachedCount,
-  getPaginationInfo,
-} = require("../../utils/caching.utils");
+const { getPaginationInfo } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
 
 exports.getAllCouncilRegistrations = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "admin:doctors:council:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: dbObject.getAllMedicalCouncilRegistrationCount,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No medical council registrations found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
-    const cacheKey = cacheKeyBulider(
-      "admin:doctors:council:all",
-      limit,
-      offset,
-    );
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
-      });
-    }
     const rawData = await dbObject.getAllMedicalCouncilRegistration(
       limit,
       offset,
     );
+
     if (!rawData?.length) {
       return Response.SUCCESS({
         message: "No medical council registrations found",
@@ -55,10 +28,11 @@ exports.getAllCouncilRegistrations = async (limit, page) => {
     const registrations = await Promise.all(
       rawData.map(mapCouncilRegistrationRow),
     );
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(registrations),
-    });
+
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     return Response.SUCCESS({
       data: registrations,
       pagination: paginationInfo,
@@ -71,25 +45,15 @@ exports.getAllCouncilRegistrations = async (limit, page) => {
 
 exports.getCouncilRegistration = async (id) => {
   try {
-    const cacheKey = `admin:doctors:council:registrations:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
     const rawData = await dbObject.getCouncilRegistrationById(id);
 
     if (!rawData) {
-      logger.warn(`Medical Council Registration Not Found for ID ${id}`);
       return Response.NOT_FOUND({
         message: "Medical Council Registration Not Found",
       });
     }
     const registration = await mapCouncilRegistrationRow(rawData);
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(registration),
-    });
     return Response.SUCCESS({ data: registration });
   } catch (error) {
     logger.error("getCouncilRegistration: ", error);
@@ -101,9 +65,8 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
   try {
     const rawData = await dbObject.getCouncilRegistrationById(regId);
     if (!rawData) {
-      logger.warn(`Medical Council Registration Not Found for ID ${regId}`);
       return Response.NOT_FOUND({
-        message: "Medical Council Registration Not Found",
+        message: "Medical Council Registration Not Found for this Doctor",
       });
     }
 
@@ -112,25 +75,47 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
       doctor_id: doctorId,
       first_name: firstName,
       last_name: lastName,
+      certificate_expiry_date: certificateExpiryDate,
     } = rawData;
 
-    if (registrationStats === "approved") {
-      logger.warn("Medical Council Registration Already Approved");
-      return Response.NOT_MODIFIED();
+    if (moment(certificateExpiryDate).isBefore(moment())) {
+      councilRegRepo.updateDoctorCouncilRegistrationExpiredStatus(regId);
+      return Response.BAD_REQUEST({
+        message: `Doctor's certificate has expired on ${moment(certificateExpiryDate).format("YYYY-MM-DD HH:mm:ss")}`,
+      });
     }
 
-    const [doctor] = await Promise.allSettled([
+    if (registrationStats === "approved") {
+      return Response.NOT_MODIFIED({});
+    }
+
+    // Use Promise.allSettled to ensure both database operations complete
+    const [doctorResult, approvalResult] = await Promise.allSettled([
       dbObject.getDoctorById(doctorId),
       dbObject.approveDoctorMedicalCouncilRegistrationById({
         registrationId: regId,
         approvedBy: userId,
       }),
-    ]).catch((error) => {
-      logger.error("approveCouncilRegistration: ", error);
-      throw error;
-    });
+    ]);
 
-    const { email: doctorEmail } = doctor.value;
+    // Check if the getDoctorById promise succeeded
+    if (doctorResult.status !== "fulfilled" || !doctorResult.value) {
+      logger.error("Failed to get doctor details: ", doctorResult.reason);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "An unexpected error occurred",
+      });
+    }
+
+    // Check if the approval promise succeeded
+    if (approvalResult.status !== "fulfilled") {
+      logger.error("Failed to approve registration: ", approvalResult.reason);
+      return Response.INTERNAL_SERVER_ERROR({
+        message:
+          "An unexpected error occurred while approving the registration.",
+      });
+    }
+
+    const { email: doctorEmail } = doctorResult.value;
 
     //  send email notification to doctor upon approval
     await doctorCouncilRegistrationApprovedEmail({
@@ -139,7 +124,6 @@ exports.approveCouncilRegistration = async ({ regId, userId }) => {
     });
 
     await Promise.all([
-      redisClient.clearCacheByPattern("admin:doctors:council:*"),
       redisClient.clearCacheByPattern(
         `doctor:${doctorId}:council-registration:*`,
       ),
@@ -163,9 +147,8 @@ exports.rejectCouncilRegistration = async ({
   try {
     const rawData = await dbObject.getCouncilRegistrationById(regId);
     if (!rawData) {
-      logger.warn(`Medical Council Registration Not Found for ID ${regId}`);
       return Response.NOT_FOUND({
-        message: "Medical Council Registration Not Found",
+        message: "Medical Council Registration Not Found for this Doctor",
       });
     }
 
@@ -177,23 +160,34 @@ exports.rejectCouncilRegistration = async ({
     } = rawData;
 
     if (registrationStatus === "rejected") {
-      logger.warn("Medical Council Registration Already Rejected");
-      return Response.NOT_MODIFIED();
+      return Response.NOT_MODIFIED({});
     }
 
-    const [doctor] = await Promise.allSettled([
+    const [doctorResult, rejectionResult] = await Promise.allSettled([
       dbObject.getDoctorById(doctorId),
       dbObject.rejectDoctorMedicalCouncilRegistrationById({
         registrationId: regId,
         rejectionReason,
         approvedBy: userId,
       }),
-    ]).catch((error) => {
-      logger.error("rejectCouncilRegistration: ", error);
-      throw error;
-    });
+    ]);
 
-    const { email: doctorEmail } = doctor.value;
+    if (rejectionResult.status !== "fulfilled") {
+      logger.error("Failed to reject registration: ", rejectionResult.reason);
+      return Response.INTERNAL_SERVER_ERROR({
+        message:
+          "An unexpected error occurred while rejecting the registration.",
+      });
+    }
+
+    if (doctorResult.status !== "fulfilled" || !doctorResult.value) {
+      logger.error("Failed to get doctor details: ", doctorResult.reason);
+      return Response.INTERNAL_SERVER_ERROR({
+        message: "An unexpected error occurred.",
+      });
+    }
+
+    const { email: doctorEmail } = doctorResult.value;
 
     //  send email notification to doctor upon approval
     await doctorCouncilRegistrationRejectedEmail({
@@ -201,7 +195,6 @@ exports.rejectCouncilRegistration = async ({
       doctorName: `${firstName} ${lastName}`,
     });
     await Promise.all([
-      redisClient.clearCacheByPattern("admin:doctors:council:*"),
       redisClient.clearCacheByPattern(
         `doctor:${doctorId}:council-registration:*`,
       ),
