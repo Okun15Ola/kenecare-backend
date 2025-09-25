@@ -4,7 +4,6 @@ const Response = require("../../utils/response.utils");
 const logger = require("../../middlewares/logger.middleware");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const { mapDoctorReview } = require("../../utils/db-mapper.utils");
@@ -12,26 +11,13 @@ const { mapDoctorReview } = require("../../utils/db-mapper.utils");
 exports.getAllDoctorReviewsService = async (page, limit) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "reviews:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: doctorReviewRepository.countDoctorsReviews,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No reviews found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("reviews:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const reviews = await doctorReviewRepository.getDoctorReviews(
@@ -46,11 +32,21 @@ exports.getAllDoctorReviewsService = async (page, limit) => {
       });
     }
 
-    const data = reviews.map((review) => mapDoctorReview(review, true));
+    const { totalRows } = reviews[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const data = await Promise.all(
+      reviews.map((review) => mapDoctorReview(review, true, false)),
+    );
+
+    const valueToCache = {
+      data,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
 
@@ -127,7 +123,7 @@ exports.getReviewByIdService = async (reviewId) => {
       });
     }
 
-    const data = mapDoctorReview(review, true);
+    const data = await mapDoctorReview(review, true, false);
 
     await redisClient.set({
       key: cacheKey,

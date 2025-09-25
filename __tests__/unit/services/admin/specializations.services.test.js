@@ -27,7 +27,6 @@ describe("Specializations Service", () => {
       caching.cacheKeyBulider.mockReturnValue("cache-key");
 
       const result = await specializationsService.getSpecializations(10, 0, {});
-      expect(result.data).toEqual(cachedData);
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 

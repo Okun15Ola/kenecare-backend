@@ -1,0 +1,20 @@
+pull_request_rules:
+  - name: "Assign reviewers to Dependabot PRs"
+    conditions:
+      - author=dependabot[bot]
+    actions:
+      request_reviews:
+        users:
+          - rolandeke
+      label:
+        add:
+          - "automerge"
+          - "review-needed"
+  - name: "Auto-merge Dependabot PRs"
+    conditions:
+      - author=dependabot[bot]
+      - label=automerge
+      - check-success=all
+    actions:
+      merge:
+        method: squash

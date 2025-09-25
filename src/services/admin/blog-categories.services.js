@@ -4,7 +4,6 @@ const { redisClient } = require("../../config/redis.config");
 const { mapBlogCategoryRow } = require("../../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
@@ -12,26 +11,13 @@ const logger = require("../../middlewares/logger.middleware");
 exports.getBlogCategories = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "blog-categories:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: dbObject.countBlogCategory,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No blog categories found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("blog-categories:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await dbObject.getAllBlogCategories(limit, offset);
@@ -42,12 +28,19 @@ exports.getBlogCategories = async (limit, page) => {
         data: [],
       });
     }
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const categories = rawData.map(mapBlogCategoryRow);
 
+    const valueToCache = {
+      data: categories,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(categories),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
 
@@ -71,7 +64,6 @@ exports.getBlogCategory = async (id) => {
     const rawData = await dbObject.getBlogCategoryById(id);
 
     if (!rawData) {
-      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Blog Categrory Not Found" });
     }
     const category = mapBlogCategoryRow(rawData);
@@ -92,7 +84,6 @@ exports.createBlogCategory = async (name) => {
   try {
     const rawData = await dbObject.getBlogCategoryByName(name);
     if (rawData) {
-      logger.warn(`Blog Category Already Exists: ${name}`);
       return Response.BAD_REQUEST({
         message: "Blog Category Name Already Exists",
       });
@@ -105,7 +96,6 @@ exports.createBlogCategory = async (name) => {
     const { insertId } = await dbObject.createNewBlogCategory(category);
 
     if (!insertId) {
-      logger.warn("Failed to create blog category");
       return Response.BAD_REQUEST({
         message: "Failed to create blog category",
       });
@@ -124,7 +114,6 @@ exports.updateBlogCategory = async ({ id, name }) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);
     if (!rawData) {
-      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.BAD_REQUEST({
         message: "Blog Category Not Found",
       });
@@ -136,7 +125,6 @@ exports.updateBlogCategory = async ({ id, name }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update blog category for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -152,13 +140,11 @@ exports.updateBlogCategoryStatus = async ({ id, status }) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);
     if (!rawData) {
-      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.BAD_REQUEST({
         message: "Blog Category Not Found",
       });
     }
     if (status < 0 || status > 1) {
-      logger.warn("Invalid Category Status");
       return Response.BAD_REQUEST({ message: "Invalid Category Status" });
     }
 
@@ -168,7 +154,6 @@ exports.updateBlogCategoryStatus = async ({ id, status }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update blog category status for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -187,7 +172,6 @@ exports.deleteBlogCategory = async (id) => {
   try {
     const rawData = await dbObject.getBlogCategoryById(id);
     if (!rawData) {
-      logger.warn(`Blog Category Not Found for ID ${id}`);
       return Response.BAD_REQUEST({
         message: "Blog Category Not Found",
       });
@@ -196,7 +180,6 @@ exports.deleteBlogCategory = async (id) => {
     const { affectedRows } = await dbObject.deleteBlogCategoryById(id);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete blog category for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 

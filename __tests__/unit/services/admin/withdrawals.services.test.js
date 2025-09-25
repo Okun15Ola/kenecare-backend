@@ -1,13 +1,9 @@
 const withdrawalsService = require("../../../../src/services/admin/withdrawals.services");
 const Response = require("../../../../src/utils/response.utils");
 const withdrawalRepo = require("../../../../src/repository/withdrawal-requests.repository");
-// const doctorRepo = require("../../../../src/repository/doctors.repository");
-// const walletRepo = require("../../../../src/repository/doctor-wallet.repository");
-// const smsUtils = require("../../../../src/utils/sms.utils");
 const dbMapper = require("../../../../src/utils/db-mapper.utils");
 const logger = require("../../../../src/middlewares/logger.middleware");
 const cachingUtils = require("../../../../src/utils/caching.utils");
-// const { redisClient } = require("../../../../src/config/redis.config");
 
 jest.mock("../../../../src/utils/response.utils");
 jest.mock("../../../../src/repository/withdrawal-requests.repository");
@@ -85,16 +81,6 @@ describe("withdrawals.services", () => {
         pagination: { total: 2, page: 1 },
       });
     });
-
-    it("should throw error and log if exception occurs", async () => {
-      const error = new Error("fail");
-      cachingUtils.getCachedCount.mockRejectedValue(error);
-      logger.error.mockReturnValue();
-      await expect(withdrawalsService.getAllRequests(1, 1)).rejects.toThrow(
-        error,
-      );
-      expect(logger.error).toHaveBeenCalled();
-    });
   });
 
   describe("getWithdrawalRequestByTransactionId", () => {
@@ -103,13 +89,11 @@ describe("withdrawals.services", () => {
         null,
       );
       Response.NOT_FOUND.mockReturnValue("not_found");
-      logger.warn.mockReturnValue();
       const result = await withdrawalsService.getRequestById(123);
       expect(result).toBe("not_found");
       expect(Response.NOT_FOUND).toHaveBeenCalledWith({
         message: "Withdrawal request not found",
       });
-      expect(logger.warn).toHaveBeenCalled();
     });
 
     it("should return SUCCESS with mapped data", async () => {

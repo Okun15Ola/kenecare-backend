@@ -1,0 +1,85 @@
+name: rollback-kenecare-api
+
+on:
+  workflow_dispatch:
+    inputs:
+      ENV:
+        description: "Environment to rollback (staging or prod)"
+        required: true
+        default: "prod"
+        type: choice
+        options:
+          - staging
+          - prod
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: imotechsl/kenecare-api
+  ENV_FILE_STAGING: .env.staging
+  ENV_FILE_PROD: .env.production
+  DOCKER_COMPOSE_STAGING: docker-compose.api-staging.yml
+  DOCKER_COMPOSE_PROD: docker-compose.api-prod.yml
+  PRODUCTION_HEALTH_CHECK_URL: https://api.kenecare.com/api/v1/health-check
+  STAGING_HEALTH_CHECK_URL: https://api.kenecare.com/api/v1/health-check
+
+concurrency:
+  group: "kenecare-api-${{github.workflow}}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  rollback:
+    runs-on: ["self-hosted", "imotechsl-apps"]
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Select Compose and Env files
+        run: |
+          if [ "${{ github.event.inputs.ENV }}" == "staging" ]; then
+            echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_STAGING}}" >> $GITHUB_ENV
+            echo "ENV_FILE=${{env.ENV_FILE_STAGING}}" >> $GITHUB_ENV
+            echo "HEALTH_CHECK_URL=${{env.STAGING_HEALTH_CHECK_URL}}" >> $GITHUB_ENV
+          else
+            echo "COMPOSE_FILE=${{env.DOCKER_COMPOSE_PROD}}" >> $GITHUB_ENV
+            echo "ENV_FILE=${{env.ENV_FILE_PROD}}" >> $GITHUB_ENV
+            echo "HEALTH_CHECK_URL=${{env.PRODUCTION_HEALTH_CHECK_URL}}" >> $GITHUB_ENV
+          fi
+
+      - name: Get Last Deployed Image
+        run: |
+          if [ -f ~/.last_kenecare_api_deployed_image ]; then
+            LAST_IMAGE=$(cat ~/.last_kenecare_api_deployed_image)
+            echo "LAST_IMAGE=$LAST_IMAGE" >> $GITHUB_ENV
+            echo "Found last deployed image: $LAST_IMAGE"
+          else
+            echo "No record of last deployed image found!"
+            exit 1
+          fi
+
+      - name: Rollback Deployment
+        run: |
+          echo "🚨 Rolling back to previous image: $LAST_IMAGE"
+          ENV=${{ github.event.inputs.ENV }} \
+          docker compose -f $COMPOSE_FILE --env-file $ENV_FILE down --timeout 30 || true
+          
+          ENV=${{ github.event.inputs.ENV }} \
+          IMAGE_TAG=${LAST_IMAGE##*:} make deploy-prod TAG=${LAST_IMAGE##*:}
+
+      - name: Verify Rollback
+        run: |
+          echo "Waiting for rollback container to stabilize..."
+          sleep 15
+          if curl -s --head $HEALTH_CHECK_URL | grep "200 OK" > /dev/null; then
+            echo "✅ Rollback succeeded. Service is healthy."
+          else
+            echo "❌ Rollback failed. Please check logs."
+            exit 1
+          fi
+
+      - name: Notify Rollback Success
+        if: success()
+        run: |
+          echo "Rollback completed successfully."
+          echo "Reverted to image: $LAST_IMAGE"

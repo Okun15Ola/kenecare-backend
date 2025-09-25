@@ -1,9 +1,10 @@
 module.exports = {
   GET_ALL_BLOG: `
-    SELECT blog_id, category_name, title, description, image, tags, disclaimer, fullname as 'author', blogs.is_active, blogs.is_featured, blogs.created_at
+    SELECT blog_id, category_name, title, description, image, tags, disclaimer, fullname as 'author', blogs.is_active, blogs.is_featured, blogs.created_at, COUNT(*) OVER() AS totalRows
     FROM blogs
     INNER JOIN blog_categories ON blogs.blog_category_id = blog_categories.category_id
     INNER JOIN admins on blogs.inputted_by = admins.admin_id
+    LIMIT ?,?
   `,
   COUNT_BLOG: "SELECT COUNT(*) AS totalRows FROM blogs;",
   GET_BLOG_BY_ID: `

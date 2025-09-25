@@ -136,7 +136,7 @@ CREATE DEFINER=`kenecare`@`%` PROCEDURE `Sp_GetCities`(
     IN p_offset INT
 )
 BEGIN
-    SELECT * FROM cities
+    SELECT c.*, COUNT(*) OVER() AS totalRows FROM cities c
     LIMIT p_limit OFFSET p_offset;
 END ;;
 DELIMITER ;

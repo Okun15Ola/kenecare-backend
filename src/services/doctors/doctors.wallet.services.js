@@ -15,7 +15,6 @@ const { hashUsersPassword } = require("../../utils/auth.utils");
 const {
   createWithdrawalRequest,
   getDoctorWithdrawalHistory,
-  countDoctorWithdrawalHistory,
 } = require("../../repository/withdrawal-requests.repository");
 const { processPayout } = require("../../utils/payment.utils");
 const {
@@ -265,16 +264,6 @@ exports.getWithdrawalHistoryService = async (userId, page, limit) => {
     }
 
     const offset = (page - 1) * limit;
-    const { totalRows } = await countDoctorWithdrawalHistory(doctorId);
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No doctor withdrawal history found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const data = await getDoctorWithdrawalHistory(doctorId, limit, offset);
 
@@ -284,6 +273,9 @@ exports.getWithdrawalHistoryService = async (userId, page, limit) => {
         data: [],
       });
     }
+
+    const { totalRows } = data[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const history = data.map(mapDoctorWithdrawalHistoryRow);
 

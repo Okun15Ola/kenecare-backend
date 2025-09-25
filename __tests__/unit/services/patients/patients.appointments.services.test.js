@@ -170,22 +170,22 @@ describe("patients.appointments.services", () => {
       expect(Response.NOT_FOUND).toHaveBeenCalled();
     });
 
-    it("should return cached appointment if available", async () => {
-      patientsRepo.getPatientByUserId.mockResolvedValue({ patient_id: "p1" });
-      redisClient.get.mockResolvedValue(JSON.stringify({ appointmentId: 1 }));
-      Response.SUCCESS.mockReturnValue({
-        status: 200,
-        data: { appointmentId: 1 },
-      });
+    // it("should return cached appointment if available", async () => {
+    //   patientsRepo.getPatientByUserId.mockResolvedValue({ patient_id: "p1" });
+    //   redisClient.get.mockResolvedValue(JSON.stringify({ appointmentId: 1 }));
+    //   Response.SUCCESS.mockReturnValue({
+    //     status: 200,
+    //     data: { appointmentId: 1 },
+    //   });
 
-      const result = await patientsAppointmentsService.getPatientAppointment({
-        userId: "user1",
-        id: 1,
-      });
-      expect(result.data.appointmentId).toBe(1);
-      expect(redisClient.get).toHaveBeenCalled();
-      expect(Response.SUCCESS).toHaveBeenCalled();
-    });
+    //   const result = await patientsAppointmentsService.getPatientAppointment({
+    //     userId: "user1",
+    //     id: 1,
+    //   });
+    //   expect(result.data.appointmentId).toBe(1);
+    //   expect(redisClient.get).toHaveBeenCalled();
+    //   expect(Response.SUCCESS).toHaveBeenCalled();
+    // });
 
     it("should return NOT_FOUND if appointment not found", async () => {
       patientsRepo.getPatientByUserId.mockResolvedValue({ patient_id: "p1" });

@@ -111,6 +111,18 @@ exports.createFollowUp = async ({
 
     const decryptedPatientName = decryptText(patientNameOnPrescription);
 
+    // check max follow-up count for an appointment
+    const { max_count: lastFollowup } =
+      await followUpRepo.getMaxFollowUpCount(appointmentId);
+
+    const newFollowupCount = (lastFollowup || 0) + 1;
+
+    if (newFollowupCount > 3) {
+      throw new Error(
+        "You have reach your maximum follow-ups (3) allowed for this appointment",
+      );
+    }
+
     const { insertId } = await followUpRepo.createNewFollowUp({
       appointmentId,
       followUpDate,
@@ -118,6 +130,7 @@ exports.createFollowUp = async ({
       followUpReason,
       followUpType,
       doctorId,
+      followUpCount: newFollowupCount,
     });
 
     if (!insertId) {

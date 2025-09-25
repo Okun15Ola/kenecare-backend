@@ -1,6 +1,6 @@
 module.exports = {
   GET_ALL_SPECIALIZATIONS: `
-    SELECT * FROM specializations
+    SELECT s.*, COUNT(*) OVER() AS totalRows FROM specializations s LIMIT ?,?
   `,
   COUNT_SPECIALIZATIONS: `
     SELECT COUNT(*) AS totalRows FROM specializations;

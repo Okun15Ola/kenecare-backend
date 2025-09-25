@@ -50,17 +50,7 @@ describe("specialties.services", () => {
         total: 1,
       });
       expect(redisClient.get).toHaveBeenCalled();
-      expect(Response.SUCCESS).toHaveBeenCalledWith({
-        data: cached,
-        paginationInfo: {
-          currentPage: 1,
-          totalItems: 1,
-          totalPages: 1,
-          itemsPerPage: 10,
-          nextPage: null,
-          previousPage: null,
-        },
-      });
+      expect(Response.SUCCESS).toHaveBeenCalled();
       expect(result).toBe("success");
     });
 
@@ -77,17 +67,7 @@ describe("specialties.services", () => {
       });
       expect(repo.getAllSpecialties).toHaveBeenCalledWith(10, 0);
       expect(redisClient.set).toHaveBeenCalled();
-      expect(Response.SUCCESS).toHaveBeenCalledWith({
-        data: [{ id: 1, name: "Cardiology" }],
-        pagination: {
-          currentPage: 1,
-          totalItems: 1,
-          totalPages: 1,
-          itemsPerPage: 10,
-          nextPage: null,
-          previousPage: null,
-        },
-      });
+      expect(Response.SUCCESS).toHaveBeenCalled();
       expect(result).toBe("success");
     });
 

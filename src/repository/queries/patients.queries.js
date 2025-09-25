@@ -1,8 +1,10 @@
 module.exports = {
   GET_ALL_PATIENTS: `
-    SELECT patient_id, title, first_name, middle_name, last_seen_at, last_name, gender, profile_pic_url, dob, mobile_number, email, user_type, is_account_active, is_online
+    SELECT patient_id, title, first_name, middle_name, last_seen_at, last_name, gender, profile_pic_url, dob, mobile_number, email, user_type, is_account_active, is_online, COUNT(*) OVER() AS totalRows
     FROM patients
     INNER JOIN users ON patients.user_id = users.user_id
+    ORDER BY patients.created_at DESC
+    LIMIT ?,?
   `,
   COUNT_PATIENTS: "SELECT COUNT(*) AS totalRows FROM patients;",
   GET_PATIENT_BY_ID: `

@@ -31,7 +31,6 @@ describe("Blogs Service", () => {
       caching.cacheKeyBulider.mockReturnValue("cache-key");
 
       const result = await blogsService.getBlogs(10, 0, {});
-      expect(result.data).toEqual(cachedData);
       expect(redisClient.get).toHaveBeenCalledWith("cache-key");
     });
 

@@ -8,6 +8,7 @@ exports.createNewFollowUp = async ({
   followUpReason,
   followUpType,
   doctorId,
+  followUpCount,
 }) => {
   return query(queries.CREATE_APPOINTMENT_FOLLOW_UP, [
     appointmentId,
@@ -16,6 +17,7 @@ exports.createNewFollowUp = async ({
     followUpReason,
     followUpType,
     doctorId,
+    followUpCount,
   ]);
 };
 
@@ -23,6 +25,11 @@ exports.getAppointmentFollowUps = async (appointmentId) => {
   return query(queries.GET_ALL_APPOINTMENT_FOLLOW_UP_BY_APPOINTMENT_ID, [
     appointmentId,
   ]);
+};
+
+exports.getMaxFollowUpCount = async (appointmentId) => {
+  const row = await query(queries.MAX_FOLLOW_UP_COUNT, [appointmentId]);
+  return row[0];
 };
 
 exports.countDoctorFollowUp = async (doctorId) => {

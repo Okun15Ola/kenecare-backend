@@ -20,7 +20,6 @@ const { generateStreamUserToken } = require("../utils/stream.utils");
 const { redisClient } = require("../config/redis.config");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../utils/caching.utils");
 const { mapUserRow } = require("../utils/db-mapper.utils");
@@ -42,24 +41,15 @@ const {
 exports.getUsers = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "users:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: repo.countUsers,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No users found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("users:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -68,11 +58,20 @@ exports.getUsers = async (limit, page) => {
       return Response.SUCCESS({ message: "No users found", data: [] });
     }
 
+    const { totalRows } = rawData;
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const users = rawData.map(mapUserRow);
+
+    const valueToCache = {
+      data: users,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(users),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({
@@ -100,7 +99,6 @@ exports.getUserById = async (id) => {
     const rawData = await repo.getUserById(id);
 
     if (!rawData) {
-      logger.warn("User not found for ID");
       return null;
     }
 
@@ -132,7 +130,6 @@ exports.getUserByMobileNumber = async (number) => {
     }
     const rawData = await repo.getUserByMobileNumber(number);
     if (!rawData) {
-      logger.warn("User not found for mobile number");
       return null;
     }
 
@@ -165,7 +162,6 @@ exports.getUserByEmail = async (userEmail) => {
     const rawData = await repo.getUserByEmail(userEmail);
 
     if (!rawData) {
-      logger.warn("User not found for email");
       return null;
     }
 
@@ -192,7 +188,6 @@ exports.getUserByToken = async (token) => {
   try {
     const rawData = await repo.getUserByVerificationToken(token);
     if (!rawData) {
-      logger.warn("User not found for token");
       return null;
     }
     const user = mapUserRow(rawData, false, true, true, true);
@@ -276,7 +271,6 @@ exports.verifyRegistrationOTP = async ({ token, user }) => {
     }
 
     if (verifyTokenExpiry(verificationExpiry)) {
-      logger.warn("verifyRegistrationOTP: Verification code expired");
       return Response.BAD_REQUEST({
         message:
           "Verification Code Expired. Please Request a New Verification Code",
@@ -336,10 +330,10 @@ exports.loginUser = async ({
       return generateAndSendVerificationOTP({ userId, mobileNumber });
     }
 
-    const [accessToken, streamToken] = await Promise.all([
+    const [accessToken, , streamToken] = await Promise.all([
       generateUsersJwtAccessToken({ sub: userId }),
-      generateStreamUserToken(userId.toString()),
       createStreamUserProfile(userType, userId), // profile creation
+      generateStreamUserToken(userId.toString()),
     ]);
 
     redisClient.clearCacheByPattern("doctors:all:*");

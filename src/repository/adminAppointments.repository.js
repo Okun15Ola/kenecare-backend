@@ -2,20 +2,14 @@ const { query } = require("./db.connection");
 const queries = require("./queries/adminAppointments.queries");
 
 exports.getAllAppointments = async (limit, offset) => {
-  const optimizedQuery =
-    limit && offset
-      ? `${queries.GET_ALL_APPOINTMENTS} LIMIT ${limit} OFFSET ${offset}`
-      : queries.GET_ALL_APPOINTMENTS;
-
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_APPOINTMENTS, [offset, limit]);
 };
 
 exports.getAppointments = async (limit, offset) => {
-  const optimizedQuery =
-    limit && offset
-      ? `${queries.GET_APPOINTMENTS} LIMIT ${limit} OFFSET ${offset}`
-      : queries.GET_APPOINTMENTS;
-  return query(optimizedQuery);
+  if (!limit || !offset) {
+    return query(queries.GET_ALL_APPOINTMENTS, [0, 100]);
+  }
+  return query(queries.GET_APPOINTMENTS, [offset, limit]);
 };
 
 exports.countAppointments = async () => {
@@ -28,9 +22,12 @@ exports.countDoctorAppointments = async (doctorId) => {
   return row[0];
 };
 
-exports.getAppointmentsByDoctorId = async ({ limit, offset, doctorId }) => {
-  const optimizedQuery = `${queries.GET_APPOINTMENTS_BY_DOCTOR_ID} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery, [doctorId]);
+exports.getAppointmentsByDoctorId = async (limit, offset, doctorId) => {
+  return query(queries.GET_APPOINTMENTS_BY_DOCTOR_ID, [
+    doctorId,
+    offset,
+    limit,
+  ]);
 };
 
 exports.getAppointmentById = async (appointmentId) => {

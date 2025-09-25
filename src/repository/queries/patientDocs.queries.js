@@ -8,28 +8,28 @@ const COMMON_SELECT = `
 
 module.exports = {
   GET_ALL_PATIENT_DOCS: `
-    SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype, access_token
+    SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype
     FROM patient_medical_documents
     INNER JOIN patients ON patient_medical_documents.patient_id = patients.patient_id
     ORDER BY medical_document_id DESC
   `,
   GET_PATIENT_DOC_BY_ID: `
-    SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype, access_token
+    SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype
     FROM patient_medical_documents
     INNER JOIN patients ON patient_medical_documents.patient_id = patients.patient_id
     WHERE medical_document_id = ? LIMIT 1;
   `,
   GET_PATIENT_DOC_BY_DOC_AND_PATIENT_ID: `
-    SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype, access_token
+    SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype
     FROM patient_medical_documents
     INNER JOIN patients ON patient_medical_documents.patient_id = patients.patient_id
     WHERE medical_document_id = ? AND patient_medical_documents.patient_id = ? LIMIT 1;
   `,
   GET_DOCS_BY_PATIENT_ID: `
-    SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype, access_token
+    SELECT medical_document_id, patient_medical_documents.patient_id, title, first_name, middle_name, last_name, document_uuid, patient_medical_documents.medical_document_id, document_title, mimetype, patient_medical_documents.created_at, patient_medical_documents.updated_at, COUNT(*) OVER() AS totalRows
     FROM patient_medical_documents
     INNER JOIN patients ON patient_medical_documents.patient_id = patients.patient_id
-    WHERE patient_medical_documents.patient_id = ? ORDER BY medical_document_id DESC
+    WHERE patient_medical_documents.patient_id = ? ORDER BY medical_document_id DESC LIMIT ?,?
   `,
   COUNT_DOCS_BY_PATIENT_ID: `
     SELECT Count(*) AS totalRows

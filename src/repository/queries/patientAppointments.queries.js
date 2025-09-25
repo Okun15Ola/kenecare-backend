@@ -7,7 +7,8 @@ SELECT medical_appointments.appointment_id, appointment_uuid, p.patient_id, p.fi
       start_time, end_time, appointment_status, cancelled_reason, cancelled_at, canceled_by,
       postponed_by, postponed_date, postponed_reason, medical_appointments.created_at,
       medical_appointments.updated_at, amount_paid, currency, payment_method, order_id,
-      transaction_id, payment_status
+      transaction_id, payment_status,
+      COUNT(*) OVER() AS totalRows
     FROM medical_appointments
     INNER JOIN patients AS p ON medical_appointments.patient_id = p.patient_id
     INNER JOIN doctors AS d ON medical_appointments.doctor_id = d.doctor_id
@@ -21,6 +22,7 @@ module.exports = {
     ${COMMON_SELECT}
     WHERE medical_appointments.patient_id = ? AND payment_status = 'success'
     ORDER BY medical_appointments.appointment_id DESC
+    LIMIT ?,?
   `,
 
   GET_PATIENT_APPOINTMENTS_DASHBOARD_COUNTS: `

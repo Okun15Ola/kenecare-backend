@@ -35,8 +35,6 @@ module.exports = {
 
   async execute() {
     try {
-      console.info("Running approved appointment notification job...");
-
       const appointments = await getDoctorsApprovedAppointmentsForToday();
       const currentDateTime = moment();
       const notifications = [];
@@ -81,10 +79,8 @@ module.exports = {
       if (notifications.length > 0) {
         sendSmsNotifications(notifications);
       }
-      console.info("Appointment approved notification job completed");
     } catch (error) {
       logger.error("Error in approved appointmenta notification job:", error);
-      console.error("Error in approved appointment notification job:", error);
     }
   },
 };

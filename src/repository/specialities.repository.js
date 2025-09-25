@@ -2,8 +2,7 @@ const { query } = require("./db.connection");
 const queries = require("./queries/specialities.queries");
 
 exports.getAllSpecialties = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_SPECIALTIES} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_SPECIALTIES, [offset, limit]);
 };
 
 exports.getSpecialtiyCount = async () => {
