@@ -16,6 +16,7 @@ module.exports = {
   dbUsername: env.DB_USER,
   dbPassword: env.DB_PASS,
   dbName: env.DB_NAME,
+  dbUrl: env.DB_URL,
   dbPort: env.DB_PORT,
   dbConnectionLimit: env.DB_CONNECTION_LIMIT,
   encryptionKey: env.ENCRYPTION_KEY,

@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/Users/myles/Desktop/repos/kenecare-backend/src/logs/.e3b69e002aa319c354a86c0e372ba75d1b584b24-audit.json",
+    "files": [
+        {
+            "date": 1758708339874,
+            "name": "/Users/myles/Desktop/repos/kenecare-backend/src/logs/access-2025-09-24.log",
+            "hash": "85ee487eb8e68756fb83524a2b97c3aa600207ddad48d4b8d091263926adb7ac"
+        },
+        {
+            "date": 1758802460659,
+            "name": "/Users/myles/Desktop/repos/kenecare-backend/src/logs/access-2025-09-25.log",
+            "hash": "a542e1fb477ba5b80cbf03c86b8434738ba6b81b64847b6fda3db2c49a09aa66"
+        }
+    ],
+    "hashType": "sha256"
+}

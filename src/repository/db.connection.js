@@ -9,6 +9,8 @@ const {
   dbName,
   dbPort,
   dbConnectionLimit,
+  dbUrl,
+  nodeEnv,
 } = require("../config/default.config");
 
 // Improved and more complete DB configuration:
@@ -26,13 +28,21 @@ const dbConfig = {
 };
 
 // Create a connection pool with the above config:
-const connectionPool = mysql.createPool(dbConfig);
+// const connectionPool = mysql.createPool(dbConfig);
+const connectionPool = mysql.createPool({
+  uri: dbUrl, // mysql://user:password@host:3306/dbname
+  ssl: nodeEnv === "production" ? { rejectUnauthorized: true } : false,
+});
 
 // Get the promise-based version of the pool
 const promisePool = connectionPool.promise();
 
 // Create session store using the same config:
-const sessionStore = new MySQLStore(dbConfig);
+// const sessionStore = new MySQLStore(dbConfig);
+const sessionStore = new MySQLStore({
+  uri: dbUrl, // mysql://user:password@host:3306/dbname
+  ssl: nodeEnv === "production" ? { rejectUnauthorized: true } : false,
+});
 
 // Promise-based query utility function:
 const query = (sql, params) => {
@@ -68,7 +78,10 @@ const withTransaction = async (callback) => {
 
 // Exporting the utilities:
 module.exports = {
-  dbConfig,
+  dbConfig: {
+    uri: dbUrl,
+    ssl: nodeEnv === "production" ? { rejectUnauthorized: true } : false,
+  },
   sessionStore,
   connectionPool,
   query,

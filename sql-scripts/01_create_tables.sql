@@ -1,4 +1,7 @@
-use db_kenecare;
+-- use db_kenecare;
+
+-- Disable foreign key checks so tables can be dropped/recreated safely
+SET FOREIGN_KEY_CHECKS = 0;
 
 --
 -- Table structure for table `admins`
@@ -901,7 +904,9 @@ CREATE TABLE `zoom_meetings` (
 ) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE `api_clients` (
+-- DROP TABLE IF EXISTS `api_clients`;
+
+CREATE TABLE IF NOT EXISTS `api_clients` (
   `client_id` INT PRIMARY KEY AUTO_INCREMENT,
   `client_uuid` CHAR(36) UNIQUE NOT NULL,
   `name` VARCHAR(100) NOT NULL,
@@ -913,7 +918,7 @@ CREATE TABLE `api_clients` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE `api_keys` (
+CREATE TABLE IF NOT EXISTS `api_keys` (
   `key_id` INT PRIMARY KEY AUTO_INCREMENT,
   `key_uuid` CHAR(36) UNIQUE NOT NULL,
   `client_id` INT NOT NULL,
@@ -940,14 +945,21 @@ SET
   `deleted_at` = NULL;
 
 -- Add the name column
-ALTER TABLE api_keys ADD COLUMN name VARCHAR(100) NOT NULL;
+ALTER TABLE api_keys 
+ADD COLUMN name VARCHAR(100) NOT NULL;
+AFTER id;
 
 -- Add the description column
-ALTER TABLE api_keys ADD COLUMN description TEXT;
+ALTER TABLE api_keys 
+ADD COLUMN description TEXT;
+AFTER id;
+
 
 -- Add the environment enum column
-ALTER TABLE api_keys ADD COLUMN environment ENUM('development', 'staging', 'production', 'testing') 
+ALTER TABLE api_keys 
+ADD COLUMN environment ENUM('development', 'staging', 'production', 'testing') 
 NOT NULL DEFAULT 'development';
+AFTER id;
 
 
 -- Create the table to store blog post details.
@@ -1141,7 +1153,7 @@ ALTER TABLE `doctor_faqs` ADD INDEX `idx_faq_is_active` (`is_active`), ADD INDEX
 ALTER TABLE `doctor_feedbacks` ADD UNIQUE KEY `uq_doctor_patient_feedback` (`doctor_id`, `patient_id`), MODIFY COLUMN `is_feedback_approved` TINYINT NOT NULL DEFAULT '0', ADD INDEX `idx_feedback_approved` (`is_feedback_approved`), ADD INDEX `idx_feedback_created_at` (`created_at` DESC);
 ALTER TABLE `doctors` MODIFY COLUMN `user_id` INT NOT NULL UNIQUE, MODIFY COLUMN `professional_summary` TEXT DEFAULT NULL, MODIFY COLUMN `qualifications` TEXT DEFAULT NULL, MODIFY COLUMN `is_profile_approved` TINYINT NOT NULL DEFAULT '0', ADD INDEX `idx_doctors_approved_gender_experience` (`is_profile_approved`, `gender`, `years_of_experience`), ADD INDEX `idx_doctors_consultation_fee` (`consultation_fee`);
 ALTER TABLE `doctors_council_registration` MODIFY COLUMN `registration_number` VARCHAR(255) NOT NULL UNIQUE, ADD UNIQUE KEY `uq_doctor_council_reg` (`doctor_id`, `medical_council_id`), MODIFY COLUMN `registration_status` ENUM('pending','approved','rejected', 'active', 'expired') NOT NULL DEFAULT 'pending', ADD INDEX `idx_cert_expiry_date_status` (`certificate_expiry_date`, `registration_status`);
-ALTER TABLE `doctors_educational_background` ADD UNIQUE KEY `uq_doctor_education` (`doctor_id`, `institution_name`, `degree_attained`, `year_completed`), ADD INDEX `idx_education_institution_degree` (`institution_name`, `degree_att_ained`);
+ALTER TABLE `doctors_educational_background` ADD UNIQUE KEY `uq_doctor_education` (`doctor_id`, `institution_name`, `degree_attained`, `year_completed`), ADD INDEX `idx_education_institution_degree` (`institution_name`, `degree_attained`);
 ALTER TABLE `doctors_wallet` MODIFY COLUMN `doctor_id` INT NOT NULL UNIQUE;
 ALTER TABLE `marketers` MODIFY COLUMN `phone_number` VARCHAR(50) NOT NULL UNIQUE, MODIFY COLUMN `email` VARCHAR(150) UNIQUE DEFAULT NULL, MODIFY COLUMN `id_document_number` VARCHAR(50) NOT NULL UNIQUE, MODIFY COLUMN `nin` VARCHAR(50) UNIQUE DEFAULT NULL, ADD INDEX `idx_marketer_name` (`first_name`, `last_name`), ADD INDEX `idx_marketer_phone_verified` (`is_phone_verified`), ADD INDEX `idx_marketer_email_verified` (`is_email_verified`);
 ALTER TABLE `medical_appointments` ADD UNIQUE KEY `uq_doctor_datetime_slot` (`doctor_id`, `appointment_date`, `appointment_time`), ADD INDEX `idx_appointment_datetime` (`appointment_date`, `appointment_time`), ADD INDEX `idx_appointment_status` (`appointment_status`), ADD INDEX `idx_appointment_time` (`appointment_time`), ADD INDEX `idx_appointment_created_at` (`created_at`), ADD INDEX `idx_appointment_updated_at` (`updated_at`), ADD INDEX `idx_appointment_type` (`appointment_type`), ADD INDEX `idx_appointment_patient_status_date` (`patient_id`, `appointment_status`, `appointment_date` DESC), ADD INDEX `idx_appointment_doctor_date_status_time` (`doctor_id`, `appointment_date`, `appointment_status`, `appointment_time`), ADD INDEX `idx_appointment_patient_doctor_status` (`patient_id`, `doctor_id`, `appointment_status`);

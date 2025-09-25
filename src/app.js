@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 require("dotenv").config();
-require("newrelic");
+// require("newrelic");
 require("module-alias/register");
 const compression = require("compression");
 const express = require("express");

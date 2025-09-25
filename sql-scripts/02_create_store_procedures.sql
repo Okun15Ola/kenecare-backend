@@ -1,4 +1,7 @@
-use db_kenecare;
+-- use db_kenecare;
+
+-- Disable foreign key checks so tables can be dropped/recreated safely
+SET FOREIGN_KEY_CHECKS = 0;
 
 --
 -- Dumping routines for database 'db_kenecare'
