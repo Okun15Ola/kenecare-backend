@@ -7,25 +7,9 @@ module.exports = {
 
   async execute() {
     try {
-      logger.info("Running user online status job...");
-      console.info("Running user online status job...");
-
-      const { affectedRows } = await markUserOffline();
-
-      if (affectedRows > 0) {
-        logger.info(
-          `Turned off ${affectedRows} inactive user${affectedRows > 1 ? "s" : ""}`,
-        );
-        console.info(
-          `Turned off ${affectedRows} inactive user${affectedRows > 1 ? "s" : ""}`,
-        );
-      } else {
-        logger.info("No inactive user at this time");
-        console.info("No inactive user at this time");
-      }
+      await markUserOffline();
     } catch (error) {
       logger.error("Error in turning off user online status job:", error);
-      console.error("Error in turning off user online status job:", error);
     }
   },
 };

@@ -10,7 +10,6 @@ const {
   getPatientSharedMedicalDocuments,
   getPatientSharedMedicalDocument,
   deletePatientSharedMedicalDocument,
-  countMedicalDocumentByPatientId,
 } = require("../../repository/patient-docs.repository");
 const { getPatientByUserId } = require("../../repository/patients.repository");
 const Response = require("../../utils/response.utils");
@@ -32,7 +31,6 @@ const {
 } = require("../../utils/auth.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 
@@ -45,20 +43,7 @@ exports.getPatientMedicalDocuments = async (userId, page, limit) => {
     }
     const { patient_id: patientId } = patient;
     const offset = (page - 1) * limit;
-    const countCacheKey = `patient:${patientId}:documents:count`;
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => countMedicalDocumentByPatientId(patientId),
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No patient appointments found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider(
       `patient:${patientId}:documents:all`,
       limit,
@@ -66,9 +51,10 @@ exports.getPatientMedicalDocuments = async (userId, page, limit) => {
     );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getMedicalDocumentsByPatientId(
@@ -83,13 +69,23 @@ exports.getPatientMedicalDocuments = async (userId, page, limit) => {
       });
     }
 
+    const { totalRows } = rawData[0];
+
     const documents = await Promise.all(
       rawData.map((document) => mapPatientDocumentRow(document)),
     );
 
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const valueToCache = {
+      data: documents,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(documents),
+      value: JSON.stringify(valueToCache),
+      expiry: 60,
     });
     return Response.SUCCESS({ data: documents, pagination: paginationInfo });
   } catch (error) {

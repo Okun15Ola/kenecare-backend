@@ -9,13 +9,11 @@ const {
 } = require("../../repository/marketers.repository");
 const {
   getAllTestimonials,
-  countTestimonial,
 } = require("../../repository/testimonials.repository");
 const { sendMarketerUserRegisteredSMS } = require("../../utils/sms.utils");
 const { redisClient } = require("../../config/redis.config");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const {
@@ -33,23 +31,13 @@ const { encryptText } = require("../../utils/auth.utils");
 exports.getAllPatients = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "patients:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: repo.countPatients,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No patients found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("patients:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await repo.getAllPatients(limit, offset);
@@ -58,10 +46,20 @@ exports.getAllPatients = async (limit, page) => {
       return Response.SUCCESS({ message: "No patients found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const patients = await Promise.all(rawData.map(mapPatientRow));
+
+    const valueToCache = {
+      data: patients,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(patients),
+      value: JSON.stringify(valueToCache),
     });
     return Response.SUCCESS({ data: patients, pagination: paginationInfo });
   } catch (error) {
@@ -113,11 +111,11 @@ exports.getDoctorsPatientsHasMet = async (userId) => {
 
 exports.getPatientById = async (id) => {
   try {
-    const cacheKey = `patient:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
+    // const cacheKey = `patient:${id}`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    // }
     const rawData = await repo.getPatientById(id);
     if (!rawData) {
       logger.warn(`Patient Profile Not Found for ID: ${id}`);
@@ -142,10 +140,10 @@ exports.getPatientById = async (id) => {
       medicalInfo: medicalInfo || null,
     };
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(patientWithMedicalRecord),
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(patientWithMedicalRecord),
+    // });
 
     return Response.SUCCESS({ data: patientWithMedicalRecord });
   } catch (error) {
@@ -157,26 +155,14 @@ exports.getPatientById = async (id) => {
 exports.getPatientsTestimonial = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "patient:testimonials:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: countTestimonial,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No patient testimonials found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("patient:testimonials:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await getAllTestimonials(limit, offset);
@@ -186,6 +172,10 @@ exports.getPatientsTestimonial = async (limit, page) => {
         data: [],
       });
     }
+
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const patients = await Promise.all(rawData.map(mapPatientRow));
 
@@ -222,11 +212,11 @@ exports.getPatientByUser = async (id) => {
       return Response.FORBIDDEN({ message: "Unauthorized account access." });
     }
 
-    const cacheKey = `patient:${patient.patientId}:user:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
+    // const cacheKey = `patient:${patient.patientId}:user:${id}`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    // }
 
     const medicalRecord = await repo.getPatientMedicalInfoByPatientId(
       patient.patientId,
@@ -241,10 +231,10 @@ exports.getPatientByUser = async (id) => {
       medicalInfo: medicalInfo || null,
     };
 
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(patientWithMedicalRecord),
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(patientWithMedicalRecord),
+    // });
     return Response.SUCCESS({ data: patientWithMedicalRecord });
   } catch (error) {
     logger.error("getPatientByUser: ", error);

@@ -8,7 +8,6 @@ const { generateFileName } = require("../utils/file-upload.utils");
 const { redisClient } = require("../config/redis.config");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../utils/caching.utils");
 const { mapSpecialityRow } = require("../utils/db-mapper.utils");
@@ -17,23 +16,12 @@ const logger = require("../middlewares/logger.middleware");
 exports.getSpecialties = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "specialties:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: repo.getSpecialtiyCount,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No specialties found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
-
     const cacheKey = cacheKeyBulider("specialties:all", limit, offset);
 
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData), paginationInfo });
+      const { data, pagination } = JSON.parse(cachedData);
+      return Response.SUCCESS({ data, pagination });
     }
 
     const rawData = await repo.getAllSpecialties(limit, offset);
@@ -41,11 +29,20 @@ exports.getSpecialties = async (limit, page) => {
       return Response.SUCCESS({ message: "No specialties found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const specialties = await Promise.all(rawData.map(mapSpecialityRow));
+
+    const valueToCache = {
+      data: specialties,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(specialties),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
     return Response.SUCCESS({ data: specialties, pagination: paginationInfo });
@@ -65,7 +62,6 @@ exports.getSpecialtyByName = async (name) => {
     const rawData = await repo.getSpecialtyByName(name);
 
     if (!rawData) {
-      logger.warn(`Specialty Not Found for Name ${name}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
@@ -92,7 +88,6 @@ exports.getSpecialtyById = async (id) => {
     const rawData = await repo.getSpecialtiyById(id);
 
     if (!rawData) {
-      logger.warn(`Specialty Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
@@ -130,7 +125,6 @@ exports.createSpecialty = async ({ name, description, image, inputtedBy }) => {
     });
 
     if (!insertId) {
-      logger.warn("Failed to create specialty");
       return Response.BAD_REQUEST({ message: "Failed to create specialty" });
     }
 
@@ -148,7 +142,6 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
   try {
     const rawData = await repo.getSpecialtiyById(id);
     if (!rawData) {
-      logger.warn(`Specialty Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Specialty Not Found" });
     }
 
@@ -173,7 +166,6 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update specialty for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -190,7 +182,6 @@ exports.updateSpecialty = async ({ id, name, image, description }) => {
 exports.updateSpecialtyStatus = async ({ id, status }) => {
   try {
     if (!Number.isInteger(status) || status < 0 || status > 1) {
-      logger.warn(`Invalid Status Code: ${status}`);
       return Response.BAD_REQUEST({ message: "Invalid Status Code" });
     }
 
@@ -200,7 +191,6 @@ exports.updateSpecialtyStatus = async ({ id, status }) => {
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update specialty status for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -226,7 +216,6 @@ exports.deleteSpecialty = async (id) => {
     const { affectedRows } = await repo.deleteSpecialtieById(id);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete specialty for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 

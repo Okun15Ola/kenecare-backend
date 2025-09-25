@@ -5,7 +5,7 @@ const DOCTOR_COLUMNS = `
   d.consultation_fee, c.city_name, c.latitude, c.longitude, 
   d.years_of_experience, d.is_profile_approved, d.user_id, 
   u.mobile_number, u.email, u.user_type, u.is_account_active, u.is_online, u.last_seen_at,
-  dcr.registration_status, dcr.certificate_expiry_date
+  dcr.registration_status, dcr.certificate_expiry_date, COUNT(*) OVER() AS totalRows
 `;
 
 const DOCTOR_JOINS = `
@@ -28,6 +28,7 @@ module.exports = {
     SELECT ${DOCTOR_COLUMNS}
     ${DOCTOR_JOINS}
     ${APPROVED_DOCTOR_CONDITIONS}
+    LIMIT ?,?
   `,
   GET_DOCTORS_COUNT: `
     SELECT COUNT(*) as totalRows
@@ -65,6 +66,7 @@ module.exports = {
     AND dcr.registration_status = 'approved'
     AND dcr.certificate_expiry_date >= CURDATE()
     ORDER BY dcr.updated_at DESC
+    LIMIT ?,?
   `,
   COUNT_SEARCH_DOCTOR_BY_QUERY: `
   SELECT COUNT(*) AS totalRows
@@ -114,6 +116,7 @@ module.exports = {
     AND dcr.registration_status = 'approved'
     AND dcr.certificate_expiry_date >= CURDATE()
     ORDER BY dcr.updated_at DESC
+    LIMIT ?,?
   `,
   GET_DOCTORS_COUNT_BY_CITY:
     "SELECT COUNT(*) AS totalRows FROM doctors INNER JOIN doctors_council_registration dcr ON doctors.doctor_id = dcr.doctor_id WHERE city_id = ? AND is_profile_approved = 1 AND dcr.registration_status = 'approved' AND dcr.certificate_expiry_date >= CURDATE();",
@@ -125,6 +128,7 @@ module.exports = {
     AND dcr.registration_status = 'approved'
     AND dcr.certificate_expiry_date >= CURDATE()
     ORDER BY dcr.updated_at DESC
+    LIMIT ?,?
   `,
   GET_DOCTORS_BY_SPECIALIZATION_ID_COUNT: `
     SELECT COUNT(*) AS totalRows
@@ -139,6 +143,7 @@ module.exports = {
   AND dcr.registration_status = 'approved' 
   AND dcr.certificate_expiry_date >= CURDATE()
   ORDER BY dcr.updated_at DESC
+  LIMIT ?,?
   `,
   GET_DOCTORS_BY_HOSPITAL_ID_COUNT:
     "SELECT COUNT(*) AS totalRows FROM doctors INNER JOIN doctors_council_registration dcr ON doctors.doctor_id = dcr.doctor_id WHERE hospital_id = ? AND dcr.registration_status = 'approved' AND dcr.certificate_expiry_date >= CURDATE();",
@@ -152,12 +157,13 @@ module.exports = {
     WHERE dcr.doctor_id = ? LIMIT 1;
   `,
   GET_DOCTOR_ALL_COUNCIL_REGISTRATIONS: `
-    SELECT council_registration_id, doctors_council_registration.doctor_id, first_name, last_name, doctors.specialization_id, speciality_name, profile_pic_url, council_name, years_of_experience, is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, verified_by, doctors_council_registration.created_at
+    SELECT council_registration_id, doctors_council_registration.doctor_id, first_name, last_name, doctors.specialization_id, speciality_name, profile_pic_url, council_name, years_of_experience, is_profile_approved, registration_number, registration_year, registration_document_url, certificate_issued_date, certificate_expiry_date, registration_status, rejection_reason, verified_by, doctors_council_registration.created_at, COUNT(*) OVER() AS totalRows
     FROM doctors_council_registration
     INNER JOIN medical_councils on doctors_council_registration.medical_council_id = medical_councils.council_id
     INNER JOIN doctors on doctors_council_registration.doctor_id = doctors.doctor_id
     INNER JOIN medical_specialities on doctors.specialization_id = medical_specialities.speciality_id
     ORDER BY doctors_council_registration.updated_at DESC
+    LIMIT ?,?
   `,
   COUNT_COUNCIL_REGISTRATIONS:
     "SELECT COUNT(*) AS totalRows FROM doctors_council_registration;",

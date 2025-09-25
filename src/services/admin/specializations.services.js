@@ -4,7 +4,6 @@ const { redisClient } = require("../../config/redis.config");
 const { mapSpecializationRow } = require("../../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 const logger = require("../../middlewares/logger.middleware");
@@ -12,23 +11,14 @@ const logger = require("../../middlewares/logger.middleware");
 exports.getSpecializations = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "specializations:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: dbObject.countSpecialization,
-    });
 
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No specialization found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("specializations:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
     const rawData = await dbObject.getAllSpecialization(limit, offset);
@@ -37,12 +27,22 @@ exports.getSpecializations = async (limit, page) => {
       return Response.SUCCESS({ message: "No specialization found", data: [] });
     }
 
+    const { totalRows } = rawData[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const specializations = rawData.map(mapSpecializationRow);
+
+    const valueToCache = {
+      data: specializations,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(specializations),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
+
     return Response.SUCCESS({
       data: specializations,
       pagination: paginationInfo,
@@ -63,7 +63,6 @@ exports.getSpecializationByName = async (name) => {
     const rawData = await dbObject.getSpecializationByName(name);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
@@ -91,7 +90,6 @@ exports.getSpecializationById = async (id) => {
     const rawData = await dbObject.getSpecializationById(id);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
     const specialization = mapSpecializationRow(rawData);
@@ -112,7 +110,6 @@ exports.createSpecialization = async ({ name, description, imageUrl }) => {
   try {
     const rawData = await dbObject.getSpecializationByName(name);
     if (rawData) {
-      logger.warn("Specialization Name already exists");
       return Response.BAD_REQUEST({
         message: "Specialization Name already exists",
       });
@@ -129,7 +126,6 @@ exports.createSpecialization = async ({ name, description, imageUrl }) => {
     const { insertId } = await dbObject.createNewSpecialization(specialization);
 
     if (!insertId) {
-      logger.warn("Fail to create specialization");
       return Response.NO_CONTENT({});
     }
 
@@ -146,7 +142,6 @@ exports.updateSpecialization = async ({ specializationId, specialization }) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
     const { affectedRows } = await dbObject.updateSpecializationById({
@@ -172,7 +167,6 @@ exports.updateSpecializationStatus = async ({ specializationId, status }) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 
@@ -205,7 +199,6 @@ exports.deleteSpecialization = async (specializationId) => {
     const rawData = await dbObject.getSpecializationById(specializationId);
 
     if (!rawData) {
-      logger.warn("Specialization Not Found");
       return Response.NOT_FOUND({ message: "Specialization Not Found" });
     }
 

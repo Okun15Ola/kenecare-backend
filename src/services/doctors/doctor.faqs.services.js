@@ -5,7 +5,6 @@ const Response = require("../../utils/response.utils");
 const { fetchLoggedInDoctor } = require("../../utils/helpers.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 
@@ -22,17 +21,6 @@ exports.getDoctorFaqsService = async (userId, limit, page) => {
     }
 
     const offset = (page - 1) * limit;
-    const countCacheKey = `doctor:${doctorId}:faq:count`;
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => doctorFaqRepository.countDoctorFaq(doctorId),
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({ message: "No doctor faq found", data: [] });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider(
       `doctor:${doctorId}:faq:all`,
@@ -42,9 +30,10 @@ exports.getDoctorFaqsService = async (userId, limit, page) => {
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -58,9 +47,17 @@ exports.getDoctorFaqsService = async (userId, limit, page) => {
       return Response.SUCCESS({ message: "No doctor faq found", data: [] });
     }
 
+    const { totalRows } = data[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const valueToCache = {
+      data,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(valueToCache),
     });
 
     return Response.SUCCESS({
@@ -86,20 +83,6 @@ exports.getDoctorActiveFaqsService = async (userId, limit, page) => {
     }
 
     const offset = (page - 1) * limit;
-    const countCacheKey = `doctor:${doctorId}:faq:active:count`;
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () => doctorFaqRepository.countDoctorActiveFaq(doctorId),
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No doctor active faq found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider(
       `doctor:${doctorId}:faq:active:all`,
@@ -109,9 +92,10 @@ exports.getDoctorActiveFaqsService = async (userId, limit, page) => {
     const cachedData = await redisClient.get(cacheKey);
 
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -128,9 +112,17 @@ exports.getDoctorActiveFaqsService = async (userId, limit, page) => {
       });
     }
 
+    const { totalRows } = data[0];
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const valueToCache = {
+      data,
+      pagination: paginationInfo,
+    };
+
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(valueToCache),
     });
 
     return Response.SUCCESS({

@@ -102,8 +102,6 @@ module.exports = {
       if (notifications.length > 0) {
         sendSmsNotifications(notifications);
       }
-
-      logger.info("Appointment notification job completed");
     } catch (error) {
       logger.error("Error in appointment notification job:", error);
     }

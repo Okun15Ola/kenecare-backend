@@ -10,7 +10,8 @@ const baseAppointmentSelect = `
     speciality_name, meeting_id, start_time, end_time,
     appointment_status, cancelled_reason, cancelled_at,
     canceled_by, postponed_by, postponed_date, postponed_reason,
-    medical_appointments.created_at, medical_appointments.updated_at, users.mobile_number AS doctor_mobile_number
+    medical_appointments.created_at, medical_appointments.updated_at, users.mobile_number AS doctor_mobile_number,
+    COUNT(*) OVER() AS totalRows
   FROM medical_appointments
   INNER JOIN patients ON medical_appointments.patient_id = patients.patient_id
   INNER JOIN doctors ON medical_appointments.doctor_id = doctors.doctor_id
@@ -19,12 +20,12 @@ const baseAppointmentSelect = `
 `;
 
 module.exports = {
-  GET_ALL_APPOINTMENTS: `${baseAppointmentSelect} ORDER BY appointment_id ASC`,
+  GET_ALL_APPOINTMENTS: `${baseAppointmentSelect} ORDER BY appointment_id DESC LIMIT ?,?`,
   COUNT_APPOINTMENTS: "SELECT COUNT(*) AS totalRows FROM medical_appointments;",
   COUNT_DOCTORS_APPOINTMENTS:
     "SELECT COUNT(*) AS totalRows FROM medical_appointments WHERE doctor_id = ?;",
-  GET_APPOINTMENTS: `${baseAppointmentSelect} ORDER BY appointment_id ASC`,
-  GET_APPOINTMENTS_BY_DOCTOR_ID: `${baseAppointmentSelect} WHERE medical_appointments.doctor_id = ? ORDER BY medical_appointments.created_at`,
+  GET_APPOINTMENTS: `${baseAppointmentSelect} ORDER BY appointment_id ASC LIMIT ?,?`,
+  GET_APPOINTMENTS_BY_DOCTOR_ID: `${baseAppointmentSelect} WHERE medical_appointments.doctor_id = ? ORDER BY medical_appointments.created_at LIMIT ?,?`,
   GET_APPOINTMENT_BY_ID: `${baseAppointmentSelect} WHERE medical_appointments.appointment_id = ?;`,
   GET_APPOINTMENT_BY_UUID: `
     SELECT 

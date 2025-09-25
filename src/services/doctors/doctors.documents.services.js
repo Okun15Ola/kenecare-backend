@@ -18,11 +18,11 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
     }
 
     const { doctor_id: doctorId, title } = doctor;
-    const cacheKey = `doctor:${doctorId}:documents`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return Response.SUCCESS({ data: JSON.parse(cachedData) });
-    }
+    // const cacheKey = `doctor:${doctorId}:documents`;
+    // const cachedData = await redisClient.get(cacheKey);
+    // if (cachedData) {
+    //   return Response.SUCCESS({ data: JSON.parse(cachedData) });
+    // }
 
     const rawData = await getSharedMedicalDocumentsByDoctorId(doctorId);
 
@@ -36,10 +36,10 @@ exports.getDoctorSharedMedicalDocuments = async (userId) => {
     const sharedMedicalDocuments = await Promise.all(
       rawData.map((row) => mapDoctorSharedMedicalDocs(row, title)),
     );
-    await redisClient.set({
-      key: cacheKey,
-      value: JSON.stringify(sharedMedicalDocuments),
-    });
+    // await redisClient.set({
+    //   key: cacheKey,
+    //   value: JSON.stringify(sharedMedicalDocuments),
+    // });
     return Response.SUCCESS({ data: sharedMedicalDocuments });
   } catch (error) {
     logger.error("getDoctorSharedMedicalDocuments: ", error);

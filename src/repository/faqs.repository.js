@@ -2,13 +2,11 @@ const { query } = require("./db.connection");
 const queries = require("./queries/faqs.queries");
 
 exports.getAllFaqs = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_ALL_FAQS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(queries.GET_ALL_FAQS, [offset, limit]);
 };
 
 exports.getPublishedFaqs = async (limit, offset) => {
-  const optimizedQuery = `${queries.GET_PUBLISHED_FAQS} LIMIT ${limit} OFFSET ${offset}`;
-  return query(optimizedQuery);
+  return query(queries.GET_PUBLISHED_FAQS, [offset, limit]);
 };
 
 exports.countPublishFaq = async () => {

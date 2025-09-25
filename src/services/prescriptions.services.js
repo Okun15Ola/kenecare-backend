@@ -57,7 +57,6 @@ exports.getAppointmentPrescriptionById = async (id) => {
     const prescriptionExist = await getAppointmentPrescriptionById(id);
 
     if (!prescriptionExist) {
-      logger.warn(`Prescription not found for ID ${id}`);
       return Response.NOT_FOUND({
         message: "Prescription not found. Try again",
       });

@@ -141,12 +141,12 @@ exports.mapAdminAppointmentRow = (appointments) => {
     appointmentEndTime: moment(appointmentEndTime).format("HH:mm:ss"),
     appointmentStatus,
     cancelledReason: cancelledReason || "",
-    cancelledAt: moment(cancelledAt).format("YYYY-MM-DD HH:mm"),
+    cancelledAt: moment(cancelledAt).format("YYYY-MM-DD HH:mm:ss"),
     cancelledBy,
     postponedReason: postponedReason || "",
-    postponeDate: moment(postponeDate).format("YYYY-MM-DD HH:mm"),
+    postponeDate: moment(postponeDate).format("YYYY-MM-DD HH:mm:ss"),
     postponedBy,
-    createAt: moment(createAt).format("YYYY-MM-DD HH:mm"),
+    createAt: moment(createAt).format("YYYY-MM-DD HH:mm:ss"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
@@ -198,7 +198,7 @@ exports.mapBlogRow = async (blog, includeImageUrl) => {
     author,
     featured,
     isActive: Boolean(isActive),
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
@@ -262,8 +262,8 @@ exports.mapCouncilRegistrationRow = async (councilRegistration) => {
     regNumber,
     regYear,
     regDocumentUrl: documentUrl,
-    certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD HH:mm"),
-    certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD HH:mm"),
+    certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD HH:mm:ss"),
+    certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD HH:mm:ss"),
     regStatus,
     rejectionReason,
     verifiedBy,
@@ -322,7 +322,7 @@ exports.mapMarketersRow = (marketer) => {
     secondEmergencyContactName,
     secondEmergencyContactNumber,
     secondEmergencyContactAddress,
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
@@ -383,8 +383,8 @@ exports.mapMarketersWithDocumentRow = async (marketer) => {
     secondEmergencyContactName,
     secondEmergencyContactNumber,
     secondEmergencyContactAddress,
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
-    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
+    updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
@@ -558,7 +558,7 @@ exports.mapFollowUpRow = (followUp) => {
     reason,
     followUpStatus,
     followUpType,
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
@@ -602,8 +602,8 @@ exports.mapDoctorCouncilRow = async (doctorCouncil) => {
     regNumber,
     regYear,
     regDocumentUrl: documentUrl,
-    certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD HH:mm"),
-    certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD HH:mm"),
+    certIssuedDate: moment(certIssuedDate).format("YYYY-MM-DD HH:mm:ss"),
+    certExpiryDate: moment(certExpiryDate).format("YYYY-MM-DD HH:mm:ss"),
     regStatus,
     rejectionReason,
     verifiedBy,
@@ -1190,14 +1190,13 @@ exports.mapPatientDocumentRow = async (document, includeFileUrl = false) => {
     medical_document_id: documentId,
     document_uuid: documentUUID,
     document_title: documentTitle,
-    // mimetype: mimeType,
+    created_at: createdAt,
+    updated_at: updatedAt,
   } = document;
 
   const mapped = {
     documentId,
-    // documentUUID,
     documentTitle,
-    // mimeType,
   };
 
   if (includeFileUrl) {
@@ -1207,6 +1206,9 @@ exports.mapPatientDocumentRow = async (document, includeFileUrl = false) => {
     );
     mapped.fileUrl = fileUrl;
   }
+
+  mapped.createAt = moment(createdAt).format("YYYY-MM-DD HH:mm:ss");
+  mapped.updatedAt = moment(updatedAt).format("YYYY-MM-DD HH:mm:ss");
 
   return mapped;
 };
@@ -1249,7 +1251,7 @@ exports.mapPatientRow = async (patient) => {
     userId,
     isAccountActive: Boolean(isAccountActive),
     isOnline: Boolean(isOnline),
-    createdAt: moment(createdAt).format("YYYY-MM-DD: HH:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD: HH:mm:ss"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 
@@ -1411,9 +1413,9 @@ exports.mapApiKeyRow = (key) => {
     environment,
     apiKey,
     isActive: Boolean(isActive),
-    expiresAt: moment(expiresAt).format("YYYY-MM-DD HH:mm"),
+    expiresAt: moment(expiresAt).format("YYYY-MM-DD HH:mm:ss"),
     lastUsed: moment(lastUsed).format("YYYY-MM-DD HH:mm:ss"),
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
@@ -1461,9 +1463,9 @@ exports.mapDoctorBlog = async (blog) => {
     status,
     image: imageUrl,
     tags: parsedTags,
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
     publishedAt: publishedAt
-      ? moment(publishedAt).format("YYYY-MM-DD HH:mm")
+      ? moment(publishedAt).format("YYYY-MM-DD HH:mm:ss")
       : null,
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
@@ -1481,12 +1483,16 @@ exports.mapAppointmentFeedback = (feedbacks) => {
     feedbackId,
     appointmentId,
     feedback: feedback ? he.decode(feedback) : null,
-    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm"),
+    createdAt: moment(createdAt).format("YYYY-MM-DD HH:mm:ss"),
     updatedAt: moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
   };
 };
 
-exports.mapDoctorReview = (reviews, includeApproval = false) => {
+exports.mapDoctorReview = async (
+  reviews,
+  includeApproval = false,
+  includePatientPhoto = false,
+) => {
   const {
     feedback_id: reviewId,
     doctor_id: doctorId,
@@ -1494,6 +1500,7 @@ exports.mapDoctorReview = (reviews, includeApproval = false) => {
     first_name: patientFirstName,
     last_name: patientLastName,
     patient_id: patientId,
+    profile_pic_url: patientProfilePic,
     feedback_content: review,
     is_feedback_approved: isApproved,
     created_at: createdAt,
@@ -1514,6 +1521,14 @@ exports.mapDoctorReview = (reviews, includeApproval = false) => {
 
   if (includeApproval) {
     mapped.isApproved = isApproved;
+  }
+
+  if (includePatientPhoto) {
+    const imageUrl = await fetchAndCacheUrl(
+      `patient_pic:${patientId}`,
+      patientProfilePic,
+    );
+    mapped.patientProfilePic = imageUrl;
   }
   return mapped;
 };

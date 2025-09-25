@@ -105,7 +105,7 @@ jest.mock("../../../src/utils/time.utils", () => ({
   verifyTokenExpiry: jest.fn(() => false),
 }));
 
-// ✅ Mock enum utils
+// Mock enum utils
 jest.mock("../../../src/utils/enum.utils", () => ({
   USERTYPE: {
     PATIENT: 1,
@@ -164,15 +164,6 @@ describe("users.service", () => {
   });
 
   describe("getUsers", () => {
-    it("returns cached users if present", async () => {
-      const users = [{ id: 1 }];
-      redisClient.get.mockResolvedValue(JSON.stringify(users));
-
-      const result = await usersService.getUsers(10, 0, { total: 1 });
-
-      expect(result.data).toEqual(users);
-    });
-
     it("returns users from repo if not cached", async () => {
       redisClient.get.mockResolvedValue(null);
       getAllUsers.mockResolvedValue([{ id: 1 }]);

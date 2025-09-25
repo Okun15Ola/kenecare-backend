@@ -115,7 +115,11 @@ describe("follow-ups.services", () => {
       patientsRepo.getPatientById.mockResolvedValue({
         mobile_number: "1234567890",
       });
+      timeUtils.checkDoctorAvailability.mockResolvedValue({
+        isAvailable: true,
+      });
       followUpRepo.createNewFollowUp.mockResolvedValue({ insertId: null });
+      followUpRepo.getMaxFollowUpCount.mockResolvedValue({ max_count: 1 });
       Response.INTERNAL_SERVER_ERROR.mockReturnValue("internal_error");
       const result = await followUpsService.createFollowUp(params);
       expect(result).toBe("internal_error");

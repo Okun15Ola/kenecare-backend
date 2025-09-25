@@ -6,7 +6,6 @@ const { generateFileName } = require("../utils/file-upload.utils");
 const { mapCommonSymptomsRow } = require("../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../utils/caching.utils");
 const logger = require("../middlewares/logger.middleware");
@@ -14,26 +13,13 @@ const logger = require("../middlewares/logger.middleware");
 exports.getCommonSymptoms = async (limit, page) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = "common-symptoms:count";
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: repo.countCommonSymptom,
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No common symptoms found",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
     const cacheKey = cacheKeyBulider("common-symptoms:all", limit, offset);
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
+      const { data, pagination } = JSON.parse(cachedData);
       return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
+        data,
+        pagination,
       });
     }
 
@@ -46,11 +32,20 @@ exports.getCommonSymptoms = async (limit, page) => {
       });
     }
 
+    const { totalRows } = rawData[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
     const symptoms = await Promise.all(rawData.map(mapCommonSymptomsRow));
+
+    const valueToCache = {
+      data: symptoms,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(symptoms),
+      value: JSON.stringify(valueToCache),
       expiry: 3600,
     });
 
@@ -70,7 +65,6 @@ exports.getCommonSymptom = async (id) => {
     }
     const rawData = await repo.getCommonSymptomById(id);
     if (!rawData) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom Not Found" });
     }
 
@@ -99,7 +93,6 @@ exports.createCommonSymptom = async ({
 }) => {
   try {
     if (!file) {
-      logger.warn("Symptom image is required");
       return Response.BAD_REQUEST({ message: "Please upload symptom image" });
     }
     const fileName = `symptom_${generateFileName(file)}`;
@@ -161,7 +154,6 @@ exports.updateCommonSymptom = async ({
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
@@ -186,7 +178,6 @@ exports.updateCommonSymptom = async ({
     });
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to update Common Symptom for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 
@@ -208,7 +199,6 @@ exports.updateCommonSymptomStatus = async ({ id }) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
@@ -225,14 +215,12 @@ exports.deleteCommonSymptom = async (id) => {
   try {
     const symptom = await repo.getCommonSymptomById(id);
     if (!symptom) {
-      logger.warn(`Common Symptom Not Found for ID ${id}`);
       return Response.NOT_FOUND({ message: "Common Symptom not found" });
     }
 
     const { affectedRows } = await repo.deleteCommonSymptomById(id);
 
     if (!affectedRows || affectedRows < 1) {
-      logger.warn(`Failed to delete Common Symptom for ID ${id}`);
       return Response.NOT_MODIFIED({});
     }
 

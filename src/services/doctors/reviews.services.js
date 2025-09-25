@@ -6,7 +6,6 @@ const logger = require("../../middlewares/logger.middleware");
 const { mapDoctorReview } = require("../../utils/db-mapper.utils");
 const {
   cacheKeyBulider,
-  getCachedCount,
   getPaginationInfo,
 } = require("../../utils/caching.utils");
 
@@ -61,21 +60,6 @@ exports.getApprovedDoctorReviewsIndexService = async (
 ) => {
   try {
     const offset = (page - 1) * limit;
-    const countCacheKey = `doctor:${doctorId}:reviews:count`;
-    const totalRows = await getCachedCount({
-      cacheKey: countCacheKey,
-      countQueryFn: () =>
-        doctorReviewRepository.countDoctorApprovedReviews(doctorId),
-    });
-
-    if (!totalRows) {
-      return Response.SUCCESS({
-        message: "No reviews found for this doctor.",
-        data: [],
-      });
-    }
-
-    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
 
     const cacheKey = cacheKeyBulider(
       `doctor:${doctorId}:reviews`,
@@ -84,10 +68,8 @@ exports.getApprovedDoctorReviewsIndexService = async (
     );
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      return Response.SUCCESS({
-        data: JSON.parse(cachedData),
-        pagination: paginationInfo,
-      });
+      const { data, pagination } = JSON.parse(cachedData);
+      return Response.SUCCESS({ data, pagination });
     }
 
     const reviews =
@@ -104,11 +86,22 @@ exports.getApprovedDoctorReviewsIndexService = async (
       });
     }
 
-    const data = reviews.map(mapDoctorReview);
+    const { totalRows } = reviews[0];
+
+    const paginationInfo = getPaginationInfo({ totalRows, limit, page });
+
+    const data = await Promise.all(
+      reviews.map((review) => mapDoctorReview(review, false, true)),
+    );
+
+    const valueToCache = {
+      data,
+      pagination: paginationInfo,
+    };
 
     await redisClient.set({
       key: cacheKey,
-      value: JSON.stringify(data),
+      value: JSON.stringify(valueToCache),
     });
 
     return Response.SUCCESS({

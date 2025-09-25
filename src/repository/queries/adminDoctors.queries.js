@@ -27,12 +27,14 @@ const ADMIN_COUNCIL_REGISTRATION_JOINS = `
 
 module.exports = {
   GET_ALL_DOCTORS: `
-  SELECT ${ADMIN_DOCTOR_COLUMNS}
+  SELECT ${ADMIN_DOCTOR_COLUMNS},
+  COUNT(*) OVER() AS totalRows
   FROM doctors d
   INNER JOIN users u ON d.user_id = u.user_id
   INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
   INNER JOIN cities c ON d.city_id = c.city_id
   ORDER BY d.updated_at DESC
+  LIMIT ?,?
   `,
 
   COUNT_DOCTORS: `
@@ -58,6 +60,7 @@ module.exports = {
     OR ms.speciality_name LIKE ?
   )
   ORDER BY d.updated_at DESC
+  LIMIT ?,?
   `,
 
   GET_DOCTOR_BY_ID: `
@@ -130,12 +133,14 @@ module.exports = {
       dcr.registration_number, dcr.registration_year, dcr.registration_document_url, 
       dcr.certificate_issued_date, dcr.certificate_expiry_date, 
       dcr.registration_status, dcr.rejection_reason, dcr.verified_by, 
-      dcr.created_at
+      dcr.created_at,
+      COUNT(*) OVER() AS totalRows
     FROM doctors_council_registration dcr
     INNER JOIN medical_councils mc ON dcr.medical_council_id = mc.council_id
     INNER JOIN doctors d ON dcr.doctor_id = d.doctor_id
     INNER JOIN medical_specialities ms ON d.specialization_id = ms.speciality_id
     ORDER BY dcr.updated_at DESC
+    LIMIT ?, ?;
   `,
 
   GET_DOCTOR_COUNCIL_REGISTRATION_BY_ID: `

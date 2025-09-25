@@ -1,5 +1,5 @@
 REGISTRY = docker.io
-IMAGE_NAME = imotechsl/kenecare-api
+IMAGE_NAME = kenecare/kenecare-api
 CURRENT_IMAGE_TAG ?= $(TAG)
 # OLD_IMAGE_TAG stores the tag of the previously deployed image for rollback.
 OLD_IMAGE_TAG = $(shell cat .last_deployed_image 2>/dev/null || echo "")
@@ -183,7 +183,7 @@ check-redis-status: check-env
 .PHONY: build-dev
 build-dev: check-env
 	@echo "Building Docker image for development: $(IMAGE_NAME):development"
-	@ENV=$(ENV) docker build -t $(IMAGE_NAME):development.
+	@ENV=$(ENV) docker build -t $(IMAGE_NAME):development .
 
 .PHONY: build-staging
 build-staging: check-env
@@ -192,9 +192,9 @@ build-staging: check-env
 
 .PHONY: build-prod
 build-prod: check-env
-	@echo "Building Docker image for production: $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG)"
+	@echo "Building Docker image for production: $(REGISTRY)/$(IMAGE_NAME):prod-$(CURRENT_IMAGE_TAG)"
 	@sleep 5
-	@ENV=production docker build -t $(REGISTRY)/$(IMAGE_NAME):$(CURRENT_IMAGE_TAG) -f Dockerfile.prod .
+	@ENV=production docker build -t $(REGISTRY)/$(IMAGE_NAME):prod-$(CURRENT_IMAGE_TAG) -f Dockerfile.prod .
 
 # ==============================================================================
 # Run Commands (Development Focused)
@@ -236,7 +236,7 @@ stop-api:
 
 .PHONY: run-dev
 run-dev: check-env run-db run-redis run-api
-	@echo "Development environment is up and running!"
+	@echo "🚀🚀Development environment is up and running🚀🚀"
 	@echo "Access API at: http://localhost:8500 (or configured port)"
 
 .PHONY: stop-dev
